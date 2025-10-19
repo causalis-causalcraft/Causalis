@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>DML ATE Example &#8212; Causalis 0.1.0 documentation</title>
+    <title>Impact of 401(k) on Financial Assets &#8212; Causalis 0.1.0 documentation</title>
   
   
   
@@ -46,12 +46,10 @@
     <script src="../_static/copybutton.js?v=f281be69"></script>
     <script src="../_static/design-tabs.js?v=df1d7cd1"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
-    <script>DOCUMENTATION_OPTIONS.pagename = 'examples/dml_ate';</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'examples/401k';</script>
     <link rel="icon" href="../_static/new_logo.svg"/>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="DML ATT Example" href="dml_atte.html" />
-    <link rel="prev" title="Real World Examples" href="../examples.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   </head>
@@ -156,7 +154,7 @@
 </li>
 
 
-<li class="nav-item current active">
+<li class="nav-item ">
   <a class="nav-link nav-internal" href="../examples.html">
     Real World Examples
   </a>
@@ -261,7 +259,9 @@ document.write(`
       
       
       
-      <div class="bd-sidebar-primary bd-sidebar">
+        
+      
+      <div class="bd-sidebar-primary bd-sidebar hide-on-wide">
         
 
   
@@ -283,7 +283,7 @@ document.write(`
 </li>
 
 
-<li class="nav-item current active">
+<li class="nav-item ">
   <a class="nav-link nav-internal" href="../examples.html">
     Real World Examples
   </a>
@@ -345,21 +345,6 @@ document.write(`
     
   </div>
   
-    <div class="sidebar-primary-items__start sidebar-primary__section">
-        <div class="sidebar-primary-item">
-<nav class="bd-docs-nav bd-links"
-     aria-label="Section Navigation">
-  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
-  <div class="bd-toc-item navbar-nav"><p aria-level="2" class="caption" role="heading"><span class="caption-text">Basic synthetic examples</span></p>
-<ul class="current nav bd-sidenav">
-<li class="toctree-l1 current active"><a class="current reference internal" href="#">DML ATE Example</a></li>
-<li class="toctree-l1"><a class="reference internal" href="dml_atte.html">DML ATT Example</a></li>
-
-</ul>
-</div>
-</nav></div>
-    </div>
-  
   
   <div class="sidebar-primary-items__end sidebar-primary__section">
   </div>
@@ -392,10 +377,7 @@ document.write(`
         <i class="fa-solid fa-home"></i>
       </a>
     </li>
-    
-    <li class="breadcrumb-item"><a href="../examples.html" class="nav-link">Real World Examples</a></li>
-    
-    <li class="breadcrumb-item active" aria-current="page">DML ATE Example</li>
+    <li class="breadcrumb-item active" aria-current="page">Impact of...</li>
   </ul>
 </nav>
 </div>
@@ -412,187 +394,76 @@ document.write(`
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <section class="tex2jax_ignore mathjax_ignore" id="dml-ate-example">
-<h1>DML ATE Example<a class="headerlink" href="#dml-ate-example" title="Link to this heading">#</a></h1>
-<p>This notebook covers scenario:</p>
-<div class="pst-scrollable-table-container"><table class="table">
-<thead>
-<tr class="row-odd"><th class="head"><p>Is RCT</p></th>
-<th class="head"><p>Treatment</p></th>
-<th class="head"><p>Outcome</p></th>
-<th class="head"><p>EDA</p></th>
-<th class="head"><p>Estimands</p></th>
-<th class="head"><p>Refutation</p></th>
-</tr>
-</thead>
-<tbody>
-<tr class="row-even"><td><p>Observational</p></td>
-<td><p>Binary</p></td>
-<td><p>Continuous</p></td>
-<td><p>Yes</p></td>
-<td><p>ATE</p></td>
-<td><p>Yes</p></td>
-</tr>
-</tbody>
-</table>
-</div>
-<p>We will estimate Average Treatment Effect (ATE) of binary treatment on continuous outcome. It shows explonatary data analysis and refutation tests</p>
-<section id="generate-data">
-<h2>Generate data<a class="headerlink" href="#generate-data" title="Link to this heading">#</a></h2>
-<p>Let’s generate data of how feature (Treatment) impact on ARPU (Outcome) with linear effect (theta) = 1.8</p>
+  <section class="tex2jax_ignore mathjax_ignore" id="impact-of-401-k-on-financial-assets">
+<h1>Impact of 401(k) on Financial Assets<a class="headerlink" href="#impact-of-401-k-on-financial-assets" title="Link to this heading">#</a></h1>
+<section id="data-explanation">
+<h2>Data explanation<a class="headerlink" href="#data-explanation" title="Link to this heading">#</a></h2>
+<p>1991 Survey of Income and Program Participation</p>
+<ul class="simple">
+<li><p><strong>net_tfa</strong> — <em>Net Total Financial Assets</em>.
+Calculated as the sum of all liquid and interest-earning assets (IRA balances, 401(k) balances, checking accounts, U.S. savings bonds, other interest‐earning accounts, stocks, mutual funds, etc.) <strong>minus</strong> non‐mortgage debts.</p></li>
+<li><p><strong>e401</strong> — <em>401(k) Eligibility Indicator</em>.
+Equals 1 if the individual’s employer offers a 401(k) plan; otherwise 0.</p></li>
+<li><p><strong>p401</strong> — <em>401(k) Participation Indicator</em>.
+Equals 1 if the individual participate in 401(k) plan; otherwise 0.</p></li>
+<li><p><strong>age</strong> — <em>Age</em>.
+Age of the individual in years.</p></li>
+<li><p><strong>inc</strong> — <em>Annual Income</em>.
+Annual income of the individual, measured in U.S. dollars for the year 1990.</p></li>
+<li><p><strong>educ</strong> — <em>Years of Education</em>.
+Number of completed years of formal education.</p></li>
+<li><p><strong>fsize</strong> — <em>Family Size</em>.
+Total number of persons living in the household.</p></li>
+<li><p><strong>marr</strong> — <em>Marital Status</em>.
+Equals 1 if the individual is married; otherwise 0.</p></li>
+<li><p><strong>twoearn</strong> — <em>Two-Earner Household</em>.
+Equals 1 if there are two wage earners in the household; otherwise 0.</p></li>
+<li><p><strong>db</strong> — <em>Defined-Benefit Pension Plan</em>.
+Equals 1 if the individual is covered by a defined-benefit pension plan; otherwise 0.</p></li>
+<li><p><strong>pira</strong> — <em>IRA Participation</em>.
+Equals 1 if the individual contributes to an Individual Retirement Account (IRA); otherwise 0.</p></li>
+<li><p><strong>hown</strong> — <em>Home Ownership</em>.
+Equals 1 if the household owns its home; 0 if renting.</p></li>
+</ul>
+<p>We download it with fetch_401K function from doubleML.datasets</p>
+<p>This dataset has a problem. Cofounders were measured in the same year as treatment and outcome,
+like they are demographic factors that do not change over time. So inference might still be biased.</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython2 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">causalis.data</span><span class="w"> </span><span class="kn">import</span> <span class="n">CausalDatasetGenerator</span><span class="p">,</span> <span class="n">CausalData</span>
+<div class="highlight-ipython2 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">doubleml.datasets</span><span class="w"> </span><span class="kn">import</span> <span class="n">fetch_401K</span>
+<span class="n">df</span> <span class="o">=</span> <span class="n">fetch_401K</span><span class="p">(</span><span class="n">return_type</span><span class="o">=</span><span class="s1">&#39;DataFrame&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython2 notranslate"><div class="highlight"><pre><span></span><span class="c1"># don&#39;t know what they mean</span>
+<span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;tw&#39;</span><span class="p">,</span> <span class="s1">&#39;nifa&#39;</span><span class="p">])</span>
+<span class="c1"># eligibility for 401k, drop because it&#39;s an instrument</span>
+<span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;e401&#39;</span><span class="p">])</span>
 
-<span class="c1"># Reproducibility</span>
-<span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="mi">42</span><span class="p">)</span>
-
-<span class="n">confounder_specs</span> <span class="o">=</span> <span class="p">[</span>
-    <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;tenure_months&quot;</span><span class="p">,</span> <span class="s2">&quot;dist&quot;</span><span class="p">:</span> <span class="s2">&quot;normal&quot;</span><span class="p">,</span> <span class="s2">&quot;mu&quot;</span><span class="p">:</span> <span class="mi">24</span><span class="p">,</span> <span class="s2">&quot;sd&quot;</span><span class="p">:</span> <span class="mi">12</span><span class="p">},</span>
-    <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;avg_sessions_week&quot;</span><span class="p">,</span> <span class="s2">&quot;dist&quot;</span><span class="p">:</span> <span class="s2">&quot;normal&quot;</span><span class="p">,</span> <span class="s2">&quot;mu&quot;</span><span class="p">:</span> <span class="mi">5</span><span class="p">,</span> <span class="s2">&quot;sd&quot;</span><span class="p">:</span> <span class="mi">2</span><span class="p">},</span>
-    <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;spend_last_month&quot;</span><span class="p">,</span> <span class="s2">&quot;dist&quot;</span><span class="p">:</span> <span class="s2">&quot;uniform&quot;</span><span class="p">,</span> <span class="s2">&quot;a&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;b&quot;</span><span class="p">:</span> <span class="mi">200</span><span class="p">},</span>
-    <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;premium_user&quot;</span><span class="p">,</span> <span class="s2">&quot;dist&quot;</span><span class="p">:</span> <span class="s2">&quot;bernoulli&quot;</span><span class="p">,</span> <span class="s2">&quot;p&quot;</span><span class="p">:</span> <span class="mf">0.25</span><span class="p">},</span>
-    <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;urban_resident&quot;</span><span class="p">,</span> <span class="s2">&quot;dist&quot;</span><span class="p">:</span> <span class="s2">&quot;bernoulli&quot;</span><span class="p">,</span> <span class="s2">&quot;p&quot;</span><span class="p">:</span> <span class="mf">0.60</span><span class="p">},</span>
-<span class="p">]</span>
-
-<span class="c1"># Causal effect and noise</span>
-<span class="n">theta</span> <span class="o">=</span> <span class="mf">1.8</span>  <span class="c1"># ATE: +1.8 ARPU units if new_feature = 1</span>
-<span class="n">sigma_y</span> <span class="o">=</span> <span class="mf">3.5</span>  <span class="c1"># ARPU noise std</span>
-<span class="n">target_d_rate</span> <span class="o">=</span> <span class="mf">0.2</span>  <span class="c1"># ~20% treated</span>
-
-<span class="c1"># Effects of confounders on ARPU (baseline, additive)</span>
-<span class="c1"># Order: tenure_months, avg_sessions_week, spend_last_month, premium_user, urban_resident</span>
-<span class="n">beta_y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span>
-    <span class="mf">0.05</span><span class="p">,</span>  <span class="c1"># tenure_months: small positive effect</span>
-    <span class="mf">0.40</span><span class="p">,</span>  <span class="c1"># avg_sessions_week: strong positive effect</span>
-    <span class="mf">0.02</span><span class="p">,</span>  <span class="c1"># spend_last_month: recent spend correlates with ARPU</span>
-    <span class="mf">2.00</span><span class="p">,</span>  <span class="c1"># premium_user: premium users have higher ARPU</span>
-    <span class="mf">1.00</span><span class="p">,</span>  <span class="c1"># urban_resident: urban users slightly higher ARPU</span>
-<span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
-
-<span class="c1"># Effects of confounders on treatment assignment (log-odds scale)</span>
-<span class="n">beta_d</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span>
-    <span class="mf">0.015</span><span class="p">,</span>  <span class="c1"># tenure_months</span>
-    <span class="mf">0.10</span><span class="p">,</span>  <span class="c1"># avg_sessions_week</span>
-    <span class="mf">0.002</span><span class="p">,</span>  <span class="c1"># spend_last_month</span>
-    <span class="mf">0.75</span><span class="p">,</span>  <span class="c1"># premium_user</span>
-    <span class="mf">0.30</span><span class="p">,</span>  <span class="c1"># urban_resident: more likely to get the feature</span>
-<span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
-
-<span class="n">gen</span> <span class="o">=</span> <span class="n">CausalDatasetGenerator</span><span class="p">(</span>
-    <span class="n">theta</span><span class="o">=</span><span class="n">theta</span><span class="p">,</span>
-    <span class="n">outcome_type</span><span class="o">=</span><span class="s2">&quot;continuous&quot;</span><span class="p">,</span>
-    <span class="n">sigma_y</span><span class="o">=</span><span class="n">sigma_y</span><span class="p">,</span>
-    <span class="n">target_d_rate</span><span class="o">=</span><span class="n">target_d_rate</span><span class="p">,</span>
-    <span class="n">seed</span><span class="o">=</span><span class="mi">42</span><span class="p">,</span>
-    <span class="n">confounder_specs</span><span class="o">=</span><span class="n">confounder_specs</span><span class="p">,</span>
-    <span class="n">beta_y</span><span class="o">=</span><span class="n">beta_y</span><span class="p">,</span>
-    <span class="n">beta_d</span><span class="o">=</span><span class="n">beta_d</span><span class="p">,</span>
-<span class="p">)</span>
-
-
-<span class="c1"># Create dataset</span>
-<span class="n">causal_data</span> <span class="o">=</span> <span class="n">gen</span><span class="o">.</span><span class="n">to_causal_data</span><span class="p">(</span>
-    <span class="n">n</span><span class="o">=</span><span class="mi">10_000</span><span class="p">,</span>
-    <span class="n">confounders</span> <span class="o">=</span> <span class="p">[</span>
-    <span class="s2">&quot;tenure_months&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;avg_sessions_week&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;spend_last_month&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;premium_user&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;urban_resident&quot;</span><span class="p">,</span>
-<span class="p">]</span>
-<span class="p">)</span>
-
-<span class="c1"># Show first few rows</span>
-<span class="n">causal_data</span><span class="o">.</span><span class="n">df</span><span class="o">.</span><span class="n">head</span><span class="p">()</span>
+<span class="n">df</span><span class="o">.</span><span class="n">columns</span>
 </pre></div>
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output text_html"><div>
-<style scoped>
-    .dataframe tbody tr th:only-of-type {
-        vertical-align: middle;
-    }
-
-    .dataframe tbody tr th {
-        vertical-align: top;
-    }
-
-    .dataframe thead th {
-        text-align: right;
-    }
-</style>
-<table border="1" class="dataframe">
-  <thead>
-    <tr style="text-align: right;">
-      <th></th>
-      <th>y</th>
-      <th>d</th>
-      <th>tenure_months</th>
-      <th>avg_sessions_week</th>
-      <th>spend_last_month</th>
-      <th>premium_user</th>
-      <th>urban_resident</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>0</th>
-      <td>4.127714</td>
-      <td>0.0</td>
-      <td>27.656605</td>
-      <td>5.352554</td>
-      <td>72.552568</td>
-      <td>1.0</td>
-      <td>0.0</td>
-    </tr>
-    <tr>
-      <th>1</th>
-      <td>11.122008</td>
-      <td>1.0</td>
-      <td>11.520191</td>
-      <td>6.798247</td>
-      <td>188.481287</td>
-      <td>1.0</td>
-      <td>0.0</td>
-    </tr>
-    <tr>
-      <th>2</th>
-      <td>10.580393</td>
-      <td>1.0</td>
-      <td>33.005414</td>
-      <td>2.055459</td>
-      <td>51.040440</td>
-      <td>0.0</td>
-      <td>1.0</td>
-    </tr>
-    <tr>
-      <th>3</th>
-      <td>6.982844</td>
-      <td>1.0</td>
-      <td>35.286777</td>
-      <td>4.429404</td>
-      <td>166.992239</td>
-      <td>0.0</td>
-      <td>1.0</td>
-    </tr>
-    <tr>
-      <th>4</th>
-      <td>10.899381</td>
-      <td>0.0</td>
-      <td>0.587578</td>
-      <td>6.658307</td>
-      <td>179.371126</td>
-      <td>0.0</td>
-      <td>0.0</td>
-    </tr>
-  </tbody>
-</table>
-</div></div></div>
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Index([&#39;net_tfa&#39;, &#39;age&#39;, &#39;inc&#39;, &#39;fsize&#39;, &#39;educ&#39;, &#39;db&#39;, &#39;marr&#39;, &#39;twoearn&#39;,
+       &#39;p401&#39;, &#39;pira&#39;, &#39;hown&#39;],
+      dtype=&#39;object&#39;)
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython2 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">causalis.data</span><span class="w"> </span><span class="kn">import</span> <span class="n">CausalData</span>
+<span class="n">causal_data</span> <span class="o">=</span> <span class="n">CausalData</span><span class="p">(</span><span class="n">df</span><span class="o">=</span><span class="n">df</span><span class="p">,</span> <span class="n">treatment</span><span class="o">=</span><span class="s1">&#39;p401&#39;</span><span class="p">,</span>
+                         <span class="n">outcome</span><span class="o">=</span><span class="s1">&#39;net_tfa&#39;</span><span class="p">,</span>
+                         <span class="n">confounders</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;age&#39;</span><span class="p">,</span> <span class="s1">&#39;inc&#39;</span><span class="p">,</span> <span class="s1">&#39;fsize&#39;</span><span class="p">,</span> <span class="s1">&#39;educ&#39;</span><span class="p">,</span> <span class="s1">&#39;db&#39;</span><span class="p">,</span> <span class="s1">&#39;marr&#39;</span><span class="p">,</span> <span class="s1">&#39;twoearn&#39;</span><span class="p">,</span> <span class="s1">&#39;pira&#39;</span><span class="p">,</span> <span class="s1">&#39;hown&#39;</span><span class="p">])</span>
+</pre></div>
+</div>
+</div>
 </div>
 </section>
 <section id="eda">
@@ -608,14 +479,11 @@ document.write(`
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>{&#39;n_rows&#39;: 10000, &#39;n_columns&#39;: 7}
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>{&#39;n_rows&#39;: 9915, &#39;n_columns&#39;: 11}
 </pre></div>
 </div>
 </div>
 </div>
-<section id="general-dataset-information">
-<h3>General dataset information<a class="headerlink" href="#general-dataset-information" title="Link to this heading">#</a></h3>
-<p>Let’s see how outcome differ between clients who recieved the feature and didn’t</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython2 notranslate"><div class="highlight"><pre><span></span><span class="c1"># 1) Outcome statistics by treatment</span>
@@ -669,35 +537,37 @@ document.write(`
   </thead>
   <tbody>
     <tr>
-      <th>0.0</th>
-      <td>8030</td>
-      <td>6.137433</td>
-      <td>3.933863</td>
-      <td>-9.866447</td>
-      <td>1.118291</td>
-      <td>3.517427</td>
-      <td>6.157583</td>
-      <td>8.847907</td>
-      <td>11.114776</td>
-      <td>20.770359</td>
+      <th>0</th>
+      <td>7321</td>
+      <td>10890.477539</td>
+      <td>55256.829173</td>
+      <td>-502302.0</td>
+      <td>-5427.0</td>
+      <td>-1184.0</td>
+      <td>200.0</td>
+      <td>7399.0</td>
+      <td>33500.0</td>
+      <td>1462115.0</td>
     </tr>
     <tr>
-      <th>1.0</th>
-      <td>1970</td>
-      <td>8.608973</td>
-      <td>3.942856</td>
-      <td>-3.821492</td>
-      <td>3.666892</td>
-      <td>5.986613</td>
-      <td>8.560912</td>
-      <td>11.247429</td>
-      <td>13.552612</td>
-      <td>21.377687</td>
+      <th>1</th>
+      <td>2594</td>
+      <td>38262.058594</td>
+      <td>79087.535303</td>
+      <td>-283356.0</td>
+      <td>-1300.0</td>
+      <td>3000.0</td>
+      <td>15249.0</td>
+      <td>45985.5</td>
+      <td>98887.4</td>
+      <td>1536798.0</td>
     </tr>
   </tbody>
 </table>
 </div></div></div>
 </div>
+<p>Participants’ average net worth is ≈28k higher, but this gap cannot be causally attributed
+solely to participation. The classes are imbalanced—only 26% are treated.</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython2 notranslate"><div class="highlight"><pre><span></span><span class="n">eda</span><span class="o">.</span><span class="n">outcome_hist</span><span class="p">()</span>
@@ -705,7 +575,7 @@ document.write(`
 </div>
 </div>
 <div class="cell_output docutils container">
-<img alt="../_images/b10d1480fed6e415f5202dc4c8915143deb10171565c9ccfdd1e5e4b9e03f08c.png" src="../_images/b10d1480fed6e415f5202dc4c8915143deb10171565c9ccfdd1e5e4b9e03f08c.png" />
+<img alt="../_images/70ddb2baa40dfd121a41763d5d28697dcb6156b6692f581e1690279f6ac7795e.png" src="../_images/70ddb2baa40dfd121a41763d5d28697dcb6156b6692f581e1690279f6ac7795e.png" />
 </div>
 </div>
 <div class="cell docutils container">
@@ -715,13 +585,10 @@ document.write(`
 </div>
 </div>
 <div class="cell_output docutils container">
-<img alt="../_images/dd32508273fdcc9c21d5df9e7d0a76611e36c894981077d02b1344677e90c6a4.png" src="../_images/dd32508273fdcc9c21d5df9e7d0a76611e36c894981077d02b1344677e90c6a4.png" />
+<img alt="../_images/6e11c3e55b8e19db88cf0570f39b3f580751a35e4390b562d785a8f81d5481f9.png" src="../_images/6e11c3e55b8e19db88cf0570f39b3f580751a35e4390b562d785a8f81d5481f9.png" />
 </div>
 </div>
-</section>
-<section id="propensity">
-<h3>Propensity<a class="headerlink" href="#propensity" title="Link to this heading">#</a></h3>
-<p>Now let’s examine how propensity score differ treatments</p>
+<p>Our outcome has large right tail</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython2 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Shows means of confounders for control/treated groups, absolute differences, and SMD values</span>
@@ -764,44 +631,74 @@ document.write(`
   </thead>
   <tbody>
     <tr>
-      <th>premium_user</th>
-      <td>0.218057</td>
-      <td>0.382234</td>
-      <td>0.164176</td>
-      <td>0.364037</td>
+      <th>inc</th>
+      <td>32889.802486</td>
+      <td>49366.975713</td>
+      <td>16477.173227</td>
+      <td>0.662197</td>
     </tr>
     <tr>
-      <th>tenure_months</th>
-      <td>23.405355</td>
-      <td>25.799499</td>
-      <td>2.394143</td>
-      <td>0.199024</td>
+      <th>hown</th>
+      <td>0.589127</td>
+      <td>0.765227</td>
+      <td>0.176100</td>
+      <td>0.383456</td>
     </tr>
     <tr>
-      <th>avg_sessions_week</th>
-      <td>4.976354</td>
-      <td>5.302999</td>
-      <td>0.326645</td>
-      <td>0.163509</td>
+      <th>pira</th>
+      <td>0.200246</td>
+      <td>0.360447</td>
+      <td>0.160201</td>
+      <td>0.362421</td>
     </tr>
     <tr>
-      <th>urban_resident</th>
-      <td>0.587547</td>
-      <td>0.655330</td>
-      <td>0.067783</td>
-      <td>0.140072</td>
+      <th>db</th>
+      <td>0.228248</td>
+      <td>0.391673</td>
+      <td>0.163426</td>
+      <td>0.358968</td>
     </tr>
     <tr>
-      <th>spend_last_month</th>
-      <td>99.288113</td>
-      <td>104.941250</td>
-      <td>5.653137</td>
-      <td>0.097172</td>
+      <th>twoearn</th>
+      <td>0.337659</td>
+      <td>0.502699</td>
+      <td>0.165040</td>
+      <td>0.339096</td>
+    </tr>
+    <tr>
+      <th>educ</th>
+      <td>12.991121</td>
+      <td>13.813416</td>
+      <td>0.822294</td>
+      <td>0.299061</td>
+    </tr>
+    <tr>
+      <th>marr</th>
+      <td>0.574512</td>
+      <td>0.690439</td>
+      <td>0.115928</td>
+      <td>0.242175</td>
+    </tr>
+    <tr>
+      <th>age</th>
+      <td>40.900970</td>
+      <td>41.509638</td>
+      <td>0.608668</td>
+      <td>0.060108</td>
+    </tr>
+    <tr>
+      <th>fsize</th>
+      <td>2.848108</td>
+      <td>2.915960</td>
+      <td>0.067852</td>
+      <td>0.044731</td>
     </tr>
   </tbody>
 </table>
 </div></div></div>
 </div>
+<p>Treatment and control are unbalanced on all confounders except age and fsize; nonetheless,
+we retain age and fsize in the model to gain efficiency</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython2 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Propensity model fit</span>
@@ -814,7 +711,7 @@ document.write(`
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>ROC AUC from PropensityModel: 0.5926
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>ROC AUC from PropensityModel: 0.7145
 </pre></div>
 </div>
 </div>
@@ -828,7 +725,7 @@ document.write(`
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Positivity check from PropensityModel: {&#39;bounds&#39;: (0.05, 0.95), &#39;share_below&#39;: 0.0121, &#39;share_above&#39;: 0.0, &#39;flag&#39;: False}
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Positivity check from PropensityModel: {&#39;bounds&#39;: (0.05, 0.95), &#39;share_below&#39;: 0.08371154815935451, &#39;share_above&#39;: 0.0, &#39;flag&#39;: True}
 </pre></div>
 </div>
 </div>
@@ -870,43 +767,75 @@ document.write(`
   <tbody>
     <tr>
       <th>0</th>
-      <td>num__spend_last_month</td>
-      <td>0.000299</td>
-      <td>0.166002</td>
-      <td>0.027438</td>
-      <td>0.000047</td>
+      <td>num__inc</td>
+      <td>0.006932</td>
+      <td>0.583319</td>
+      <td>0.126203</td>
+      <td>0.001334</td>
     </tr>
     <tr>
       <th>1</th>
-      <td>num__premium_user</td>
-      <td>-0.000269</td>
-      <td>0.306301</td>
-      <td>0.052687</td>
-      <td>-0.000042</td>
+      <td>num__fsize</td>
+      <td>0.005461</td>
+      <td>0.080593</td>
+      <td>0.015778</td>
+      <td>0.001050</td>
     </tr>
     <tr>
       <th>2</th>
-      <td>num__urban_resident</td>
-      <td>0.000245</td>
-      <td>0.158900</td>
-      <td>0.026210</td>
-      <td>0.000039</td>
+      <td>num__age</td>
+      <td>-0.004583</td>
+      <td>0.154312</td>
+      <td>0.030720</td>
+      <td>-0.000879</td>
     </tr>
     <tr>
       <th>3</th>
-      <td>num__avg_sessions_week</td>
-      <td>-0.000141</td>
-      <td>0.174082</td>
-      <td>0.028841</td>
-      <td>-0.000022</td>
+      <td>num__marr</td>
+      <td>-0.004524</td>
+      <td>0.030119</td>
+      <td>0.005827</td>
+      <td>-0.000868</td>
     </tr>
     <tr>
       <th>4</th>
-      <td>num__tenure_months</td>
-      <td>-0.000135</td>
-      <td>0.194878</td>
-      <td>0.032482</td>
-      <td>-0.000021</td>
+      <td>num__educ</td>
+      <td>-0.003760</td>
+      <td>0.121098</td>
+      <td>0.023929</td>
+      <td>-0.000722</td>
+    </tr>
+    <tr>
+      <th>5</th>
+      <td>num__hown</td>
+      <td>0.001024</td>
+      <td>0.187255</td>
+      <td>0.037551</td>
+      <td>0.000197</td>
+    </tr>
+    <tr>
+      <th>6</th>
+      <td>num__db</td>
+      <td>-0.000816</td>
+      <td>0.272325</td>
+      <td>0.055610</td>
+      <td>-0.000157</td>
+    </tr>
+    <tr>
+      <th>7</th>
+      <td>num__twoearn</td>
+      <td>0.000228</td>
+      <td>0.043159</td>
+      <td>0.008376</td>
+      <td>0.000044</td>
+    </tr>
+    <tr>
+      <th>8</th>
+      <td>num__pira</td>
+      <td>0.000038</td>
+      <td>0.129544</td>
+      <td>0.025647</td>
+      <td>0.000007</td>
     </tr>
   </tbody>
 </table>
@@ -920,13 +849,9 @@ document.write(`
 </div>
 </div>
 <div class="cell_output docutils container">
-<img alt="../_images/c2be5b2795a3ca9358911c50a5d555e0a53f44f2832930086341d58739017acd.png" src="../_images/c2be5b2795a3ca9358911c50a5d555e0a53f44f2832930086341d58739017acd.png" />
+<img alt="../_images/cee310cd1c51350eb01d14ed797326d7e05b78da91a1b3a61fe44216c39090fb.png" src="../_images/cee310cd1c51350eb01d14ed797326d7e05b78da91a1b3a61fe44216c39090fb.png" />
 </div>
 </div>
-</section>
-<section id="outcome-regression">
-<h3>Outcome regression<a class="headerlink" href="#outcome-regression" title="Link to this heading">#</a></h3>
-<p>Let’s analyze how confounders predict outcome</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython2 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Outcome model fit</span>
@@ -938,7 +863,7 @@ document.write(`
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>{&#39;rmse&#39;: 3.656989617205263, &#39;mae&#39;: 2.90424413216463}
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>{&#39;rmse&#39;: 60189.944724760215, &#39;mae&#39;: 20331.55384475013}
 </pre></div>
 </div>
 </div>
@@ -977,38 +902,56 @@ document.write(`
   <tbody>
     <tr>
       <th>0</th>
-      <td>avg_sessions_week</td>
-      <td>-0.000502</td>
+      <td>inc</td>
+      <td>731.774932</td>
     </tr>
     <tr>
       <th>1</th>
-      <td>spend_last_month</td>
-      <td>0.000350</td>
+      <td>pira</td>
+      <td>-683.388458</td>
     </tr>
     <tr>
       <th>2</th>
-      <td>urban_resident</td>
-      <td>0.000245</td>
+      <td>age</td>
+      <td>370.619026</td>
     </tr>
     <tr>
       <th>3</th>
-      <td>premium_user</td>
-      <td>-0.000055</td>
+      <td>marr</td>
+      <td>-189.688960</td>
     </tr>
     <tr>
       <th>4</th>
-      <td>tenure_months</td>
-      <td>-0.000038</td>
+      <td>educ</td>
+      <td>-133.732826</td>
+    </tr>
+    <tr>
+      <th>5</th>
+      <td>twoearn</td>
+      <td>-106.324198</td>
+    </tr>
+    <tr>
+      <th>6</th>
+      <td>fsize</td>
+      <td>68.288189</td>
+    </tr>
+    <tr>
+      <th>7</th>
+      <td>db</td>
+      <td>-32.271609</td>
+    </tr>
+    <tr>
+      <th>8</th>
+      <td>hown</td>
+      <td>-25.276096</td>
     </tr>
   </tbody>
 </table>
 </div></div></div>
 </div>
 </section>
-</section>
 <section id="inference">
 <h2>Inference<a class="headerlink" href="#inference" title="Link to this heading">#</a></h2>
-<p>Now time to estimate ATE with Double Machine Learning</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython2 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">causalis.inference.ate</span><span class="w"> </span><span class="kn">import</span> <span class="n">dml_ate</span>
@@ -1028,19 +971,19 @@ document.write(`
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>1.766253520771568
-0.0
-(1.5329683790491713, 1.9995386624939646)
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>11250.6922050985
+4.0745185003743245e-13
+(8210.458854591107, 14290.925555605892)
 </pre></div>
 </div>
 </div>
 </div>
-<p>True theta in our data generating proccess was 1.8</p>
+<p>Average Treatment Effect is significant and equals 11385 dollars in CI bounds (8674, 14096)</p>
 </section>
 <section id="refutation">
 <h2>Refutation<a class="headerlink" href="#refutation" title="Link to this heading">#</a></h2>
-<section id="overlap">
-<h3>Overlap<a class="headerlink" href="#overlap" title="Link to this heading">#</a></h3>
+<section id="overlap-validation">
+<h3>Overlap validation<a class="headerlink" href="#overlap-validation" title="Link to this heading">#</a></h3>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython2 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w">  </span><span class="nn">causalis.refutation</span><span class="w"> </span><span class="kn">import</span> <span class="o">*</span>
@@ -1089,7 +1032,7 @@ document.write(`
     <tr>
       <th>2</th>
       <td>edge_0.02_below</td>
-      <td>0.001000</td>
+      <td>0.026828</td>
       <td>GREEN</td>
     </tr>
     <tr>
@@ -1101,76 +1044,77 @@ document.write(`
     <tr>
       <th>4</th>
       <td>KS</td>
-      <td>0.139672</td>
-      <td>GREEN</td>
+      <td>0.307200</td>
+      <td>YELLOW</td>
     </tr>
     <tr>
       <th>5</th>
       <td>AUC</td>
-      <td>0.592382</td>
+      <td>0.706812</td>
       <td>GREEN</td>
     </tr>
     <tr>
       <th>6</th>
       <td>ESS_treated_ratio</td>
-      <td>0.742224</td>
+      <td>0.365399</td>
       <td>GREEN</td>
     </tr>
     <tr>
       <th>7</th>
       <td>ESS_control_ratio</td>
-      <td>0.970455</td>
+      <td>0.893936</td>
       <td>GREEN</td>
     </tr>
     <tr>
       <th>8</th>
       <td>tails_w1_q99/med</td>
-      <td>6.278831</td>
-      <td>GREEN</td>
+      <td>33.171484</td>
+      <td>YELLOW</td>
     </tr>
     <tr>
       <th>9</th>
       <td>tails_w0_q99/med</td>
-      <td>2.844508</td>
+      <td>5.250310</td>
       <td>GREEN</td>
     </tr>
     <tr>
       <th>10</th>
       <td>ATT_identity_relerr</td>
-      <td>0.037683</td>
-      <td>GREEN</td>
+      <td>0.069338</td>
+      <td>YELLOW</td>
     </tr>
     <tr>
       <th>11</th>
       <td>clip_m_total</td>
-      <td>0.000100</td>
+      <td>0.009783</td>
       <td>GREEN</td>
     </tr>
     <tr>
       <th>12</th>
       <td>calib_ECE</td>
-      <td>0.036215</td>
+      <td>0.026384</td>
       <td>GREEN</td>
     </tr>
     <tr>
       <th>13</th>
       <td>calib_slope</td>
-      <td>0.520588</td>
-      <td>RED</td>
+      <td>0.765845</td>
+      <td>YELLOW</td>
     </tr>
     <tr>
       <th>14</th>
       <td>calib_intercept</td>
-      <td>-0.637457</td>
-      <td>RED</td>
+      <td>-0.197527</td>
+      <td>GREEN</td>
     </tr>
   </tbody>
 </table>
 </div></div></div>
 </div>
+<p>We find no evidence of a violation of the overlap (positivity) assumption.</p>
 </section>
-<section id="score">
-<h3>Score<a class="headerlink" href="#score" title="Link to this heading">#</a></h3>
+<section id="score-validation">
+<h3>Score validation<a class="headerlink" href="#score-validation" title="Link to this heading">#</a></h3>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython2 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">causalis.refutation.score.score_validation</span><span class="w"> </span><span class="kn">import</span> <span class="n">run_score_diagnostics</span>
@@ -1207,55 +1151,56 @@ document.write(`
     <tr>
       <th>0</th>
       <td>se_plugin</td>
-      <td>1.190252e-01</td>
+      <td>1551.167968</td>
       <td>NA</td>
     </tr>
     <tr>
       <th>1</th>
       <td>psi_p99_over_med</td>
-      <td>1.355647e+01</td>
-      <td>YELLOW</td>
+      <td>36.192430</td>
+      <td>RED</td>
     </tr>
     <tr>
       <th>2</th>
       <td>psi_kurtosis</td>
-      <td>6.047594e+01</td>
+      <td>263.310341</td>
       <td>RED</td>
     </tr>
     <tr>
       <th>3</th>
       <td>max_|t|_g1</td>
-      <td>5.463687e+00</td>
-      <td>RED</td>
+      <td>3.951050</td>
+      <td>YELLOW</td>
     </tr>
     <tr>
       <th>4</th>
       <td>max_|t|_g0</td>
-      <td>1.384511e+00</td>
-      <td>GREEN</td>
+      <td>2.472043</td>
+      <td>YELLOW</td>
     </tr>
     <tr>
       <th>5</th>
       <td>max_|t|_m</td>
-      <td>1.388284e+00</td>
+      <td>1.875749</td>
       <td>GREEN</td>
     </tr>
     <tr>
       <th>6</th>
       <td>oos_tstat_fold</td>
-      <td>1.241609e-15</td>
+      <td>0.000028</td>
       <td>GREEN</td>
     </tr>
     <tr>
       <th>7</th>
       <td>oos_tstat_strict</td>
-      <td>1.241615e-15</td>
+      <td>0.000028</td>
       <td>GREEN</td>
     </tr>
   </tbody>
 </table>
 </div></div></div>
 </div>
+<p>We see that psi_p99_over_med and psi_kurtosis are RED. That’s because large tail in outcome. We find no evidence of anomaly score behavior</p>
 </section>
 <section id="sutva">
 <h3>SUTVA<a class="headerlink" href="#sutva" title="Link to this heading">#</a></h3>
@@ -1274,10 +1219,14 @@ document.write(`
 </div>
 </div>
 </div>
-</section>
+<p>1.) Yes<br />
+2.) Yes<br />
+3.) No. We have problems with design<br />
+4.) Yes<br />
+In conclusion cofounders are measured not before treatment. So treatment affected cofounders</p>
 </section>
 <section id="uncofoundedness">
-<h2>Uncofoundedness<a class="headerlink" href="#uncofoundedness" title="Link to this heading">#</a></h2>
+<h3>Uncofoundedness<a class="headerlink" href="#uncofoundedness" title="Link to this heading">#</a></h3>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython2 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">causalis.refutation.unconfoundedness.uncofoundedness_validation</span><span class="w"> </span><span class="kn">import</span> <span class="n">run_unconfoundedness_diagnostics</span>
@@ -1315,7 +1264,7 @@ document.write(`
     <tr>
       <th>0</th>
       <td>balance_max_smd</td>
-      <td>2.195631e-02</td>
+      <td>7.606060e-02</td>
       <td>GREEN</td>
     </tr>
     <tr>
@@ -1327,88 +1276,94 @@ document.write(`
     <tr>
       <th>2</th>
       <td>ess_treated_ratio</td>
-      <td>7.422239e-01</td>
-      <td>YELLOW</td>
+      <td>3.653986e-01</td>
+      <td>RED</td>
     </tr>
     <tr>
       <th>3</th>
       <td>ess_control_ratio</td>
-      <td>9.704552e-01</td>
+      <td>8.939358e-01</td>
       <td>GREEN</td>
     </tr>
     <tr>
       <th>4</th>
       <td>w_tail_ratio_treated</td>
-      <td>1.167923e+13</td>
+      <td>1.218068e+13</td>
       <td>RED</td>
     </tr>
     <tr>
       <th>5</th>
       <td>w_tail_ratio_control</td>
-      <td>1.729690e+00</td>
+      <td>2.482226e+00</td>
       <td>GREEN</td>
     </tr>
     <tr>
       <th>6</th>
       <td>top1_mass_share_treated</td>
-      <td>1.412602e-01</td>
+      <td>2.137807e-01</td>
       <td>GREEN</td>
     </tr>
     <tr>
       <th>7</th>
       <td>top1_mass_share_control</td>
-      <td>2.566909e-02</td>
+      <td>3.937273e-02</td>
       <td>GREEN</td>
     </tr>
     <tr>
       <th>8</th>
       <td>ks_m_treated_vs_control</td>
-      <td>1.396717e-01</td>
-      <td>GREEN</td>
+      <td>3.071998e-01</td>
+      <td>YELLOW</td>
     </tr>
     <tr>
       <th>9</th>
       <td>pct_m_outside_overlap</td>
-      <td>1.000000e-02</td>
+      <td>9.783157e-01</td>
       <td>GREEN</td>
     </tr>
   </tbody>
 </table>
 </div></div></div>
 </div>
+<p>We see w_tail_ratio_treated and ess_treated_ratio are RED. It’s ok. These tests are unstable due to small sample</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython2 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">causalis.refutation.unconfoundedness.uncofoundedness_validation</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">sensitivity_analysis</span><span class="p">,</span> <span class="n">sensitivity_benchmark</span>
 <span class="p">)</span>
 
-<span class="n">sensitivity_analysis</span><span class="p">(</span><span class="n">ate_result</span><span class="p">,</span> <span class="n">cf_y</span><span class="o">=</span><span class="mf">0.01</span><span class="p">,</span> <span class="n">cf_d</span><span class="o">=</span><span class="mf">0.01</span><span class="p">,</span> <span class="n">rho</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">level</span><span class="o">=</span><span class="mf">0.95</span><span class="p">)</span>
+<span class="n">sensitivity_analysis</span><span class="p">(</span><span class="n">ate_result</span><span class="p">,</span> <span class="n">cf_y</span><span class="o">=</span><span class="mf">0.01</span><span class="p">,</span> <span class="n">cf_d</span><span class="o">=</span><span class="mf">0.01</span><span class="p">,</span> <span class="n">rho</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">level</span><span class="o">=</span><span class="mf">0.95</span><span class="p">,</span> <span class="n">use_signed_rr</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>{&#39;theta&#39;: 1.766253520771568,
- &#39;se&#39;: 0.11902521860734187,
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>{&#39;theta&#39;: 11250.6922050985,
+ &#39;se&#39;: 1551.1679676200004,
  &#39;level&#39;: 0.95,
  &#39;z&#39;: 1.959963984540054,
- &#39;sampling_ci&#39;: (1.5329683790491713, 1.9995386624939646),
- &#39;theta_bounds_confounding&#39;: (1.6875916811818483, 1.8449153603612876),
- &#39;bias_aware_ci&#39;: (1.4543065394594517, 2.0782005020836842),
- &#39;max_bias&#39;: 0.07866183958971962,
- &#39;sigma2&#39;: 13.136641553423134,
- &#39;nu2&#39;: 0.43676740621591587,
- &#39;params&#39;: {&#39;cf_y&#39;: 0.01, &#39;cf_d&#39;: 0.01, &#39;rho&#39;: 1.0, &#39;use_signed_rr&#39;: False}}
+ &#39;sampling_ci&#39;: (8210.458854591107, 14290.925555605892),
+ &#39;theta_bounds_confounding&#39;: (10298.960958424657, 12202.423451772342),
+ &#39;bias_aware_ci&#39;: (7258.727607917263, 15242.656802279736),
+ &#39;max_bias&#39;: 951.7312466738426,
+ &#39;sigma2&#39;: 3589568447.751854,
+ &#39;nu2&#39;: 0.37645320639967106,
+ &#39;params&#39;: {&#39;cf_y&#39;: 0.01, &#39;cf_d&#39;: 0.01, &#39;rho&#39;: 1.0, &#39;use_signed_rr&#39;: True}}
 </pre></div>
 </div>
 </div>
 </div>
+<p>Even when we have unobserved cofounder with these parameters our CI bounds &gt; 0</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython2 notranslate"><div class="highlight"><pre><span></span><span class="n">sensitivity_benchmark</span><span class="p">(</span><span class="n">ate_result</span><span class="p">,</span> <span class="n">benchmarking_set</span> <span class="o">=</span><span class="p">[</span><span class="s1">&#39;tenure_months&#39;</span><span class="p">])</span>
+<div class="highlight-ipython2 notranslate"><div class="highlight"><pre><span></span><span class="n">sensitivity_benchmark</span><span class="p">(</span><span class="n">ate_result</span><span class="p">,</span> <span class="n">benchmarking_set</span> <span class="o">=</span><span class="p">[</span><span class="s1">&#39;inc&#39;</span><span class="p">])</span>
 </pre></div>
 </div>
 </div>
 <div class="cell_output docutils container">
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>/Users/ioannmartynov/PycharmProjects/Ckit/causalis/data/causaldata.py:108: UserWarning: Found 112 duplicate rows out of 9915 total rows in the DataFrame. This leaves 9803 unique rows for analysis. Duplicate rows may affect the quality of causal inference results. Consider removing duplicates if they are not intentional.
+  self._check_duplicate_rows(self.df)
+</pre></div>
+</div>
 <div class="output text_html"><div>
 <style scoped>
     .dataframe tbody tr th:only-of-type {
@@ -1437,18 +1392,25 @@ document.write(`
   </thead>
   <tbody>
     <tr>
-      <th>d</th>
-      <td>0.000034</td>
-      <td>3.037675e-07</td>
+      <th>p401</th>
+      <td>0.000041</td>
+      <td>0.000004</td>
       <td>-1.0</td>
-      <td>1.766254</td>
-      <td>1.845679</td>
-      <td>-0.079425</td>
+      <td>11250.692205</td>
+      <td>14355.071728</td>
+      <td>-3104.379523</td>
     </tr>
   </tbody>
 </table>
 </div></div></div>
 </div>
+<p>And even when unobserved cofounder is strong as ‘inc’ - income our estimate has CI bounds &gt; 0</p>
+</section>
+</section>
+<section id="conclution">
+<h2>Conclution<a class="headerlink" href="#conclution" title="Link to this heading">#</a></h2>
+<p>There are problems with design: cofounders are measured not before treatment. So treatment affected cofounders.
+However estimate is robust and in real life participation in 401k is increasing net financial assets. To keep in mind real CI bounds may differ from our estimation</p>
 </section>
 </section>
 
@@ -1462,24 +1424,6 @@ document.write(`
                 <footer class="prev-next-footer d-print-none">
                   
 <div class="prev-next-area">
-    <a class="left-prev"
-       href="../examples.html"
-       title="previous page">
-      <i class="fa-solid fa-angle-left"></i>
-      <div class="prev-next-info">
-        <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">Real World Examples</p>
-      </div>
-    </a>
-    <a class="right-next"
-       href="dml_atte.html"
-       title="next page">
-      <div class="prev-next-info">
-        <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">DML ATT Example</p>
-      </div>
-      <i class="fa-solid fa-angle-right"></i>
-    </a>
 </div>
                 </footer>
               
@@ -1498,21 +1442,17 @@ document.write(`
   </div>
   <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#generate-data">Generate data</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#eda">EDA</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#general-dataset-information">General dataset information</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#propensity">Propensity</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#outcome-regression">Outcome regression</a></li>
-</ul>
-</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#data-explanation">Data explanation</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#eda">EDA</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#inference">Inference</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#refutation">Refutation</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#overlap">Overlap</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#score">Score</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#overlap-validation">Overlap validation</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#score-validation">Score validation</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sutva">SUTVA</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#uncofoundedness">Uncofoundedness</a></li>
 </ul>
 </li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#uncofoundedness">Uncofoundedness</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#conclution">Conclution</a></li>
 </ul>
   </nav></div>
 
