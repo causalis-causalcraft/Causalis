@@ -33,3 +33,13 @@ ATE estimation workflow
 
 ATTE estimation workflow
 ```
+
+```{grid-item-card} 401k
+:img-top: _static/401k.png
+:img-alt: 401k
+:link: examples/401k
+:link-type: doc
+:class-card: sd-shadow-sm sd-rounded-2xl sd-text-center
+
+Let's look at an encyclopedic example: Assessing the Impact of a 401k Retirement Plan on Financial Assets
+```
