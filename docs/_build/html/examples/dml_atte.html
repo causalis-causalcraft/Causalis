@@ -50,8 +50,8 @@
     <link rel="icon" href="../_static/new_logo.svg"/>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="DML ATE Example" href="dml_ate.html" />
-    <link rel="prev" title="Real World Examples" href="../examples.html" />
+    <link rel="next" title="Research" href="../research.html" />
+    <link rel="prev" title="DML ATE Example" href="dml_ate.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   </head>
@@ -350,10 +350,11 @@ document.write(`
 <nav class="bd-docs-nav bd-links"
      aria-label="Section Navigation">
   <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
-  <div class="bd-toc-item navbar-nav"><ul class="current nav bd-sidenav">
+  <div class="bd-toc-item navbar-nav"><p aria-level="2" class="caption" role="heading"><span class="caption-text">Basic synthetic examples</span></p>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="dml_ate.html">DML ATE Example</a></li>
 <li class="toctree-l1 current active"><a class="current reference internal" href="#">DML ATT Example</a></li>
 
-<li class="toctree-l1"><a class="reference internal" href="dml_ate.html">DML ATE Example</a></li>
 </ul>
 </div>
 </nav></div>
@@ -787,8 +788,7 @@ plt.show()
 </div>
 </div>
 <div class="cell_output docutils container">
-<img alt="../_images/4574b58034b22de2bea7feb7ebc3965f32e56862049eb63b1bffef38b55b030b.png" src="../_images/4574b58034b22de2bea7feb7ebc3965f32e56862049eb63b1bffef38b55b030b.png" />
-<img alt="../_images/c9794199bcf77ce2b76d9026d3cac4edbdeafc443552156eee4531ae01ddf6eb.png" src="../_images/c9794199bcf77ce2b76d9026d3cac4edbdeafc443552156eee4531ae01ddf6eb.png" />
+<img alt="../_images/1c2c4de200004d3ba05d0aaec39e8661b31eb3ea6a20d8691d3b3c5f782f80a7.png" src="../_images/1c2c4de200004d3ba05d0aaec39e8661b31eb3ea6a20d8691d3b3c5f782f80a7.png" />
 </div>
 </div>
 </section>
@@ -936,7 +936,6 @@ display(shap_values_df)
       <th>feature</th>
       <th>shap_mean</th>
       <th>shap_mean_abs</th>
-      <th>odds_mult_abs</th>
       <th>exact_pp_change_abs</th>
       <th>exact_pp_change_signed</th>
     </tr>
@@ -947,7 +946,6 @@ display(shap_values_df)
       <td>num__spend_last_month</td>
       <td>-0.000340</td>
       <td>0.568471</td>
-      <td>1.765565</td>
       <td>0.136983</td>
       <td>-0.000077</td>
     </tr>
@@ -956,7 +954,6 @@ display(shap_values_df)
       <td>num__tenure_months</td>
       <td>0.000292</td>
       <td>0.175348</td>
-      <td>1.191661</td>
       <td>0.040684</td>
       <td>0.000066</td>
     </tr>
@@ -965,7 +962,6 @@ display(shap_values_df)
       <td>num__premium_user</td>
       <td>0.000120</td>
       <td>0.349319</td>
-      <td>1.418102</td>
       <td>0.082673</td>
       <td>0.000027</td>
     </tr>
@@ -974,7 +970,6 @@ display(shap_values_df)
       <td>num__urban_resident</td>
       <td>-0.000103</td>
       <td>0.169225</td>
-      <td>1.184386</td>
       <td>0.039233</td>
       <td>-0.000023</td>
     </tr>
@@ -983,7 +978,6 @@ display(shap_values_df)
       <td>num__avg_sessions_week</td>
       <td>0.000031</td>
       <td>0.230236</td>
-      <td>1.258897</td>
       <td>0.053783</td>
       <td>0.000007</td>
     </tr>
@@ -1000,7 +994,7 @@ plt.show()
 </div>
 </div>
 <div class="cell_output docutils container">
-<img alt="../_images/befc1ccc18a72598da854d85e2bfc235e6c00615fa8b4fc01a491c0e86dc98b6.png" src="../_images/befc1ccc18a72598da854d85e2bfc235e6c00615fa8b4fc01a491c0e86dc98b6.png" />
+<img alt="../_images/7dd0ea1f0247576828c9ec23d2c9107d7d15bb49c82dc1f38787f5d54579fd8b.png" src="../_images/7dd0ea1f0247576828c9ec23d2c9107d7d15bb49c82dc1f38787f5d54579fd8b.png" />
 </div>
 </div>
 </section>
@@ -1472,9 +1466,9 @@ sensitivity_analysis(atte_result, cf_y=0.01, cf_d=0.01, rho=1.0, level=0.95)
  &#39;level&#39;: 0.95,
  &#39;z&#39;: 1.959963984540054,
  &#39;sampling_ci&#39;: (1.0561145643875967, 1.5496842458309237),
- &#39;theta_bounds_confounding&#39;: (-0.7349788867797697, 3.3407776969982903),
- &#39;bias_aware_ci&#39;: (-0.981763727501433, 3.587562537719953),
- &#39;max_bias&#39;: 2.03787829188903,
+ &#39;theta_bounds_confounding&#39;: (1.2323591117099104, 1.37343969850861),
+ &#39;bias_aware_ci&#39;: (0.985574270988247, 1.6202245392302732),
+ &#39;max_bias&#39;: 0.07054029339934965,
  &#39;sigma2&#39;: 13.23191609168223,
  &#39;nu2&#39;: 0.31385839388470366,
  &#39;params&#39;: {&#39;cf_y&#39;: 0.01, &#39;cf_d&#39;: 0.01, &#39;rho&#39;: 1.0, &#39;use_signed_rr&#39;: False}}
@@ -1543,20 +1537,20 @@ sensitivity_analysis(atte_result, cf_y=0.01, cf_d=0.01, rho=1.0, level=0.95)
                   
 <div class="prev-next-area">
     <a class="left-prev"
-       href="../examples.html"
+       href="dml_ate.html"
        title="previous page">
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">Real World Examples</p>
+        <p class="prev-next-title">DML ATE Example</p>
       </div>
     </a>
     <a class="right-next"
-       href="dml_ate.html"
+       href="../research.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">DML ATE Example</p>
+        <p class="prev-next-title">Research</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>

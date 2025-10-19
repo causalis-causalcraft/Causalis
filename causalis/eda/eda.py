@@ -253,7 +253,7 @@ class PropensityModel:
                 p0 = float(np.mean(self.propensity_scores))
                 p0 = float(np.clip(p0, 1e-9, 1 - 1e-9))
                 logit_p0 = float(np.log(p0 / (1.0 - p0)))
-                result_df['odds_mult_abs'] = np.exp(result_df['shap_mean_abs'].values)
+                # result_df['odds_mult_abs'] = np.exp(result_df['shap_mean_abs'].values)
                 result_df['exact_pp_change_abs'] = 1.0 / (1.0 + np.exp(-(logit_p0 + result_df['shap_mean_abs'].values))) - p0
                 result_df['exact_pp_change_signed'] = 1.0 / (1.0 + np.exp(-(logit_p0 + result_df['shap_mean'].values))) - p0
                 return result_df
@@ -1514,6 +1514,7 @@ class CausalEDA:
                     facecolor="none" if transparent else "white",
                 )
 
+        plt.close(fig)
         return fig
 
     from typing import Optional, Tuple

@@ -184,7 +184,7 @@ def compute_bias_aware_ci(
         m_alpha = np.asarray(elems["m_alpha"], float)
         rr = np.asarray(elems["riesz_rep"], float)
         nu2, psi_nu2 = _combine_nu2_local(m_alpha, rr, cf_y, cf_d, rho, use_signed_rr=use_signed_rr)
-        max_bias, _ = _compute_sensitivity_bias_unified(sigma2, nu2, psi_sigma2, psi_nu2)
+        max_bias = float(np.sqrt(max(nu2, 0.0)) * se)
 
     theta_lower = float(theta) - float(max_bias)
     theta_upper = float(theta) + float(max_bias)
@@ -666,7 +666,7 @@ def sensitivity_analysis(
         nu2, psi_nu2 = _combine_nu2_local(
             m_alpha, rr, cf_y=cf_y, cf_d=cf_d, rho=rho, use_signed_rr=use_signed_rr
         )
-        max_bias, _ = _compute_sensitivity_bias_unified(sigma2, nu2, psi_sigma2, psi_nu2)
+        max_bias = float(np.sqrt(max(nu2, 0.0)) * se)
 
     theta_lower = float(theta) - float(max_bias)
     theta_upper = float(theta) + float(max_bias)
