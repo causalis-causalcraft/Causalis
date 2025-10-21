@@ -664,31 +664,35 @@ check robustness of it: run some tests on assumptions and answer questions about
 <h1>Overlap<a class="headerlink" href="#overlap" title="Link to this heading">#</a></h1>
 <section id="what-overlap-positivity-means">
 <h2>What “overlap/positivity” means<a class="headerlink" href="#what-overlap-positivity-means" title="Link to this heading">#</a></h2>
-<p><strong>Binary treatment <span class="math notranslate nohighlight">\((T \in \{0,1\})\)</span>:</strong>
-for all confounder values <span class="math notranslate nohighlight">\(x\)</span> in your target population,
-$<span class="math notranslate nohighlight">\(
+<p><strong>Binary treatment <span class="math notranslate nohighlight">\(T \in \{0,1\}\)</span>:</strong>
+for all confounder values <span class="math notranslate nohighlight">\(x\)</span> in your target population,</p>
+<div class="math notranslate nohighlight">
+\[
 0 &lt; e(x) := P(T = 1 \mid X = x) &lt; 1,
-\)</span><span class="math notranslate nohighlight">\(
-often strengthened to **strong positivity**:
-there exists an \)</span>\varepsilon &gt; 0<span class="math notranslate nohighlight">\( such that
-\)</span><span class="math notranslate nohighlight">\(
+\]</div>
+<p>often strengthened to <strong>strong positivity</strong>:
+there exists an <span class="math notranslate nohighlight">\(\varepsilon &gt; 0\)</span> such that</p>
+<div class="math notranslate nohighlight">
+\[
 \varepsilon \le e(x) \le 1 - \varepsilon
 \quad\text{almost surely.}
-\)</span>$</p>
+\]</div>
 <hr class="docutils" />
 <section id="why-it-matters">
 <h3>Why it matters<a class="headerlink" href="#why-it-matters" title="Link to this heading">#</a></h3>
-<ul class="simple">
+<ul>
 <li><p><strong>Identification:</strong>
 Overlap + unconfoundedness are the two pillars that identify causal effects from observational data.
 Without overlap, the effect is <strong>not identified</strong> — you must extrapolate or model-specify what never occurs.</p></li>
 <li><p><strong>Estimation stability:</strong>
-IPW/DR estimators use weights
-$<span class="math notranslate nohighlight">\(
-w_1 = \frac{D}{e(X)}, \qquad
-w_0 = \frac{1 - D}{1 - e(X)}.
-\)</span><span class="math notranslate nohighlight">\(
-If \)</span>e(X)$ is near 0 or 1, these weights explode, causing huge variance and fragile estimates.</p></li>
+IPW/DR estimators use weights</p>
+<div class="math notranslate nohighlight">
+\[
+  w_1 = \frac{D}{e(X)}, \qquad
+  w_0 = \frac{1 - D}{1 - e(X)}.
+  \]</div>
+<p>If <span class="math notranslate nohighlight">\(e(X)\)</span> is near 0 or 1, these weights explode, causing huge variance and fragile estimates.</p>
+</li>
 <li><p><strong>Target population:</strong>
 With trimming or restriction, you may change <em>who</em> the effect describes —
 e.g., ATE on the <strong>region of common support</strong>, not on the full population.</p></li>
@@ -825,12 +829,12 @@ e.g., ATE on the <strong>region of common support</strong>, not on the full popu
 </section>
 <section id="edge-mass">
 <h2><code class="docutils literal notranslate"><span class="pre">edge_mass</span></code><a class="headerlink" href="#edge-mass" title="Link to this heading">#</a></h2>
-<p>edge_0.01_below, edge_0.01_above, edge_0.02_below, edge_0.02_above  are shares of units whose propensity is below or above the percents</p>
+<p><code class="docutils literal notranslate"><span class="pre">edge_0.01_below</span></code>, <code class="docutils literal notranslate"><span class="pre">edge_0.01_above</span></code>, <code class="docutils literal notranslate"><span class="pre">edge_0.02_below</span></code>, <code class="docutils literal notranslate"><span class="pre">edge_0.02_above</span></code>  are shares of units whose propensity is below or above the percents</p>
 <p>To keep in mind: DML IRM is clipping out the interval [0.02 and 0.98]</p>
 <p>Huge shares are dangerous for estimation in terms of weights exploding</p>
 <p>Flags in Causalis:</p>
-<p>For ε=0.01: YELLOW if either side 0.02 (2%), RED if 0.05 (5%).</p>
-<p>For ε=0.02: YELLOW if either side 0.05 (5%), RED if 0.10 (10%).</p>
+<p>For <span class="math notranslate nohighlight">\(ε=0.01\)</span>: YELLOW if either side 0.02 (2%), RED if 0.05 (5%).</p>
+<p>For <span class="math notranslate nohighlight">\(ε=0.02\)</span>: YELLOW if either side 0.05 (5%), RED if 0.10 (10%).</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython2 notranslate"><div class="highlight"><pre><span></span><span class="n">rep</span><span class="p">[</span><span class="s1">&#39;edge_mass&#39;</span><span class="p">]</span>
@@ -902,28 +906,33 @@ So AUC is the fraction of all <span class="math notranslate nohighlight">\((n_1 
 </section>
 <section id="rank-mannwhitney-formulation">
 <h3>Rank / Mann–Whitney formulation<a class="headerlink" href="#rank-mannwhitney-formulation" title="Link to this heading">#</a></h3>
-<ol class="arabic simple">
+<ol class="arabic">
 <li><p>Rank all scores together (ascending). If there are ties, assign <strong>average ranks</strong> within each tied block.</p></li>
 <li><p>Let <span class="math notranslate nohighlight">\((R_1)\)</span> be the <strong>sum of ranks</strong> for the positives.</p></li>
-<li><p>Compute the Mann–Whitney (U) statistic for positives:
-$<span class="math notranslate nohighlight">\(
-U_1 = R_1 - \frac{n_1(n_1+1)}{2}.
-\)</span>$</p></li>
-<li><p>Convert to AUC by normalizing:
-$<span class="math notranslate nohighlight">\(
-\boxed{\text{AUC} = \frac{U_1}{n_1 n_0}
-= \frac{R_1 - \frac{n_1(n_1+1)}{2}}{n_1 n_0}}
-\)</span>$
-This is exactly what your function returns (with stable sorting and tie-averaged ranks).</p></li>
+<li><p>Compute the Mann–Whitney (U) statistic for positives:</p>
+<div class="math notranslate nohighlight">
+\[
+   U_1 = R_1 - \frac{n_1(n_1+1)}{2}.
+   \]</div>
+</li>
+<li><p>Convert to AUC by normalizing:</p>
+<div class="math notranslate nohighlight">
+\[
+   \boxed{\text{AUC} = \frac{U_1}{n_1 n_0}
+   = \frac{R_1 - \frac{n_1(n_1+1)}{2}}{n_1 n_0}}
+   \]</div>
+<p>This is exactly what your function returns (with stable sorting and tie-averaged ranks).</p>
+</li>
 </ol>
 </section>
 <section id="roc-integral-view-equivalent">
 <h3>ROC-integral view (equivalent)<a class="headerlink" href="#roc-integral-view-equivalent" title="Link to this heading">#</a></h3>
-<p>If <span class="math notranslate nohighlight">\((\text{TPR}(t))\)</span> and <span class="math notranslate nohighlight">\((\text{FPR}(t))\)</span> trace the ROC curve as the threshold <span class="math notranslate nohighlight">\((t)\)</span> moves,
-$<span class="math notranslate nohighlight">\(
+<p>If <span class="math notranslate nohighlight">\((\text{TPR}(t))\)</span> and <span class="math notranslate nohighlight">\((\text{FPR}(t))\)</span> trace the ROC curve as the threshold <span class="math notranslate nohighlight">\((t)\)</span> moves,</p>
+<div class="math notranslate nohighlight">
+\[
 \text{AUC} = \int_0^1 \text{TPR}\big(\text{FPR}^{-1}(u)\big)du,
-\)</span>$
-i.e., the geometric area under the ROC.</p>
+\]</div>
+<p>i.e., the geometric area under the ROC.</p>
 </section>
 <section id="properties-you-should-remember">
 <h3>Properties you should remember<a class="headerlink" href="#properties-you-should-remember" title="Link to this heading">#</a></h3>
@@ -958,8 +967,9 @@ i.e., the geometric area under the ROC.</p>
 <h2><code class="docutils literal notranslate"><span class="pre">ESS_treated_ratio</span></code><a class="headerlink" href="#ess-treated-ratio" title="Link to this heading">#</a></h2>
 <section id="weights-used">
 <h3>Weights used<a class="headerlink" href="#weights-used" title="Link to this heading">#</a></h3>
-<p>For ATE-style IPW, the treated-arm weights are
-$<span class="math notranslate nohighlight">\(
+<p>For ATE-style IPW, the treated-arm weights are</p>
+<div class="math notranslate nohighlight">
+\[
 w_i ;=; \frac{D_i}{m_i}
 \quad\Rightarrow\quad
 w_i =
@@ -967,16 +977,17 @@ w_i =
 1/m_i,&amp; D_i=1\
 when 0, &amp; D_i=0
 \end{cases}
-\)</span><span class="math notranslate nohighlight">\(
-so on the treated subset \)</span>({i:D_i=1})<span class="math notranslate nohighlight">\( the weights are simply \)</span>(1/m_i)$.</p>
+\]</div>
+<p>so on the treated subset <span class="math notranslate nohighlight">\(({i:D_i=1})\)</span> the weights are simply <span class="math notranslate nohighlight">\((1/m_i)\)</span>.</p>
 </section>
 <section id="effective-sample-size-ess">
 <h3>Effective sample size (ESS)<a class="headerlink" href="#effective-sample-size-ess" title="Link to this heading">#</a></h3>
-<p>Given the treated-arm weights <span class="math notranslate nohighlight">\((w_1,\ldots,w_{n_1})\)</span> (only for <span class="math notranslate nohighlight">\((D=1)\)</span>),
-$<span class="math notranslate nohighlight">\(
+<p>Given the treated-arm weights <span class="math notranslate nohighlight">\((w_1,\ldots,w_{n_1})\)</span> (only for <span class="math notranslate nohighlight">\((D=1)\)</span>),</p>
+<div class="math notranslate nohighlight">
+\[
 \mathrm{ESS} = \frac{\left(\sum_{i=1}^{n_1} w_i\right)^2}{\sum_{i=1}^{n_1} w_i^2}.
-\)</span>$
-This is exactly what <code class="docutils literal notranslate"><span class="pre">_ess(w)</span></code> computes.</p>
+\]</div>
+<p>This is exactly what <code class="docutils literal notranslate"><span class="pre">_ess(w)</span></code> computes.</p>
 <ul class="simple">
 <li><p>If all treated weights are equal, ESS <span class="math notranslate nohighlight">\((= n_1)\)</span> (full efficiency).</p></li>
 <li><p>If a few weights dominate, ESS drops (information concentrated in few units).</p></li>
@@ -1000,13 +1011,11 @@ This is exactly what <code class="docutils literal notranslate"><span class="pre
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython2 notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="n">rep</span><span class="p">[</span><span class="s1">&#39;ate_ess&#39;</span><span class="p">])</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">rep</span><span class="p">[</span><span class="s1">&#39;att_ess&#39;</span><span class="p">])</span>
 </pre></div>
 </div>
 </div>
 <div class="cell_output docutils container">
 <div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>{&#39;ess_w1&#39;: 502.960611352384, &#39;ess_w0&#39;: 2604.778026253534, &#39;ess_ratio_w1&#39;: 0.2470336990925265, &#39;ess_ratio_w0&#39;: 0.32706906407000674}
-{&#39;ess_w1&#39;: 2036.0, &#39;ess_w0&#39;: 201.89980668548793, &#39;ess_ratio_w1&#39;: 1.0, &#39;ess_ratio_w0&#39;: 0.02535155784599296}
 </pre></div>
 </div>
 </div>
@@ -1040,12 +1049,13 @@ This is exactly what <code class="docutils literal notranslate"><span class="pre
 </section>
 <section id="quick-example">
 <h3>Quick example<a class="headerlink" href="#quick-example" title="Link to this heading">#</a></h3>
-<p>If <span class="math notranslate nohighlight">\(\mathrm{median}(W_1) = 1.2\)</span> and <span class="math notranslate nohighlight">\(Q_{0.99}(W_1) = 46.8\)</span>, then
-$<span class="math notranslate nohighlight">\(
+<p>If <span class="math notranslate nohighlight">\(\mathrm{median}(W_1) = 1.2\)</span> and <span class="math notranslate nohighlight">\(Q_{0.99}(W_1) = 46.8\)</span>, then</p>
+<div class="math notranslate nohighlight">
+\[
 \texttt{tails\_w1\_q99/med}
 = \frac{46.8}{1.2} \approx 39,
-\)</span>$
-indicating heavy tails and a likely unstable ATE IPW.</p>
+\]</div>
+<p>indicating heavy tails and a likely unstable ATE IPW.</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython2 notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="n">rep</span><span class="p">[</span><span class="s1">&#39;ate_tails&#39;</span><span class="p">])</span>
@@ -1062,7 +1072,7 @@ indicating heavy tails and a likely unstable ATE IPW.</p>
 </section>
 <section id="att-identity-relerr">
 <h2><code class="docutils literal notranslate"><span class="pre">ATT_identity_relerr</span></code><a class="headerlink" href="#att-identity-relerr" title="Link to this heading">#</a></h2>
-<p>With estimated propensities (m_i=\hat m(X_i)) and (D_i\in{0,1}):</p>
+<p>With estimated propensities <span class="math notranslate nohighlight">\((m_i=\hat m(X_i))\)</span> and <span class="math notranslate nohighlight">\((D_i\in{0,1})\)</span>:</p>
 <ul class="simple">
 <li><p><strong>Left-hand side (controls odds sum):</strong>
 $<span class="math notranslate nohighlight">\(
@@ -1074,13 +1084,14 @@ $<span class="math notranslate nohighlight">\(
 \)</span>$</p></li>
 </ul>
 <p>If <span class="math notranslate nohighlight">\((\hat m\approx m)\)</span> and overlap is ok, <strong>LHS <span class="math notranslate nohighlight">\((\approx)\)</span> RHS</strong>.</p>
-<p>You report the <strong>relative error</strong>:
-$<span class="math notranslate nohighlight">\(
+<p>You report the <strong>relative error</strong>:</p>
+<div class="math notranslate nohighlight">
+\[
 \boxed{
 \texttt{ATT\_identity\_relerr}
 = \frac{\big|\mathrm{LHS} - \mathrm{RHS}\big|}{\mathrm{RHS}}
 }
-\)</span>$</p>
+\]</div>
 <p>(when <span class="math notranslate nohighlight">\((n_1&gt;0)\)</span> otherwise it’s set to <span class="math notranslate nohighlight">\((\infty)\)</span>).</p>
 <section id="how-to-read-the-number">
 <h3>How to read the number<a class="headerlink" href="#how-to-read-the-number" title="Link to this heading">#</a></h3>
@@ -1132,20 +1143,22 @@ $<span class="math notranslate nohighlight">\(
 <h2><code class="docutils literal notranslate"><span class="pre">calib_ECE,</span> <span class="pre">calib_slope,</span> <span class="pre">calib_intercept</span></code><a class="headerlink" href="#calib-ece-calib-slope-calib-intercept" title="Link to this heading">#</a></h2>
 <section id="calib-ece-0-018-green">
 <h3>calib_ECE = 0.018 (GREEN)<a class="headerlink" href="#calib-ece-0-018-green" title="Link to this heading">#</a></h3>
-<p><strong>Math:</strong> with 10 equal-width bins,
-$<span class="math notranslate nohighlight">\(
+<p><strong>Math:</strong> with 10 equal-width bins,</p>
+<div class="math notranslate nohighlight">
+\[
 \text{ECE}=\sum_{k=1}^{10}\frac{n_k}{n},|\bar y_k-\bar p_k|
-\)</span>$
-(weighted average gap between observed rate (\bar y_k) and mean prediction (\bar p_k) per bin).
+\]</div>
+<p>(weighted average gap between observed rate (\bar y_k) and mean prediction (\bar p_k) per bin).
 <strong>Result:</strong> ~1.8% average miscalibration → overall probabilities track outcomes well. Note the biggest bin error is in 0.5–0.6 (abs_error ≈ 0.162) but it’s tiny (95/10,000), so ECE stays low.</p>
 </section>
 <section id="calib-slope-0-889-green">
 <h3>calib_slope (β) = 0.889 (GREEN)<a class="headerlink" href="#calib-slope-0-889-green" title="Link to this heading">#</a></h3>
-<p><strong>Math (logistic recalibration):</strong>
-$<span class="math notranslate nohighlight">\(
+<p><strong>Math (logistic recalibration):</strong></p>
+<div class="math notranslate nohighlight">
+\[
 \Pr(D=1\mid p)=\sigma(\alpha+\beta,\text{logit}(p)).
-\)</span>$
-<strong>Interpretation:</strong> (\beta&lt;1) ⇒ predictions are a bit <strong>over-confident</strong> (too extreme); the optimal calibration slightly <strong>flattens</strong> them toward 0.5.</p>
+\]</div>
+<p><strong>Interpretation:</strong> (\beta&lt;1) ⇒ predictions are a bit <strong>over-confident</strong> (too extreme); the optimal calibration slightly <strong>flattens</strong> them toward 0.5.</p>
 </section>
 <section id="calib-intercept-0-107-green">
 <h3>calib_intercept (α) = −0.107 (GREEN)<a class="headerlink" href="#calib-intercept-0-107-green" title="Link to this heading">#</a></h3>
@@ -1414,21 +1427,25 @@ $<span class="math notranslate nohighlight">\(
 </div>
 <section id="psi-p99-over-med">
 <h2><code class="docutils literal notranslate"><span class="pre">psi_p99_over_med</span></code><a class="headerlink" href="#psi-p99-over-med" title="Link to this heading">#</a></h2>
-<ul class="simple">
+<ul>
 <li><p>Let <span class="math notranslate nohighlight">\(\psi_i\)</span> be the per-unit <strong>influence value</strong> (EIF score) for your estimator.
 We look at magnitudes <span class="math notranslate nohighlight">\(a_i \equiv |\psi_i|\)</span>.</p></li>
-<li><p>Define the 99th percentile and the median of these magnitudes:
-$<span class="math notranslate nohighlight">\(
-q_{0.99} \equiv \operatorname{Quantile}_{0.99}(a_1,\dots,a_n),\qquad
-m \equiv \operatorname{median}(a_1,\dots,a_n).
-\)</span>$</p></li>
-<li><p>The metric is the <strong>scale-free tail ratio</strong>:
-$<span class="math notranslate nohighlight">\(
-\boxed{
-\texttt{psi\_p99\_over\_med}
-= \frac{q_{0.99}}{m}
-}
-\)</span>$</p></li>
+<li><p>Define the 99th percentile and the median of these magnitudes:</p>
+<div class="math notranslate nohighlight">
+\[
+  q_{0.99} \equiv \operatorname{Quantile}_{0.99}(a_1,\dots,a_n),\qquad
+  m \equiv \operatorname{median}(a_1,\dots,a_n).
+  \]</div>
+</li>
+<li><p>The metric is the <strong>scale-free tail ratio</strong>:</p>
+<div class="math notranslate nohighlight">
+\[
+  \boxed{
+  \texttt{psi\_p99\_over\_med}
+  = \frac{q_{0.99}}{m}
+  }
+  \]</div>
+</li>
 </ul>
 <p><strong>Why this works (brief):</strong></p>
 <ul class="simple">
@@ -1470,27 +1487,35 @@ $<span class="math notranslate nohighlight">\(
 </section>
 <section id="psi-kurtosis">
 <h2><code class="docutils literal notranslate"><span class="pre">psi_kurtosis</span></code><a class="headerlink" href="#psi-kurtosis" title="Link to this heading">#</a></h2>
-<ul class="simple">
-<li><p>Let <span class="math notranslate nohighlight">\(\psi_i\)</span> be the per-unit influence values and define centered residuals
-$<span class="math notranslate nohighlight">\(
-\tilde\psi_i \equiv \psi_i - \bar\psi,\qquad
-\bar\psi \equiv \frac{1}{n}\sum_{i=1}^n \psi_i.
-\)</span>$</p></li>
-<li><p>Sample variance (with Bessel correction):
-$<span class="math notranslate nohighlight">\(
-s^2 \equiv \frac{1}{n-1}\sum_{i=1}^n \tilde\psi_i^2.
-\)</span>$</p></li>
-<li><p>Sample 4th central moment:
-$<span class="math notranslate nohighlight">\(
-\hat\mu_4 \equiv \frac{1}{n}\sum_{i=1}^n \tilde\psi_i^4.
-\)</span>$</p></li>
-<li><p>The reported metric (raw kurtosis, <strong>not</strong> excess):
-$<span class="math notranslate nohighlight">\(
-\boxed{
-\texttt{psi\_kurtosis}
-= \frac{\hat{\mu}_4}{s^4}
-}
-\)</span>$</p></li>
+<ul>
+<li><p>Let <span class="math notranslate nohighlight">\(\psi_i\)</span> be the per-unit influence values and define centered residuals</p>
+<div class="math notranslate nohighlight">
+\[
+  \tilde\psi_i \equiv \psi_i - \bar\psi,\qquad
+  \bar\psi \equiv \frac{1}{n}\sum_{i=1}^n \psi_i.
+  \]</div>
+</li>
+<li><p>Sample variance (with Bessel correction):</p>
+<div class="math notranslate nohighlight">
+\[
+  s^2 \equiv \frac{1}{n-1}\sum_{i=1}^n \tilde\psi_i^2.
+  \]</div>
+</li>
+<li><p>Sample 4th central moment:</p>
+<div class="math notranslate nohighlight">
+\[
+  \hat\mu_4 \equiv \frac{1}{n}\sum_{i=1}^n \tilde\psi_i^4.
+  \]</div>
+</li>
+<li><p>The reported metric (raw kurtosis, <strong>not</strong> excess):</p>
+<div class="math notranslate nohighlight">
+\[
+  \boxed{
+  \texttt{psi\_kurtosis}
+  = \frac{\hat{\mu}_4}{s^4}
+  }
+  \]</div>
+</li>
 </ul>
 <p><strong>Interpretation (quick):</strong></p>
 <ul class="simple">
@@ -1525,12 +1550,13 @@ $<span class="math notranslate nohighlight">\(
 </div>
 <section id="max-t-g1-max-t-g0-max-t-m">
 <h3><span class="math notranslate nohighlight">\(max_|t|_g1\)</span>, <span class="math notranslate nohighlight">\(max_|t|_g0\)</span>, <span class="math notranslate nohighlight">\(max_|t|_m\)</span><a class="headerlink" href="#max-t-g1-max-t-g0-max-t-m" title="Link to this heading">#</a></h3>
-<p>We work with a <strong>basis</strong> of functions
-$<span class="math notranslate nohighlight">\(
+<p>We work with a <strong>basis</strong> of functions</p>
+<div class="math notranslate nohighlight">
+\[
 \{h_b(X)\}_{b=0}^{B-1}
 \quad\text{(columns of }X_{\text{basis}}\text{; }h_0\equiv 1\text{ is the constant).}
-\)</span><span class="math notranslate nohighlight">\(
-Let \)</span>(m_i^\tau \equiv \mathrm{clip}(m_i,\tau,1-\tau))$ be the clipped propensity (guards against division by zero).</p>
+\]</div>
+<p>Let <span class="math notranslate nohighlight">\((m_i^\tau \equiv \mathrm{clip}(m_i,\tau,1-\tau))\)</span> be the clipped propensity (guards against division by zero).</p>
 </section>
 <section id="ate-case">
 <h3>ATE case<a class="headerlink" href="#ate-case" title="Link to this heading">#</a></h3>
@@ -1611,30 +1637,36 @@ t_{m,b} = \frac{\widehat d_{m,b}}{\mathrm{se}(\widehat d_{m,b})},
 <section id="atte-att-case">
 <h3>ATTE / ATT case<a class="headerlink" href="#atte-att-case" title="Link to this heading">#</a></h3>
 <p>Let <span class="math notranslate nohighlight">\((p_1 = \mathbb{E}[D])\)</span> and define the odds <span class="math notranslate nohighlight">\((o_i = m_i^\tau / (1 - m_i^\tau))\)</span>.</p>
-<ul class="simple">
-<li><p>The <span class="math notranslate nohighlight">\((g_1)\)</span> derivative is identically zero:
-$<span class="math notranslate nohighlight">\(
-\Rightarrow\quad \max_{|t|_{g_1}} = 0.
-\)</span>$</p></li>
-<li><p><strong><span class="math notranslate nohighlight">\((g_0)\)</span> direction</strong>
-$<span class="math notranslate nohighlight">\(
-\widehat d_{g_0,b}
-= \frac{1}{n}\sum_i h_b(X_i)\frac{(1-D_i)o_i - D_i}{p_1},
-\qquad
-t_{g_0,b}
-= \frac{\widehat d_{g_0,b}}{\mathrm{se}(\widehat d_{g_0,b})},
-\qquad
-\max_{|t|_{g_0}} = \max_b |t_{g_0,b}|.
-\)</span>$</p></li>
-<li><p><strong><span class="math notranslate nohighlight">\((m)\)</span> direction</strong>
-$<span class="math notranslate nohighlight">\(
-\widehat d_{m,b}
-= -\frac{1}{n}\sum_i h_b(X_i)
-\frac{(1-D_i)(Y_i - g_{0,i})}
-     {p_1(1 - m_i^\tau)^2},
-\qquad
-\max_{|t|_{m}} = \max_b |t_{m,b}|.
-\)</span>$</p></li>
+<ul>
+<li><p>The <span class="math notranslate nohighlight">\((g_1)\)</span> derivative is identically zero:</p>
+<div class="math notranslate nohighlight">
+\[
+  \Rightarrow\quad \max_{|t|_{g_1}} = 0.
+  \]</div>
+</li>
+<li><p><strong><span class="math notranslate nohighlight">\((g_0)\)</span> direction</strong></p>
+<div class="math notranslate nohighlight">
+\[
+  \widehat d_{g_0,b}
+  = \frac{1}{n}\sum_i h_b(X_i)\frac{(1-D_i)o_i - D_i}{p_1},
+  \qquad
+  t_{g_0,b}
+  = \frac{\widehat d_{g_0,b}}{\mathrm{se}(\widehat d_{g_0,b})},
+  \qquad
+  \max_{|t|_{g_0}} = \max_b |t_{g_0,b}|.
+  \]</div>
+</li>
+<li><p><strong><span class="math notranslate nohighlight">\((m)\)</span> direction</strong></p>
+<div class="math notranslate nohighlight">
+\[
+  \widehat d_{m,b}
+  = -\frac{1}{n}\sum_i h_b(X_i)
+  \frac{(1-D_i)(Y_i - g_{0,i})}
+       {p_1(1 - m_i^\tau)^2},
+  \qquad
+  \max_{|t|_{m}} = \max_b |t_{m,b}|.
+  \]</div>
+</li>
 </ul>
 <hr class="docutils" />
 <p><strong>Rule of thumb:</strong>
@@ -1783,19 +1815,21 @@ the leave-fold-out estimate used on fold <span class="math notranslate nohighlig
 <hr class="docutils" />
 <section id="step-2-held-out-scores-on-fold-k">
 <h3><strong>Step 2 — Held-out scores on fold <span class="math notranslate nohighlight">\((k)\)</span></strong><a class="headerlink" href="#step-2-held-out-scores-on-fold-k" title="Link to this heading">#</a></h3>
-<p>Define the fold-specific held-out score for <span class="math notranslate nohighlight">\(i\in I_k\)</span>:
-$<span class="math notranslate nohighlight">\(
+<p>Define the fold-specific held-out score for <span class="math notranslate nohighlight">\(i\in I_k\)</span>:</p>
+<div class="math notranslate nohighlight">
+\[
 \psi_i^{(k)}
 = \psi_b(W_i) + \psi_a(W_i)\,\hat\theta_{-k}.
-\)</span>$</p>
-<p>Compute per-fold mean and variance:
-$<span class="math notranslate nohighlight">\(
+\]</div>
+<p>Compute per-fold mean and variance:</p>
+<div class="math notranslate nohighlight">
+\[
 \bar\psi_k
 = \frac{1}{n_k}\sum_{i\in I_k}\psi_i^{(k)},
 \qquad
 s_k^2
 = \frac{1}{n_k-1}\sum_{i\in I_k}\!\big(\psi_i^{(k)}-\bar\psi_k\big)^2.
-\)</span>$</p>
+\]</div>
 </section>
 <hr class="docutils" />
 <section id="oos-t-stat-diagnostics">
@@ -1804,26 +1838,28 @@ s_k^2
 <hr class="docutils" />
 <section id="texttt-oos-tstat-fold">
 <h3><strong><span class="math notranslate nohighlight">\((\texttt{oos\_tstat\_fold})\)</span></strong><a class="headerlink" href="#texttt-oos-tstat-fold" title="Link to this heading">#</a></h3>
-<p>A fold-aggregated, variance-weighted t-statistic:
-$<span class="math notranslate nohighlight">\(
+<p>A fold-aggregated, variance-weighted t-statistic:</p>
+<div class="math notranslate nohighlight">
+\[
 \boxed{
 \texttt{oos\_tstat\_fold}
 = \frac{\displaystyle \sum_{k=1}^K n_k\,\bar\psi_k}
        {\displaystyle \sqrt{\sum_{k=1}^K n_k\,s_k^2}}
 }
-\)</span>$</p>
+\]</div>
 <p><em>Intuition:</em> averages fold means and scales by a fold-pooled standard error.</p>
 </section>
 <hr class="docutils" />
 <section id="texttt-oos-tstat-strict">
 <h3><strong><span class="math notranslate nohighlight">\((\texttt{oos\_tstat\_strict})\)</span></strong><a class="headerlink" href="#texttt-oos-tstat-strict" title="Link to this heading">#</a></h3>
-<p>A “strict” t-stat using every held-out observation directly:
-$<span class="math notranslate nohighlight">\(
+<p>A “strict” t-stat using every held-out observation directly:</p>
+<div class="math notranslate nohighlight">
+\[
 N = \sum_{k=1}^K n_k,
 \qquad
 \bar\psi_{\text{all}}
 = \frac{1}{N}\sum_{k=1}^K\sum_{i\in I_k}\psi_i^{(k)}.
-\)</span>$</p>
+\]</div>
 <div class="math notranslate nohighlight">
 \[
 s_{\text{all}}^2
@@ -1845,11 +1881,12 @@ s_{\text{all}}^2
 <section id="id1">
 <h3><strong>Interpretation</strong><a class="headerlink" href="#id1" title="Link to this heading">#</a></h3>
 <p>Under a valid design and correct cross-fitting
-(so that <span class="math notranslate nohighlight">\(\mathbb{E}[\psi]=0\)</span> out-of-sample), both statistics are approximately standard normal:
-$<span class="math notranslate nohighlight">\(
+(so that <span class="math notranslate nohighlight">\(\mathbb{E}[\psi]=0\)</span> out-of-sample), both statistics are approximately standard normal:</p>
+<div class="math notranslate nohighlight">
+\[
 \text{two-sided p-value}
 \approx 2\big(1 - \Phi(|t|)\big).
-\)</span>$</p>
+\]</div>
 <p>Values near <span class="math notranslate nohighlight">\(0\)</span> indicate that the moment condition holds out of sample.
 Large <span class="math notranslate nohighlight">\(|t|\)</span> suggests overfitting, leakage, or nuisance miscalibration.</p>
 <div class="cell docutils container">
@@ -1949,53 +1986,58 @@ Large <span class="math notranslate nohighlight">\(|t|\)</span> suggests overfit
 </div>
 <section id="balance-max-smd">
 <h2><code class="docutils literal notranslate"><span class="pre">balance\_max\_smd</span></code><a class="headerlink" href="#balance-max-smd" title="Link to this heading">#</a></h2>
-<p>For each covariate <span class="math notranslate nohighlight">\((X_j)\)</span>, the (weighted) standardized mean difference is
-$<span class="math notranslate nohighlight">\(
+<p>For each covariate <span class="math notranslate nohighlight">\((X_j)\)</span>, the (weighted) standardized mean difference is</p>
+<div class="math notranslate nohighlight">
+\[
 \mathrm{SMD}_j
 = \frac{\big|\mu_{1j} - \mu_{0j}\big|}
        {\sqrt{\tfrac{1}{2}\big(\sigma_{1j}^2 + \sigma_{0j}^2\big)}}.
-\)</span>$</p>
+\]</div>
 <p>Group means and variances are computed under the IPW weights implied by your estimand:</p>
 <ul class="simple">
 <li><p><strong>ATE:</strong> <span class="math notranslate nohighlight">\(w_{1i} = \tfrac{D_i}{\hat m_i}\)</span>, <span class="math notranslate nohighlight">\(w_{0i} = \tfrac{1-D_i}{1-\hat m_i}\)</span></p></li>
 <li><p><strong>ATTE:</strong> <span class="math notranslate nohighlight">\(w_{1i} = D_i\)</span>, <span class="math notranslate nohighlight">\(w_{0i} = (1-D_i)\tfrac{\hat m_i}{1-\hat m_i}\)</span></p></li>
 </ul>
 <p>(If <code class="docutils literal notranslate"><span class="pre">normalize=True</span></code>, each weight vector is divided by its mean.)</p>
-<p>Weighted means and variances:
-$<span class="math notranslate nohighlight">\(
+<p>Weighted means and variances:</p>
+<div class="math notranslate nohighlight">
+\[
 \mu_{gj} = \frac{\sum_i w_{gi} X_{ij}}{\sum_i w_{gi}},
 \qquad
 \sigma_{gj}^2 = \frac{\sum_i w_{gi}(X_{ij} - \mu_{gj})^2}{\sum_i w_{gi}},
 \qquad
 g \in \{0,1\}.
-\)</span>$</p>
+\]</div>
 <p>Special cases in the code:</p>
 <ul class="simple">
 <li><p>If both variances are <span class="math notranslate nohighlight">\(\approx 0\)</span> and <span class="math notranslate nohighlight">\(|\mu_{1j}-\mu_{0j}| \approx 0\)</span> ⇒ <span class="math notranslate nohighlight">\(\mathrm{SMD}_j = 0\)</span></p></li>
 <li><p>If both variances are <span class="math notranslate nohighlight">\(\approx 0\)</span> but means differ ⇒ <span class="math notranslate nohighlight">\(\mathrm{SMD}_j = \infty\)</span></p></li>
 <li><p>If denominator is <span class="math notranslate nohighlight">\(\approx 0\)</span> otherwise ⇒ <span class="math notranslate nohighlight">\(\mathrm{SMD}_j = \text{NaN}\)</span></p></li>
 </ul>
-<p>Then
-$<span class="math notranslate nohighlight">\(
+<p>Then</p>
+<div class="math notranslate nohighlight">
+\[
 \textbf{balance\_max\_smd}
 = \max_j \mathrm{SMD}_j,
-\)</span><span class="math notranslate nohighlight">\(
-implemented as a `nanmax` over the vector of \)</span>\mathrm{SMD}_j<span class="math notranslate nohighlight">\(.
-NaNs are ignored; if any feature produced \)</span>\infty<span class="math notranslate nohighlight">\(, the max is \)</span>\infty$.</p>
+\]</div>
+<p>implemented as a <code class="docutils literal notranslate"><span class="pre">nanmax</span></code> over the vector of <span class="math notranslate nohighlight">\(\mathrm{SMD}_j\)</span>.
+NaNs are ignored; if any feature produced <span class="math notranslate nohighlight">\(\infty\)</span>, the max is <span class="math notranslate nohighlight">\(\infty\)</span>.</p>
 </section>
 <section id="balance-frac-violations">
 <h2><code class="docutils literal notranslate"><span class="pre">balance\_frac\_violations</span></code><a class="headerlink" href="#balance-frac-violations" title="Link to this heading">#</a></h2>
 <p>Let the SMD threshold be <span class="math notranslate nohighlight">\(\tau\)</span> (default <span class="math notranslate nohighlight">\(0.10\)</span>).
-Define the set of <strong>finite</strong> SMDs:
-$<span class="math notranslate nohighlight">\(
+Define the set of <strong>finite</strong> SMDs:</p>
+<div class="math notranslate nohighlight">
+\[
 \mathcal{J} = \{ j : \ \mathrm{SMD}_j \text{ is finite} \}.
-\)</span>$</p>
-<p>Then the fraction of violations is
-$<span class="math notranslate nohighlight">\(
+\]</div>
+<p>Then the fraction of violations is</p>
+<div class="math notranslate nohighlight">
+\[
 \textbf{balance\_frac\_violations}
 = \frac{1}{|\mathcal{J}|}
   \sum_{j \in \mathcal{J}} \mathbf{1}\{ \mathrm{SMD}_j \ge \tau \}.
-\)</span>$</p>
+\]</div>
 <p>So it’s the share of covariates whose <strong>weighted</strong> SMD exceeds the threshold,
 computed only over finite SMDs (NaN / Inf are excluded from the denominator).</p>
 <hr class="docutils" />
@@ -2020,12 +2062,14 @@ Inflate the uncertainty by an additive “max bias”.</p>
 <hr class="docutils" />
 <section id="step-a-sampling-part">
 <h3><strong>Step A — Sampling part</strong><a class="headerlink" href="#step-a-sampling-part" title="Link to this heading">#</a></h3>
-<ul class="simple">
+<ul>
 <li><p>Point estimate <span class="math notranslate nohighlight">\(\hat\theta\)</span>, standard error <span class="math notranslate nohighlight">\(se\)</span>, and <span class="math notranslate nohighlight">\(z_\alpha\)</span> for level <span class="math notranslate nohighlight">\((1-\alpha)\)</span>.</p></li>
-<li><p>Usual sampling CI:
-$<span class="math notranslate nohighlight">\(
-[\,\hat\theta - z_\alpha\,se,\ \hat\theta + z_\alpha\,se\,].
-\)</span>$</p></li>
+<li><p>Usual sampling CI:</p></li>
+<li><div class="math notranslate nohighlight">
+\[
+  [\,\hat\theta - z_\alpha\,se,\ \hat\theta + z_\alpha\,se\,].
+  \]</div>
+</li>
 </ul>
 </section>
 <hr class="docutils" />
@@ -2066,37 +2110,44 @@ $$</p></li>
 <hr class="docutils" />
 <section id="step-c-max-bias-and-intervals">
 <h3><strong>Step C — Max bias and intervals</strong><a class="headerlink" href="#step-c-max-bias-and-intervals" title="Link to this heading">#</a></h3>
-<p>Two equivalent forms appear in the code:
-$<span class="math notranslate nohighlight">\(
+<p>Two equivalent forms appear in the code:</p>
+<div class="math notranslate nohighlight">
+\[
 \text{max\_bias}
 = \sqrt{\sigma^2\,\nu^2}
 = \big(\sqrt{\nu^2}\big)\,se.
-\)</span>$</p>
+\]</div>
 <p>Then the module reports:</p>
-<ul class="simple">
-<li><p><strong>Confounding bounds for <span class="math notranslate nohighlight">\(\theta\)</span>:</strong>
-$<span class="math notranslate nohighlight">\(
-[\,\hat\theta - \text{max\_bias},\; \hat\theta + \text{max\_bias}\,].
-\)</span>$</p></li>
-<li><p><strong>Bias-aware CI (sampling + confounding, worst-case additive):</strong>
-$<span class="math notranslate nohighlight">\(
-\Big[\,\hat\theta - (\text{max\_bias} + z_\alpha\,se),\;
-\hat\theta + (\text{max\_bias} + z_\alpha\,se)\,\Big].
-\)</span>$</p></li>
+<ul>
+<li><p><strong>Confounding bounds for <span class="math notranslate nohighlight">\(\theta\)</span>:</strong></p>
+<div class="math notranslate nohighlight">
+\[
+  [\,\hat\theta - \text{max\_bias},\; \hat\theta + \text{max\_bias}\,].
+  \]</div>
+</li>
+<li><p><strong>Bias-aware CI (sampling + confounding, worst-case additive):</strong></p>
+<div class="math notranslate nohighlight">
+\[
+  \Big[\,\hat\theta - (\text{max\_bias} + z_\alpha\,se),\;
+  \hat\theta + (\text{max\_bias} + z_\alpha\,se)\,\Big].
+  \]</div>
+</li>
 </ul>
 <p>(So you’re adding sampling error and the adversarial bias <em>linearly</em> for a conservative envelope.)</p>
 <hr class="docutils" />
 <p><strong>Notes &amp; edge handling</strong></p>
-<ul class="simple">
+<ul>
 <li><p>Numeric PSD clamping ensures <span class="math notranslate nohighlight">\(\text{base}_i \ge 0\)</span>; <span class="math notranslate nohighlight">\(\rho\)</span> is clipped to <span class="math notranslate nohighlight">\([-1,1]\)</span>.</p></li>
 <li><p>If <span class="math notranslate nohighlight">\(cf_y = cf_d = 0 \Rightarrow \nu^2 = 0 \Rightarrow\)</span> bias-aware CI collapses to the sampling CI.</p></li>
-<li><p>Internally, a delta-method IF for <span class="math notranslate nohighlight">\(\text{max\_bias}\)</span> is
-$<span class="math notranslate nohighlight">\(
-\psi_{\text{max}}(i)
-= \frac{\sigma^2\,\psi_{\nu^2}(i) + \nu^2\,\psi_{\sigma^2}(i)}
-       {2\,\text{max\_bias}},
-\)</span><span class="math notranslate nohighlight">\(
-matching \)</span>\text{max_bias} = \sqrt{\sigma^2\nu^2}$ (used for coherent summaries).</p></li>
+<li><p>Internally, a delta-method IF for <span class="math notranslate nohighlight">\(\text{max\_bias}\)</span> is</p>
+<div class="math notranslate nohighlight">
+\[
+  \psi_{\text{max}}(i)
+  = \frac{\sigma^2\,\psi_{\nu^2}(i) + \nu^2\,\psi_{\sigma^2}(i)}
+         {2\,\text{max\_bias}},
+  \]</div>
+<p>matching <span class="math notranslate nohighlight">\(\text{max\_bias} = \sqrt{\sigma^2\nu^2}\)</span> (used for coherent summaries).</p>
+</li>
 </ul>
 </section>
 <hr class="docutils" />
@@ -2119,42 +2170,47 @@ Use how well <span class="math notranslate nohighlight">\(Z\)</span> explains re
 <hr class="docutils" />
 <section id="step-b-residuals-from-the-long-model">
 <h3><strong>Step B — Residuals from the long model</strong><a class="headerlink" href="#step-b-residuals-from-the-long-model" title="Link to this heading">#</a></h3>
-<p>Let <span class="math notranslate nohighlight">\((g_1, g_0, \hat m)\)</span> be the outcome and propensity learners:
-$<span class="math notranslate nohighlight">\(
+<p>Let <span class="math notranslate nohighlight">\((g_1, g_0, \hat m)\)</span> be the outcome and propensity learners:</p>
+<div class="math notranslate nohighlight">
+\[
 r_y := Y - \big(D g_1 + (1-D) g_0\big),
 \qquad
 r_d := D - \hat m.
-\)</span>$
-These are the EIF’s outcome and treatment residual components.</p>
+\]</div>
+<p>These are the EIF’s outcome and treatment residual components.</p>
 </section>
 <hr class="docutils" />
 <section id="step-c-how-much-of-each-residual-does-z-explain">
 <h3><strong>Step C — How much of each residual does <span class="math notranslate nohighlight">\(Z\)</span> explain?</strong><a class="headerlink" href="#step-c-how-much-of-each-residual-does-z-explain" title="Link to this heading">#</a></h3>
 <p>Regress <span class="math notranslate nohighlight">\(r_y\)</span> on <span class="math notranslate nohighlight">\(Z\)</span> and <span class="math notranslate nohighlight">\(r_d\)</span> on <span class="math notranslate nohighlight">\(Z\)</span> (unweighted OLS; <strong>ATT</strong> case uses ATT weights):</p>
-<ul class="simple">
+<ul>
 <li><p>Obtain <span class="math notranslate nohighlight">\(R^2_y\)</span> and <span class="math notranslate nohighlight">\(R^2_d\)</span>.</p></li>
-<li><p>Convert to <strong>signal-to-noise ratios</strong> (the “strength” of confounding channels):
-$<span class="math notranslate nohighlight">\(
-cf_y = \frac{R^2_y}{1 - R^2_y},
-\qquad
-cf_d = \frac{R^2_d}{1 - R^2_d}.
-\)</span><span class="math notranslate nohighlight">\(
-(These are the same \)</span>R^2 / (1 - R^2)<span class="math notranslate nohighlight">\( maps used in modern partial-\)</span>R^2$ robustness frameworks.)</p></li>
+<li><p>Convert to <strong>signal-to-noise ratios</strong> (the “strength” of confounding channels):</p>
+<div class="math notranslate nohighlight">
+\[
+  cf_y = \frac{R^2_y}{1 - R^2_y},
+  \qquad
+  cf_d = \frac{R^2_d}{1 - R^2_d}.
+  \]</div>
+<p>(These are the same <span class="math notranslate nohighlight">\(R^2 / (1 - R^2)\)</span> maps used in modern partial-<span class="math notranslate nohighlight">\(R^2\)</span> robustness frameworks.)</p>
+</li>
 </ul>
-<p>Compute the correlation between the <strong>fitted</strong> pieces from those two regressions:
-$<span class="math notranslate nohighlight">\(
+<p>Compute the correlation between the <strong>fitted</strong> pieces from those two regressions:</p>
+<div class="math notranslate nohighlight">
+\[
 \rho = \operatorname{corr}\!\big(\widehat r_y(Z),\ \widehat r_d(Z)\big),
-\)</span><span class="math notranslate nohighlight">\(
-weighted for ATT when applicable, then clipped to \)</span>[-1,1]$.</p>
+\]</div>
+<p>weighted for ATT when applicable, then clipped to <span class="math notranslate nohighlight">\([-1,1]\)</span>.</p>
 </section>
 <hr class="docutils" />
 <section id="outputs">
 <h3><strong>Outputs</strong><a class="headerlink" href="#outputs" title="Link to this heading">#</a></h3>
-<p>A one-row DataFrame (indexed by the treatment name) with
-$<span class="math notranslate nohighlight">\(
+<p>A one-row DataFrame (indexed by the treatment name) with</p>
+<div class="math notranslate nohighlight">
+\[
 \{\, cf_y,\ cf_d,\ \rho,\ \hat\theta_{\text{long}},\
 \hat\theta_{\text{short}},\ \Delta \,\}.
-\)</span>$</p>
+\]</div>
 <p>You can pass <span class="math notranslate nohighlight">\((cf_y, cf_d, \rho)\)</span> straight into <code class="docutils literal notranslate"><span class="pre">sensitivity_analysis</span></code> to get the associated bias-aware interval.
 Intuitively, this calibrates <em>how strong hidden stuff would need to be</em> by using a concrete, observed proxy <span class="math notranslate nohighlight">\(Z\)</span>.</p>
 </section>
@@ -2162,14 +2218,16 @@ Intuitively, this calibrates <em>how strong hidden stuff would need to be</em> b
 <hr class="docutils" />
 <section id="how-to-read-them-together">
 <h2><strong>How to read them together</strong><a class="headerlink" href="#how-to-read-them-together" title="Link to this heading">#</a></h2>
-<ol class="arabic simple">
+<ol class="arabic">
 <li><p>Use <code class="docutils literal notranslate"><span class="pre">sensitivity_benchmark</span></code> with a plausible omitted set <span class="math notranslate nohighlight">\(Z\)</span> to <strong>derive</strong> <span class="math notranslate nohighlight">\((cf_y, cf_d, \rho)\)</span> and observe the actual estimate shift <span class="math notranslate nohighlight">\(\Delta\)</span>.</p></li>
-<li><p>Plug those <span class="math notranslate nohighlight">\((cf_y, cf_d, \rho)\)</span> into <code class="docutils literal notranslate"><span class="pre">sensitivity_analysis</span></code> to get:
-$<span class="math notranslate nohighlight">\(
-\text{max\_bias} = \sqrt{\nu^2}\,se,
-\qquad
-\text{Bias-aware CI} = \hat\theta \pm (\text{max\_bias} + z_\alpha\,se).
-\)</span>$</p></li>
+<li><p>Plug those <span class="math notranslate nohighlight">\((cf_y, cf_d, \rho)\)</span> into <code class="docutils literal notranslate"><span class="pre">sensitivity_analysis</span></code> to get:</p>
+<div class="math notranslate nohighlight">
+\[
+   \text{max\_bias} = \sqrt{\nu^2}\,se,
+   \qquad
+   \text{Bias-aware CI} = \hat\theta \pm (\text{max\_bias} + z_\alpha\,se).
+   \]</div>
+</li>
 </ol>
 <p>Small <span class="math notranslate nohighlight">\(cf\)</span> values (or <span class="math notranslate nohighlight">\(\rho \approx 0\)</span>) ⇒ tiny <span class="math notranslate nohighlight">\(\nu^2\)</span> ⇒ bias-aware CI near the sampling CI.
 Large <span class="math notranslate nohighlight">\(cf\)</span> values and <span class="math notranslate nohighlight">\(|\rho|\approx 1\)</span> widen it, reflecting stronger plausible hidden confounding.</p>
