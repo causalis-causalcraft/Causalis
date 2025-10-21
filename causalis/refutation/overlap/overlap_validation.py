@@ -1,3 +1,7 @@
+"""
+Overlap validation module
+"""
+
 from __future__ import annotations
 
 import numpy as np
@@ -85,8 +89,8 @@ def _q(w: np.ndarray, qs=(0.5, 0.95, 0.99, 0.999)) -> Dict[str, float]:
 DEFAULT_THRESHOLDS = dict(
     edge_mass_warn_001=0.02, edge_mass_strong_001=0.05,
     edge_mass_warn_002=0.05, edge_mass_strong_002=0.10,
-    ks_warn=0.25, ks_strong=0.35,
-    auc_warn=0.90, auc_strong=0.95,
+    ks_warn=0.30, ks_strong=0.40,
+    auc_warn=0.80, auc_strong=0.90,
     ipw_relerr_warn=0.05, ipw_relerr_strong=0.10,
     ess_ratio_warn=0.30, ess_ratio_strong=0.15,
     clip_share_warn=0.02, clip_share_strong=0.05,
@@ -804,7 +808,7 @@ def positivity_overlap_checks(
 ResultLike = Union[Dict[str, Any], Any]
 
 
-def _extract_diag_from_result(res: ResultLike) -> Tuple[np.ndarray, np.ndarray, Optional[float]]:
+def extract_diag_from_result(res: ResultLike) -> Tuple[np.ndarray, np.ndarray, Optional[float]]:
     """Extract m_hat, D, and trimming epsilon from dml_ate/dml_att result dict or model.
     Accepts:
     - dict returned by dml_ate/dml_att (prefers key 'diagnostic_data'; otherwise uses 'model'), or
@@ -927,7 +931,7 @@ def overlap_report_from_result(
         # be permissive; fall back to the explicit flag
         detected_hajek = bool(use_hajek)
 
-    m_hat, d, thr = _extract_diag_from_result(res)
+    m_hat, d, thr = extract_diag_from_result(res)
     m_clip = (thr, 1.0 - thr) if thr is not None else None
     return positivity_overlap_checks(
         m_hat=m_hat,
@@ -989,7 +993,7 @@ def run_overlap_diagnostics(
     if m_hat is None or D is None:
         if res is None:
             raise ValueError("Pass either (m_hat, D) or `res`.")
-        m_hat_res, d_res, thr = _extract_diag_from_result(res)
+        m_hat_res, d_res, thr = extract_diag_from_result(res)
         m_hat, D = m_hat_res, d_res
         # Inherit trimming as clipping audit bounds if not specified
         if m_clipped_from is None and thr is not None:

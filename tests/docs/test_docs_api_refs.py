@@ -29,8 +29,6 @@ def test_refutation_exports():
         'refute_placebo_outcome',
         'refute_placebo_treatment',
         'refute_subset',
-        'sensitivity_analysis',
-        'get_sensitivity_summary',
         'refute_irm_orthogonality',
     ]:
         assert hasattr(ref, name), f"causalis.refutation missing expected export: {name}"

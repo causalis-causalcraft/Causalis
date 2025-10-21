@@ -15,10 +15,20 @@ research/dgp_benchmarking
 
 ```{grid-item-card} Linear and Nonlinear Data Generating Process benchmarking
 :img-top: _static/dgp_benchmarking.png
-:img-alt: Forest plot preview
+:img-alt: dgp_benchmarking
 :link: research/dgp_benchmarking
 :link-type: doc
 :class-card: sd-shadow-sm sd-rounded-2xl sd-text-center
 
 Benchmark simple DGP from causalis.data.generators.
+```
+
+```{grid-item-card} Refutation tests for DML IRM
+:img-top: _static/refutation_flow.png
+:img-alt: refutation_flow
+:link: research/refutation_flow
+:link-type: doc
+:class-card: sd-shadow-sm sd-rounded-2xl sd-text-center
+
+Explaining refutation tests for DML Interative Regression Model
 ```

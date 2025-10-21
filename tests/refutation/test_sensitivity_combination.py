@@ -8,7 +8,7 @@ from sklearn.ensemble import RandomForestRegressor
 
 from causalis.data.causaldata import CausalData
 from causalis.inference.estimators.irm import IRM
-from causalis.refutation.unconfoundedness.uncofoundedness_validation import sensitivity_analysis, get_sensitivity_summary
+from causalis.refutation.unconfoundedness.sensitivity import sensitivity_analysis, get_sensitivity_summary
 
 
 def make_synth(n=400, seed=123):
