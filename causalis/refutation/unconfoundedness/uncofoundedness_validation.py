@@ -1,9 +1,5 @@
 """
-Sensitivity analysis utilities for internal IRM-based estimators.
-
-This module provides functions to produce a simple sensitivity-style report for
-causal effect estimates returned by dml_ate and dml_att (which are based on the
-internal IRM estimator). It no longer relies on DoubleML objects.
+Uncofoundedness validation module
 """
 
 from __future__ import annotations
@@ -418,24 +414,19 @@ def run_unconfoundedness_diagnostics(
     return_summary: bool = True,
 ) -> _Dict[str, _Any]:
     """
-    Single entry-point for *unconfoundedness* validation:
-      - Covariate balance (SMD) after implied IPW/ATT weighting
-      - Overlap diagnostics (propensity distribution by group)
-      - Weight stability (ESS, tails, concentration)
+    Unconfoundedness diagnostics focused on balance (SMD).
 
-    Usage:
-      A) With a result dict / model:
-         run_unconfoundedness_diagnostics(res=ate_result, threshold=0.10)
-      B) With raw arrays:
-         run_unconfoundedness_diagnostics(X=X, d=d, m_hat=m, score="ATE", normalize=False)
+    Inputs:
+      - Either a result/model via `res`, or raw arrays X, d, m_hat (+ optional names, score, normalize).
 
-    Returns a dict with:
-      - params (score, threshold, eps_overlap, normalize)
-      - balance (SMD series, unweighted SMD, pass, worst_features)
-      - weights (ESS, quantiles, top1 mass)
-      - overlap (KS distance, tail shares, group min/max m)
-      - summary (metric/value/flag)
-      - thresholds, flags, overall_flag
+    Returns a dictionary:
+      {
+        "params": {"score", "normalize", "smd_threshold"},
+        "balance": {"smd", "smd_unweighted", "smd_max", "frac_violations", "pass", "worst_features"},
+        "flags": {"balance_max_smd", "balance_violations"},
+        "overall_flag": max severity across balance flags,
+        "summary": pd.DataFrame with balance rows only
+      }
     """
     # ---- Resolve inputs ----
     if (X is None or d is None or m_hat is None) and res is None:
@@ -466,170 +457,71 @@ def run_unconfoundedness_diagnostics(
     if m_hat.size != n or d.size != n:
         raise ValueError("X, d, m_hat must have matching length n.")
 
-    # ---- Balance (SMD) ----
+    # ---- Balance (SMD only) ----
     bal = _balance_smd(X, d, m_hat, score=score_u, normalize=used_norm, threshold=threshold)
-    w1, w0 = bal["weights"]
-    s1, s0 = bal["mass"]
 
     smd_w = pd.Series(bal["smd_weighted"], index=names, dtype=float, name="SMD_weighted")
     smd_u = pd.Series(bal["smd_unweighted"], index=names, dtype=float, name="SMD_unweighted")
     worst = smd_w.sort_values(ascending=False).head(10)
 
-    # ---- Weight stability ----
-    def _ess(w: np.ndarray) -> float:
-        w = np.asarray(w, dtype=float)
-        s = float(np.sum(w))
-        ss = float(np.sum(w * w)) + 1e-12
-        return (s * s) / ss
+    frac_viol = float(bal["frac_violations"]) if np.isfinite(bal["frac_violations"]) else 0.0
+    pass_bal = bool(np.all(smd_w[np.isfinite(smd_w)] < float(threshold)) and (frac_viol < 0.10)) if np.any(np.isfinite(smd_w)) else True
 
-    ess1 = _ess(w1); ess0 = _ess(w0)
-    # group counts (unweighted)
-    n1 = int((d > 0.5).sum())
-    n0 = int((d <= 0.5).sum())
-    # Clamp ratios to [0,1] to avoid numerical noise
-    ess1_ratio = float(min(1.0, max(0.0, ess1 / max(n1, 1))))
-    ess0_ratio = float(min(1.0, max(0.0, ess0 / max(n0, 1))))
-
-    # weight tails & concentration (per group)
-    q1 = _safe_quantiles(w1); q0 = _safe_quantiles(w0)
-    tail_ratio1 = (q1[-1] / (q1[0] + 1e-12)) if np.isfinite(q1[-1]) and np.isfinite(q1[0]) else float("nan")
-    tail_ratio0 = (q0[-1] / (q0[0] + 1e-12)) if np.isfinite(q0[-1]) and np.isfinite(q0[0]) else float("nan")
-    # top 1% mass share
-    def _top1_share(w: np.ndarray) -> float:
-        w = np.asarray(w, dtype=float)
-        if w.size == 0:
-            return float("nan")
-        s = float(np.sum(w))
-        k = max(1, int(np.ceil(0.01 * w.size)))
-        return float(np.sum(np.sort(w)[-k:]) / (s + 1e-12))
-    top1_1 = _top1_share(w1); top1_0 = _top1_share(w0)
-
-    # ---- Overlap diagnostics on m_hat ----
-    m = np.asarray(m_hat, dtype=float)
-    m1 = m[d > 0.5]; m0 = m[d <= 0.5]
-    ks_m = _ks_unweighted(m1, m0)
-    pct_low = float(100.0 * np.mean(m <= eps_overlap))
-    pct_high = float(100.0 * np.mean(m >= 1.0 - eps_overlap))
-    pct_low_by_group = float(100.0 * np.mean(m1 <= eps_overlap)) if m1.size else float("nan")
-    pct_high_by_group = float(100.0 * np.mean(m0 >= 1.0 - eps_overlap)) if m0.size else float("nan")
-    m_stats = {
-        "treated": dict(n=n1, m_min=float(np.min(m1)) if m1.size else float("nan"), m_max=float(np.max(m1)) if m1.size else float("nan")),
-        "control": dict(n=n0, m_min=float(np.min(m0)) if m0.size else float("nan"), m_max=float(np.max(m0)) if m0.size else float("nan")),
+    balance_block = {
+        "smd": smd_w,
+        "smd_unweighted": smd_u,
+        "smd_max": float(bal["smd_max"]),
+        "frac_violations": frac_viol,
+        "pass": pass_bal,
+        "worst_features": worst,
     }
 
-    # ---- Compose report ----
+
+    # ---- Balance-only flags & thresholds ----
+    def _grade_balance(val: float, warn: float, strong: float) -> str:
+        if val is None or (isinstance(val, float) and (np.isnan(val) or np.isinf(val))):
+            return "NA"
+        v = float(val)
+        return "GREEN" if v < warn else ("YELLOW" if v < strong else "RED")
+
+    smd_warn = float(threshold)
+    smd_strong = float(threshold) * 2.0  # conventional 0.10/0.20 if threshold=0.10
+    viol_frac_warn = 0.10
+    viol_frac_strong = 0.25
+
+    balance_flags = {
+        "balance_max_smd": _grade_balance(balance_block["smd_max"], smd_warn, smd_strong),
+        "balance_violations": _grade_balance(balance_block["frac_violations"], viol_frac_warn, viol_frac_strong),
+    }
+
+    # ---- Overall flag severity (balance only) ----
+    order = {"GREEN": 0, "YELLOW": 1, "RED": 2, "NA": -1}
+    worst_flag = max((order.get(f, -1) for f in balance_flags.values()), default=-1)
+    inv = {v: k for k, v in order.items()}
+    overall_flag = inv.get(worst_flag, "NA")
+
+    # ---- Params ----
+    params = {
+        "score": score_u,
+        "normalize": used_norm,
+        "smd_threshold": float(threshold),
+    }
+
     report: _Dict[str, _Any] = {
-        "params": {
-            "score": score_u,
-            "threshold": float(threshold),
-            "eps_overlap": float(eps_overlap),
-            "normalize": used_norm,
-        },
-        "balance": {
-            "smd": smd_w,
-            "smd_unweighted": smd_u,
-            "smd_max": float(bal["smd_max"]),
-            "frac_violations": float(bal["frac_violations"]),
-            "pass": (bool(np.all(smd_w[np.isfinite(smd_w)] < float(threshold)) and float(bal["frac_violations"]) < 0.10) if np.any(np.isfinite(smd_w)) else True),
-            "worst_features": worst,
-        },
-        "weights": {
-            "sum_treated": s1,
-            "sum_control": s0,
-            "ess_treated": float(ess1),
-            "ess_control": float(ess0),
-            "ess_treated_ratio": float(ess1_ratio),
-            "ess_control_ratio": float(ess0_ratio),
-            "w_treated_quantiles": {"p50": q1[0], "p90": q1[1], "p99": q1[2]},
-            "w_control_quantiles": {"p50": q0[0], "p90": q0[1], "p99": q0[2]},
-            "w_tail_ratio_treated": float(tail_ratio1),
-            "w_tail_ratio_control": float(tail_ratio0),
-            "top1_mass_share_treated": float(top1_1),
-            "top1_mass_share_control": float(top1_0),
-        },
-        "overlap": {
-            "ks_m_treated_vs_control": float(ks_m),
-            "pct_m_le_eps": pct_low,
-            "pct_m_ge_1_minus_eps": pct_high,
-            "pct_treated_m_le_eps": pct_low_by_group,
-            "pct_control_m_ge_1_minus_eps": pct_high_by_group,
-            "pct_m_outside_both": float(min(100.0, pct_low + pct_high)),
-            "by_group_min_max": m_stats,
-        },
+        "params": params,
+        "balance": balance_block,
+        "flags": balance_flags,
+        "overall_flag": overall_flag,
         "meta": {"n": int(n), "p": int(p)},
     }
 
-    # ---- Thresholds & flags (GREEN/YELLOW/RED) ----
-    thr = {
-        "smd_warn": 0.10, "smd_strong": 0.20,                   # balance
-        "viol_frac_warn": 0.10, "viol_frac_strong": 0.25,       # share of features over threshold
-        "ess_ratio_warn": 0.80, "ess_ratio_strong": 0.60,       # ESS/N_g (larger is better)
-        "w_tail_warn": 20.0, "w_tail_strong": 50.0,             # p99/median of weights
-        "top1_share_warn": 0.50, "top1_share_strong": 0.70,     # mass in top 1%
-        "ks_warn": 0.25, "ks_strong": 0.40,                     # KS distance on m
-        "extreme_m_warn": 10.0, "extreme_m_strong": 20.0,       # % overall outside [eps, 1-eps]
-    }
-
-    flags = {
-        "balance_max_smd": _grade(report["balance"]["smd_max"], thr["smd_warn"], thr["smd_strong"], larger_is_worse=True),
-        "balance_violations": _grade(report["balance"]["frac_violations"], thr["viol_frac_warn"], thr["viol_frac_strong"], larger_is_worse=True),
-        "ess_treated_ratio": _grade(report["weights"]["ess_treated_ratio"], thr["ess_ratio_warn"], thr["ess_ratio_strong"], larger_is_worse=False),
-        "ess_control_ratio": _grade(report["weights"]["ess_control_ratio"], thr["ess_ratio_warn"], thr["ess_ratio_strong"], larger_is_worse=False),
-        "w_tail_treated": _grade(report["weights"]["w_tail_ratio_treated"], thr["w_tail_warn"], thr["w_tail_strong"], larger_is_worse=True),
-        "w_tail_control": _grade(report["weights"]["w_tail_ratio_control"], thr["w_tail_warn"], thr["w_tail_strong"], larger_is_worse=True),
-        "top1_mass_treated": _grade(report["weights"]["top1_mass_share_treated"], thr["top1_share_warn"], thr["top1_share_strong"], larger_is_worse=True),
-        "top1_mass_control": _grade(report["weights"]["top1_mass_share_control"], thr["top1_share_warn"], thr["top1_share_strong"], larger_is_worse=True),
-        "ks_propensity": _grade(report["overlap"]["ks_m_treated_vs_control"], thr["ks_warn"], thr["ks_strong"], larger_is_worse=True),
-        "extreme_propensity_overall": _grade(
-            max(report["overlap"]["pct_m_le_eps"], report["overlap"]["pct_m_ge_1_minus_eps"]),
-            thr["extreme_m_warn"], thr["extreme_m_strong"], larger_is_worse=True
-        ),
-    }
-
-    report["thresholds"] = thr
-    report["flags"] = flags
-
-    # Overall = worst of flags (NA ignored)
-    order = {"GREEN": 0, "YELLOW": 1, "RED": 2, "NA": -1}
-    worst_flag = max((order.get(f, -1) for f in flags.values()), default=-1)
-    inv = {v: k for k, v in order.items()}
-    report["overall_flag"] = inv.get(worst_flag, "NA")
-
-    # ---- Compact summary table ----
+    # ---- Optional summary table (balance-only) ----
     if return_summary:
-        rows = [
-            ("balance_max_smd", report["balance"]["smd_max"], flags["balance_max_smd"]),
-            ("balance_frac_violations", report["balance"]["frac_violations"], flags["balance_violations"]),
-            ("ess_treated_ratio", report["weights"]["ess_treated_ratio"], flags["ess_treated_ratio"]),
-            ("ess_control_ratio", report["weights"]["ess_control_ratio"], flags["ess_control_ratio"]),
-            ("w_tail_ratio_treated", report["weights"]["w_tail_ratio_treated"], flags["w_tail_treated"]),
-            ("w_tail_ratio_control", report["weights"]["w_tail_ratio_control"], flags["w_tail_control"]),
-            ("top1_mass_share_treated", report["weights"]["top1_mass_share_treated"], flags["top1_mass_treated"]),
-            ("top1_mass_share_control", report["weights"]["top1_mass_share_control"], flags["top1_mass_control"]),
-            ("ks_m_treated_vs_control", report["overlap"]["ks_m_treated_vs_control"], flags["ks_propensity"]),
-            ("pct_m_outside_overlap", max(report["overlap"]["pct_m_le_eps"], report["overlap"]["pct_m_ge_1_minus_eps"]), flags["extreme_propensity_overall"]),
+        bal_rows = [
+            {"metric": "balance_max_smd", "value": balance_block["smd_max"], "flag": balance_flags["balance_max_smd"]},
+            {"metric": "balance_frac_violations", "value": balance_block["frac_violations"], "flag": balance_flags["balance_violations"]},
         ]
-        report["summary"] = pd.DataFrame(rows, columns=["metric", "value", "flag"])
+        report["summary"] = pd.DataFrame(bal_rows)
 
     return report
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# ---------------- Re-exports from dedicated sensitivity module (backward-compat) ----------------
-from .sensitivity import (
-    sensitivity_analysis,
-    get_sensitivity_summary,
-    sensitivity_benchmark,
-)

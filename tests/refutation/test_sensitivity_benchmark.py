@@ -7,7 +7,7 @@ from sklearn.ensemble import RandomForestRegressor, RandomForestClassifier
 
 from causalis.data.causaldata import CausalData
 from causalis.inference.estimators.irm import IRM
-from causalis.refutation.unconfoundedness.uncofoundedness_validation import sensitivity_benchmark
+from causalis.refutation.unconfoundedness.sensitivity import sensitivity_benchmark
 
 
 def make_synthetic(n=400, seed=42):
