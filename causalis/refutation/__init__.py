@@ -15,6 +15,7 @@ from .score.score_validation import *  # noqa: F401,F403
 
 # Unconfoundedness sensitivity and balance checks
 from .unconfoundedness.uncofoundedness_validation import *  # noqa: F401,F403
+from .unconfoundedness.sensitivity import *  # noqa: F401,F403
 
 # SUTVA helper
 from .sutva.sutva_validation import *  # noqa: F401,F403
