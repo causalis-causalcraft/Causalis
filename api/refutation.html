@@ -382,8 +382,6 @@ document.write(`
 <li class="toctree-l2"><a class="reference internal" href="generated/causalis.refutation.refute_placebo_outcome.html">causalis.refutation.refute_placebo_outcome</a></li>
 <li class="toctree-l2"><a class="reference internal" href="generated/causalis.refutation.refute_placebo_treatment.html">causalis.refutation.refute_placebo_treatment</a></li>
 <li class="toctree-l2"><a class="reference internal" href="generated/causalis.refutation.refute_subset.html">causalis.refutation.refute_subset</a></li>
-<li class="toctree-l2"><a class="reference internal" href="generated/causalis.refutation.sensitivity_analysis.html">causalis.refutation.sensitivity_analysis</a></li>
-<li class="toctree-l2"><a class="reference internal" href="generated/causalis.refutation.get_sensitivity_summary.html">causalis.refutation.get_sensitivity_summary</a></li>
 <li class="toctree-l2"><a class="reference internal" href="generated/causalis.refutation.refute_irm_orthogonality.html">causalis.refutation.refute_irm_orthogonality</a></li>
 </ul>
 </details></li>
@@ -468,12 +466,6 @@ document.write(`
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="generated/causalis.refutation.refute_subset.html#causalis.refutation.refute_subset" title="causalis.refutation.refute_subset"><code class="xref py py-obj docutils literal notranslate"><span class="pre">refute_subset</span></code></a></p></td>
 <td><p>Re-estimate the effect on a random subset (default 80 %) to check sample-stability of the estimate.</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="generated/causalis.refutation.sensitivity_analysis.html#causalis.refutation.sensitivity_analysis" title="causalis.refutation.sensitivity_analysis"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sensitivity_analysis</span></code></a></p></td>
-<td><p>Compute bias-aware components and cache them on <cite>effect_estimation[&quot;bias_aware&quot;]</cite>.</p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="generated/causalis.refutation.get_sensitivity_summary.html#causalis.refutation.get_sensitivity_summary" title="causalis.refutation.get_sensitivity_summary"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_sensitivity_summary</span></code></a></p></td>
-<td><p>Render a single, unified bias-aware summary string.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="generated/causalis.refutation.refute_irm_orthogonality.html#causalis.refutation.refute_irm_orthogonality" title="causalis.refutation.refute_irm_orthogonality"><code class="xref py py-obj docutils literal notranslate"><span class="pre">refute_irm_orthogonality</span></code></a></p></td>
 <td><p>Comprehensive AIPW orthogonality diagnostics for IRM estimators.</p></td>
@@ -992,10 +984,7 @@ under specified value gates.</p></li>
 </section>
 <section id="module-causalis.refutation.unconfoundedness.uncofoundedness_validation">
 <span id="sensitivity-analysis"></span><h2>Sensitivity Analysis<a class="headerlink" href="#module-causalis.refutation.unconfoundedness.uncofoundedness_validation" title="Link to this heading">#</a></h2>
-<p>Sensitivity analysis utilities for internal IRM-based estimators.</p>
-<p>This module provides functions to produce a simple sensitivity-style report for
-causal effect estimates returned by dml_ate and dml_att (which are based on the
-internal IRM estimator). It no longer relies on DoubleML objects.</p>
+<p>Uncofoundedness validation module</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="causalis.refutation.unconfoundedness.uncofoundedness_validation.validate_unconfoundedness_balance">
 <span class="sig-prename descclassname"><span class="pre">causalis.refutation.unconfoundedness.uncofoundedness_validation.</span></span><span class="sig-name descname"><span class="pre">validate_unconfoundedness_balance</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">effect_estimation</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">normalize</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/causalis/refutation/unconfoundedness/uncofoundedness_validation.html#validate_unconfoundedness_balance"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#causalis.refutation.unconfoundedness.uncofoundedness_validation.validate_unconfoundedness_balance" title="Link to this definition">#</a></dt>
@@ -1043,7 +1032,8 @@ variances in the two groups.</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="causalis.refutation.unconfoundedness.uncofoundedness_validation.run_unconfoundedness_diagnostics">
 <span class="sig-prename descclassname"><span class="pre">causalis.refutation.unconfoundedness.uncofoundedness_validation.</span></span><span class="sig-name descname"><span class="pre">run_unconfoundedness_diagnostics</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">res</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">X</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">d</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">m_hat</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">score</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">normalize</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">eps_overlap</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.01</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_summary</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/causalis/refutation/unconfoundedness/uncofoundedness_validation.html#run_unconfoundedness_diagnostics"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#causalis.refutation.unconfoundedness.uncofoundedness_validation.run_unconfoundedness_diagnostics" title="Link to this definition">#</a></dt>
-<dd><dl class="field-list simple">
+<dd><p>Unconfoundedness diagnostics focused on balance (SMD).</p>
+<dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Dict" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code></a>]</span></p>
 </dd>
@@ -1062,28 +1052,20 @@ variances in the two groups.</p>
 </ul>
 </dd>
 </dl>
-<dl class="simple">
-<dt>Single entry-point for <em>unconfoundedness</em> validation:</dt><dd><ul class="simple">
-<li><p>Covariate balance (SMD) after implied IPW/ATT weighting</p></li>
-<li><p>Overlap diagnostics (propensity distribution by group)</p></li>
-<li><p>Weight stability (ESS, tails, concentration)</p></li>
+<dl>
+<dt>Inputs:</dt><dd><ul class="simple">
+<li><p>Either a result/model via <cite>res</cite>, or raw arrays X, d, m_hat (+ optional names, score, normalize).</p></li>
 </ul>
 </dd>
-<dt>Usage:</dt><dd><ol class="upperalpha simple">
-<li><p>With a result dict / model:
-run_unconfoundedness_diagnostics(res=ate_result, threshold=0.10)</p></li>
-<li><p>With raw arrays:
-run_unconfoundedness_diagnostics(X=X, d=d, m_hat=m, score=”ATE”, normalize=False)</p></li>
-</ol>
+<dt>Returns a dictionary:</dt><dd><dl class="simple">
+<dt>{</dt><dd><p>“params”: {“score”, “normalize”, “smd_threshold”},
+“balance”: {“smd”, “smd_unweighted”, “smd_max”, “frac_violations”, “pass”, “worst_features”},
+“flags”: {“balance_max_smd”, “balance_violations”},
+“overall_flag”: max severity across balance flags,
+“summary”: pd.DataFrame with balance rows only</p>
 </dd>
-<dt>Returns a dict with:</dt><dd><ul class="simple">
-<li><p>params (score, threshold, eps_overlap, normalize)</p></li>
-<li><p>balance (SMD series, unweighted SMD, pass, worst_features)</p></li>
-<li><p>weights (ESS, quantiles, top1 mass)</p></li>
-<li><p>overlap (KS distance, tail shares, group min/max m)</p></li>
-<li><p>summary (metric/value/flag)</p></li>
-<li><p>thresholds, flags, overall_flag</p></li>
-</ul>
+</dl>
+<p>}</p>
 </dd>
 </dl>
 </dd></dl>

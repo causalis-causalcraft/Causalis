@@ -1,0 +1,2428 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Refutation of DML IRM inference &#8212; Causalis 0.1.0 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../_static/styles/bootstrap.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+
+  
+  <link href="../_static/vendor/fontawesome/6.5.2/css/all.min.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../_static/mystnb.8ecb98da25f57f5357bf6f572d296f466b2cfe2517ffebfabe82451661e28f02.css?v=6644e6bb" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=95c83b7e" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/custom.css?v=e0b54744" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
+  <script src="../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+    <script src="../_static/documentation_options.js?v=2caa9db7"></script>
+    <script src="../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../_static/copybutton.js?v=f281be69"></script>
+    <script src="../_static/design-tabs.js?v=df1d7cd1"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'research/refutation_flow';</script>
+    <link rel="icon" href="../_static/new_logo.svg"/>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-primary-sidebar-checkbox"/>
+  <label class="overlay overlay-primary" for="pst-primary-sidebar-checkbox"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-secondary-sidebar-checkbox"/>
+  <label class="overlay overlay-secondary" for="pst-secondary-sidebar-checkbox"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../_static/new_logo_big.svg" class="logo__image only-light" alt=""/>
+    <script>document.write(`<img src="../_static/new_logo_big.svg" class="logo__image only-dark" alt=""/>`);</script>
+  
+  
+    <p class="title logo__title">Causalis</p>
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../user-guide.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../examples.html">
+    Real World Examples
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../research.html">
+    Research
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../api.html">
+    API Reference
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+ <script>
+ document.write(`
+   <button class="btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<script>
+document.write(`
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"></i>
+  </button>
+`);
+</script></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/IoannMartynov/Causalis" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+ <script>
+ document.write(`
+   <button class="btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script>
+    </div>
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+        
+      
+      <div class="bd-sidebar-primary bd-sidebar hide-on-wide">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../user-guide.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../examples.html">
+    Real World Examples
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../research.html">
+    Research
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../api.html">
+    API Reference
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<script>
+document.write(`
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"></i>
+  </button>
+`);
+</script></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/IoannMartynov/Causalis" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    <li class="breadcrumb-item active" aria-current="page">Refutation...</li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section class="tex2jax_ignore mathjax_ignore" id="refutation-of-dml-irm-inference">
+<h1>Refutation of DML IRM inference<a class="headerlink" href="#refutation-of-dml-irm-inference" title="Link to this heading">#</a></h1>
+<p>This notebook explain refutation tests that implemented in Causalis
+DGP took from <a class="reference external" href="https://ioannmartynov.github.io/Causalis/research/dgp_benchmarking.html">benchmarking notebook</a></p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython2 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Tuple</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">causalis.data</span><span class="w"> </span><span class="kn">import</span> <span class="n">CausalDatasetGenerator</span>
+
+<span class="c1"># 1) Confounders</span>
+<span class="n">confounder_specs</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;tenure_months&quot;</span><span class="p">,</span>     <span class="s2">&quot;dist&quot;</span><span class="p">:</span> <span class="s2">&quot;normal&quot;</span><span class="p">,</span>    <span class="s2">&quot;mu&quot;</span><span class="p">:</span> <span class="mi">24</span><span class="p">,</span> <span class="s2">&quot;sd&quot;</span><span class="p">:</span> <span class="mi">12</span><span class="p">},</span>
+    <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;avg_sessions_week&quot;</span><span class="p">,</span> <span class="s2">&quot;dist&quot;</span><span class="p">:</span> <span class="s2">&quot;normal&quot;</span><span class="p">,</span>    <span class="s2">&quot;mu&quot;</span><span class="p">:</span> <span class="mi">5</span><span class="p">,</span>  <span class="s2">&quot;sd&quot;</span><span class="p">:</span> <span class="mi">2</span><span class="p">},</span>
+    <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;spend_last_month&quot;</span><span class="p">,</span>  <span class="s2">&quot;dist&quot;</span><span class="p">:</span> <span class="s2">&quot;uniform&quot;</span><span class="p">,</span>   <span class="s2">&quot;a&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>   <span class="s2">&quot;b&quot;</span><span class="p">:</span> <span class="mi">200</span><span class="p">},</span>
+    <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;premium_user&quot;</span><span class="p">,</span>      <span class="s2">&quot;dist&quot;</span><span class="p">:</span> <span class="s2">&quot;bernoulli&quot;</span><span class="p">,</span> <span class="s2">&quot;p&quot;</span><span class="p">:</span> <span class="mf">0.25</span><span class="p">},</span>
+    <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;urban_resident&quot;</span><span class="p">,</span>    <span class="s2">&quot;dist&quot;</span><span class="p">:</span> <span class="s2">&quot;bernoulli&quot;</span><span class="p">,</span> <span class="s2">&quot;p&quot;</span><span class="p">:</span> <span class="mf">0.60</span><span class="p">},</span>
+<span class="p">]</span>
+
+<span class="c1"># 2) Feature index map</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">feature_indices_from_specs</span><span class="p">(</span><span class="n">specs</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]])</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]]:</span>
+    <span class="n">idx</span><span class="p">,</span> <span class="n">out</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">spec</span> <span class="ow">in</span> <span class="n">specs</span><span class="p">:</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="n">spec</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;name&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+        <span class="n">dist</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">spec</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;dist&quot;</span><span class="p">,</span><span class="s2">&quot;normal&quot;</span><span class="p">))</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">dist</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;normal&quot;</span><span class="p">,</span><span class="s2">&quot;uniform&quot;</span><span class="p">,</span><span class="s2">&quot;bernoulli&quot;</span><span class="p">):</span>
+            <span class="n">out</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">idx</span><span class="p">,);</span> <span class="n">idx</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unsupported dist: </span><span class="si">{</span><span class="n">dist</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">out</span>
+
+<span class="n">feat</span> <span class="o">=</span> <span class="n">feature_indices_from_specs</span><span class="p">(</span><span class="n">confounder_specs</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">col</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span> <span class="k">return</span> <span class="n">X</span><span class="p">[:,</span> <span class="n">feat</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="mi">0</span><span class="p">]]</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_log1p_pos</span><span class="p">(</span><span class="n">x</span><span class="p">):</span> <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">log1p</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="kc">None</span><span class="p">))</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_sqrt_pos</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>  <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="kc">None</span><span class="p">))</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_ind</span><span class="p">(</span><span class="n">cond</span><span class="p">):</span>    <span class="k">return</span> <span class="n">cond</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">float</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_sigmoid</span><span class="p">(</span><span class="n">z</span><span class="p">):</span>   <span class="k">return</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">z</span><span class="p">))</span>
+
+<span class="c1"># 3) g_d(x) -   nonlinear connection between X and D</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">g_d</span><span class="p">(</span><span class="n">X</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+    <span class="n">tenure</span> <span class="o">=</span> <span class="n">col</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="s2">&quot;tenure_months&quot;</span><span class="p">)</span>
+    <span class="n">sess</span>   <span class="o">=</span> <span class="n">col</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="s2">&quot;avg_sessions_week&quot;</span><span class="p">)</span>
+    <span class="n">spend</span>  <span class="o">=</span> <span class="n">col</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="s2">&quot;spend_last_month&quot;</span><span class="p">)</span>
+    <span class="n">prem</span>   <span class="o">=</span> <span class="n">col</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="s2">&quot;premium_user&quot;</span><span class="p">)</span>
+    <span class="n">urban</span>  <span class="o">=</span> <span class="n">col</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="s2">&quot;urban_resident&quot;</span><span class="p">)</span>
+    <span class="n">tau_align</span> <span class="o">=</span> <span class="n">tau_func</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>                                       <span class="c1"># explicit alignment</span>
+    <span class="k">return</span> <span class="p">(</span>
+        <span class="mf">1.10</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">tanh</span><span class="p">(</span><span class="mf">0.06</span><span class="o">*</span><span class="p">(</span><span class="n">spend</span> <span class="o">-</span> <span class="mf">100.0</span><span class="p">))</span>
+      <span class="o">+</span> <span class="mf">1.00</span> <span class="o">*</span> <span class="n">_sigmoid</span><span class="p">(</span><span class="mf">0.60</span><span class="o">*</span><span class="p">(</span><span class="n">sess</span> <span class="o">-</span> <span class="mf">5.0</span><span class="p">))</span>
+      <span class="o">+</span> <span class="mf">0.50</span> <span class="o">*</span> <span class="n">_log1p_pos</span><span class="p">(</span><span class="n">tenure</span><span class="p">)</span>
+      <span class="o">+</span> <span class="mf">0.50</span> <span class="o">*</span> <span class="n">prem</span>
+      <span class="o">+</span> <span class="mf">0.25</span> <span class="o">*</span> <span class="n">urban</span>
+      <span class="o">+</span> <span class="mf">0.90</span> <span class="o">*</span> <span class="n">prem</span> <span class="o">*</span> <span class="n">_ind</span><span class="p">(</span><span class="n">spend</span> <span class="o">&gt;</span> <span class="mf">120.0</span><span class="p">)</span>
+      <span class="o">+</span> <span class="mf">0.30</span> <span class="o">*</span> <span class="n">urban</span> <span class="o">*</span> <span class="n">_ind</span><span class="p">(</span><span class="n">tenure</span> <span class="o">&lt;</span> <span class="mf">12.0</span><span class="p">)</span>
+      <span class="o">+</span> <span class="mf">0.80</span> <span class="o">*</span> <span class="n">tau_align</span>                                         <span class="c1"># direct alignment term (λ)</span>
+    <span class="p">)</span>
+
+
+<span class="c1"># 4) g_y(x)  -   nonlinear connection between X and Y</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">g_y</span><span class="p">(</span><span class="n">X</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+    <span class="n">tenure</span> <span class="o">=</span> <span class="n">col</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="s2">&quot;tenure_months&quot;</span><span class="p">)</span>
+    <span class="n">sess</span>   <span class="o">=</span> <span class="n">col</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="s2">&quot;avg_sessions_week&quot;</span><span class="p">)</span>
+    <span class="n">spend</span>  <span class="o">=</span> <span class="n">col</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="s2">&quot;spend_last_month&quot;</span><span class="p">)</span>
+    <span class="n">prem</span>   <span class="o">=</span> <span class="n">col</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="s2">&quot;premium_user&quot;</span><span class="p">)</span>
+    <span class="n">urban</span>  <span class="o">=</span> <span class="n">col</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="s2">&quot;urban_resident&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">(</span>
+        <span class="mf">0.70</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">tanh</span><span class="p">(</span><span class="mf">0.03</span><span class="o">*</span><span class="p">(</span><span class="n">spend</span> <span class="o">-</span> <span class="mf">80.0</span><span class="p">))</span>
+      <span class="o">+</span> <span class="mf">0.50</span> <span class="o">*</span> <span class="n">_sqrt_pos</span><span class="p">(</span><span class="n">sess</span><span class="p">)</span>
+      <span class="o">+</span> <span class="mf">0.40</span> <span class="o">*</span> <span class="n">_log1p_pos</span><span class="p">(</span><span class="n">tenure</span><span class="p">)</span>
+      <span class="o">+</span> <span class="mf">0.30</span> <span class="o">*</span> <span class="n">prem</span>
+      <span class="o">+</span> <span class="mf">0.10</span> <span class="o">*</span> <span class="n">urban</span>
+      <span class="o">-</span> <span class="mf">0.10</span> <span class="o">*</span> <span class="n">_ind</span><span class="p">(</span><span class="n">spend</span> <span class="o">&lt;</span> <span class="mf">20.0</span><span class="p">)</span>
+    <span class="p">)</span>
+
+<span class="c1"># 5) tau(x)  — nonlinear effect function (CATE)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">tau_func</span><span class="p">(</span><span class="n">X</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+    <span class="n">tenure</span> <span class="o">=</span> <span class="n">col</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="s2">&quot;tenure_months&quot;</span><span class="p">)</span>
+    <span class="n">sess</span>   <span class="o">=</span> <span class="n">col</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="s2">&quot;avg_sessions_week&quot;</span><span class="p">)</span>
+    <span class="n">spend</span>  <span class="o">=</span> <span class="n">col</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="s2">&quot;spend_last_month&quot;</span><span class="p">)</span>
+    <span class="n">prem</span>   <span class="o">=</span> <span class="n">col</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="s2">&quot;premium_user&quot;</span><span class="p">)</span>
+    <span class="n">urban</span>  <span class="o">=</span> <span class="n">col</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="s2">&quot;urban_resident&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">(</span>
+        <span class="mf">0.40</span>
+      <span class="o">+</span> <span class="mf">0.60</span> <span class="o">*</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">/</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="mf">0.40</span><span class="o">*</span><span class="p">(</span><span class="n">sess</span> <span class="o">-</span> <span class="mf">5.0</span><span class="p">))))</span>  <span class="c1"># sigmoid</span>
+      <span class="o">+</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">prem</span> <span class="o">*</span> <span class="n">_ind</span><span class="p">(</span><span class="n">spend</span> <span class="o">&gt;</span> <span class="mf">120.0</span><span class="p">)</span>
+      <span class="o">+</span> <span class="mf">0.10</span> <span class="o">*</span> <span class="n">urban</span> <span class="o">*</span> <span class="n">_ind</span><span class="p">(</span><span class="n">tenure</span> <span class="o">&lt;</span> <span class="mf">12.0</span><span class="p">)</span>
+    <span class="p">)</span>
+
+<span class="c1"># 6) Generator — continuous outcome</span>
+<span class="n">gen</span> <span class="o">=</span> <span class="n">CausalDatasetGenerator</span><span class="p">(</span>
+    <span class="n">theta</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>                 <span class="c1"># ignored; we pass tau</span>
+    <span class="n">tau</span><span class="o">=</span><span class="n">tau_func</span><span class="p">,</span>              <span class="c1"># nonlinear effect</span>
+    <span class="n">beta_y</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">beta_d</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>  <span class="c1"># use nonlinear g_* only</span>
+    <span class="n">g_y</span><span class="o">=</span><span class="n">g_y</span><span class="p">,</span> <span class="n">g_d</span><span class="o">=</span><span class="n">g_d</span><span class="p">,</span>          <span class="c1"># nonlinear functions</span>
+    <span class="n">alpha_y</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>               <span class="c1"># baseline mean level, intercept</span>
+    <span class="n">alpha_d</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>               <span class="c1"># will be calibrated to target_d_rate</span>
+    <span class="n">sigma_y</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>               <span class="c1"># noise std for Y</span>
+    <span class="n">outcome_type</span><span class="o">=</span><span class="s2">&quot;continuous&quot;</span><span class="p">,</span> <span class="c1"># outcome distribution</span>
+    <span class="n">confounder_specs</span><span class="o">=</span><span class="n">confounder_specs</span><span class="p">,</span>
+    <span class="n">target_d_rate</span><span class="o">=</span><span class="mf">0.20</span><span class="p">,</span>        <span class="c1"># 20% will be treated</span>
+    <span class="n">u_strength_d</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>          <span class="c1"># strength of latent confounder influence on treatment</span>
+    <span class="n">u_strength_y</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>          <span class="c1"># strength of latent confounder influence on outcome</span>
+    <span class="n">propensity_sharpness</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>    <span class="c1"># increase to make overlap harder</span>
+    <span class="n">seed</span><span class="o">=</span><span class="mi">123</span>                   <span class="c1"># random seed for reproducibility</span>
+<span class="p">)</span>
+
+<span class="c1"># 7) Generate</span>
+<span class="n">n</span> <span class="o">=</span> <span class="mi">10_000</span>                     <span class="c1"># Number of observations</span>
+<span class="n">df</span> <span class="o">=</span> <span class="n">gen</span><span class="o">.</span><span class="n">generate</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+
+
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Treatment share ≈&quot;</span><span class="p">,</span> <span class="n">df</span><span class="p">[</span><span class="s2">&quot;d&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">mean</span><span class="p">())</span>
+<span class="n">true_ate</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="s2">&quot;cate&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">mean</span><span class="p">())</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Ground-truth ATE from the DGP: </span><span class="si">{</span><span class="n">true_ate</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="c1"># Ground-truth ATT (on the natural scale): E[tau(X) | T=1] = mean CATE among the treated</span>
+<span class="n">true_att</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">df</span><span class="p">[</span><span class="s2">&quot;d&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;cate&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">mean</span><span class="p">())</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Ground-truth ATT from the DGP: </span><span class="si">{</span><span class="n">true_att</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Treatment share ≈ 0.2036
+Ground-truth ATE from the DGP: 0.913
+Ground-truth ATT from the DGP: 1.567
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython2 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">causalis.data</span><span class="w"> </span><span class="kn">import</span> <span class="n">CausalData</span>
+
+<span class="n">causal_data</span> <span class="o">=</span> <span class="n">CausalData</span><span class="p">(</span>
+    <span class="n">df</span><span class="o">=</span><span class="n">df</span><span class="p">,</span>
+    <span class="n">treatment</span><span class="o">=</span><span class="s2">&quot;d&quot;</span><span class="p">,</span>
+    <span class="n">outcome</span><span class="o">=</span><span class="s2">&quot;y&quot;</span><span class="p">,</span>
+    <span class="n">confounders</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;tenure_months&quot;</span><span class="p">,</span>
+                 <span class="s2">&quot;avg_sessions_week&quot;</span><span class="p">,</span>
+                 <span class="s2">&quot;spend_last_month&quot;</span><span class="p">,</span>
+                 <span class="s2">&quot;premium_user&quot;</span><span class="p">,</span>
+                 <span class="s2">&quot;urban_resident&quot;</span><span class="p">]</span>
+<span class="p">)</span>
+
+<span class="n">causal_data</span><span class="o">.</span><span class="n">df</span><span class="o">.</span><span class="n">head</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_html"><div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>y</th>
+      <th>d</th>
+      <th>tenure_months</th>
+      <th>avg_sessions_week</th>
+      <th>spend_last_month</th>
+      <th>premium_user</th>
+      <th>urban_resident</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>0.689404</td>
+      <td>0.0</td>
+      <td>12.130544</td>
+      <td>4.056687</td>
+      <td>181.570607</td>
+      <td>0.0</td>
+      <td>0.0</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>3.045282</td>
+      <td>0.0</td>
+      <td>19.586560</td>
+      <td>1.671561</td>
+      <td>182.793598</td>
+      <td>0.0</td>
+      <td>0.0</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>7.173595</td>
+      <td>1.0</td>
+      <td>39.455103</td>
+      <td>5.452889</td>
+      <td>125.185708</td>
+      <td>1.0</td>
+      <td>1.0</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>1.926216</td>
+      <td>0.0</td>
+      <td>26.327693</td>
+      <td>5.051629</td>
+      <td>4.932905</td>
+      <td>0.0</td>
+      <td>1.0</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>1.225088</td>
+      <td>0.0</td>
+      <td>35.042771</td>
+      <td>4.933996</td>
+      <td>23.577407</td>
+      <td>0.0</td>
+      <td>0.0</td>
+    </tr>
+  </tbody>
+</table>
+</div></div></div>
+</div>
+</section>
+<section class="tex2jax_ignore mathjax_ignore" id="inference">
+<h1>Inference<a class="headerlink" href="#inference" title="Link to this heading">#</a></h1>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython2 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">causalis.inference.ate</span><span class="w"> </span><span class="kn">import</span> <span class="n">dml_ate</span>
+
+<span class="c1"># Estimate Average Treatment Effect (ATE)</span>
+<span class="n">ate_result</span> <span class="o">=</span> <span class="n">dml_ate</span><span class="p">(</span><span class="n">causal_data</span><span class="p">,</span> <span class="n">n_folds</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">normalize_ipw</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">store_diagnostic_data</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="mi">123</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython2 notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="n">ate_result</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;coefficient&#39;</span><span class="p">))</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">ate_result</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;p_value&#39;</span><span class="p">))</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">ate_result</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;confidence_interval&#39;</span><span class="p">))</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Ground-truth ATE from the DGP: </span><span class="si">{</span><span class="n">true_ate</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>0.9917276396749556
+0.0
+(0.869543879249174, 1.1139114001007373)
+Ground-truth ATE from the DGP: 0.913
+</pre></div>
+</div>
+</div>
+</div>
+<p>As we see our estimate is accurate and CI bounds include ground-truth ATE. In real life we can’t compare estimation with truth so we need
+check robustness of it: run some tests on assumptions and answer questions about research design</p>
+</section>
+<section class="tex2jax_ignore mathjax_ignore" id="overlap">
+<h1>Overlap<a class="headerlink" href="#overlap" title="Link to this heading">#</a></h1>
+<section id="what-overlap-positivity-means">
+<h2>What “overlap/positivity” means<a class="headerlink" href="#what-overlap-positivity-means" title="Link to this heading">#</a></h2>
+<p><strong>Binary treatment <span class="math notranslate nohighlight">\((T \in \{0,1\})\)</span>:</strong>
+for all confounder values <span class="math notranslate nohighlight">\(x\)</span> in your target population,
+$<span class="math notranslate nohighlight">\(
+0 &lt; e(x) := P(T = 1 \mid X = x) &lt; 1,
+\)</span><span class="math notranslate nohighlight">\(
+often strengthened to **strong positivity**:
+there exists an \)</span>\varepsilon &gt; 0<span class="math notranslate nohighlight">\( such that
+\)</span><span class="math notranslate nohighlight">\(
+\varepsilon \le e(x) \le 1 - \varepsilon
+\quad\text{almost surely.}
+\)</span>$</p>
+<hr class="docutils" />
+<section id="why-it-matters">
+<h3>Why it matters<a class="headerlink" href="#why-it-matters" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p><strong>Identification:</strong>
+Overlap + unconfoundedness are the two pillars that identify causal effects from observational data.
+Without overlap, the effect is <strong>not identified</strong> — you must extrapolate or model-specify what never occurs.</p></li>
+<li><p><strong>Estimation stability:</strong>
+IPW/DR estimators use weights
+$<span class="math notranslate nohighlight">\(
+w_1 = \frac{D}{e(X)}, \qquad
+w_0 = \frac{1 - D}{1 - e(X)}.
+\)</span><span class="math notranslate nohighlight">\(
+If \)</span>e(X)$ is near 0 or 1, these weights explode, causing huge variance and fragile estimates.</p></li>
+<li><p><strong>Target population:</strong>
+With trimming or restriction, you may change <em>who</em> the effect describes —
+e.g., ATE on the <strong>region of common support</strong>, not on the full population.</p></li>
+</ul>
+<p>It’s summary for overlap diagnostics</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython2 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w">  </span><span class="nn">causalis.refutation</span><span class="w"> </span><span class="kn">import</span> <span class="o">*</span>
+<span class="n">rep</span> <span class="o">=</span> <span class="n">run_overlap_diagnostics</span><span class="p">(</span><span class="n">res</span><span class="o">=</span><span class="n">ate_result</span><span class="p">)</span>
+<span class="n">rep</span><span class="p">[</span><span class="s2">&quot;summary&quot;</span><span class="p">]</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_html"><div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>metric</th>
+      <th>value</th>
+      <th>flag</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>edge_0.01_below</td>
+      <td>0.000000</td>
+      <td>GREEN</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>edge_0.01_above</td>
+      <td>0.000000</td>
+      <td>GREEN</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>edge_0.02_below</td>
+      <td>0.077300</td>
+      <td>YELLOW</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>edge_0.02_above</td>
+      <td>0.000400</td>
+      <td>YELLOW</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>KS</td>
+      <td>0.511643</td>
+      <td>RED</td>
+    </tr>
+    <tr>
+      <th>5</th>
+      <td>AUC</td>
+      <td>0.835125</td>
+      <td>YELLOW</td>
+    </tr>
+    <tr>
+      <th>6</th>
+      <td>ESS_treated_ratio</td>
+      <td>0.247034</td>
+      <td>YELLOW</td>
+    </tr>
+    <tr>
+      <th>7</th>
+      <td>ESS_control_ratio</td>
+      <td>0.327069</td>
+      <td>GREEN</td>
+    </tr>
+    <tr>
+      <th>8</th>
+      <td>tails_w1_q99/med</td>
+      <td>38.676284</td>
+      <td>YELLOW</td>
+    </tr>
+    <tr>
+      <th>9</th>
+      <td>tails_w0_q99/med</td>
+      <td>20.575638</td>
+      <td>YELLOW</td>
+    </tr>
+    <tr>
+      <th>10</th>
+      <td>ATT_identity_relerr</td>
+      <td>0.177229</td>
+      <td>RED</td>
+    </tr>
+    <tr>
+      <th>11</th>
+      <td>clip_m_total</td>
+      <td>0.023600</td>
+      <td>YELLOW</td>
+    </tr>
+    <tr>
+      <th>12</th>
+      <td>calib_ECE</td>
+      <td>0.018453</td>
+      <td>GREEN</td>
+    </tr>
+    <tr>
+      <th>13</th>
+      <td>calib_slope</td>
+      <td>0.889332</td>
+      <td>GREEN</td>
+    </tr>
+    <tr>
+      <th>14</th>
+      <td>calib_intercept</td>
+      <td>-0.106806</td>
+      <td>GREEN</td>
+    </tr>
+  </tbody>
+</table>
+</div></div></div>
+</div>
+</section>
+</section>
+<section id="edge-mass">
+<h2><code class="docutils literal notranslate"><span class="pre">edge_mass</span></code><a class="headerlink" href="#edge-mass" title="Link to this heading">#</a></h2>
+<p>edge_0.01_below, edge_0.01_above, edge_0.02_below, edge_0.02_above  are shares of units whose propensity is below or above the percents</p>
+<p>To keep in mind: DML IRM is clipping out the interval [0.02 and 0.98]</p>
+<p>Huge shares are dangerous for estimation in terms of weights exploding</p>
+<p>Flags in Causalis:</p>
+<p>For ε=0.01: YELLOW if either side 0.02 (2%), RED if 0.05 (5%).</p>
+<p>For ε=0.02: YELLOW if either side 0.05 (5%), RED if 0.10 (10%).</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython2 notranslate"><div class="highlight"><pre><span></span><span class="n">rep</span><span class="p">[</span><span class="s1">&#39;edge_mass&#39;</span><span class="p">]</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>{&#39;share_below_001&#39;: 0.0,
+ &#39;share_above_001&#39;: 0.0,
+ &#39;share_below_002&#39;: 0.0773,
+ &#39;share_above_002&#39;: 0.0004,
+ &#39;min_m&#39;: 0.01,
+ &#39;max_m&#39;: 0.99}
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython2 notranslate"><div class="highlight"><pre><span></span><span class="c1"># You can also check shares per arm</span>
+<span class="n">rep</span><span class="p">[</span><span class="s1">&#39;edge_mass_by_arm&#39;</span><span class="p">]</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>{&#39;share_below_001_D1&#39;: 0.0,
+ &#39;share_above_001_D0&#39;: 0.0,
+ &#39;share_below_002_D1&#39;: 0.010805500982318271,
+ &#39;share_above_002_D0&#39;: 0.00025113008538422905}
+</pre></div>
+</div>
+</div>
+</div>
+</section>
+<section id="ks-kolmogorovsmirnov-statistic">
+<h2><code class="docutils literal notranslate"><span class="pre">ks</span> <span class="pre">-</span> <span class="pre">Kolmogorov–Smirnov</span> <span class="pre">statistic</span></code><a class="headerlink" href="#ks-kolmogorovsmirnov-statistic" title="Link to this heading">#</a></h2>
+<p>Here KS is the <strong>two-sample Kolmogorov–Smirnov statistic</strong> comparing the distributions of the propensities for treated vs control:</p>
+<div class="math notranslate nohighlight">
+\[ D=\max_t |\hat F_A(t)-\hat F_B(t)| \]</div>
+<p>Interpretation:</p>
+<ul class="simple">
+<li><p>(D=0): identical distributions (perfect overlap).</p></li>
+<li><p>(D=1): complete separation (no overlap).</p></li>
+<li><p>Your value <strong>KS = 0.5116</strong> means there exists a threshold (t) such that the share of treated with <span class="math notranslate nohighlight">\((m\le t)\)</span> differs from the share of controls with <span class="math notranslate nohighlight">\((m\le t)\)</span> by <strong>~51 percentage points</strong>. That’s why it’s flagged <strong>RED</strong> (your thresholds mark RED when (D&gt;0.35)): treatment assignment is highly predictable from covariates ⇒ <strong>poor overlap / strong confounding risk</strong>.</p></li>
+</ul>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython2 notranslate"><div class="highlight"><pre><span></span><span class="n">rep</span><span class="p">[</span><span class="s1">&#39;ks&#39;</span><span class="p">]</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>0.5116427657267132
+</pre></div>
+</div>
+</div>
+</div>
+</section>
+<section id="auc">
+<h2><code class="docutils literal notranslate"><span class="pre">AUC</span></code><a class="headerlink" href="#auc" title="Link to this heading">#</a></h2>
+<section id="probability-definition-most-intuitive">
+<h3>Probability definition (most intuitive)<a class="headerlink" href="#probability-definition-most-intuitive" title="Link to this heading">#</a></h3>
+<div class="math notranslate nohighlight">
+\[
+\text{AUC} = \Pr\big(s^+ &gt; s^-\big)+\tfrac12,\Pr\big(s^+ = s^-\big),
+\]</div>
+<p>where <span class="math notranslate nohighlight">\((s^+)\)</span> is a score from a random positive and <span class="math notranslate nohighlight">\((s^-)\)</span> from a random negative.
+So AUC is the fraction of all <span class="math notranslate nohighlight">\((n_1 n_0)\)</span> positive–negative pairs that are correctly ordered by the score (ties get half-credit).</p>
+</section>
+<section id="rank-mannwhitney-formulation">
+<h3>Rank / Mann–Whitney formulation<a class="headerlink" href="#rank-mannwhitney-formulation" title="Link to this heading">#</a></h3>
+<ol class="arabic simple">
+<li><p>Rank all scores together (ascending). If there are ties, assign <strong>average ranks</strong> within each tied block.</p></li>
+<li><p>Let <span class="math notranslate nohighlight">\((R_1)\)</span> be the <strong>sum of ranks</strong> for the positives.</p></li>
+<li><p>Compute the Mann–Whitney (U) statistic for positives:
+$<span class="math notranslate nohighlight">\(
+U_1 = R_1 - \frac{n_1(n_1+1)}{2}.
+\)</span>$</p></li>
+<li><p>Convert to AUC by normalizing:
+$<span class="math notranslate nohighlight">\(
+\boxed{\text{AUC} = \frac{U_1}{n_1 n_0}
+= \frac{R_1 - \frac{n_1(n_1+1)}{2}}{n_1 n_0}}
+\)</span>$
+This is exactly what your function returns (with stable sorting and tie-averaged ranks).</p></li>
+</ol>
+</section>
+<section id="roc-integral-view-equivalent">
+<h3>ROC-integral view (equivalent)<a class="headerlink" href="#roc-integral-view-equivalent" title="Link to this heading">#</a></h3>
+<p>If <span class="math notranslate nohighlight">\((\text{TPR}(t))\)</span> and <span class="math notranslate nohighlight">\((\text{FPR}(t))\)</span> trace the ROC curve as the threshold <span class="math notranslate nohighlight">\((t)\)</span> moves,
+$<span class="math notranslate nohighlight">\(
+\text{AUC} = \int_0^1 \text{TPR}\big(\text{FPR}^{-1}(u)\big)du,
+\)</span>$
+i.e., the geometric area under the ROC.</p>
+</section>
+<section id="properties-you-should-remember">
+<h3>Properties you should remember<a class="headerlink" href="#properties-you-should-remember" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p><strong>Range:</strong> <span class="math notranslate nohighlight">\((0 \le \text{AUC} \le 1)\)</span>; 0.5 = random ranking; 1 = perfect separation.</p></li>
+<li><p><strong>Symmetry:</strong> <span class="math notranslate nohighlight">\((\text{AUC}(s,y) = 1 - \text{AUC}(s,1-y))\)</span>.</p></li>
+<li><p><strong>Monotone invariance:</strong> Any strictly increasing transform <span class="math notranslate nohighlight">\((f)\)</span> leaves AUC unchanged (only ranks matter).</p></li>
+<li><p><strong>Ties:</strong> Averaged ranks ⇒ adds the <span class="math notranslate nohighlight">\((\tfrac12\Pr(s^+=s^-))\)</span> term automatically.</p></li>
+</ul>
+</section>
+<section id="in-the-propensity-overlap-context">
+<h3>In the propensity/overlap context<a class="headerlink" href="#in-the-propensity-overlap-context" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p>A <strong>higher</strong> AUC means treatment (D) is <strong>more predictable</strong> from covariates (bad for overlap/positivity).</p></li>
+<li><p>For good overlap you actually want AUC <strong>close to 0.5</strong>.</p></li>
+</ul>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython2 notranslate"><div class="highlight"><pre><span></span><span class="n">rep</span><span class="p">[</span><span class="s1">&#39;auc&#39;</span><span class="p">]</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>0.8351248965136829
+</pre></div>
+</div>
+</div>
+</div>
+</section>
+</section>
+<section id="ess-treated-ratio">
+<h2><code class="docutils literal notranslate"><span class="pre">ESS_treated_ratio</span></code><a class="headerlink" href="#ess-treated-ratio" title="Link to this heading">#</a></h2>
+<section id="weights-used">
+<h3>Weights used<a class="headerlink" href="#weights-used" title="Link to this heading">#</a></h3>
+<p>For ATE-style IPW, the treated-arm weights are
+$<span class="math notranslate nohighlight">\(
+w_i ;=; \frac{D_i}{m_i}
+\quad\Rightarrow\quad
+w_i =
+\begin{cases}
+1/m_i,&amp; D_i=1\
+when 0, &amp; D_i=0
+\end{cases}
+\)</span><span class="math notranslate nohighlight">\(
+so on the treated subset \)</span>({i:D_i=1})<span class="math notranslate nohighlight">\( the weights are simply \)</span>(1/m_i)$.</p>
+</section>
+<section id="effective-sample-size-ess">
+<h3>Effective sample size (ESS)<a class="headerlink" href="#effective-sample-size-ess" title="Link to this heading">#</a></h3>
+<p>Given the treated-arm weights <span class="math notranslate nohighlight">\((w_1,\ldots,w_{n_1})\)</span> (only for <span class="math notranslate nohighlight">\((D=1)\)</span>),
+$<span class="math notranslate nohighlight">\(
+\mathrm{ESS} = \frac{\left(\sum_{i=1}^{n_1} w_i\right)^2}{\sum_{i=1}^{n_1} w_i^2}.
+\)</span>$
+This is exactly what <code class="docutils literal notranslate"><span class="pre">_ess(w)</span></code> computes.</p>
+<ul class="simple">
+<li><p>If all treated weights are equal, ESS <span class="math notranslate nohighlight">\((= n_1)\)</span> (full efficiency).</p></li>
+<li><p>If a few weights dominate, ESS drops (information concentrated in few units).</p></li>
+</ul>
+</section>
+<section id="the-reported-metric">
+<h3>The reported metric<a class="headerlink" href="#the-reported-metric" title="Link to this heading">#</a></h3>
+<div class="math notranslate nohighlight">
+\[
+\boxed{
+\mathrm{ESS}_{\text{treated ratio}}
+= \frac{\mathrm{ESS}}{n_1}
+= \frac{\left(\sum_i w_i\right)^2}{n_1 \sum_i w_i^2}
+}
+\]</div>
+<p>This lies in <span class="math notranslate nohighlight">\((0,1]\)</span>. Near <strong>1</strong> ⇒ well-behaved weights; near <strong>0</strong> ⇒ severe instability.</p>
+</section>
+<section id="why-it-reflects-overlap">
+<h3>Why it reflects overlap<a class="headerlink" href="#why-it-reflects-overlap" title="Link to this heading">#</a></h3>
+<p>When propensities <span class="math notranslate nohighlight">\((m_i)\)</span> approach 0 for treated units, weights <span class="math notranslate nohighlight">\((1/m_i)\)</span> explode → large CV → <strong>low ESS_treated_ratio</strong>. Hence this metric is a direct, quantitative read on how much usable information remains in the treated group after IPW.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython2 notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="n">rep</span><span class="p">[</span><span class="s1">&#39;ate_ess&#39;</span><span class="p">])</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">rep</span><span class="p">[</span><span class="s1">&#39;att_ess&#39;</span><span class="p">])</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>{&#39;ess_w1&#39;: 502.960611352384, &#39;ess_w0&#39;: 2604.778026253534, &#39;ess_ratio_w1&#39;: 0.2470336990925265, &#39;ess_ratio_w0&#39;: 0.32706906407000674}
+{&#39;ess_w1&#39;: 2036.0, &#39;ess_w0&#39;: 201.89980668548793, &#39;ess_ratio_w1&#39;: 1.0, &#39;ess_ratio_w0&#39;: 0.02535155784599296}
+</pre></div>
+</div>
+</div>
+</div>
+</section>
+</section>
+<section id="tails-w1-q99-med">
+<h2><code class="docutils literal notranslate"><span class="pre">tails_w1_q99/med</span></code><a class="headerlink" href="#tails-w1-q99-med" title="Link to this heading">#</a></h2>
+<div class="math notranslate nohighlight">
+\[
+\boxed{
+\texttt{tails\_w1\_q99/med}
+= \frac{Q_{0.99}(W_1)}{\mathrm{median}(W_1)}.
+}
+\]</div>
+<section id="interpretation">
+<h3>Interpretation<a class="headerlink" href="#interpretation" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p>It’s a <strong>tail-heaviness index</strong> for treated weights: how large the 99th-percentile weight is relative to a typical (median) weight.</p></li>
+<li><p><strong>Scale-invariant</strong>: if you re-scale weights (e.g., Hájek normalization), both numerator and denominator scale equally, so the ratio is unchanged.</p></li>
+<li><p>Bigger <span class="math notranslate nohighlight">\((\Rightarrow)\)</span> <strong>heavier right tail</strong> <span class="math notranslate nohighlight">\((\Rightarrow)\)</span> more variance inflation for IPW (since variance depends on large <span class="math notranslate nohighlight">\((w_i^2)\)</span>). It typically coincides with a <strong>low <span class="math notranslate nohighlight">\(ESS(_\text{treated ratio}\)</span>)</strong>.</p></li>
+</ul>
+</section>
+<section id="edge-cases-thresholds">
+<h3>Edge cases &amp; thresholds<a class="headerlink" href="#edge-cases-thresholds" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p>If <span class="math notranslate nohighlight">\((\text{median}(W_1)=0)\)</span> or undefined, the ratio is not meaningful (your code returns “NA” in that case; with positive treated weights this is rare).</p></li>
+<li><p>Defaults: <strong>YELLOW</strong> if any of <span class="math notranslate nohighlight">\(({q95/med,q99/med,q999/med,\max/med})\)</span> exceeds <strong>10</strong>; <strong>RED</strong> if any exceed <strong>100</strong>.
+<code class="docutils literal notranslate"><span class="pre">tails_w1_q99/med</span></code> is one of these checks, focusing specifically on the 99th percentile.</p></li>
+</ul>
+</section>
+<section id="quick-example">
+<h3>Quick example<a class="headerlink" href="#quick-example" title="Link to this heading">#</a></h3>
+<p>If <span class="math notranslate nohighlight">\(\mathrm{median}(W_1) = 1.2\)</span> and <span class="math notranslate nohighlight">\(Q_{0.99}(W_1) = 46.8\)</span>, then
+$<span class="math notranslate nohighlight">\(
+\texttt{tails\_w1\_q99/med}
+= \frac{46.8}{1.2} \approx 39,
+\)</span>$
+indicating heavy tails and a likely unstable ATE IPW.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython2 notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="n">rep</span><span class="p">[</span><span class="s1">&#39;ate_tails&#39;</span><span class="p">])</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>{&#39;w1&#39;: {&#39;q50&#39;: 2.585563809098619, &#39;q95&#39;: 26.04879283279811, &#39;q99&#39;: 100.0, &#39;max&#39;: 100.0, &#39;median&#39;: 2.585563809098619}, &#39;w0&#39;: {&#39;q50&#39;: 1.073397908573178, &#39;q95&#39;: 1.6626662464619888, &#39;q99&#39;: 22.085846285748335, &#39;max&#39;: 99.99999999999991, &#39;median&#39;: 1.073397908573178}}
+</pre></div>
+</div>
+</div>
+</div>
+</section>
+</section>
+<section id="att-identity-relerr">
+<h2><code class="docutils literal notranslate"><span class="pre">ATT_identity_relerr</span></code><a class="headerlink" href="#att-identity-relerr" title="Link to this heading">#</a></h2>
+<p>With estimated propensities (m_i=\hat m(X_i)) and (D_i\in{0,1}):</p>
+<ul class="simple">
+<li><p><strong>Left-hand side (controls odds sum):</strong>
+$<span class="math notranslate nohighlight">\(
+\text{LHS} = \sum_{i=1}^n (1-D_i),\frac{m_i}{1-m_i}.
+\)</span>$</p></li>
+<li><p><strong>Right-hand side (treated count):</strong>
+$<span class="math notranslate nohighlight">\(
+\text{RHS} = \sum_{i=1}^n D_i = n_1.
+\)</span>$</p></li>
+</ul>
+<p>If <span class="math notranslate nohighlight">\((\hat m\approx m)\)</span> and overlap is ok, <strong>LHS <span class="math notranslate nohighlight">\((\approx)\)</span> RHS</strong>.</p>
+<p>You report the <strong>relative error</strong>:
+$<span class="math notranslate nohighlight">\(
+\boxed{
+\texttt{ATT\_identity\_relerr}
+= \frac{\big|\mathrm{LHS} - \mathrm{RHS}\big|}{\mathrm{RHS}}
+}
+\)</span>$</p>
+<p>(when <span class="math notranslate nohighlight">\((n_1&gt;0)\)</span> otherwise it’s set to <span class="math notranslate nohighlight">\((\infty)\)</span>).</p>
+<section id="how-to-read-the-number">
+<h3>How to read the number<a class="headerlink" href="#how-to-read-the-number" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p>Small <span class="math notranslate nohighlight">\((\texttt{relerr})\)</span> (e.g., (\le 5%)) ⇒ propensities are <strong>reasonably calibrated</strong> (especially on the control side) and ATT weights won’t be wildly off in total mass.</p></li>
+<li><p>Large <span class="math notranslate nohighlight">\((\texttt{relerr})\)</span> ⇒ possible <strong>miscalibration</strong> of <span class="math notranslate nohighlight">\((\hat m)\)</span> (e.g., over/underestimation for controls), <strong>poor overlap</strong> (many controls with <span class="math notranslate nohighlight">\((m_i\to 1)\)</span> inflating <span class="math notranslate nohighlight">\((m_i/(1-m_i)))\)</span>, or <strong>clipping/trimming</strong> effects.</p></li>
+</ul>
+<p>Your default flags (same as in the code):</p>
+<ul class="simple">
+<li><p><strong>GREEN</strong> if <span class="math notranslate nohighlight">\((\texttt{relerr} \le 0.05)\)</span></p></li>
+<li><p><strong>YELLOW</strong> if <span class="math notranslate nohighlight">\((0.05 &lt; \texttt{relerr} \le 0.10)\)</span></p></li>
+<li><p><strong>RED</strong> if <span class="math notranslate nohighlight">\((&gt; 0.10)\)</span></p></li>
+</ul>
+</section>
+<section id="quick-intuition">
+<h3>Quick intuition<a class="headerlink" href="#quick-intuition" title="Link to this heading">#</a></h3>
+<p>The term <span class="math notranslate nohighlight">\((m/(1-m))\)</span> is the <strong>odds</strong> of treatment. Summing that over <strong>controls</strong> should reconstruct the <strong>treated count</strong>. If it doesn’t, either the odds are off (propensity miscalibration) or the data lack support where you need it—both are red flags for ATT-IPW stability.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython2 notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="n">rep</span><span class="p">[</span><span class="s1">&#39;att_weights&#39;</span><span class="p">])</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>{&#39;lhs_sum&#39;: 2396.83831663893, &#39;rhs_sum&#39;: 2036.0, &#39;rel_err&#39;: 0.17722903567727402}
+</pre></div>
+</div>
+</div>
+</div>
+</section>
+</section>
+<section id="clip-m-total">
+<h2><code class="docutils literal notranslate"><span class="pre">clip_m_total</span></code><a class="headerlink" href="#clip-m-total" title="Link to this heading">#</a></h2>
+<p>look at edge_mass</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython2 notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="n">rep</span><span class="p">[</span><span class="s1">&#39;clipping&#39;</span><span class="p">])</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>{&#39;m_clip_lower&#39;: 0.0235, &#39;m_clip_upper&#39;: 0.0001, &#39;g_clip_share&#39;: nan}
+</pre></div>
+</div>
+</div>
+</div>
+</section>
+<section id="calib-ece-calib-slope-calib-intercept">
+<h2><code class="docutils literal notranslate"><span class="pre">calib_ECE,</span> <span class="pre">calib_slope,</span> <span class="pre">calib_intercept</span></code><a class="headerlink" href="#calib-ece-calib-slope-calib-intercept" title="Link to this heading">#</a></h2>
+<section id="calib-ece-0-018-green">
+<h3>calib_ECE = 0.018 (GREEN)<a class="headerlink" href="#calib-ece-0-018-green" title="Link to this heading">#</a></h3>
+<p><strong>Math:</strong> with 10 equal-width bins,
+$<span class="math notranslate nohighlight">\(
+\text{ECE}=\sum_{k=1}^{10}\frac{n_k}{n},|\bar y_k-\bar p_k|
+\)</span>$
+(weighted average gap between observed rate (\bar y_k) and mean prediction (\bar p_k) per bin).
+<strong>Result:</strong> ~1.8% average miscalibration → overall probabilities track outcomes well. Note the biggest bin error is in 0.5–0.6 (abs_error ≈ 0.162) but it’s tiny (95/10,000), so ECE stays low.</p>
+</section>
+<section id="calib-slope-0-889-green">
+<h3>calib_slope (β) = 0.889 (GREEN)<a class="headerlink" href="#calib-slope-0-889-green" title="Link to this heading">#</a></h3>
+<p><strong>Math (logistic recalibration):</strong>
+$<span class="math notranslate nohighlight">\(
+\Pr(D=1\mid p)=\sigma(\alpha+\beta,\text{logit}(p)).
+\)</span>$
+<strong>Interpretation:</strong> (\beta&lt;1) ⇒ predictions are a bit <strong>over-confident</strong> (too extreme); the optimal calibration slightly <strong>flattens</strong> them toward 0.5.</p>
+</section>
+<section id="calib-intercept-0-107-green">
+<h3>calib_intercept (α) = −0.107 (GREEN)<a class="headerlink" href="#calib-intercept-0-107-green" title="Link to this heading">#</a></h3>
+<p><strong>Math:</strong> same model as above; (\alpha) is a vertical shift on the log-odds scale.
+<strong>Interpretation:</strong> Negative (\alpha) nudges probabilities <strong>downward</strong> overall (your model is, on average, a bit high), consistent with bins like 0.5–0.6 where <span class="math notranslate nohighlight">\((\bar p_k &gt; \bar y_k)\)</span>.</p>
+<p>All three fall well within your GREEN thresholds, so calibration looks solid despite minor mid-range overprediction.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython2 notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="n">rep</span><span class="p">[</span><span class="s1">&#39;calibration&#39;</span><span class="p">])</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>{&#39;n&#39;: 10000, &#39;n_bins&#39;: 10, &#39;auc&#39;: 0.8351248965136829, &#39;brier&#39;: 0.10778483728183921, &#39;ece&#39;: 0.018452696253043466, &#39;reliability_table&#39;:    bin  lower  upper  count    mean_p  frac_pos  abs_error
+0    0    0.0    0.1   5089  0.044279  0.054431   0.010152
+1    1    0.1    0.2   1724  0.148308  0.172274   0.023965
+2    2    0.2    0.3   1171  0.245443  0.231426   0.014017
+3    3    0.3    0.4    626  0.341419  0.316294   0.025125
+4    4    0.4    0.5    251  0.440675  0.382470   0.058205
+5    5    0.5    0.6     95  0.541182  0.378947   0.162235
+6    6    0.6    0.7    107  0.649163  0.588785   0.060378
+7    7    0.7    0.8    214  0.754985  0.785047   0.030061
+8    8    0.8    0.9    427  0.851461  0.859485   0.008024
+9    9    0.9    1.0    296  0.932652  0.888514   0.044139, &#39;recalibration&#39;: {&#39;intercept&#39;: -0.10680601474031537, &#39;slope&#39;: 0.8893319945661962}, &#39;flags&#39;: {&#39;ece&#39;: &#39;GREEN&#39;, &#39;slope&#39;: &#39;GREEN&#39;, &#39;intercept&#39;: &#39;GREEN&#39;}, &#39;thresholds&#39;: {&#39;ece_warn&#39;: 0.1, &#39;ece_strong&#39;: 0.2, &#39;slope_warn_lo&#39;: 0.8, &#39;slope_warn_hi&#39;: 1.2, &#39;slope_strong_lo&#39;: 0.6, &#39;slope_strong_hi&#39;: 1.4, &#39;intercept_warn&#39;: 0.2, &#39;intercept_strong&#39;: 0.4}}
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython2 notranslate"><div class="highlight"><pre><span></span><span class="n">calib</span> <span class="o">=</span> <span class="n">rep</span><span class="p">[</span><span class="s1">&#39;calibration&#39;</span><span class="p">]</span>
+
+<span class="n">calib</span><span class="p">[</span><span class="s1">&#39;reliability_table&#39;</span><span class="p">]</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_html"><div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>bin</th>
+      <th>lower</th>
+      <th>upper</th>
+      <th>count</th>
+      <th>mean_p</th>
+      <th>frac_pos</th>
+      <th>abs_error</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>0</td>
+      <td>0.0</td>
+      <td>0.1</td>
+      <td>5089</td>
+      <td>0.044279</td>
+      <td>0.054431</td>
+      <td>0.010152</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>1</td>
+      <td>0.1</td>
+      <td>0.2</td>
+      <td>1724</td>
+      <td>0.148308</td>
+      <td>0.172274</td>
+      <td>0.023965</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>2</td>
+      <td>0.2</td>
+      <td>0.3</td>
+      <td>1171</td>
+      <td>0.245443</td>
+      <td>0.231426</td>
+      <td>0.014017</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>3</td>
+      <td>0.3</td>
+      <td>0.4</td>
+      <td>626</td>
+      <td>0.341419</td>
+      <td>0.316294</td>
+      <td>0.025125</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>4</td>
+      <td>0.4</td>
+      <td>0.5</td>
+      <td>251</td>
+      <td>0.440675</td>
+      <td>0.382470</td>
+      <td>0.058205</td>
+    </tr>
+    <tr>
+      <th>5</th>
+      <td>5</td>
+      <td>0.5</td>
+      <td>0.6</td>
+      <td>95</td>
+      <td>0.541182</td>
+      <td>0.378947</td>
+      <td>0.162235</td>
+    </tr>
+    <tr>
+      <th>6</th>
+      <td>6</td>
+      <td>0.6</td>
+      <td>0.7</td>
+      <td>107</td>
+      <td>0.649163</td>
+      <td>0.588785</td>
+      <td>0.060378</td>
+    </tr>
+    <tr>
+      <th>7</th>
+      <td>7</td>
+      <td>0.7</td>
+      <td>0.8</td>
+      <td>214</td>
+      <td>0.754985</td>
+      <td>0.785047</td>
+      <td>0.030061</td>
+    </tr>
+    <tr>
+      <th>8</th>
+      <td>8</td>
+      <td>0.8</td>
+      <td>0.9</td>
+      <td>427</td>
+      <td>0.851461</td>
+      <td>0.859485</td>
+      <td>0.008024</td>
+    </tr>
+    <tr>
+      <th>9</th>
+      <td>9</td>
+      <td>0.9</td>
+      <td>1.0</td>
+      <td>296</td>
+      <td>0.932652</td>
+      <td>0.888514</td>
+      <td>0.044139</td>
+    </tr>
+  </tbody>
+</table>
+</div></div></div>
+</div>
+</section>
+</section>
+</section>
+<section class="tex2jax_ignore mathjax_ignore" id="score">
+<h1>Score<a class="headerlink" href="#score" title="Link to this heading">#</a></h1>
+<p>We need this score refutation tests for:</p>
+<ul class="simple">
+<li><p>Catch overfitting/leakage: The out-of-sample moment check verifies that the AIPW score averages to ~0 on held-out folds using fold-specific θ and nuisances. If this fails, your effect can be an artifact of leakage or overfit learners rather than a real signal.</p></li>
+<li><p>Verify Neyman orthogonality in practice: The Gateaux-derivative tests (orthogonality_derivatives) check that small, targeted perturbations to the nuisances (g₀, g₁, m) don’t move the score mean. Large |t| values flag miscalibration (e.g., biased propensity or outcome models) that breaks the orthogonality protection DML relies on.</p></li>
+<li><p>Assess finite-sample stability: The influence diagnostics reveal heavy tails (p99/median, kurtosis) and top-influential points. Spiky ψ implies high variance and sensitivity—often due to near-0/1 propensities, poor overlap, or outliers.</p></li>
+<li><p>ATTE-specific risks: For ATT/ATTE, only g₀ and m matter in the score. The added overlap metrics and trim curves show how reliant your estimate is on scarce, high-m controls—common failure mode for ATT.</p></li>
+</ul>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython2 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">causalis.refutation.score.score_validation</span><span class="w"> </span><span class="kn">import</span> <span class="n">run_score_diagnostics</span>
+<span class="n">rep_score</span> <span class="o">=</span> <span class="n">run_score_diagnostics</span><span class="p">(</span><span class="n">res</span><span class="o">=</span><span class="n">ate_result</span><span class="p">)</span>
+<span class="n">rep_score</span><span class="p">[</span><span class="s2">&quot;summary&quot;</span><span class="p">]</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_html"><div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>metric</th>
+      <th>value</th>
+      <th>flag</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>se_plugin</td>
+      <td>6.233980e-02</td>
+      <td>NA</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>psi_p99_over_med</td>
+      <td>2.374779e+01</td>
+      <td>RED</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>psi_kurtosis</td>
+      <td>3.032000e+02</td>
+      <td>RED</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>max_|t|_g1</td>
+      <td>4.350018e+00</td>
+      <td>RED</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>max_|t|_g0</td>
+      <td>2.076780e+00</td>
+      <td>YELLOW</td>
+    </tr>
+    <tr>
+      <th>5</th>
+      <td>max_|t|_m</td>
+      <td>1.030583e+00</td>
+      <td>GREEN</td>
+    </tr>
+    <tr>
+      <th>6</th>
+      <td>oos_tstat_fold</td>
+      <td>-2.552943e-15</td>
+      <td>GREEN</td>
+    </tr>
+    <tr>
+      <th>7</th>
+      <td>oos_tstat_strict</td>
+      <td>-2.461798e-15</td>
+      <td>GREEN</td>
+    </tr>
+  </tbody>
+</table>
+</div></div></div>
+</div>
+<section id="psi-p99-over-med">
+<h2><code class="docutils literal notranslate"><span class="pre">psi_p99_over_med</span></code><a class="headerlink" href="#psi-p99-over-med" title="Link to this heading">#</a></h2>
+<ul class="simple">
+<li><p>Let <span class="math notranslate nohighlight">\(\psi_i\)</span> be the per-unit <strong>influence value</strong> (EIF score) for your estimator.
+We look at magnitudes <span class="math notranslate nohighlight">\(a_i \equiv |\psi_i|\)</span>.</p></li>
+<li><p>Define the 99th percentile and the median of these magnitudes:
+$<span class="math notranslate nohighlight">\(
+q_{0.99} \equiv \operatorname{Quantile}_{0.99}(a_1,\dots,a_n),\qquad
+m \equiv \operatorname{median}(a_1,\dots,a_n).
+\)</span>$</p></li>
+<li><p>The metric is the <strong>scale-free tail ratio</strong>:
+$<span class="math notranslate nohighlight">\(
+\boxed{
+\texttt{psi\_p99\_over\_med}
+= \frac{q_{0.99}}{m}
+}
+\)</span>$</p></li>
+</ul>
+<p><strong>Why this works (brief):</strong></p>
+<ul class="simple">
+<li><p>Uses <span class="math notranslate nohighlight">\(|\psi_i|\)</span> to ignore sign (only tail size matters).</p></li>
+<li><p>Dividing by the <strong>median</strong> makes it scale-invariant and robust to a few large values.</p></li>
+<li><p>Large values <span class="math notranslate nohighlight">\(\big(\gg 1\big)\)</span> mean a small fraction of observations dominate uncertainty (heavy tails → unstable SE).</p></li>
+</ul>
+<p><strong>Quick read:</strong></p>
+<ul class="simple">
+<li><p><span class="math notranslate nohighlight">\(\approx 1!-!5\)</span>: tails tame/stable</p></li>
+<li><p><span class="math notranslate nohighlight">\(\gtrsim 10\)</span>: caution (heavy tails)</p></li>
+<li><p><span class="math notranslate nohighlight">\(\gtrsim 20\)</span>: likely unstable; check overlap, trim/clamp propensities, or robustify learners.</p></li>
+</ul>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython2 notranslate"><div class="highlight"><pre><span></span><span class="n">rep_score</span><span class="p">[</span><span class="s1">&#39;influence_diagnostics&#39;</span><span class="p">]</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>{&#39;se_plugin&#39;: 0.06233979878689177,
+ &#39;kurtosis&#39;: 303.1999961346597,
+ &#39;p99_over_med&#39;: 23.747788009323845,
+ &#39;top_influential&#39;:       i         psi         m     res_t  res_c
+ 0  6224  205.671733  0.010000  2.062391    0.0
+ 1  1915 -180.280657  0.012198 -2.205898   -0.0
+ 2   215 -163.974979  0.013644 -2.221508   -0.0
+ 3  9389  131.757805  0.010585  1.393678    0.0
+ 4   868 -101.111026  0.014727 -1.489752   -0.0
+ 5  2741  -96.602896  0.024285 -2.345406   -0.0
+ 6  1993   83.941140  0.028412  2.404237    0.0
+ 7  9894  -82.585292  0.011016 -0.907962   -0.0
+ 8  2350   70.269293  0.029162  2.063988    0.0
+ 9  1499   70.103947  0.022092  1.576351    0.0}
+</pre></div>
+</div>
+</div>
+</div>
+</section>
+<section id="psi-kurtosis">
+<h2><code class="docutils literal notranslate"><span class="pre">psi_kurtosis</span></code><a class="headerlink" href="#psi-kurtosis" title="Link to this heading">#</a></h2>
+<ul class="simple">
+<li><p>Let <span class="math notranslate nohighlight">\(\psi_i\)</span> be the per-unit influence values and define centered residuals
+$<span class="math notranslate nohighlight">\(
+\tilde\psi_i \equiv \psi_i - \bar\psi,\qquad
+\bar\psi \equiv \frac{1}{n}\sum_{i=1}^n \psi_i.
+\)</span>$</p></li>
+<li><p>Sample variance (with Bessel correction):
+$<span class="math notranslate nohighlight">\(
+s^2 \equiv \frac{1}{n-1}\sum_{i=1}^n \tilde\psi_i^2.
+\)</span>$</p></li>
+<li><p>Sample 4th central moment:
+$<span class="math notranslate nohighlight">\(
+\hat\mu_4 \equiv \frac{1}{n}\sum_{i=1}^n \tilde\psi_i^4.
+\)</span>$</p></li>
+<li><p>The reported metric (raw kurtosis, <strong>not</strong> excess):
+$<span class="math notranslate nohighlight">\(
+\boxed{
+\texttt{psi\_kurtosis}
+= \frac{\hat{\mu}_4}{s^4}
+}
+\)</span>$</p></li>
+</ul>
+<p><strong>Interpretation (quick):</strong></p>
+<ul class="simple">
+<li><p>Normal reference <span class="math notranslate nohighlight">\(\approx 3\)</span> (excess kurtosis <span class="math notranslate nohighlight">\(=0\)</span>).</p></li>
+<li><p>Much larger <span class="math notranslate nohighlight">\(\Rightarrow\)</span> heavier tails / more extreme <span class="math notranslate nohighlight">\(\psi_i\)</span> outliers.</p></li>
+<li><p>Rules of thumb used in the diagnostics: <span class="math notranslate nohighlight">\(\ge 10\)</span> = caution, <span class="math notranslate nohighlight">\(\ge 30\)</span> = severe.</p></li>
+</ul>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython2 notranslate"><div class="highlight"><pre><span></span><span class="n">rep_score</span><span class="p">[</span><span class="s1">&#39;influence_diagnostics&#39;</span><span class="p">]</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>{&#39;se_plugin&#39;: 0.06233979878689177,
+ &#39;kurtosis&#39;: 303.1999961346597,
+ &#39;p99_over_med&#39;: 23.747788009323845,
+ &#39;top_influential&#39;:       i         psi         m     res_t  res_c
+ 0  6224  205.671733  0.010000  2.062391    0.0
+ 1  1915 -180.280657  0.012198 -2.205898   -0.0
+ 2   215 -163.974979  0.013644 -2.221508   -0.0
+ 3  9389  131.757805  0.010585  1.393678    0.0
+ 4   868 -101.111026  0.014727 -1.489752   -0.0
+ 5  2741  -96.602896  0.024285 -2.345406   -0.0
+ 6  1993   83.941140  0.028412  2.404237    0.0
+ 7  9894  -82.585292  0.011016 -0.907962   -0.0
+ 8  2350   70.269293  0.029162  2.063988    0.0
+ 9  1499   70.103947  0.022092  1.576351    0.0}
+</pre></div>
+</div>
+</div>
+</div>
+<section id="max-t-g1-max-t-g0-max-t-m">
+<h3><span class="math notranslate nohighlight">\(max_|t|_g1\)</span>, <span class="math notranslate nohighlight">\(max_|t|_g0\)</span>, <span class="math notranslate nohighlight">\(max_|t|_m\)</span><a class="headerlink" href="#max-t-g1-max-t-g0-max-t-m" title="Link to this heading">#</a></h3>
+<p>We work with a <strong>basis</strong> of functions
+$<span class="math notranslate nohighlight">\(
+\{h_b(X)\}_{b=0}^{B-1}
+\quad\text{(columns of }X_{\text{basis}}\text{; }h_0\equiv 1\text{ is the constant).}
+\)</span><span class="math notranslate nohighlight">\(
+Let \)</span>(m_i^\tau \equiv \mathrm{clip}(m_i,\tau,1-\tau))$ be the clipped propensity (guards against division by zero).</p>
+</section>
+<section id="ate-case">
+<h3>ATE case<a class="headerlink" href="#ate-case" title="Link to this heading">#</a></h3>
+<p>For each basis function <span class="math notranslate nohighlight">\((b)\)</span>, form a sample mean (Gateaux derivative estimator) and its standard error, then compute a t-statistic; finally take the maximum absolute value across bases.</p>
+</section>
+<hr class="docutils" />
+<section id="g-1-direction">
+<h3><span class="math notranslate nohighlight">\((g_1)\)</span> direction<a class="headerlink" href="#g-1-direction" title="Link to this heading">#</a></h3>
+<div class="math notranslate nohighlight">
+\[
+\widehat d_{g_1,b}
+= \frac{1}{n}\sum_{i=1}^n h_b(X_i)
+\Big(1 - \frac{D_i}{m_i^\tau}\Big),
+\qquad
+\mathrm{se}(\widehat d_{g_1,b})
+= \frac{\operatorname{sd}\!\left[h_b(X_i)
+\left(1-\frac{D_i}{m_i^\tau}\right)\right]}{\sqrt{n}}.
+\]</div>
+<div class="math notranslate nohighlight">
+\[
+t_{g_1,b} = \frac{\widehat d_{g_1,b}}{\mathrm{se}(\widehat d_{g_1,b})},
+\qquad
+\boxed{
+\max_{|t|_{g_1}} = \max_b |t_{g_1,b}|
+}.
+\]</div>
+</section>
+<hr class="docutils" />
+<section id="g-0-direction">
+<h3><span class="math notranslate nohighlight">\((g_0)\)</span> direction<a class="headerlink" href="#g-0-direction" title="Link to this heading">#</a></h3>
+<div class="math notranslate nohighlight">
+\[
+\widehat d_{g_0,b}
+= \frac{1}{n}\sum_{i=1}^n h_b(X_i)
+\Big(\frac{1-D_i}{1-m_i^\tau} - 1\Big),
+\qquad
+\mathrm{se}(\widehat d_{g_0,b})
+= \frac{\operatorname{sd}\!\left[h_b(X_i)
+\left(\frac{1-D_i}{1-m_i^\tau} - 1\right)\right]}{\sqrt{n}}.
+\]</div>
+<div class="math notranslate nohighlight">
+\[
+t_{g_0,b} = \frac{\widehat d_{g_0,b}}{\mathrm{se}(\widehat d_{g_0,b})},
+\qquad
+\boxed{
+\max_{|t|_{g_0}} = \max_b |t_{g_0,b}|
+}.
+\]</div>
+</section>
+<hr class="docutils" />
+<section id="m-direction">
+<h3><span class="math notranslate nohighlight">\((m)\)</span> direction<a class="headerlink" href="#m-direction" title="Link to this heading">#</a></h3>
+<div class="math notranslate nohighlight">
+\[
+S_i \equiv
+\frac{D_i(Y_i - g_{1,i})}{(m_i^\tau)^2}
++ \frac{(1-D_i)(Y_i - g_{0,i})}{(1 - m_i^\tau)^2}.
+\]</div>
+<div class="math notranslate nohighlight">
+\[
+\widehat d_{m,b}
+= -\frac{1}{n}\sum_{i=1}^n h_b(X_i) S_i,
+\qquad
+\mathrm{se}(\widehat d_{m,b})
+= \frac{\operatorname{sd}\!\left[h_b(X_i)S_i\right]}{\sqrt{n}}.
+\]</div>
+<div class="math notranslate nohighlight">
+\[
+t_{m,b} = \frac{\widehat d_{m,b}}{\mathrm{se}(\widehat d_{m,b})},
+\qquad
+\boxed{
+\max_{|t|_{m}} = \max_b |t_{m,b}|
+}.
+\]</div>
+<p><strong>Interpretation:</strong> under Neyman orthogonality, each derivative mean <span class="math notranslate nohighlight">\((\widehat d_{\bullet,b})\)</span> should be approximately zero, so all <span class="math notranslate nohighlight">\((|t_{\bullet,b}|)\)</span> should be small. Large <span class="math notranslate nohighlight">\((\max_{|t|})\)</span> values flag miscalibration of the corresponding nuisance.</p>
+</section>
+<hr class="docutils" />
+<section id="atte-att-case">
+<h3>ATTE / ATT case<a class="headerlink" href="#atte-att-case" title="Link to this heading">#</a></h3>
+<p>Let <span class="math notranslate nohighlight">\((p_1 = \mathbb{E}[D])\)</span> and define the odds <span class="math notranslate nohighlight">\((o_i = m_i^\tau / (1 - m_i^\tau))\)</span>.</p>
+<ul class="simple">
+<li><p>The <span class="math notranslate nohighlight">\((g_1)\)</span> derivative is identically zero:
+$<span class="math notranslate nohighlight">\(
+\Rightarrow\quad \max_{|t|_{g_1}} = 0.
+\)</span>$</p></li>
+<li><p><strong><span class="math notranslate nohighlight">\((g_0)\)</span> direction</strong>
+$<span class="math notranslate nohighlight">\(
+\widehat d_{g_0,b}
+= \frac{1}{n}\sum_i h_b(X_i)\frac{(1-D_i)o_i - D_i}{p_1},
+\qquad
+t_{g_0,b}
+= \frac{\widehat d_{g_0,b}}{\mathrm{se}(\widehat d_{g_0,b})},
+\qquad
+\max_{|t|_{g_0}} = \max_b |t_{g_0,b}|.
+\)</span>$</p></li>
+<li><p><strong><span class="math notranslate nohighlight">\((m)\)</span> direction</strong>
+$<span class="math notranslate nohighlight">\(
+\widehat d_{m,b}
+= -\frac{1}{n}\sum_i h_b(X_i)
+\frac{(1-D_i)(Y_i - g_{0,i})}
+     {p_1(1 - m_i^\tau)^2},
+\qquad
+\max_{|t|_{m}} = \max_b |t_{m,b}|.
+\)</span>$</p></li>
+</ul>
+<hr class="docutils" />
+<p><strong>Rule of thumb:</strong>
+<span class="math notranslate nohighlight">\((\max_{|t|} \lesssim 2)\)</span> is “okay”; larger values indicate orthogonality breakdown — fix by recalibrating that nuisance, changing learners, features, or trimming.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython2 notranslate"><div class="highlight"><pre><span></span><span class="n">rep_score</span><span class="p">[</span><span class="s1">&#39;orthogonality_derivatives&#39;</span><span class="p">]</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_html"><div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>basis</th>
+      <th>d_g1</th>
+      <th>se_g1</th>
+      <th>t_g1</th>
+      <th>d_g0</th>
+      <th>se_g0</th>
+      <th>t_g0</th>
+      <th>d_m</th>
+      <th>se_m</th>
+      <th>t_m</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>0</td>
+      <td>-0.233097</td>
+      <td>0.053585</td>
+      <td>-4.350018</td>
+      <td>0.036084</td>
+      <td>0.017458</td>
+      <td>2.066835</td>
+      <td>0.314777</td>
+      <td>3.739844</td>
+      <td>0.084168</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>1</td>
+      <td>-0.012467</td>
+      <td>0.058847</td>
+      <td>-0.211863</td>
+      <td>0.029152</td>
+      <td>0.025305</td>
+      <td>1.152026</td>
+      <td>0.598770</td>
+      <td>3.992048</td>
+      <td>0.149991</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>2</td>
+      <td>0.021350</td>
+      <td>0.060963</td>
+      <td>0.350206</td>
+      <td>0.038320</td>
+      <td>0.022736</td>
+      <td>1.685394</td>
+      <td>-5.950311</td>
+      <td>5.773734</td>
+      <td>-1.030583</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>3</td>
+      <td>0.125716</td>
+      <td>0.061772</td>
+      <td>2.035176</td>
+      <td>0.047856</td>
+      <td>0.023043</td>
+      <td>2.076780</td>
+      <td>2.428545</td>
+      <td>5.321692</td>
+      <td>0.456348</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>4</td>
+      <td>0.007767</td>
+      <td>0.047830</td>
+      <td>0.162379</td>
+      <td>0.052762</td>
+      <td>0.029293</td>
+      <td>1.801146</td>
+      <td>-1.800507</td>
+      <td>2.686426</td>
+      <td>-0.670224</td>
+    </tr>
+    <tr>
+      <th>5</th>
+      <td>5</td>
+      <td>0.007035</td>
+      <td>0.054763</td>
+      <td>0.128462</td>
+      <td>0.002395</td>
+      <td>0.015985</td>
+      <td>0.149811</td>
+      <td>2.012890</td>
+      <td>3.491102</td>
+      <td>0.576577</td>
+    </tr>
+  </tbody>
+</table>
+</div></div></div>
+</div>
+</section>
+</section>
+<section id="oos-tstat-fold-oos-tstat-strict">
+<h2><code class="docutils literal notranslate"><span class="pre">oos_tstat_fold,</span> <span class="pre">oos_tstat_strict</span></code><a class="headerlink" href="#oos-tstat-fold-oos-tstat-strict" title="Link to this heading">#</a></h2>
+<p>Here’s the math behind the two OOS (out-of-sample) moment t-stats used in the diagnostics.
+Assume K-fold cross-fitting with held-out index sets <span class="math notranslate nohighlight">\((I_k)\)</span> (size <span class="math notranslate nohighlight">\(n_k\)</span>) and complements <span class="math notranslate nohighlight">\((R_k)\)</span>.</p>
+<hr class="docutils" />
+<section id="step-1-leave-fold-out-hat-theta-k">
+<h3><strong>Step 1 — Leave-fold-out <span class="math notranslate nohighlight">\((\hat\theta_{-k})\)</span></strong><a class="headerlink" href="#step-1-leave-fold-out-hat-theta-k" title="Link to this heading">#</a></h3>
+<p>For the moment condition
+<span class="math notranslate nohighlight">\((\mathbb{E}[\psi_a(W)\,\theta + \psi_b(W)] = 0)\)</span>,
+the leave-fold-out estimate used on fold <span class="math notranslate nohighlight">\((k)\)</span> is</p>
+<div class="math notranslate nohighlight">
+\[
+\hat\theta_{-k}
+= -\frac{\bar\psi_{b,R_k}}{\bar\psi_{a,R_k}},
+\qquad
+\bar\psi_{\cdot,R_k}
+= \frac{1}{|R_k|}\sum_{i\in R_k}\psi_{\cdot}(W_i).
+\]</div>
+</section>
+<hr class="docutils" />
+<section id="step-2-held-out-scores-on-fold-k">
+<h3><strong>Step 2 — Held-out scores on fold <span class="math notranslate nohighlight">\((k)\)</span></strong><a class="headerlink" href="#step-2-held-out-scores-on-fold-k" title="Link to this heading">#</a></h3>
+<p>Define the fold-specific held-out score for <span class="math notranslate nohighlight">\(i\in I_k\)</span>:
+$<span class="math notranslate nohighlight">\(
+\psi_i^{(k)}
+= \psi_b(W_i) + \psi_a(W_i)\,\hat\theta_{-k}.
+\)</span>$</p>
+<p>Compute per-fold mean and variance:
+$<span class="math notranslate nohighlight">\(
+\bar\psi_k
+= \frac{1}{n_k}\sum_{i\in I_k}\psi_i^{(k)},
+\qquad
+s_k^2
+= \frac{1}{n_k-1}\sum_{i\in I_k}\!\big(\psi_i^{(k)}-\bar\psi_k\big)^2.
+\)</span>$</p>
+</section>
+<hr class="docutils" />
+<section id="oos-t-stat-diagnostics">
+<h3>OOS t-stat diagnostics<a class="headerlink" href="#oos-t-stat-diagnostics" title="Link to this heading">#</a></h3>
+</section>
+<hr class="docutils" />
+<section id="texttt-oos-tstat-fold">
+<h3><strong><span class="math notranslate nohighlight">\((\texttt{oos\_tstat\_fold})\)</span></strong><a class="headerlink" href="#texttt-oos-tstat-fold" title="Link to this heading">#</a></h3>
+<p>A fold-aggregated, variance-weighted t-statistic:
+$<span class="math notranslate nohighlight">\(
+\boxed{
+\texttt{oos\_tstat\_fold}
+= \frac{\displaystyle \sum_{k=1}^K n_k\,\bar\psi_k}
+       {\displaystyle \sqrt{\sum_{k=1}^K n_k\,s_k^2}}
+}
+\)</span>$</p>
+<p><em>Intuition:</em> averages fold means and scales by a fold-pooled standard error.</p>
+</section>
+<hr class="docutils" />
+<section id="texttt-oos-tstat-strict">
+<h3><strong><span class="math notranslate nohighlight">\((\texttt{oos\_tstat\_strict})\)</span></strong><a class="headerlink" href="#texttt-oos-tstat-strict" title="Link to this heading">#</a></h3>
+<p>A “strict” t-stat using every held-out observation directly:
+$<span class="math notranslate nohighlight">\(
+N = \sum_{k=1}^K n_k,
+\qquad
+\bar\psi_{\text{all}}
+= \frac{1}{N}\sum_{k=1}^K\sum_{i\in I_k}\psi_i^{(k)}.
+\)</span>$</p>
+<div class="math notranslate nohighlight">
+\[
+s_{\text{all}}^2
+= \frac{1}{N-1}
+  \sum_{k=1}^K\sum_{i\in I_k}
+  \big(\psi_i^{(k)} - \bar\psi_{\text{all}}\big)^2.
+\]</div>
+<div class="math notranslate nohighlight">
+\[
+\boxed{
+\texttt{oos\_tstat\_strict}
+= \frac{\bar\psi_{\text{all}}}{s_{\text{all}}/\sqrt{N}}
+}
+\]</div>
+<p><em>Intuition:</em> computes a single overall mean and standard error across <em>all</em> held-out scores
+(often slightly more conservative).</p>
+</section>
+<hr class="docutils" />
+<section id="id1">
+<h3><strong>Interpretation</strong><a class="headerlink" href="#id1" title="Link to this heading">#</a></h3>
+<p>Under a valid design and correct cross-fitting
+(so that <span class="math notranslate nohighlight">\(\mathbb{E}[\psi]=0\)</span> out-of-sample), both statistics are approximately standard normal:
+$<span class="math notranslate nohighlight">\(
+\text{two-sided p-value}
+\approx 2\big(1 - \Phi(|t|)\big).
+\)</span>$</p>
+<p>Values near <span class="math notranslate nohighlight">\(0\)</span> indicate that the moment condition holds out of sample.
+Large <span class="math notranslate nohighlight">\(|t|\)</span> suggests overfitting, leakage, or nuisance miscalibration.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython2 notranslate"><div class="highlight"><pre><span></span><span class="n">rep_score</span><span class="p">[</span><span class="s1">&#39;oos_moment_test&#39;</span><span class="p">]</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>{&#39;fold_results&#39;:    fold     n  psi_mean    psi_var
+ 0     0  2500 -0.002503  37.561660
+ 1     1  2500  0.100558  54.360122
+ 2     2  2500  0.068724  31.028728
+ 3     3  2500 -0.166779  32.522161,
+ &#39;tstat_fold_agg&#39;: -2.5529434141490394e-15,
+ &#39;pvalue_fold_agg&#39;: 0.999999999999998,
+ &#39;tstat_strict&#39;: -2.461798420221801e-15,
+ &#39;pvalue_strict&#39;: 0.999999999999998,
+ &#39;interpretation&#39;: &#39;Near 0 indicates moment condition holds.&#39;}
+</pre></div>
+</div>
+</div>
+</div>
+</section>
+</section>
+</section>
+<section class="tex2jax_ignore mathjax_ignore" id="sutva">
+<h1>SUTVA<a class="headerlink" href="#sutva" title="Link to this heading">#</a></h1>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython2 notranslate"><div class="highlight"><pre><span></span><span class="n">print_sutva_questions</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>1.) Are your clients independent (i)?
+2.) Do you measure confounders, treatment, and outcome in the same intervals?
+3.) Do you measure confounders before treatment and outcome after?
+4.) Do you have a consistent label of treatment, such as if a person does not receive a treatment, he has a label 0?
+</pre></div>
+</div>
+</div>
+</div>
+<p>Those assumptions are statistically untestable. We need design of research for them</p>
+</section>
+<section class="tex2jax_ignore mathjax_ignore" id="uncofoundedness">
+<h1>Uncofoundedness<a class="headerlink" href="#uncofoundedness" title="Link to this heading">#</a></h1>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython2 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">causalis.refutation.unconfoundedness.uncofoundedness_validation</span><span class="w"> </span><span class="kn">import</span> <span class="n">run_unconfoundedness_diagnostics</span>
+
+<span class="n">rep_uc</span> <span class="o">=</span> <span class="n">run_unconfoundedness_diagnostics</span><span class="p">(</span><span class="n">res</span><span class="o">=</span><span class="n">ate_result</span><span class="p">)</span>
+<span class="n">rep_uc</span><span class="p">[</span><span class="s1">&#39;summary&#39;</span><span class="p">]</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_html"><div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>metric</th>
+      <th>value</th>
+      <th>flag</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>balance_max_smd</td>
+      <td>0.144968</td>
+      <td>YELLOW</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>balance_frac_violations</td>
+      <td>0.200000</td>
+      <td>YELLOW</td>
+    </tr>
+  </tbody>
+</table>
+</div></div></div>
+</div>
+<section id="balance-max-smd">
+<h2><code class="docutils literal notranslate"><span class="pre">balance\_max\_smd</span></code><a class="headerlink" href="#balance-max-smd" title="Link to this heading">#</a></h2>
+<p>For each covariate <span class="math notranslate nohighlight">\((X_j)\)</span>, the (weighted) standardized mean difference is
+$<span class="math notranslate nohighlight">\(
+\mathrm{SMD}_j
+= \frac{\big|\mu_{1j} - \mu_{0j}\big|}
+       {\sqrt{\tfrac{1}{2}\big(\sigma_{1j}^2 + \sigma_{0j}^2\big)}}.
+\)</span>$</p>
+<p>Group means and variances are computed under the IPW weights implied by your estimand:</p>
+<ul class="simple">
+<li><p><strong>ATE:</strong> <span class="math notranslate nohighlight">\(w_{1i} = \tfrac{D_i}{\hat m_i}\)</span>, <span class="math notranslate nohighlight">\(w_{0i} = \tfrac{1-D_i}{1-\hat m_i}\)</span></p></li>
+<li><p><strong>ATTE:</strong> <span class="math notranslate nohighlight">\(w_{1i} = D_i\)</span>, <span class="math notranslate nohighlight">\(w_{0i} = (1-D_i)\tfrac{\hat m_i}{1-\hat m_i}\)</span></p></li>
+</ul>
+<p>(If <code class="docutils literal notranslate"><span class="pre">normalize=True</span></code>, each weight vector is divided by its mean.)</p>
+<p>Weighted means and variances:
+$<span class="math notranslate nohighlight">\(
+\mu_{gj} = \frac{\sum_i w_{gi} X_{ij}}{\sum_i w_{gi}},
+\qquad
+\sigma_{gj}^2 = \frac{\sum_i w_{gi}(X_{ij} - \mu_{gj})^2}{\sum_i w_{gi}},
+\qquad
+g \in \{0,1\}.
+\)</span>$</p>
+<p>Special cases in the code:</p>
+<ul class="simple">
+<li><p>If both variances are <span class="math notranslate nohighlight">\(\approx 0\)</span> and <span class="math notranslate nohighlight">\(|\mu_{1j}-\mu_{0j}| \approx 0\)</span> ⇒ <span class="math notranslate nohighlight">\(\mathrm{SMD}_j = 0\)</span></p></li>
+<li><p>If both variances are <span class="math notranslate nohighlight">\(\approx 0\)</span> but means differ ⇒ <span class="math notranslate nohighlight">\(\mathrm{SMD}_j = \infty\)</span></p></li>
+<li><p>If denominator is <span class="math notranslate nohighlight">\(\approx 0\)</span> otherwise ⇒ <span class="math notranslate nohighlight">\(\mathrm{SMD}_j = \text{NaN}\)</span></p></li>
+</ul>
+<p>Then
+$<span class="math notranslate nohighlight">\(
+\textbf{balance\_max\_smd}
+= \max_j \mathrm{SMD}_j,
+\)</span><span class="math notranslate nohighlight">\(
+implemented as a `nanmax` over the vector of \)</span>\mathrm{SMD}_j<span class="math notranslate nohighlight">\(.
+NaNs are ignored; if any feature produced \)</span>\infty<span class="math notranslate nohighlight">\(, the max is \)</span>\infty$.</p>
+</section>
+<section id="balance-frac-violations">
+<h2><code class="docutils literal notranslate"><span class="pre">balance\_frac\_violations</span></code><a class="headerlink" href="#balance-frac-violations" title="Link to this heading">#</a></h2>
+<p>Let the SMD threshold be <span class="math notranslate nohighlight">\(\tau\)</span> (default <span class="math notranslate nohighlight">\(0.10\)</span>).
+Define the set of <strong>finite</strong> SMDs:
+$<span class="math notranslate nohighlight">\(
+\mathcal{J} = \{ j : \ \mathrm{SMD}_j \text{ is finite} \}.
+\)</span>$</p>
+<p>Then the fraction of violations is
+$<span class="math notranslate nohighlight">\(
+\textbf{balance\_frac\_violations}
+= \frac{1}{|\mathcal{J}|}
+  \sum_{j \in \mathcal{J}} \mathbf{1}\{ \mathrm{SMD}_j \ge \tau \}.
+\)</span>$</p>
+<p>So it’s the share of covariates whose <strong>weighted</strong> SMD exceeds the threshold,
+computed only over finite SMDs (NaN / Inf are excluded from the denominator).</p>
+<hr class="docutils" />
+<section id="quick-interpretation">
+<h3>Quick interpretation<a class="headerlink" href="#quick-interpretation" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p>Smaller is better. A common rule of thumb is <span class="math notranslate nohighlight">\(\mathrm{SMD} \le 0.10\)</span>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">balance_max_smd</span></code> tells you the <strong>worst</strong> residual imbalance across covariates.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">balance_frac_violations</span></code> tells you <strong>how many</strong> covariates (as a fraction) still exceed the chosen threshold.</p></li>
+</ul>
+</section>
+</section>
+<section id="sensitivity-analysis">
+<h2><code class="docutils literal notranslate"><span class="pre">Sensitivity</span> <span class="pre">analysis</span></code><a class="headerlink" href="#sensitivity-analysis" title="Link to this heading">#</a></h2>
+<section id="sensitivity-analysis-bias-aware-ci">
+<h3>1) <code class="docutils literal notranslate"><span class="pre">sensitivity_analysis</span></code>: bias-aware CI<a class="headerlink" href="#sensitivity-analysis-bias-aware-ci" title="Link to this heading">#</a></h3>
+<p><strong>Goal.</strong>
+Start from your estimator <span class="math notranslate nohighlight">\((\hat\theta)\)</span> with sampling standard error <span class="math notranslate nohighlight">\((se)\)</span>.
+Allow a controlled amount of <em>worst-case hidden confounding</em> through three knobs <span class="math notranslate nohighlight">\((cf_y, cf_d, \rho)\)</span>.
+Inflate the uncertainty by an additive “max bias”.</p>
+</section>
+<hr class="docutils" />
+<section id="step-a-sampling-part">
+<h3><strong>Step A — Sampling part</strong><a class="headerlink" href="#step-a-sampling-part" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p>Point estimate <span class="math notranslate nohighlight">\(\hat\theta\)</span>, standard error <span class="math notranslate nohighlight">\(se\)</span>, and <span class="math notranslate nohighlight">\(z_\alpha\)</span> for level <span class="math notranslate nohighlight">\((1-\alpha)\)</span>.</p></li>
+<li><p>Usual sampling CI:
+$<span class="math notranslate nohighlight">\(
+[\,\hat\theta - z_\alpha\,se,\ \hat\theta + z_\alpha\,se\,].
+\)</span>$</p></li>
+</ul>
+</section>
+<hr class="docutils" />
+<section id="step-b-confounding-geometry">
+<h3><strong>Step B — Confounding geometry</strong><a class="headerlink" href="#step-b-confounding-geometry" title="Link to this heading">#</a></h3>
+<p>The code pulls sensitivity elements from the fitted IRM:</p>
+<ul class="simple">
+<li><p><span class="math notranslate nohighlight">\(\sigma^2\)</span>: the <strong>asymptotic variance</strong> of the estimator’s EIF
+(so that <span class="math notranslate nohighlight">\(se = \sqrt{\sigma^2}\)</span> in the module’s normalization).</p></li>
+<li><p><span class="math notranslate nohighlight">\(m_\alpha(i) \ge 0\)</span>: per-unit weight for the <strong>outcome channel</strong>
+(how outcome-model misspecification moves the EIF).</p></li>
+<li><p><span class="math notranslate nohighlight">\(r(i)\)</span> (“riesz_rep”): per-unit weight for the <strong>treatment channel</strong>
+(how propensity-model misspecification moves the EIF).</p></li>
+</ul>
+<p>We turn the user’s sensitivity knobs into a <strong>quadratic budget</strong> for adversarial confounding:
+$$
+\begin{aligned}
+a_i &amp;:= \sqrt{2,m_\alpha(i)}, \[1mm]
+b_i &amp;:=
+\begin{cases}
+|r(i)|, &amp; \text{(default, worst-case sign)} \
+r(i),   &amp; \text{(if \texttt{use_signed_rr=True})}
+\end{cases} \[2mm]
+\text{base}_i &amp;= a_i^2,cf_y + b_i^2,cf_d</p>
+<ul class="simple">
+<li><p>2,\rho,\sqrt{cf_y,cf_d},a_i b_i \ge 0, \[2mm]
+\nu^2 &amp;:= \mathbb{E}_n[\text{base}_i].
+\end{aligned}
+$$</p></li>
+</ul>
+<ul class="simple">
+<li><p><span class="math notranslate nohighlight">\(cf_y \ge 0\)</span>: strength of unobserved outcome disturbance</p></li>
+<li><p><span class="math notranslate nohighlight">\(cf_d \ge 0\)</span>: strength of unobserved treatment disturbance</p></li>
+<li><p><span class="math notranslate nohighlight">\(\rho \in [-1,1]\)</span>: their correlation</p></li>
+</ul>
+<p>This <span class="math notranslate nohighlight">\(\nu^2\)</span> is a <strong>dimensionless bias multiplier</strong> — how sensitive the EIF is to those perturbations.</p>
+</section>
+<hr class="docutils" />
+<section id="step-c-max-bias-and-intervals">
+<h3><strong>Step C — Max bias and intervals</strong><a class="headerlink" href="#step-c-max-bias-and-intervals" title="Link to this heading">#</a></h3>
+<p>Two equivalent forms appear in the code:
+$<span class="math notranslate nohighlight">\(
+\text{max\_bias}
+= \sqrt{\sigma^2\,\nu^2}
+= \big(\sqrt{\nu^2}\big)\,se.
+\)</span>$</p>
+<p>Then the module reports:</p>
+<ul class="simple">
+<li><p><strong>Confounding bounds for <span class="math notranslate nohighlight">\(\theta\)</span>:</strong>
+$<span class="math notranslate nohighlight">\(
+[\,\hat\theta - \text{max\_bias},\; \hat\theta + \text{max\_bias}\,].
+\)</span>$</p></li>
+<li><p><strong>Bias-aware CI (sampling + confounding, worst-case additive):</strong>
+$<span class="math notranslate nohighlight">\(
+\Big[\,\hat\theta - (\text{max\_bias} + z_\alpha\,se),\;
+\hat\theta + (\text{max\_bias} + z_\alpha\,se)\,\Big].
+\)</span>$</p></li>
+</ul>
+<p>(So you’re adding sampling error and the adversarial bias <em>linearly</em> for a conservative envelope.)</p>
+<hr class="docutils" />
+<p><strong>Notes &amp; edge handling</strong></p>
+<ul class="simple">
+<li><p>Numeric PSD clamping ensures <span class="math notranslate nohighlight">\(\text{base}_i \ge 0\)</span>; <span class="math notranslate nohighlight">\(\rho\)</span> is clipped to <span class="math notranslate nohighlight">\([-1,1]\)</span>.</p></li>
+<li><p>If <span class="math notranslate nohighlight">\(cf_y = cf_d = 0 \Rightarrow \nu^2 = 0 \Rightarrow\)</span> bias-aware CI collapses to the sampling CI.</p></li>
+<li><p>Internally, a delta-method IF for <span class="math notranslate nohighlight">\(\text{max\_bias}\)</span> is
+$<span class="math notranslate nohighlight">\(
+\psi_{\text{max}}(i)
+= \frac{\sigma^2\,\psi_{\nu^2}(i) + \nu^2\,\psi_{\sigma^2}(i)}
+       {2\,\text{max\_bias}},
+\)</span><span class="math notranslate nohighlight">\(
+matching \)</span>\text{max_bias} = \sqrt{\sigma^2\nu^2}$ (used for coherent summaries).</p></li>
+</ul>
+</section>
+<hr class="docutils" />
+<section id="sensitivity-benchmark-calibrating-cf-y-cf-d-rho-from-omitted-covariates">
+<h3>2) <code class="docutils literal notranslate"><span class="pre">sensitivity_benchmark</span></code>: calibrating <span class="math notranslate nohighlight">\((cf_y, cf_d, \rho)\)</span> from omitted covariates<a class="headerlink" href="#sensitivity-benchmark-calibrating-cf-y-cf-d-rho-from-omitted-covariates" title="Link to this heading">#</a></h3>
+<p><strong>Goal.</strong>
+Pick a set <span class="math notranslate nohighlight">\(Z\)</span> of candidate “omitted” covariates (the <code class="docutils literal notranslate"><span class="pre">benchmarking_set</span></code>).
+Refit a <strong>short</strong> IRM that excludes <span class="math notranslate nohighlight">\(Z\)</span> and compare it to the <strong>long</strong> (original) model.
+Use how well <span class="math notranslate nohighlight">\(Z\)</span> explains residual variation to <em>derive</em> plausible <span class="math notranslate nohighlight">\((cf_y, cf_d, \rho)\)</span>.</p>
+</section>
+<hr class="docutils" />
+<section id="step-a-long-vs-short-estimates">
+<h3><strong>Step A — Long vs short estimates</strong><a class="headerlink" href="#step-a-long-vs-short-estimates" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p>Long: <span class="math notranslate nohighlight">\(\hat\theta_{\text{long}}\)</span> (original model).</p></li>
+<li><p>Short: <span class="math notranslate nohighlight">\(\hat\theta_{\text{short}}\)</span> (drop <span class="math notranslate nohighlight">\(Z\)</span>, same learners/hyperparams).</p></li>
+<li><p>Report <span class="math notranslate nohighlight">\(\Delta = \hat\theta_{\text{long}} - \hat\theta_{\text{short}}\)</span>.</p></li>
+</ul>
+</section>
+<hr class="docutils" />
+<section id="step-b-residuals-from-the-long-model">
+<h3><strong>Step B — Residuals from the long model</strong><a class="headerlink" href="#step-b-residuals-from-the-long-model" title="Link to this heading">#</a></h3>
+<p>Let <span class="math notranslate nohighlight">\((g_1, g_0, \hat m)\)</span> be the outcome and propensity learners:
+$<span class="math notranslate nohighlight">\(
+r_y := Y - \big(D g_1 + (1-D) g_0\big),
+\qquad
+r_d := D - \hat m.
+\)</span>$
+These are the EIF’s outcome and treatment residual components.</p>
+</section>
+<hr class="docutils" />
+<section id="step-c-how-much-of-each-residual-does-z-explain">
+<h3><strong>Step C — How much of each residual does <span class="math notranslate nohighlight">\(Z\)</span> explain?</strong><a class="headerlink" href="#step-c-how-much-of-each-residual-does-z-explain" title="Link to this heading">#</a></h3>
+<p>Regress <span class="math notranslate nohighlight">\(r_y\)</span> on <span class="math notranslate nohighlight">\(Z\)</span> and <span class="math notranslate nohighlight">\(r_d\)</span> on <span class="math notranslate nohighlight">\(Z\)</span> (unweighted OLS; <strong>ATT</strong> case uses ATT weights):</p>
+<ul class="simple">
+<li><p>Obtain <span class="math notranslate nohighlight">\(R^2_y\)</span> and <span class="math notranslate nohighlight">\(R^2_d\)</span>.</p></li>
+<li><p>Convert to <strong>signal-to-noise ratios</strong> (the “strength” of confounding channels):
+$<span class="math notranslate nohighlight">\(
+cf_y = \frac{R^2_y}{1 - R^2_y},
+\qquad
+cf_d = \frac{R^2_d}{1 - R^2_d}.
+\)</span><span class="math notranslate nohighlight">\(
+(These are the same \)</span>R^2 / (1 - R^2)<span class="math notranslate nohighlight">\( maps used in modern partial-\)</span>R^2$ robustness frameworks.)</p></li>
+</ul>
+<p>Compute the correlation between the <strong>fitted</strong> pieces from those two regressions:
+$<span class="math notranslate nohighlight">\(
+\rho = \operatorname{corr}\!\big(\widehat r_y(Z),\ \widehat r_d(Z)\big),
+\)</span><span class="math notranslate nohighlight">\(
+weighted for ATT when applicable, then clipped to \)</span>[-1,1]$.</p>
+</section>
+<hr class="docutils" />
+<section id="outputs">
+<h3><strong>Outputs</strong><a class="headerlink" href="#outputs" title="Link to this heading">#</a></h3>
+<p>A one-row DataFrame (indexed by the treatment name) with
+$<span class="math notranslate nohighlight">\(
+\{\, cf_y,\ cf_d,\ \rho,\ \hat\theta_{\text{long}},\
+\hat\theta_{\text{short}},\ \Delta \,\}.
+\)</span>$</p>
+<p>You can pass <span class="math notranslate nohighlight">\((cf_y, cf_d, \rho)\)</span> straight into <code class="docutils literal notranslate"><span class="pre">sensitivity_analysis</span></code> to get the associated bias-aware interval.
+Intuitively, this calibrates <em>how strong hidden stuff would need to be</em> by using a concrete, observed proxy <span class="math notranslate nohighlight">\(Z\)</span>.</p>
+</section>
+</section>
+<hr class="docutils" />
+<section id="how-to-read-them-together">
+<h2><strong>How to read them together</strong><a class="headerlink" href="#how-to-read-them-together" title="Link to this heading">#</a></h2>
+<ol class="arabic simple">
+<li><p>Use <code class="docutils literal notranslate"><span class="pre">sensitivity_benchmark</span></code> with a plausible omitted set <span class="math notranslate nohighlight">\(Z\)</span> to <strong>derive</strong> <span class="math notranslate nohighlight">\((cf_y, cf_d, \rho)\)</span> and observe the actual estimate shift <span class="math notranslate nohighlight">\(\Delta\)</span>.</p></li>
+<li><p>Plug those <span class="math notranslate nohighlight">\((cf_y, cf_d, \rho)\)</span> into <code class="docutils literal notranslate"><span class="pre">sensitivity_analysis</span></code> to get:
+$<span class="math notranslate nohighlight">\(
+\text{max\_bias} = \sqrt{\nu^2}\,se,
+\qquad
+\text{Bias-aware CI} = \hat\theta \pm (\text{max\_bias} + z_\alpha\,se).
+\)</span>$</p></li>
+</ol>
+<p>Small <span class="math notranslate nohighlight">\(cf\)</span> values (or <span class="math notranslate nohighlight">\(\rho \approx 0\)</span>) ⇒ tiny <span class="math notranslate nohighlight">\(\nu^2\)</span> ⇒ bias-aware CI near the sampling CI.
+Large <span class="math notranslate nohighlight">\(cf\)</span> values and <span class="math notranslate nohighlight">\(|\rho|\approx 1\)</span> widen it, reflecting stronger plausible hidden confounding.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython2 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">causalis.refutation.unconfoundedness.sensitivity</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">sensitivity_analysis</span><span class="p">,</span> <span class="n">sensitivity_benchmark</span>
+<span class="p">)</span>
+
+<span class="n">sensitivity_analysis</span><span class="p">(</span><span class="n">ate_result</span><span class="p">,</span> <span class="n">cf_y</span><span class="o">=</span><span class="mf">0.01</span><span class="p">,</span> <span class="n">cf_d</span><span class="o">=</span><span class="mf">0.01</span><span class="p">,</span> <span class="n">rho</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">level</span><span class="o">=</span><span class="mf">0.95</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>{&#39;theta&#39;: 0.9917276396749556,
+ &#39;se&#39;: 0.06233979878689177,
+ &#39;level&#39;: 0.95,
+ &#39;z&#39;: 1.959963984540054,
+ &#39;sampling_ci&#39;: (0.869543879249174, 1.1139114001007373),
+ &#39;theta_bounds_confounding&#39;: (0.9282979061474285, 1.0551573732024828),
+ &#39;bias_aware_ci&#39;: (0.8061141457216469, 1.1773411336282644),
+ &#39;max_bias&#39;: 0.06342973352752714,
+ &#39;sigma2&#39;: 1.0690078122954034,
+ &#39;nu2&#39;: 1.0352732234146504,
+ &#39;params&#39;: {&#39;cf_y&#39;: 0.01, &#39;cf_d&#39;: 0.01, &#39;rho&#39;: 1.0, &#39;use_signed_rr&#39;: False}}
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython2 notranslate"><div class="highlight"><pre><span></span><span class="n">sensitivity_benchmark</span><span class="p">(</span><span class="n">ate_result</span><span class="p">,</span> <span class="n">benchmarking_set</span> <span class="o">=</span><span class="p">[</span><span class="s1">&#39;tenure_months&#39;</span><span class="p">])</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_html"><div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>cf_y</th>
+      <th>cf_d</th>
+      <th>rho</th>
+      <th>theta_long</th>
+      <th>theta_short</th>
+      <th>delta</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>d</th>
+      <td>0.000001</td>
+      <td>1.951733e-08</td>
+      <td>-1.0</td>
+      <td>0.991728</td>
+      <td>1.064098</td>
+      <td>-0.07237</td>
+    </tr>
+  </tbody>
+</table>
+</div></div></div>
+</div>
+</section>
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#">Refutation of DML IRM inference</a></li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#inference">Inference</a></li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#overlap">Overlap</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#what-overlap-positivity-means">What “overlap/positivity” means</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#why-it-matters">Why it matters</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#edge-mass"><code class="docutils literal notranslate"><span class="pre">edge_mass</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#ks-kolmogorovsmirnov-statistic"><code class="docutils literal notranslate"><span class="pre">ks</span> <span class="pre">-</span> <span class="pre">Kolmogorov–Smirnov</span> <span class="pre">statistic</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#auc"><code class="docutils literal notranslate"><span class="pre">AUC</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#probability-definition-most-intuitive">Probability definition (most intuitive)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#rank-mannwhitney-formulation">Rank / Mann–Whitney formulation</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#roc-integral-view-equivalent">ROC-integral view (equivalent)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#properties-you-should-remember">Properties you should remember</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#in-the-propensity-overlap-context">In the propensity/overlap context</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#ess-treated-ratio"><code class="docutils literal notranslate"><span class="pre">ESS_treated_ratio</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#weights-used">Weights used</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#effective-sample-size-ess">Effective sample size (ESS)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#the-reported-metric">The reported metric</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#why-it-reflects-overlap">Why it reflects overlap</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#tails-w1-q99-med"><code class="docutils literal notranslate"><span class="pre">tails_w1_q99/med</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#interpretation">Interpretation</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#edge-cases-thresholds">Edge cases &amp; thresholds</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#quick-example">Quick example</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#att-identity-relerr"><code class="docutils literal notranslate"><span class="pre">ATT_identity_relerr</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#how-to-read-the-number">How to read the number</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#quick-intuition">Quick intuition</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#clip-m-total"><code class="docutils literal notranslate"><span class="pre">clip_m_total</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#calib-ece-calib-slope-calib-intercept"><code class="docutils literal notranslate"><span class="pre">calib_ECE,</span> <span class="pre">calib_slope,</span> <span class="pre">calib_intercept</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#calib-ece-0-018-green">calib_ECE = 0.018 (GREEN)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#calib-slope-0-889-green">calib_slope (β) = 0.889 (GREEN)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#calib-intercept-0-107-green">calib_intercept (α) = −0.107 (GREEN)</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#score">Score</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#psi-p99-over-med"><code class="docutils literal notranslate"><span class="pre">psi_p99_over_med</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#psi-kurtosis"><code class="docutils literal notranslate"><span class="pre">psi_kurtosis</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#max-t-g1-max-t-g0-max-t-m"><span class="math notranslate nohighlight">\(max_|t|_g1\)</span>, <span class="math notranslate nohighlight">\(max_|t|_g0\)</span>, <span class="math notranslate nohighlight">\(max_|t|_m\)</span></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#ate-case">ATE case</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#g-1-direction"><span class="math notranslate nohighlight">\((g_1)\)</span> direction</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#g-0-direction"><span class="math notranslate nohighlight">\((g_0)\)</span> direction</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#m-direction"><span class="math notranslate nohighlight">\((m)\)</span> direction</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#atte-att-case">ATTE / ATT case</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#oos-tstat-fold-oos-tstat-strict"><code class="docutils literal notranslate"><span class="pre">oos_tstat_fold,</span> <span class="pre">oos_tstat_strict</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#step-1-leave-fold-out-hat-theta-k"><strong>Step 1 — Leave-fold-out <span class="math notranslate nohighlight">\((\hat\theta_{-k})\)</span></strong></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#step-2-held-out-scores-on-fold-k"><strong>Step 2 — Held-out scores on fold <span class="math notranslate nohighlight">\((k)\)</span></strong></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#oos-t-stat-diagnostics">OOS t-stat diagnostics</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#texttt-oos-tstat-fold"><strong><span class="math notranslate nohighlight">\((\texttt{oos\_tstat\_fold})\)</span></strong></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#texttt-oos-tstat-strict"><strong><span class="math notranslate nohighlight">\((\texttt{oos\_tstat\_strict})\)</span></strong></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id1"><strong>Interpretation</strong></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#sutva">SUTVA</a></li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#uncofoundedness">Uncofoundedness</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#balance-max-smd"><code class="docutils literal notranslate"><span class="pre">balance\_max\_smd</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#balance-frac-violations"><code class="docutils literal notranslate"><span class="pre">balance\_frac\_violations</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#quick-interpretation">Quick interpretation</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sensitivity-analysis"><code class="docutils literal notranslate"><span class="pre">Sensitivity</span> <span class="pre">analysis</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sensitivity-analysis-bias-aware-ci">1) <code class="docutils literal notranslate"><span class="pre">sensitivity_analysis</span></code>: bias-aware CI</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#step-a-sampling-part"><strong>Step A — Sampling part</strong></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#step-b-confounding-geometry"><strong>Step B — Confounding geometry</strong></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#step-c-max-bias-and-intervals"><strong>Step C — Max bias and intervals</strong></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sensitivity-benchmark-calibrating-cf-y-cf-d-rho-from-omitted-covariates">2) <code class="docutils literal notranslate"><span class="pre">sensitivity_benchmark</span></code>: calibrating <span class="math notranslate nohighlight">\((cf_y, cf_d, \rho)\)</span> from omitted covariates</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#step-a-long-vs-short-estimates"><strong>Step A — Long vs short estimates</strong></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#step-b-residuals-from-the-long-model"><strong>Step B — Residuals from the long model</strong></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#step-c-how-much-of-each-residual-does-z-explain"><strong>Step C — How much of each residual does <span class="math notranslate nohighlight">\(Z\)</span> explain?</strong></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#outputs"><strong>Outputs</strong></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#how-to-read-them-together"><strong>How to read them together</strong></a></li>
+</ul>
+</li>
+</ul>
+
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b"></script>
+<script src="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2025, Causalis Team.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.1.3.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.15.4.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>
