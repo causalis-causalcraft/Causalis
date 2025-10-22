@@ -1,6 +1,6 @@
 # User Guide
 
-This guide will help you get started with Causal Inference and CausalKit and understand its core concepts.
+This guide will help you get started with Causal Inference and Causalis and understand its core concepts.
 
 ```{toctree}
 :maxdepth: 2

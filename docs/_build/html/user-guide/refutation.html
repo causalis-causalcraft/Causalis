@@ -32,7 +32,7 @@
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="../_static/mystnb.8ecb98da25f57f5357bf6f572d296f466b2cfe2517ffebfabe82451661e28f02.css?v=6644e6bb" />
     <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=95c83b7e" />
-    <link rel="stylesheet" type="text/css" href="../_static/css/custom.css?v=5afa6543" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/custom.css?v=e0b54744" />
   
   <!-- Pre-loaded scripts that we'll load fully later -->
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b" />
@@ -413,7 +413,7 @@ document.write(`
                   
   <section class="tex2jax_ignore mathjax_ignore" id="refutation-and-robustness">
 <h1>Refutation and robustness<a class="headerlink" href="#refutation-and-robustness" title="Link to this heading">#</a></h1>
-<p>The causalkit.refutation module provides quick checks to assess whether your estimated causal effect is plausible and robust. These utilities take your inference function (e.g., dml_ate) and a CausalData object, perturb the data (e.g., randomize outcome or treatment, subsample, etc.), re-run the estimator, and report the new estimate.</p>
+<p>The causalis.refutation module provides quick checks to assess whether your estimated causal effect is plausible and robust. These utilities take your inference function (e.g., dml_ate) and a CausalData object, perturb the data (e.g., randomize outcome or treatment, subsample, etc.), re-run the estimator, and report the new estimate.</p>
 <p>What it includes</p>
 <ul class="simple">
 <li><p>Placebo checks: refute_placebo_outcome, refute_placebo_treatment (expect near-zero effect and large p-value if the design is valid)</p></li>
@@ -429,8 +429,8 @@ document.write(`
 </ul>
 <p>Minimal example
 Assume you already have causal_data (see Inference guide for building it) and want to run a placebo outcome test using DoubleML ATE:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">causalkit.refutation</span><span class="w"> </span><span class="kn">import</span> <span class="n">refute_placebo_outcome</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">causalkit.inference.ate</span><span class="w"> </span><span class="kn">import</span> <span class="n">dml_ate</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">causalis.refutation</span><span class="w"> </span><span class="kn">import</span> <span class="n">refute_placebo_outcome</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">causalis.inference.ate</span><span class="w"> </span><span class="kn">import</span> <span class="n">dml_ate</span>
 
 <span class="c1"># Replace outcome with random noise and re-estimate</span>
 <span class="n">res</span> <span class="o">=</span> <span class="n">refute_placebo_outcome</span><span class="p">(</span><span class="n">dml_ate</span><span class="p">,</span> <span class="n">causal_data</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="mi">42</span><span class="p">)</span>

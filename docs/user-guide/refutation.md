@@ -1,6 +1,6 @@
 # Refutation and robustness
 
-The causalkit.refutation module provides quick checks to assess whether your estimated causal effect is plausible and robust. These utilities take your inference function (e.g., dml_ate) and a CausalData object, perturb the data (e.g., randomize outcome or treatment, subsample, etc.), re-run the estimator, and report the new estimate.
+The causalis.refutation module provides quick checks to assess whether your estimated causal effect is plausible and robust. These utilities take your inference function (e.g., dml_ate) and a CausalData object, perturb the data (e.g., randomize outcome or treatment, subsample, etc.), re-run the estimator, and report the new estimate.
 
 What it includes
 - Placebo checks: refute_placebo_outcome, refute_placebo_treatment (expect near-zero effect and large p-value if the design is valid)
@@ -17,8 +17,8 @@ Minimal example
 Assume you already have causal_data (see Inference guide for building it) and want to run a placebo outcome test using DoubleML ATE:
 
 ```
-from causalkit.refutation import refute_placebo_outcome
-from causalkit.inference.ate import dml_ate
+from causalis.refutation import refute_placebo_outcome
+from causalis.inference.ate import dml_ate
 
 # Replace outcome with random noise and re-estimate
 res = refute_placebo_outcome(dml_ate, causal_data, random_state=42)

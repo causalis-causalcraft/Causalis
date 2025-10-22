@@ -1,6 +1,6 @@
 # Installation
 
-This guide shows the quickest way to install CausalKit directly from GitHub.
+This guide shows the quickest way to install Causalis directly from GitHub.
 
 ## Prerequisites
 - Python 3.7+ (per project configuration)
@@ -20,8 +20,8 @@ python -c "import causalkit; print(causalkit.__version__)"
 ## Optional: editable install (for contributors)
 If you plan to work with the source code, clone the repo and install in editable mode:
 ```bash
-git clone https://github.com/ioannmartynov/CausalKit.git
-cd CausalKit
+git clone https://github.com/ioannmartynov/Causalis.git
+cd Causalis
 pip install -e .
 # or include development tools
 pip install -e ".[dev]"

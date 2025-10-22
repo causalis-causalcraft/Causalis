@@ -1,5 +1,4 @@
 # Real World Examples
-## Basic synthetic examples
 
 ```{toctree}
 :hidden:
@@ -10,7 +9,26 @@ examples/dml_ate
 examples/dml_atte
 ```
 
-````{grid} 3
+```{toctree}
+:hidden:
+:caption: Famous Datasets
+:maxdepth: 1
+
+examples/401k
+```
+
+```{toctree}
+:hidden:
+:caption: Design Templates
+:maxdepth: 1
+
+examples/design_template
+```
+
+
+## Basic synthetic examples
+
+````{grid} 2
 :gutter: 2
 :margin: 2
 
@@ -34,6 +52,13 @@ ATE estimation workflow
 ATTE estimation workflow
 ```
 
+````
+## Famous Datasets
+
+````{grid} 3
+:gutter: 2
+:margin: 2
+
 ```{grid-item-card} 401k
 :img-top: _static/401k.png
 :img-alt: 401k
@@ -43,3 +68,23 @@ ATTE estimation workflow
 
 Let's look at an encyclopedic example: Assessing the Impact of a 401k Retirement Plan on Financial Assets
 ```
+
+````
+
+## Design Templates
+
+````{grid} 1
+:gutter: 2
+:margin: 2
+
+```{grid-item-card} Design of Research Template
+:img-top: _static/design_template.png
+:img-alt: design_template
+:link: examples/design_template
+:link-type: doc
+:class-card: sd-shadow-sm sd-rounded-2xl sd-text-center
+
+Start your first research with DML right now!
+```
+
+````
