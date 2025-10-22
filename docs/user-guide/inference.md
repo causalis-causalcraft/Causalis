@@ -1,6 +1,6 @@
 # Inference
 
-The `causalkit.inference` module provides estimators to quantify causal effects from observational or experimental data. It offers ready‑to‑use functions for common targets such as:
+The `causalis.inference` module provides estimators to quantify causal effects from observational or experimental data. It offers ready‑to‑use functions for common targets such as:
 
 - ATE (Average Treatment Effect): overall effect of a binary treatment on the outcome
 - ATT (Average Treatment effect on the Treated)

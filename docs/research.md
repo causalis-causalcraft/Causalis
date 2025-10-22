@@ -8,8 +8,16 @@
 research/dgp_benchmarking
 ```
 
+```{toctree}
+:hidden:
+:caption: Refutation tests
+:maxdepth: 1
+
+research/refutation_flow
+```
+
 ## Benchmarking
-````{grid} 3
+````{grid} 1
 :gutter: 2
 :margin: 2
 
@@ -23,6 +31,15 @@ research/dgp_benchmarking
 Benchmark simple DGP from causalis.data.generators.
 ```
 
+
+````
+
+## Refutation tests
+
+````{grid} 1
+:gutter: 2
+:margin: 2
+
 ```{grid-item-card} Refutation tests for DML IRM
 :img-top: _static/refutation_flow.png
 :img-alt: refutation_flow
@@ -32,3 +49,5 @@ Benchmark simple DGP from causalis.data.generators.
 
 Explaining refutation tests for DML Interative Regression Model
 ```
+
+````

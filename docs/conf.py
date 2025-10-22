@@ -86,7 +86,6 @@ autosummary_generate = True
 autodoc_mock_imports = [
     'catboost',
     'matplotlib',
-    'econml',
     'shap',
 ]
 # Move type hints into the description for clearer parameter sections

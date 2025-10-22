@@ -4,7 +4,7 @@
 ```{container} hero
 :class: sd-text-center sd-shadow-sm sd-rounded-2xl
 
-Evaluate the impact of the treatment on the outcome metric within the sample population, while controlling for confounding factors, to inform resource allocation decisions.
+Evaluate the impact of the `treatment` on the `outcome` metric within the sample population, while controlling for `confounding` factors, to inform resource allocation decisions.
 ````
 ## Why Causalis?
 ````{grid} 1
@@ -34,11 +34,26 @@ Check assumptions and robustness of the inference
 
 Propensity score distribution, SMD, and other useful plots
 ```
+
+```{grid-item-card} **Advanced DGP**:
+:class-card: sd-shadow-sm sd-rounded-2xl
+
+Data Generating Process with non-linear effects, unobserved confounding,
+target treatment rate calibration, Gaussian copula, heterogeneous treatment effects and more
+```
+
 ```{grid-item-card} **Modern State-of-the-Art Casusal Inference**:
 :class-card: sd-shadow-sm sd-rounded-2xl
 
 Double Machine Learning Interactive Regression Model. Designed 
 for capturing nonlinear effects
+```
+
+```{grid-item-card} **And of course, Easy to Use💚**:
+:class-card: sd-shadow-sm sd-rounded-2xl
+
+Design templates, Baseline notebooks, Colored refutation tests, Real World Examples are separated from
+deep theory
 ```
 ````
 
@@ -94,7 +109,7 @@ Applied Causalis to real world examples
 :link-type: doc
 :class-card: sd-shadow-sm sd-rounded-2xl sd-text-center
 
-Theory research
+Theory research with math and code
 ```
 ````
 ##### References
