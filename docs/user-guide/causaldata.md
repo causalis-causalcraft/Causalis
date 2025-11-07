@@ -1,6 +1,6 @@
 # CausalData at a glance
 
-CausalData is the light-weight input container used across CausalKit. It wraps a pandas DataFrame and records which columns are the outcome (target), the treatment, and the confounders.
+CausalData is the light-weight input container used across Causalis. It wraps a pandas DataFrame and records which columns are the outcome (target), the treatment, and the confounders.
 
 ## Quick start
 

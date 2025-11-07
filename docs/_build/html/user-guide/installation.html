@@ -50,7 +50,7 @@
     <link rel="icon" href="../_static/new_logo.svg"/>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="CausalData at a glance" href="causaldata.html" />
+    <link rel="next" title="Why DML IRM is the Best Modern Choice for Causal Inference" href="dml_irm_model.html" />
     <link rel="prev" title="Introduction to Causal Inference" href="causal_inference_fundamentals.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
@@ -353,10 +353,10 @@ document.write(`
   <div class="bd-toc-item navbar-nav"><ul class="current nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="causal_inference_fundamentals.html">Introduction to Causal Inference</a></li>
 <li class="toctree-l1 current active"><a class="current reference internal" href="#">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dml_irm_model.html">Why DML IRM is the Best Modern Choice for Causal Inference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="causaldata.html">CausalData at a glance</a></li>
-<li class="toctree-l1"><a class="reference internal" href="eda.html">Exploratory Data Analysis (EDA)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="inference.html">Inference</a></li>
-<li class="toctree-l1"><a class="reference internal" href="refutation.html">Refutation and robustness</a></li>
+<li class="toctree-l1"><a class="reference internal" href="refutation.html">Refutation: quick checks and sensitivity</a></li>
 <li class="toctree-l1"><a class="reference internal" href="math_eda_irm_refutation.html">Math notation for EDA, IRM, and refutation diagnostics (CausalKit)</a></li>
 </ul>
 </div>
@@ -421,12 +421,28 @@ document.write(`
 <section id="prerequisites">
 <h2>Prerequisites<a class="headerlink" href="#prerequisites" title="Link to this heading">#</a></h2>
 <ul class="simple">
-<li><p>Python 3.7+ (per project configuration)</p></li>
-<li><p>A clean virtual environment is recommended (venv or conda)</p></li>
+<li><p>python&gt;=3.7</p></li>
+<li><p>numpy&gt;=1.19.0</p></li>
+<li><p>pandas&gt;=1.0.0</p></li>
+<li><p>plotly&gt;=5.0.0</p></li>
+<li><p>scikit-learn</p></li>
+<li><p>pip</p></li>
+<li><p>pip:</p>
+<ul>
+<li><p>doubleml</p></li>
+<li><p>-e .</p></li>
+</ul>
+</li>
 </ul>
 </section>
-<section id="install-from-github-recommended">
-<h2>Install from GitHub (recommended)<a class="headerlink" href="#install-from-github-recommended" title="Link to this heading">#</a></h2>
+<section id="install-from-pip">
+<h2>Install from pip<a class="headerlink" href="#install-from-pip" title="Link to this heading">#</a></h2>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>causalis
+</pre></div>
+</div>
+</section>
+<section id="install-from-github">
+<h2>Install from GitHub<a class="headerlink" href="#install-from-github" title="Link to this heading">#</a></h2>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>--upgrade<span class="w"> </span>pip
 pip<span class="w"> </span>install<span class="w"> </span><span class="s2">&quot;git+https://github.com/ioannmartynov/causalkit.git&quot;</span>
 </pre></div>
@@ -437,17 +453,6 @@ pip<span class="w"> </span>install<span class="w"> </span><span class="s2">&quot
 </pre></div>
 </div>
 </section>
-</section>
-<section id="optional-editable-install-for-contributors">
-<h2>Optional: editable install (for contributors)<a class="headerlink" href="#optional-editable-install-for-contributors" title="Link to this heading">#</a></h2>
-<p>If you plan to work with the source code, clone the repo and install in editable mode:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/ioannmartynov/Causalis.git
-<span class="nb">cd</span><span class="w"> </span>Causalis
-pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span>.
-<span class="c1"># or include development tools</span>
-pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span><span class="s2">&quot;.[dev]&quot;</span>
-</pre></div>
-</div>
 </section>
 <section id="optional-conda-environment-after-cloning-the-repo">
 <h2>Optional: conda environment after cloning the repo<a class="headerlink" href="#optional-conda-environment-after-cloning-the-repo" title="Link to this heading">#</a></h2>
@@ -483,11 +488,11 @@ conda<span class="w"> </span>activate<span class="w"> </span>causalis
       </div>
     </a>
     <a class="right-next"
-       href="causaldata.html"
+       href="dml_irm_model.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">CausalData at a glance</p>
+        <p class="prev-next-title">Why DML IRM is the Best Modern Choice for Causal Inference</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>
@@ -510,11 +515,11 @@ conda<span class="w"> </span>activate<span class="w"> </span>causalis
   <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#prerequisites">Prerequisites</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#install-from-github-recommended">Install from GitHub (recommended)</a><ul class="nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#install-from-pip">Install from pip</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#install-from-github">Install from GitHub</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#verify-the-installation">Verify the installation</a></li>
 </ul>
 </li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#optional-editable-install-for-contributors">Optional: editable install (for contributors)</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#optional-conda-environment-after-cloning-the-repo">Optional: conda environment after cloning the repo</a></li>
 </ul>
   </nav></div>

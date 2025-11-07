@@ -50,8 +50,8 @@
     <link rel="icon" href="../_static/new_logo.svg"/>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Refutation and robustness" href="refutation.html" />
-    <link rel="prev" title="Exploratory Data Analysis (EDA)" href="eda.html" />
+    <link rel="next" title="Refutation: quick checks and sensitivity" href="refutation.html" />
+    <link rel="prev" title="CausalData at a glance" href="causaldata.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   </head>
@@ -353,10 +353,10 @@ document.write(`
   <div class="bd-toc-item navbar-nav"><ul class="current nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="causal_inference_fundamentals.html">Introduction to Causal Inference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dml_irm_model.html">Why DML IRM is the Best Modern Choice for Causal Inference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="causaldata.html">CausalData at a glance</a></li>
-<li class="toctree-l1"><a class="reference internal" href="eda.html">Exploratory Data Analysis (EDA)</a></li>
 <li class="toctree-l1 current active"><a class="current reference internal" href="#">Inference</a></li>
-<li class="toctree-l1"><a class="reference internal" href="refutation.html">Refutation and robustness</a></li>
+<li class="toctree-l1"><a class="reference internal" href="refutation.html">Refutation: quick checks and sensitivity</a></li>
 <li class="toctree-l1"><a class="reference internal" href="math_eda_irm_refutation.html">Math notation for EDA, IRM, and refutation diagnostics (CausalKit)</a></li>
 </ul>
 </div>
@@ -417,40 +417,114 @@ document.write(`
                   
   <section class="tex2jax_ignore mathjax_ignore" id="inference">
 <h1>Inference<a class="headerlink" href="#inference" title="Link to this heading">#</a></h1>
-<p>The <code class="docutils literal notranslate"><span class="pre">causalis.inference</span></code> module provides estimators to quantify causal effects from observational or experimental data. It offers ready‑to‑use functions for common targets such as:</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">causalis.inference</span></code> module provides estimators to quantify causal effects from observational or experimental data.<br />
+It offers ready-to-use functions for common targets such as:</p>
 <ul class="simple">
-<li><p>ATE (Average Treatment Effect): overall effect of a binary treatment on the outcome</p></li>
-<li><p>ATT (Average Treatment effect on the Treated)</p></li>
-<li><p>CATE/GATE: heterogeneity of effects across individuals or groups</p></li>
+<li><p><strong>ATE (Average Treatment Effect):</strong> overall effect of a binary treatment on the outcome</p></li>
+<li><p><strong>ATT (Average Treatment effect on the Treated)</strong></p></li>
+<li><p><strong>CATE / GATE:</strong> heterogeneity of effects across individuals or groups</p></li>
 </ul>
-<p>Under the hood, ATE/ATT routines rely on Double Machine Learning (DoubleML/IRM) with sensible defaults (CatBoost learners) and cross‑fitting to reduce bias from flexible nuisance models.</p>
+<p>Under the hood, ATE/ATT routines rely on <strong>Double Machine Learning (DoubleML / IRM)</strong> with sensible defaults<br />
+(<code class="docutils literal notranslate"><span class="pre">CatBoost</span></code> learners) and <strong>cross-fitting</strong> to reduce bias from flexible nuisance models.</p>
+<hr class="docutils" />
 <section id="a-very-short-ate-example">
-<h2>A very short ATE example<a class="headerlink" href="#a-very-short-ate-example" title="Link to this heading">#</a></h2>
-<p>Below is the minimal flow using the DoubleML ATE estimator. It expects a <code class="docutils literal notranslate"><span class="pre">CausalData</span></code> object with one binary treatment, one outcome, and a list of confounders.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">causalis.inference.ate</span><span class="w"> </span><span class="kn">import</span> <span class="n">dml_ate_source</span>
+<h2>A Very Short ATE Example<a class="headerlink" href="#a-very-short-ate-example" title="Link to this heading">#</a></h2>
+<p>Below is the minimal flow using the internal IRM ATE estimator.<br />
+It expects a <code class="docutils literal notranslate"><span class="pre">CausalData</span></code> object with one binary treatment, one outcome, and a list of confounders.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">causalis.inference.ate</span><span class="w"> </span><span class="kn">import</span> <span class="n">dml_ate</span>
 
 <span class="c1"># Assume you already constructed a CausalData object: `causal_data`</span>
 <span class="c1"># (see the User Guide pages for data preparation and EDA)</span>
 
-<span class="n">results</span> <span class="o">=</span> <span class="n">dml_ate_source</span><span class="p">(</span><span class="n">causal_data</span><span class="p">,</span> <span class="n">n_folds</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">confidence_level</span><span class="o">=</span><span class="mf">0.95</span><span class="p">)</span>
+<span class="n">results</span> <span class="o">=</span> <span class="n">dml_ate</span><span class="p">(</span><span class="n">causal_data</span><span class="p">,</span> <span class="n">n_folds</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">confidence_level</span><span class="o">=</span><span class="mf">0.95</span><span class="p">)</span>
 
-<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;ATE (coefficient):&quot;</span><span class="p">,</span> <span class="n">results</span><span class="p">[</span><span class="s2">&quot;coefficient&quot;</span><span class="p">])</span>  <span class="c1"># float</span>
-<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Std. error:&quot;</span><span class="p">,</span> <span class="n">results</span><span class="p">[</span><span class="s2">&quot;std_error&quot;</span><span class="p">])</span>  <span class="c1"># float</span>
-<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;P-value:&quot;</span><span class="p">,</span> <span class="n">results</span><span class="p">[</span><span class="s2">&quot;p_value&quot;</span><span class="p">])</span>  <span class="c1"># float</span>
-<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;95% CI:&quot;</span><span class="p">,</span> <span class="n">results</span><span class="p">[</span><span class="s2">&quot;confidence_interval&quot;</span><span class="p">])</span>  <span class="c1"># (lower, upper)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;ATE (coefficient):&quot;</span><span class="p">,</span> <span class="n">results</span><span class="p">[</span><span class="s2">&quot;coefficient&quot;</span><span class="p">])</span>      <span class="c1"># float</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Std. error:&quot;</span><span class="p">,</span> <span class="n">results</span><span class="p">[</span><span class="s2">&quot;std_error&quot;</span><span class="p">])</span>               <span class="c1"># float</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;P-value:&quot;</span><span class="p">,</span> <span class="n">results</span><span class="p">[</span><span class="s2">&quot;p_value&quot;</span><span class="p">])</span>                    <span class="c1"># float</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;95% CI:&quot;</span><span class="p">,</span> <span class="n">results</span><span class="p">[</span><span class="s2">&quot;confidence_interval&quot;</span><span class="p">])</span>         <span class="c1"># (lower, upper)</span>
 </pre></div>
 </div>
-<p>What it returns (structure):</p>
+<section id="what-it-returns">
+<h3>What It Returns<a class="headerlink" href="#what-it-returns" title="Link to this heading">#</a></h3>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>{
-  &#39;coefficient&#39;: float,                 # estimated average treatment effect
-  &#39;std_error&#39;: float,                   # standard error
-  &#39;p_value&#39;: float,                     # p-value for H0: effect == 0
-  &#39;confidence_interval&#39;: (float, float),# (lower, upper) at the requested level
-  &#39;model&#39;: DoubleMLIRM                  # fitted DoubleML object for advanced inspection
+  &#39;coefficient&#39;: float,                  # estimated average treatment effect
+  &#39;std_error&#39;: float,                    # standard error
+  &#39;p_value&#39;: float,                      # p-value for H0: effect == 0
+  &#39;confidence_interval&#39;: (float, float), # (lower, upper) at the requested level
+  &#39;model&#39;: IRM,                          # fitted IRM object for advanced inspection
+  &#39;diagnostic_data&#39;: dict                # comprehensive diagnostic information (optional)
 }
 </pre></div>
 </div>
-<p>Tip: You can pass your own ML models to <code class="docutils literal notranslate"><span class="pre">dml_ate(ml_g=...,</span> <span class="pre">ml_m=...)</span></code> if you want to replace the default CatBoost learners.</p>
+</section>
+</section>
+<hr class="docutils" />
+<section id="advanced-usage">
+<h2>Advanced Usage<a class="headerlink" href="#advanced-usage" title="Link to this heading">#</a></h2>
+<section id="custom-machine-learning-models">
+<h3>Custom Machine Learning Models<a class="headerlink" href="#custom-machine-learning-models" title="Link to this heading">#</a></h3>
+<p>You can pass your own ML models to replace the default CatBoost learners:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.ensemble</span><span class="w"> </span><span class="kn">import</span> <span class="n">RandomForestRegressor</span><span class="p">,</span> <span class="n">RandomForestClassifier</span>
+
+<span class="n">results</span> <span class="o">=</span> <span class="n">dml_ate</span><span class="p">(</span>
+    <span class="n">causal_data</span><span class="p">,</span>
+    <span class="n">ml_g</span><span class="o">=</span><span class="n">RandomForestRegressor</span><span class="p">(</span><span class="n">n_estimators</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">max_depth</span><span class="o">=</span><span class="mi">5</span><span class="p">),</span>
+    <span class="n">ml_m</span><span class="o">=</span><span class="n">RandomForestClassifier</span><span class="p">(</span><span class="n">n_estimators</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">max_depth</span><span class="o">=</span><span class="mi">5</span><span class="p">),</span>
+    <span class="n">n_folds</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>
+    <span class="n">confidence_level</span><span class="o">=</span><span class="mf">0.95</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<hr class="docutils" />
+<section id="additional-parameters">
+<h3>Additional Parameters<a class="headerlink" href="#additional-parameters" title="Link to this heading">#</a></h3>
+<p>The <code class="docutils literal notranslate"><span class="pre">dml_ate</span></code> function provides several additional parameters for fine-tuning:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">results</span> <span class="o">=</span> <span class="n">dml_ate</span><span class="p">(</span>
+    <span class="n">causal_data</span><span class="p">,</span>
+    <span class="n">n_folds</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>                      <span class="c1"># number of cross-fitting folds</span>
+    <span class="n">n_rep</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>                        <span class="c1"># number of repetitions (currently 1 supported)</span>
+    <span class="n">score</span><span class="o">=</span><span class="s2">&quot;ATE&quot;</span><span class="p">,</span>                    <span class="c1"># &quot;ATE&quot; or &quot;ATTE&quot;</span>
+    <span class="n">confidence_level</span><span class="o">=</span><span class="mf">0.95</span><span class="p">,</span>          <span class="c1"># confidence level for CI</span>
+    <span class="n">normalize_ipw</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>            <span class="c1"># whether to normalize IPW terms</span>
+    <span class="n">trimming_rule</span><span class="o">=</span><span class="s2">&quot;truncate&quot;</span><span class="p">,</span>       <span class="c1"># trimming approach for propensity</span>
+    <span class="n">trimming_threshold</span><span class="o">=</span><span class="mf">1e-2</span><span class="p">,</span>        <span class="c1"># trimming threshold</span>
+    <span class="n">random_state</span><span class="o">=</span><span class="mi">42</span><span class="p">,</span>                <span class="c1"># random seed for reproducibility</span>
+    <span class="n">store_diagnostic_data</span><span class="o">=</span><span class="kc">True</span>      <span class="c1"># store comprehensive diagnostics</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<hr class="docutils" />
+<section id="diagnostic-data">
+<h3>Diagnostic Data<a class="headerlink" href="#diagnostic-data" title="Link to this heading">#</a></h3>
+<p>By default, <code class="docutils literal notranslate"><span class="pre">dml_ate</span></code> can store detailed diagnostic information useful for validation and refutation tests:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">results</span> <span class="o">=</span> <span class="n">dml_ate</span><span class="p">(</span><span class="n">causal_data</span><span class="p">,</span> <span class="n">store_diagnostic_data</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+<span class="c1"># Access diagnostic data</span>
+<span class="n">diagnostics</span> <span class="o">=</span> <span class="n">results</span><span class="p">[</span><span class="s2">&quot;diagnostic_data&quot;</span><span class="p">]</span>
+
+<span class="c1"># Available diagnostic information:</span>
+<span class="c1"># - m_hat: estimated propensity scores</span>
+<span class="c1"># - g0_hat: estimated outcome under control</span>
+<span class="c1"># - g1_hat: estimated outcome under treatment</span>
+<span class="c1"># - y: observed outcomes</span>
+<span class="c1"># - d: observed treatment</span>
+<span class="c1"># - x: confounders</span>
+<span class="c1"># - psi: influence function values</span>
+<span class="c1"># - psi_a, psi_b: score components</span>
+<span class="c1"># - folds: fold assignments</span>
+<span class="c1"># - score: score type used</span>
+<span class="c1"># - normalize_ipw: whether IPW was normalized</span>
+<span class="c1"># - trimming_threshold: trimming threshold used</span>
+<span class="c1"># - p1: treatment prevalence</span>
+</pre></div>
+</div>
+<p>This diagnostic data enables comprehensive <strong>refutation tests</strong>, including overlap diagnostics, score validation, and sensitivity analysis.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>
+</pre></div>
+</div>
+</section>
 </section>
 </section>
 
@@ -465,12 +539,12 @@ document.write(`
                   
 <div class="prev-next-area">
     <a class="left-prev"
-       href="eda.html"
+       href="causaldata.html"
        title="previous page">
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">Exploratory Data Analysis (EDA)</p>
+        <p class="prev-next-title">CausalData at a glance</p>
       </div>
     </a>
     <a class="right-next"
@@ -478,7 +552,7 @@ document.write(`
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">Refutation and robustness</p>
+        <p class="prev-next-title">Refutation: quick checks and sensitivity</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>
@@ -500,7 +574,16 @@ document.write(`
   </div>
   <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#a-very-short-ate-example">A very short ATE example</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#a-very-short-ate-example">A Very Short ATE Example</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#what-it-returns">What It Returns</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#advanced-usage">Advanced Usage</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#custom-machine-learning-models">Custom Machine Learning Models</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#additional-parameters">Additional Parameters</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#diagnostic-data">Diagnostic Data</a></li>
+</ul>
+</li>
 </ul>
   </nav></div>
 
