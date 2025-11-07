@@ -355,10 +355,10 @@ document.write(`
   <div class="bd-toc-item navbar-nav"><ul class="current nav bd-sidenav">
 <li class="toctree-l1 current active"><a class="current reference internal" href="#">Introduction to Causal Inference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dml_irm_model.html">Why DML IRM is the Best Modern Choice for Causal Inference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="causaldata.html">CausalData at a glance</a></li>
-<li class="toctree-l1"><a class="reference internal" href="eda.html">Exploratory Data Analysis (EDA)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="inference.html">Inference</a></li>
-<li class="toctree-l1"><a class="reference internal" href="refutation.html">Refutation and robustness</a></li>
+<li class="toctree-l1"><a class="reference internal" href="refutation.html">Refutation: quick checks and sensitivity</a></li>
 <li class="toctree-l1"><a class="reference internal" href="math_eda_irm_refutation.html">Math notation for EDA, IRM, and refutation diagnostics (CausalKit)</a></li>
 </ul>
 </div>
@@ -437,7 +437,7 @@ document.write(`
 <h2>Notation<a class="headerlink" href="#notation" title="Link to this heading">#</a></h2>
 <ul class="simple">
 <li><p><strong>Units:</strong> <span class="math notranslate nohighlight">\(i=1,\dots,n\)</span></p></li>
-<li><p><strong>Treatment:</strong> <span class="math notranslate nohighlight">\(T_i\in\{0,1\}\)</span> (can be multi-valued or continuous)</p></li>
+<li><p><strong>Treatment:</strong> <span class="math notranslate nohighlight">\(D_i\in\{0,1\}\)</span> (can be multi-valued or continuous)</p></li>
 <li><p><strong>Outcome:</strong> <span class="math notranslate nohighlight">\(Y_i\)</span> (what we observe)</p></li>
 <li><p><strong>Covariates / confounders:</strong> <span class="math notranslate nohighlight">\(X_i\)</span> (pre-treatment features that affect both treatment and outcome)</p></li>
 </ul>
@@ -445,7 +445,7 @@ document.write(`
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Unit</p></th>
-<th class="head"><p>Treatment <span class="math notranslate nohighlight">\(T\)</span></p></th>
+<th class="head"><p>Treatment <span class="math notranslate nohighlight">\(D\)</span></p></th>
 <th class="head"><p>Outcome <span class="math notranslate nohighlight">\(Y\)</span></p></th>
 <th class="head"><p>Confounder_1</p></th>
 <th class="head"><p>Confounder_2</p></th>
@@ -495,18 +495,15 @@ document.write(`
 <hr class="docutils" />
 <section id="what-we-aim-to-estimate-estimands">
 <h2>What we aim to estimate (estimands)<a class="headerlink" href="#what-we-aim-to-estimate-estimands" title="Link to this heading">#</a></h2>
-<section id="ite-cate-individual-or-subgroup-effect">
-<h3>ITE / CATE: individual or subgroup effect<a class="headerlink" href="#ite-cate-individual-or-subgroup-effect" title="Link to this heading">#</a></h3>
-<ul class="simple">
-<li><p><strong>Individual Treatment Effect (ITE):</strong> <span class="math notranslate nohighlight">\(\text{ITE}_i = Y_i(1)-Y_i(0)\)</span> (unobservable for a single unit)</p></li>
-<li><p><strong>Conditional Average Treatment Effect (CATE):</strong>
+<section id="cate-individual-effect">
+<h3>CATE: individual effect<a class="headerlink" href="#cate-individual-effect" title="Link to this heading">#</a></h3>
+<p><strong>Conditional Average Treatment Effect (CATE):</strong>
 <span class="math notranslate nohighlight">\(\tau(x)=\mathbb{E}[Y(1)-Y(0)\mid X=x]\)</span>
-Use when you need personalization, uplift targeting, or to study heterogeneity.</p></li>
-</ul>
+Use when you need personalization, uplift targeting, or to study heterogeneity.</p>
 </section>
 <section id="att-effect-on-the-treated">
 <h3>ATT: effect on the treated<a class="headerlink" href="#att-effect-on-the-treated" title="Link to this heading">#</a></h3>
-<p><span class="math notranslate nohighlight">\(\text{ATT}=\mathbb{E}[Y(1)-Y(0)\mid T=1]\)</span>
+<p><span class="math notranslate nohighlight">\(\text{ATT}=\mathbb{E}[Y(1)-Y(0)\mid D=1]\)</span>
 Use to answer “Did it work <strong>for those who actually received it</strong>?”—e.g., after a selective rollout.</p>
 </section>
 <section id="ate-overall-average-effect">
@@ -521,7 +518,7 @@ Use for headline impact or policy choices that affect the whole eligible populat
 <p>In observational data, we typically rely on two key identification conditions:</p>
 <ol class="arabic simple">
 <li><p><strong>Unconfoundedness (selection on observables):</strong> given <span class="math notranslate nohighlight">\(X\)</span>, treatment is as good as random.
-Formally, <span class="math notranslate nohighlight">\((Y(0),Y(1)) \perp T \mid X\)</span>.</p></li>
+Formally, <span class="math notranslate nohighlight">\((Y(0),Y(1)) \perp D \mid X\)</span>.</p></li>
 <li><p><strong>Overlap (positivity):</strong> each unit had a nonzero chance to receive either treatment: <span class="math notranslate nohighlight">\(0&lt;\Pr(T=1\mid X)&lt;1\)</span>.</p></li>
 </ol>
 <p>These assumptions won’t be true by magic; we design models and diagnostics to make them as plausible as possible.</p>
@@ -579,7 +576,7 @@ Formally, <span class="math notranslate nohighlight">\((Y(0),Y(1)) \perp T \mid 
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-core-idea">The core idea</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#notation">Notation</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#what-we-aim-to-estimate-estimands">What we aim to estimate (estimands)</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#ite-cate-individual-or-subgroup-effect">ITE / CATE: individual or subgroup effect</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#cate-individual-effect">CATE: individual effect</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#att-effect-on-the-treated">ATT: effect on the treated</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#ate-overall-average-effect">ATE: overall average effect</a></li>
 </ul>

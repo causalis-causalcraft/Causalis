@@ -6,6 +6,8 @@
 :maxdepth: 1
 
 research/dgp_benchmarking
+research/doubleml_benchmark
+research/rct_benchmark
 ```
 
 ```{toctree}
@@ -29,6 +31,16 @@ research/refutation_flow
 :class-card: sd-shadow-sm sd-rounded-2xl sd-text-center
 
 Benchmark simple DGP from causalis.data.generators.
+```
+
+```{grid-item-card} Compare Implementation of DML IRM in Causalis and DML IRM in DoubleML
+:img-top: _static/doubleml_benchmark.png
+:img-alt: doubleml_benchmark
+:link: research/doubleml_benchmark
+:link-type: doc
+:class-card: sd-shadow-sm sd-rounded-2xl sd-text-center
+
+Causalis vs DoubleML DML IRM implementation Benchmark
 ```
 
 
