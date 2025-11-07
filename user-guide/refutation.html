@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Refutation and robustness &#8212; Causalis 0.1.0 documentation</title>
+    <title>Refutation: quick checks and sensitivity &#8212; Causalis 0.1.0 documentation</title>
   
   
   
@@ -247,6 +247,10 @@ document.write(`
   
 
   
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
 </div>
 
     </header>
@@ -349,10 +353,10 @@ document.write(`
   <div class="bd-toc-item navbar-nav"><ul class="current nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="causal_inference_fundamentals.html">Introduction to Causal Inference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dml_irm_model.html">Why DML IRM is the Best Modern Choice for Causal Inference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="causaldata.html">CausalData at a glance</a></li>
-<li class="toctree-l1"><a class="reference internal" href="eda.html">Exploratory Data Analysis (EDA)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="inference.html">Inference</a></li>
-<li class="toctree-l1 current active"><a class="current reference internal" href="#">Refutation and robustness</a></li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">Refutation: quick checks and sensitivity</a></li>
 <li class="toctree-l1"><a class="reference internal" href="math_eda_irm_refutation.html">Math notation for EDA, IRM, and refutation diagnostics (CausalKit)</a></li>
 </ul>
 </div>
@@ -394,7 +398,7 @@ document.write(`
     
     <li class="breadcrumb-item"><a href="../user-guide.html" class="nav-link">User Guide</a></li>
     
-    <li class="breadcrumb-item active" aria-current="page">Refutation...</li>
+    <li class="breadcrumb-item active" aria-current="page">Refutation:...</li>
   </ul>
 </nav>
 </div>
@@ -411,35 +415,194 @@ document.write(`
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <section class="tex2jax_ignore mathjax_ignore" id="refutation-and-robustness">
-<h1>Refutation and robustness<a class="headerlink" href="#refutation-and-robustness" title="Link to this heading">#</a></h1>
-<p>The causalis.refutation module provides quick checks to assess whether your estimated causal effect is plausible and robust. These utilities take your inference function (e.g., dml_ate) and a CausalData object, perturb the data (e.g., randomize outcome or treatment, subsample, etc.), re-run the estimator, and report the new estimate.</p>
-<p>What it includes</p>
+  <section class="tex2jax_ignore mathjax_ignore" id="refutation-quick-checks-and-sensitivity">
+<h1>Refutation: quick checks and sensitivity<a class="headerlink" href="#refutation-quick-checks-and-sensitivity" title="Link to this heading">#</a></h1>
+<p>Use these tools after you estimate a causal effect (e.g., with DML/IRM) to pressure‑test your result. They cover placebo tests, overlap/positivity, score orthogonality, balance under IPW, and bias‑aware sensitivity.</p>
+<p>Prerequisites</p>
 <ul class="simple">
-<li><p>Placebo checks: refute_placebo_outcome, refute_placebo_treatment (expect near-zero effect and large p-value if the design is valid)</p></li>
-<li><p>Subset robustness: refute_subset (re-estimate on a random fraction of data)</p></li>
-<li><p>Orthogonality diagnostics: refute_irm_orthogonality (EIF-based diagnostic suite)</p></li>
-<li><p>Sensitivity analysis: sensitivity_analysis, sensitivity_analysis_set (robustness to unobserved confounding)</p></li>
+<li><p>A CausalData object (see the Inference and CausalData guides)</p></li>
+<li><p>An inference result dict like res = dml_ate(causal_data, store_diagnostic_data=True, …)</p></li>
 </ul>
-<p>Return values</p>
+<p>Tip: For ATE the DR/AIPW score is ψ = (g1 − g0) + (Y − g1)·D/m − (Y − g0)·(1−D)/(1−m). In large samples E[ψ]=0 and θ̂ = E_n[ψ]. Diagnostics below check this and related ingredients.</p>
+<section id="placebo-and-subset-checks">
+<h2>1) Placebo and subset checks<a class="headerlink" href="#placebo-and-subset-checks" title="Link to this heading">#</a></h2>
 <ul class="simple">
-<li><p>Placebo/subset helpers return a small dict: {‘theta’: float, ‘p_value’: float}</p></li>
-<li><p>Orthogonality returns a diagnostics dict (keys include ‘theta’, ‘oos_moment_test’, ‘orthogonality_derivatives’, ‘influence_diagnostics’, ‘trimming_info’, ‘diagnostic_conditions’, ‘overall_assessment’)</p></li>
-<li><p>Sensitivity analysis returns a formatted text report</p></li>
+<li><p>Goal: detect spurious signal and fragility to sample size.</p></li>
+<li><p>Expectation: with placebo outcome/treatment the effect should be near 0 with a large p‑value; under sub‑sampling the estimate should be stable within noise.</p></li>
 </ul>
-<p>Minimal example
-Assume you already have causal_data (see Inference guide for building it) and want to run a placebo outcome test using DoubleML ATE:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">causalis.refutation</span><span class="w"> </span><span class="kn">import</span> <span class="n">refute_placebo_outcome</span>
+<p>Python</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">causalis.refutation</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">refute_placebo_outcome</span><span class="p">,</span> <span class="n">refute_placebo_treatment</span><span class="p">,</span> <span class="n">refute_subset</span>
+<span class="p">)</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">causalis.inference.ate</span><span class="w"> </span><span class="kn">import</span> <span class="n">dml_ate</span>
 
-<span class="c1"># Replace outcome with random noise and re-estimate</span>
-<span class="n">res</span> <span class="o">=</span> <span class="n">refute_placebo_outcome</span><span class="p">(</span><span class="n">dml_ate</span><span class="p">,</span> <span class="n">causal_data</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="mi">42</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">res</span><span class="p">)</span>
-<span class="c1"># Example output (values will vary):</span>
-<span class="c1"># {&#39;theta&#39;: -0.0123, &#39;p_value&#39;: 0.9591}</span>
+<span class="c1"># Placeholder: build CausalData as in the guides</span>
+<span class="n">causal_data</span> <span class="o">=</span> <span class="o">...</span>  <span class="c1"># your CausalData</span>
+
+<span class="c1"># Placebo: replace Y with noise</span>
+<span class="n">placebo_y</span> <span class="o">=</span> <span class="n">refute_placebo_outcome</span><span class="p">(</span><span class="n">dml_ate</span><span class="p">,</span> <span class="n">causal_data</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="mi">42</span><span class="p">)</span>
+<span class="c1"># Placebo: shuffle D</span>
+<span class="n">placebo_d</span> <span class="o">=</span> <span class="n">refute_placebo_treatment</span><span class="p">(</span><span class="n">dml_ate</span><span class="p">,</span> <span class="n">causal_data</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="mi">42</span><span class="p">)</span>
+<span class="c1"># Subset: re‑estimate on a fraction of data</span>
+<span class="n">subset</span> <span class="o">=</span> <span class="n">refute_subset</span><span class="p">(</span><span class="n">dml_ate</span><span class="p">,</span> <span class="n">causal_data</span><span class="p">,</span> <span class="n">fraction</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="mi">42</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">placebo_y</span><span class="p">)</span>  <span class="c1"># {&#39;theta&#39;: ~0, &#39;p_value&#39;: large}</span>
 </pre></div>
 </div>
-<p>Interpretation: Because the true outcome was replaced by noise, a well-specified design should yield theta close to 0 and a large p-value, indicating no spurious effect.</p>
+</section>
+<section id="overlap-positivity-diagnostics">
+<h2>2) Overlap (positivity) diagnostics<a class="headerlink" href="#overlap-positivity-diagnostics" title="Link to this heading">#</a></h2>
+<ul class="simple">
+<li><p>Goal: verify usable overlap and stable IPW weights.</p></li>
+<li><p>Key metrics (summary keys):</p>
+<ul>
+<li><p>edge_mass: share of m̂ near 0/1 (danger ⇒ exploding weights). Rule of thumb: for ε=0.01, yellow ≈ 2%, red ≈ 5% on either side; for ε=0.02, yellow ≈ 5%, red ≈ 10%.</p></li>
+<li><p>ks: two‑sample KS on m̂ for treated vs control (0 best, 1 worst). Red if &gt; 0.35.</p></li>
+<li><p>auc: D predictability from X via m̂ ranks. Good overlap ⇒ ≈ 0.5.</p></li>
+<li><p>ate_ess: effective sample size ratio in treated weights (higher is better; near 1 good).</p></li>
+<li><p>ate_tails: tail indices like q99/median of treated weights; &gt;10 caution, &gt;100 red.</p></li>
+<li><p>att_weights.ATT_identity_relerr: relative error of ATT odds identity (≤5% green; 5–10% yellow; &gt;10% red).</p></li>
+<li><p>clipping: how many propensities were clipped (large values signal poor overlap).</p></li>
+<li><p>calibration: ECE/slope/intercept for m̂ probability calibration (ECE small is good).</p></li>
+</ul>
+</li>
+</ul>
+<p>Python</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">causalis.refutation.overlap</span><span class="w"> </span><span class="kn">import</span> <span class="n">run_overlap_diagnostics</span>
+<span class="n">res</span> <span class="o">=</span> <span class="o">...</span>  <span class="c1"># your inference result dict</span>
+<span class="n">rep</span> <span class="o">=</span> <span class="n">run_overlap_diagnostics</span><span class="p">(</span><span class="n">res</span><span class="o">=</span><span class="n">res</span><span class="p">)</span>  <span class="c1"># or run_overlap_diagnostics(m_hat=m, D=D)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">rep</span><span class="p">[</span><span class="s1">&#39;summary&#39;</span><span class="p">])</span>
+<span class="c1"># Also available: rep[&#39;edge_mass&#39;], rep[&#39;ks&#39;], rep[&#39;auc&#39;], rep[&#39;ate_ess&#39;],</span>
+<span class="c1"># rep[&#39;ate_tails&#39;], rep[&#39;att_weights&#39;], rep[&#39;clipping&#39;], rep[&#39;calibration&#39;]</span>
+</pre></div>
+</div>
+</section>
+<section id="score-orthogonality-diagnostics-neyman">
+<h2>3) Score/orthogonality diagnostics (Neyman)<a class="headerlink" href="#score-orthogonality-diagnostics-neyman" title="Link to this heading">#</a></h2>
+<ul class="simple">
+<li><p>Goal: confirm E[ψ]=0 holds out‑of‑sample and that ψ is insensitive to small nuisance perturbations.</p></li>
+<li><p>Readouts:</p>
+<ul>
+<li><p>oos_moment_test: t‑stats oos_tstat_fold and oos_tstat_strict ≈ N(0,1); values near 0 are good.</p></li>
+<li><p>orthogonality_derivatives: max |t| for directions g1, g0, m (ATE) or g0, m (ATT). Rule of thumb: max |t| ≲ 2 is okay.</p></li>
+<li><p>influence_diagnostics: tail metrics of ψ (psi_p99_over_med, psi_kurtosis). Large values flag instability and heavy tails.</p></li>
+</ul>
+</li>
+</ul>
+<p>Python</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">causalis.refutation.score.score_validation</span><span class="w"> </span><span class="kn">import</span> <span class="n">run_score_diagnostics</span>
+<span class="n">res</span> <span class="o">=</span> <span class="o">...</span>  <span class="c1"># your inference result dict</span>
+<span class="n">rep_score</span> <span class="o">=</span> <span class="n">run_score_diagnostics</span><span class="p">(</span><span class="n">res</span><span class="o">=</span><span class="n">res</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">rep_score</span><span class="p">[</span><span class="s1">&#39;summary&#39;</span><span class="p">])</span>
+<span class="c1"># Details: rep_score[&#39;oos_moment_test&#39;], [&#39;orthogonality_derivatives&#39;], [&#39;influence_diagnostics&#39;]</span>
+</pre></div>
+</div>
+</section>
+<section id="unconfoundedness-balance-checks">
+<h2>4) Unconfoundedness/balance checks<a class="headerlink" href="#unconfoundedness-balance-checks" title="Link to this heading">#</a></h2>
+<ul class="simple">
+<li><p>Goal: see if IPW (for your estimand) balances covariates.</p></li>
+<li><p>Metrics:</p>
+<ul>
+<li><p>balance_max_smd: max standardized mean difference across covariates (smaller is better; ≤0.1 common rule).</p></li>
+<li><p>balance_frac_violations: share of covariates with SMD ≥ threshold (default 0.10).</p></li>
+</ul>
+</li>
+</ul>
+<p>Python</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">causalis.refutation.unconfoundedness.uncofoundedness_validation</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">run_unconfoundedness_diagnostics</span>
+<span class="p">)</span>
+<span class="n">res</span> <span class="o">=</span> <span class="o">...</span>  <span class="c1"># your inference result dict</span>
+<span class="n">rep_uc</span> <span class="o">=</span> <span class="n">run_unconfoundedness_diagnostics</span><span class="p">(</span><span class="n">res</span><span class="o">=</span><span class="n">res</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">rep_uc</span><span class="p">[</span><span class="s1">&#39;summary&#39;</span><span class="p">])</span>
+</pre></div>
+</div>
+</section>
+<section id="sensitivity-analysis-to-hidden-confounding">
+<h2>5) Sensitivity analysis to hidden confounding<a class="headerlink" href="#sensitivity-analysis-to-hidden-confounding" title="Link to this heading">#</a></h2>
+<ul class="simple">
+<li><p>Goal: widen intervals by a worst‑case additive bias derived from how ψ could move.</p></li>
+<li><p>Math: max_bias = sqrt(ν²)·se where ν² aggregates two channels (outcome cf_y and treatment cf_d) and their correlation ρ.</p></li>
+<li><p>Two entry points:</p>
+<ol class="arabic simple">
+<li><p>sensitivity_analysis: set (cf_y, cf_d, ρ) directly.</p></li>
+<li><p>sensitivity_benchmark: derive (cf_y, cf_d, ρ) from omitted covariates Z, then plug into sensitivity_analysis.</p></li>
+</ol>
+</li>
+</ul>
+<p>Python</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">causalis.refutation.unconfoundedness.sensitivity</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">sensitivity_analysis</span><span class="p">,</span> <span class="n">sensitivity_benchmark</span>
+<span class="p">)</span>
+<span class="n">res</span> <span class="o">=</span> <span class="o">...</span>  <span class="c1"># your inference result dict</span>
+<span class="c1"># Direct knobs</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">sensitivity_analysis</span><span class="p">(</span><span class="n">res</span><span class="p">,</span> <span class="n">cf_y</span><span class="o">=</span><span class="mf">0.01</span><span class="p">,</span> <span class="n">cf_d</span><span class="o">=</span><span class="mf">0.01</span><span class="p">,</span> <span class="n">rho</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">level</span><span class="o">=</span><span class="mf">0.95</span><span class="p">))</span>
+
+<span class="c1"># Calibrate from omitted set Z (e.g., a column name)</span>
+<span class="n">bench</span> <span class="o">=</span> <span class="n">sensitivity_benchmark</span><span class="p">(</span><span class="n">res</span><span class="p">,</span> <span class="n">benchmarking_set</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;tenure_months&#39;</span><span class="p">])</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">bench</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">sensitivity_analysis</span><span class="p">(</span><span class="n">res</span><span class="p">,</span>
+                           <span class="n">cf_y</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">bench</span><span class="p">[</span><span class="s1">&#39;cf_y&#39;</span><span class="p">]),</span>
+                           <span class="n">cf_d</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">bench</span><span class="p">[</span><span class="s1">&#39;cf_d&#39;</span><span class="p">]),</span>
+                           <span class="n">rho</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">bench</span><span class="p">[</span><span class="s1">&#39;rho&#39;</span><span class="p">]),</span>
+                           <span class="n">level</span><span class="o">=</span><span class="mf">0.95</span><span class="p">))</span>
+</pre></div>
+</div>
+</section>
+<section id="sutva-design-prompts">
+<h2>6) SUTVA (design prompts)<a class="headerlink" href="#sutva-design-prompts" title="Link to this heading">#</a></h2>
+<ul class="simple">
+<li><p>These assumptions aren’t testable from data. Use the built‑in checklist to document design decisions.</p></li>
+</ul>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">causalis.refutation.sutva.sutva_validation</span><span class="w"> </span><span class="kn">import</span> <span class="n">print_sutva_questions</span>
+<span class="n">print_sutva_questions</span><span class="p">()</span>
+</pre></div>
+</div>
+</section>
+<section id="minimal-workflow-ate">
+<h2>Minimal workflow (ATE)<a class="headerlink" href="#minimal-workflow-ate" title="Link to this heading">#</a></h2>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">causalis.inference.ate</span><span class="w"> </span><span class="kn">import</span> <span class="n">dml_ate</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">causalis.refutation</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">refute_placebo_outcome</span><span class="p">,</span> <span class="n">refute_placebo_treatment</span><span class="p">,</span> <span class="n">refute_subset</span>
+<span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">causalis.refutation.overlap</span><span class="w"> </span><span class="kn">import</span> <span class="n">run_overlap_diagnostics</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">causalis.refutation.score.score_validation</span><span class="w"> </span><span class="kn">import</span> <span class="n">run_score_diagnostics</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">causalis.refutation.unconfoundedness.uncofoundedness_validation</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">run_unconfoundedness_diagnostics</span>
+<span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">causalis.refutation.unconfoundedness.sensitivity</span><span class="w"> </span><span class="kn">import</span> <span class="n">sensitivity_analysis</span>
+
+<span class="c1"># Build your CausalData as in the guides</span>
+<span class="n">causal_data</span> <span class="o">=</span> <span class="o">...</span>  <span class="c1"># your CausalData</span>
+
+<span class="c1"># Estimate effect (stores nuisances needed for diagnostics)</span>
+<span class="n">res</span> <span class="o">=</span> <span class="n">dml_ate</span><span class="p">(</span><span class="n">causal_data</span><span class="p">,</span> <span class="n">n_folds</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">store_diagnostic_data</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="mi">123</span><span class="p">)</span>
+
+<span class="c1"># 1) Placebo + subset</span>
+<span class="n">_</span> <span class="o">=</span> <span class="n">refute_placebo_outcome</span><span class="p">(</span><span class="n">dml_ate</span><span class="p">,</span> <span class="n">causal_data</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="mi">42</span><span class="p">)</span>
+<span class="n">_</span> <span class="o">=</span> <span class="n">refute_placebo_treatment</span><span class="p">(</span><span class="n">dml_ate</span><span class="p">,</span> <span class="n">causal_data</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="mi">42</span><span class="p">)</span>
+<span class="n">_</span> <span class="o">=</span> <span class="n">refute_subset</span><span class="p">(</span><span class="n">dml_ate</span><span class="p">,</span> <span class="n">causal_data</span><span class="p">,</span> <span class="n">fraction</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="mi">42</span><span class="p">)</span>
+
+<span class="c1"># 2) Overlap</span>
+<span class="n">ov</span> <span class="o">=</span> <span class="n">run_overlap_diagnostics</span><span class="p">(</span><span class="n">res</span><span class="o">=</span><span class="n">res</span><span class="p">);</span> <span class="nb">print</span><span class="p">(</span><span class="n">ov</span><span class="p">[</span><span class="s1">&#39;summary&#39;</span><span class="p">])</span>
+
+<span class="c1"># 3) Score/orthogonality</span>
+<span class="n">sc</span> <span class="o">=</span> <span class="n">run_score_diagnostics</span><span class="p">(</span><span class="n">res</span><span class="o">=</span><span class="n">res</span><span class="p">);</span> <span class="nb">print</span><span class="p">(</span><span class="n">sc</span><span class="p">[</span><span class="s1">&#39;summary&#39;</span><span class="p">])</span>
+
+<span class="c1"># 4) Balance</span>
+<span class="n">uc</span> <span class="o">=</span> <span class="n">run_unconfoundedness_diagnostics</span><span class="p">(</span><span class="n">res</span><span class="o">=</span><span class="n">res</span><span class="p">);</span> <span class="nb">print</span><span class="p">(</span><span class="n">uc</span><span class="p">[</span><span class="s1">&#39;summary&#39;</span><span class="p">])</span>
+
+<span class="c1"># 5) Sensitivity (simple example)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">sensitivity_analysis</span><span class="p">(</span><span class="n">res</span><span class="p">,</span> <span class="n">cf_y</span><span class="o">=</span><span class="mf">0.02</span><span class="p">,</span> <span class="n">cf_d</span><span class="o">=</span><span class="mf">0.02</span><span class="p">,</span> <span class="n">rho</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">level</span><span class="o">=</span><span class="mf">0.95</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>Notes</p>
+<ul class="simple">
+<li><p>Always stratify folds by D and enable clipping of extreme propensities; large clipping/edge masses indicate weak overlap.</p></li>
+<li><p>For ATT, focus on g0 and m diagnostics and the ATT weight identity in the overlap report.</p></li>
+<li><p>Heavy ψ tails often trace back to poor overlap; consider trimming, better learners, or different features.</p></li>
+</ul>
+</section>
 </section>
 
 
@@ -476,6 +639,29 @@ Assume you already have causal_data (see Inference guide for building it) and wa
             </div>
             
             
+              
+                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#placebo-and-subset-checks">1) Placebo and subset checks</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#overlap-positivity-diagnostics">2) Overlap (positivity) diagnostics</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#score-orthogonality-diagnostics-neyman">3) Score/orthogonality diagnostics (Neyman)</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#unconfoundedness-balance-checks">4) Unconfoundedness/balance checks</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sensitivity-analysis-to-hidden-confounding">5) Sensitivity analysis to hidden confounding</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sutva-design-prompts">6) SUTVA (design prompts)</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#minimal-workflow-ate">Minimal workflow (ATE)</a></li>
+</ul>
+  </nav></div>
+
+</div></div>
               
             
           </div>

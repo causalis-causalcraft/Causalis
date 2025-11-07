@@ -50,8 +50,8 @@
     <link rel="icon" href="../_static/new_logo.svg"/>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Exploratory Data Analysis (EDA)" href="eda.html" />
-    <link rel="prev" title="Installation" href="installation.html" />
+    <link rel="next" title="Inference" href="inference.html" />
+    <link rel="prev" title="Why DML IRM is the Best Modern Choice for Causal Inference" href="dml_irm_model.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   </head>
@@ -353,10 +353,10 @@ document.write(`
   <div class="bd-toc-item navbar-nav"><ul class="current nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="causal_inference_fundamentals.html">Introduction to Causal Inference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dml_irm_model.html">Why DML IRM is the Best Modern Choice for Causal Inference</a></li>
 <li class="toctree-l1 current active"><a class="current reference internal" href="#">CausalData at a glance</a></li>
-<li class="toctree-l1"><a class="reference internal" href="eda.html">Exploratory Data Analysis (EDA)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="inference.html">Inference</a></li>
-<li class="toctree-l1"><a class="reference internal" href="refutation.html">Refutation and robustness</a></li>
+<li class="toctree-l1"><a class="reference internal" href="refutation.html">Refutation: quick checks and sensitivity</a></li>
 <li class="toctree-l1"><a class="reference internal" href="math_eda_irm_refutation.html">Math notation for EDA, IRM, and refutation diagnostics (CausalKit)</a></li>
 </ul>
 </div>
@@ -417,7 +417,7 @@ document.write(`
                   
   <section class="tex2jax_ignore mathjax_ignore" id="causaldata-at-a-glance">
 <h1>CausalData at a glance<a class="headerlink" href="#causaldata-at-a-glance" title="Link to this heading">#</a></h1>
-<p>CausalData is the light-weight input container used across CausalKit. It wraps a pandas DataFrame and records which columns are the outcome (target), the treatment, and the confounders.</p>
+<p>CausalData is the light-weight input container used across Causalis. It wraps a pandas DataFrame and records which columns are the outcome (target), the treatment, and the confounders.</p>
 <section id="quick-start">
 <h2>Quick start<a class="headerlink" href="#quick-start" title="Link to this heading">#</a></h2>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">causalis.data</span><span class="w"> </span><span class="kn">import</span> <span class="n">generate_rct_data</span><span class="p">,</span> <span class="n">CausalData</span>
@@ -526,20 +526,20 @@ Selects columns by name and/or by role. Returns a copy.</p></li>
                   
 <div class="prev-next-area">
     <a class="left-prev"
-       href="installation.html"
+       href="dml_irm_model.html"
        title="previous page">
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">Installation</p>
+        <p class="prev-next-title">Why DML IRM is the Best Modern Choice for Causal Inference</p>
       </div>
     </a>
     <a class="right-next"
-       href="eda.html"
+       href="inference.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">Exploratory Data Analysis (EDA)</p>
+        <p class="prev-next-title">Inference</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>

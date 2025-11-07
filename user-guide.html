@@ -351,10 +351,10 @@ document.write(`
   <div class="bd-toc-item navbar-nav"><ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="user-guide/causal_inference_fundamentals.html">Introduction to Causal Inference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="user-guide/installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="user-guide/dml_irm_model.html">Why DML IRM is the Best Modern Choice for Causal Inference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="user-guide/causaldata.html">CausalData at a glance</a></li>
-<li class="toctree-l1"><a class="reference internal" href="user-guide/eda.html">Exploratory Data Analysis (EDA)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="user-guide/inference.html">Inference</a></li>
-<li class="toctree-l1"><a class="reference internal" href="user-guide/refutation.html">Refutation and robustness</a></li>
+<li class="toctree-l1"><a class="reference internal" href="user-guide/refutation.html">Refutation: quick checks and sensitivity</a></li>
 <li class="toctree-l1"><a class="reference internal" href="user-guide/math_eda_irm_refutation.html">Math notation for EDA, IRM, and refutation diagnostics (CausalKit)</a></li>
 </ul>
 </div>
@@ -425,9 +425,25 @@ document.write(`
 </li>
 <li class="toctree-l1"><a class="reference internal" href="user-guide/installation.html">Installation</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="user-guide/installation.html#prerequisites">Prerequisites</a></li>
-<li class="toctree-l2"><a class="reference internal" href="user-guide/installation.html#install-from-github-recommended">Install from GitHub (recommended)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="user-guide/installation.html#optional-editable-install-for-contributors">Optional: editable install (for contributors)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="user-guide/installation.html#install-from-pip">Install from pip</a></li>
+<li class="toctree-l2"><a class="reference internal" href="user-guide/installation.html#install-from-github">Install from GitHub</a></li>
 <li class="toctree-l2"><a class="reference internal" href="user-guide/installation.html#optional-conda-environment-after-cloning-the-repo">Optional: conda environment after cloning the repo</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="user-guide/dml_irm_model.html">Why DML IRM is the Best Modern Choice for Causal Inference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="user-guide/dml_irm_model.html#combines-flexibility-with-rigor">1. Combines Flexibility with Rigor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="user-guide/dml_irm_model.html#doubly-robust-protection">2. Doubly Robust Protection</a></li>
+<li class="toctree-l2"><a class="reference internal" href="user-guide/dml_irm_model.html#neyman-orthogonality-immunity-to-regularization-bias">3. Neyman Orthogonality: Immunity to Regularization Bias</a></li>
+<li class="toctree-l2"><a class="reference internal" href="user-guide/dml_irm_model.html#cross-fitting-eliminates-overfitting-bias">4. Cross-Fitting Eliminates Overfitting Bias</a></li>
+<li class="toctree-l2"><a class="reference internal" href="user-guide/dml_irm_model.html#high-dimensional-capability">5. High-Dimensional Capability</a></li>
+<li class="toctree-l2"><a class="reference internal" href="user-guide/dml_irm_model.html#unified-framework-for-multiple-estimands">6. Unified Framework for Multiple Estimands</a></li>
+<li class="toctree-l2"><a class="reference internal" href="user-guide/dml_irm_model.html#built-in-diagnostic-framework">7. Built-In Diagnostic Framework</a></li>
+<li class="toctree-l2"><a class="reference internal" href="user-guide/dml_irm_model.html#proven-theoretical-foundation">8. Proven Theoretical Foundation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="user-guide/dml_irm_model.html#practical-performance">9. Practical Performance</a></li>
+<li class="toctree-l2"><a class="reference internal" href="user-guide/dml_irm_model.html#transparent-confounding-adjustment">10. Transparent Confounding Adjustment</a></li>
+<li class="toctree-l2"><a class="reference internal" href="user-guide/dml_irm_model.html#when-dml-irm-shines">When DML IRM Shines</a></li>
+<li class="toctree-l2"><a class="reference internal" href="user-guide/dml_irm_model.html#math-of-dml-irm">Math of DML IRM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="user-guide/dml_irm_model.html#scores">Scores</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="user-guide/causaldata.html">CausalData at a glance</a><ul>
@@ -438,12 +454,21 @@ document.write(`
 <li class="toctree-l2"><a class="reference internal" href="user-guide/causaldata.html#tips">Tips</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="user-guide/eda.html">Exploratory Data Analysis (EDA)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="user-guide/inference.html">Inference</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="user-guide/inference.html#a-very-short-ate-example">A very short ATE example</a></li>
+<li class="toctree-l2"><a class="reference internal" href="user-guide/inference.html#a-very-short-ate-example">A Very Short ATE Example</a></li>
+<li class="toctree-l2"><a class="reference internal" href="user-guide/inference.html#advanced-usage">Advanced Usage</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="user-guide/refutation.html">Refutation and robustness</a></li>
+<li class="toctree-l1"><a class="reference internal" href="user-guide/refutation.html">Refutation: quick checks and sensitivity</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="user-guide/refutation.html#placebo-and-subset-checks">1) Placebo and subset checks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="user-guide/refutation.html#overlap-positivity-diagnostics">2) Overlap (positivity) diagnostics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="user-guide/refutation.html#score-orthogonality-diagnostics-neyman">3) Score/orthogonality diagnostics (Neyman)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="user-guide/refutation.html#unconfoundedness-balance-checks">4) Unconfoundedness/balance checks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="user-guide/refutation.html#sensitivity-analysis-to-hidden-confounding">5) Sensitivity analysis to hidden confounding</a></li>
+<li class="toctree-l2"><a class="reference internal" href="user-guide/refutation.html#sutva-design-prompts">6) SUTVA (design prompts)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="user-guide/refutation.html#minimal-workflow-ate">Minimal workflow (ATE)</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="user-guide/math_eda_irm_refutation.html">Math notation for EDA, IRM, and refutation diagnostics (CausalKit)</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="user-guide/math_eda_irm_refutation.html#variables-and-parameters">1. Variables and parameters</a></li>
 <li class="toctree-l2"><a class="reference internal" href="user-guide/math_eda_irm_refutation.html#nuisance-functions-irm">2. Nuisance functions (IRM)</a></li>

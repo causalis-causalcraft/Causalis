@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Notation &#8212; Causalis 0.1.0 documentation</title>
+    <title>Why DML IRM is the Best Modern Choice for Causal Inference &#8212; Causalis 0.1.0 documentation</title>
   
   
   
@@ -48,10 +48,12 @@
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
     <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
     <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
-    <script>DOCUMENTATION_OPTIONS.pagename = 'user-guide/quick_notaton';</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'user-guide/dml_irm_model';</script>
     <link rel="icon" href="../_static/new_logo.svg"/>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="CausalData at a glance" href="causaldata.html" />
+    <link rel="prev" title="Installation" href="installation.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   </head>
@@ -149,7 +151,7 @@
 <nav>
   <ul class="bd-navbar-elements navbar-nav">
     
-<li class="nav-item ">
+<li class="nav-item current active">
   <a class="nav-link nav-internal" href="../user-guide.html">
     User Guide
   </a>
@@ -261,9 +263,7 @@ document.write(`
       
       
       
-        
-      
-      <div class="bd-sidebar-primary bd-sidebar hide-on-wide">
+      <div class="bd-sidebar-primary bd-sidebar">
         
 
   
@@ -278,7 +278,7 @@ document.write(`
 <nav>
   <ul class="bd-navbar-elements navbar-nav">
     
-<li class="nav-item ">
+<li class="nav-item current active">
   <a class="nav-link nav-internal" href="../user-guide.html">
     User Guide
   </a>
@@ -347,6 +347,24 @@ document.write(`
     
   </div>
   
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"><ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="causal_inference_fundamentals.html">Introduction to Causal Inference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">Why DML IRM is the Best Modern Choice for Causal Inference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="causaldata.html">CausalData at a glance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="inference.html">Inference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="refutation.html">Refutation: quick checks and sensitivity</a></li>
+<li class="toctree-l1"><a class="reference internal" href="math_eda_irm_refutation.html">Math notation for EDA, IRM, and refutation diagnostics (CausalKit)</a></li>
+</ul>
+</div>
+</nav></div>
+    </div>
+  
   
   <div class="sidebar-primary-items__end sidebar-primary__section">
   </div>
@@ -379,7 +397,10 @@ document.write(`
         <i class="fa-solid fa-home"></i>
       </a>
     </li>
-    <li class="breadcrumb-item active" aria-current="page">Notation</li>
+    
+    <li class="breadcrumb-item"><a href="../user-guide.html" class="nav-link">User Guide</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page">Why DML IRM...</li>
   </ul>
 </nav>
 </div>
@@ -396,8 +417,108 @@ document.write(`
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <section id="notation">
-<h1>Notation<a class="headerlink" href="#notation" title="Link to this heading">#</a></h1>
+  <section class="tex2jax_ignore mathjax_ignore" id="why-dml-irm-is-the-best-modern-choice-for-causal-inference">
+<h1>Why DML IRM is the Best Modern Choice for Causal Inference<a class="headerlink" href="#why-dml-irm-is-the-best-modern-choice-for-causal-inference" title="Link to this heading">#</a></h1>
+<p>Double Machine Learning (DML) with the Interactive Regression Model (IRM) framework represents the state-of-the-art approach for causal inference from observational data. Here’s why it has become the preferred method for modern causal analysis:</p>
+<section id="combines-flexibility-with-rigor">
+<h2>1. Combines Flexibility with Rigor<a class="headerlink" href="#combines-flexibility-with-rigor" title="Link to this heading">#</a></h2>
+<p>DML IRM achieves what was previously thought impossible: using highly flexible machine learning models (random forests, gradient boosting, neural networks) while maintaining valid statistical inference with proper confidence intervals and p-values. Traditional parametric methods require restrictive functional form assumptions, while naive ML approaches sacrifice inferential validity.</p>
+</section>
+<section id="doubly-robust-protection">
+<h2>2. Doubly Robust Protection<a class="headerlink" href="#doubly-robust-protection" title="Link to this heading">#</a></h2>
+<p>The IRM score functions (AIPW/DR scores) provide <strong>double robustness</strong>: the causal estimate remains consistent if <em>either</em> the outcome model <span class="math notranslate nohighlight">\(\mathbb{E}[Y|X,D]\)</span> <em>or</em> the propensity score <span class="math notranslate nohighlight">\(\mathbb{E}[D|X]\)</span> is correctly specified. You don’t need both models to be perfect—getting one right is sufficient. This is a massive safety net that traditional regression lacks.</p>
+</section>
+<section id="neyman-orthogonality-immunity-to-regularization-bias">
+<h2>3. Neyman Orthogonality: Immunity to Regularization Bias<a class="headerlink" href="#neyman-orthogonality-immunity-to-regularization-bias" title="Link to this heading">#</a></h2>
+<p>The key innovation is <strong>orthogonalized moment conditions</strong> that make the causal parameter estimate insensitive to small errors in nuisance function estimation. Even if your ML models for <span class="math notranslate nohighlight">\(g(D,X)\)</span> and <span class="math notranslate nohighlight">\(m(X)\)</span> have regularization bias or aren’t perfectly converging to the truth, the treatment effect estimate maintains its <span class="math notranslate nohighlight">\(\sqrt{n}\)</span>-convergence rate and asymptotic normality. This is formalized through:</p>
+<div class="math notranslate nohighlight">
+\[\frac{\partial}{\partial \eta}\mathbb{E}[\psi(W;\theta_0,\eta_0)] = 0\]</div>
+<p>This orthogonality condition ensures first-order insensitivity to nuisance estimation errors.</p>
+</section>
+<section id="cross-fitting-eliminates-overfitting-bias">
+<h2>4. Cross-Fitting Eliminates Overfitting Bias<a class="headerlink" href="#cross-fitting-eliminates-overfitting-bias" title="Link to this heading">#</a></h2>
+<p>Sample splitting (cross-fitting) ensures that:</p>
+<ul class="simple">
+<li><p>The same data is never used for both training nuisance models and computing scores</p></li>
+<li><p>Out-of-sample predictions prevent overfitting-induced bias</p></li>
+<li><p>Multiple splits with averaging reduce sampling variability</p></li>
+</ul>
+<p>This makes DML robust even with complex, high-capacity learners that would otherwise overfit.</p>
+</section>
+<section id="high-dimensional-capability">
+<h2>5. High-Dimensional Capability<a class="headerlink" href="#high-dimensional-capability" title="Link to this heading">#</a></h2>
+<p>DML IRM naturally handles high-dimensional confounders (<span class="math notranslate nohighlight">\(p \gg n\)</span> scenarios) through:</p>
+<ul class="simple">
+<li><p>Modern ML methods (LASSO, random forests, boosting, neural nets) for nuisance estimation</p></li>
+<li><p>Theoretical guarantees that hold under sparsity or approximate sparsity</p></li>
+<li><p>No need to manually select which confounders to include</p></li>
+</ul>
+</section>
+<section id="unified-framework-for-multiple-estimands">
+<h2>6. Unified Framework for Multiple Estimands<a class="headerlink" href="#unified-framework-for-multiple-estimands" title="Link to this heading">#</a></h2>
+<p>The same IRM framework seamlessly estimates:</p>
+<ul class="simple">
+<li><p><strong>ATE</strong>: Average treatment effect across the entire population</p></li>
+<li><p><strong>ATTE/ATT</strong>: Effect on the treated (more policy-relevant in many contexts)</p></li>
+<li><p><strong>CATE</strong>: Conditional effects for heterogeneity analysis</p></li>
+<li><p><strong>GATE</strong>: Group average treatment effects</p></li>
+</ul>
+<p>Simply by changing the score function, you get valid inference for different causal questions.</p>
+</section>
+<section id="built-in-diagnostic-framework">
+<h2>7. Built-In Diagnostic Framework<a class="headerlink" href="#built-in-diagnostic-framework" title="Link to this heading">#</a></h2>
+<p>Modern DML IRM implementations provide comprehensive diagnostics:</p>
+<ul class="simple">
+<li><p><strong>Overlap/positivity checks</strong>: Ensure common support between treated and control</p></li>
+<li><p><strong>Orthogonality validation</strong>: Verify Neyman orthogonality via out-of-sample moment checks</p></li>
+<li><p><strong>Sensitivity analysis</strong>: Assess robustness to potential unobserved confounding</p></li>
+<li><p><strong>Score diagnostics</strong>: Check for extreme influence values or distributional issues</p></li>
+</ul>
+</section>
+<section id="proven-theoretical-foundation">
+<h2>8. Proven Theoretical Foundation<a class="headerlink" href="#proven-theoretical-foundation" title="Link to this heading">#</a></h2>
+<p>DML rests on rigorous semiparametric theory (Chernozhukov et al., 2018):</p>
+<ul class="simple">
+<li><p>Formal asymptotic normality results</p></li>
+<li><p>Convergence rates under weak assumptions</p></li>
+<li><p>Uniform inference guarantees</p></li>
+<li><p>Multiple robustness properties</p></li>
+</ul>
+</section>
+<section id="practical-performance">
+<h2>9. Practical Performance<a class="headerlink" href="#practical-performance" title="Link to this heading">#</a></h2>
+<p>Empirical studies consistently show DML IRM outperforms alternatives:</p>
+<ul class="simple">
+<li><p>Better finite-sample coverage of confidence intervals than standard regression</p></li>
+<li><p>Lower bias than single-model approaches</p></li>
+<li><p>More stable estimates than purely parametric methods in complex settings</p></li>
+<li><p>Competitive or superior to propensity score methods while being more automatic</p></li>
+</ul>
+</section>
+<section id="transparent-confounding-adjustment">
+<h2>10. Transparent Confounding Adjustment<a class="headerlink" href="#transparent-confounding-adjustment" title="Link to this heading">#</a></h2>
+<p>Unlike black-box methods, DML IRM makes explicit:</p>
+<ul class="simple">
+<li><p>What confounders are being adjusted for</p></li>
+<li><p>How the adjustment is performed (via outcome and propensity models)</p></li>
+<li><p>The quality of overlap and model fit</p></li>
+<li><p>The influence function decomposition showing where the estimate comes from</p></li>
+</ul>
+</section>
+<section id="when-dml-irm-shines">
+<h2>When DML IRM Shines<a class="headerlink" href="#when-dml-irm-shines" title="Link to this heading">#</a></h2>
+<p>DML IRM is particularly powerful for:</p>
+<ul class="simple">
+<li><p><strong>Observational studies</strong> with rich covariate sets</p></li>
+<li><p><strong>Digital experiments</strong> with high-dimensional user features</p></li>
+<li><p><strong>Policy evaluation</strong> where selection into treatment depends on many factors</p></li>
+<li><p><strong>Heterogeneous effects</strong> requiring flexible modeling</p></li>
+<li><p><strong>Business applications</strong> demanding both accuracy and valid uncertainty quantification</p></li>
+</ul>
+<p><strong>Key Reference</strong>: Chernozhukov, V., Chetverikov, D., Demirer, M., Duflo, E., Hansen, C., Newey, W., &amp; Robins, J. (2018). Double/debiased machine learning for treatment and structural parameters. <em>The Econometrics Journal</em>, 21(1), C1-C68.</p>
+</section>
+<section id="math-of-dml-irm">
+<h2>Math of DML IRM<a class="headerlink" href="#math-of-dml-irm" title="Link to this heading">#</a></h2>
 <ul class="simple">
 <li><p>Observed data: <span class="math notranslate nohighlight">\((Y_i, D_i, X_i)_{i=1}^n\)</span>.</p>
 <ul>
@@ -423,7 +544,7 @@ document.write(`
 </ul>
 </section>
 <section id="scores">
-<h1>Scores<a class="headerlink" href="#scores" title="Link to this heading">#</a></h1>
+<h2>Scores<a class="headerlink" href="#scores" title="Link to this heading">#</a></h2>
 <div class="math notranslate nohighlight">
 \[
 u_1 = Y-\hat g_1,\quad
@@ -433,7 +554,7 @@ h_0 = \frac{1-D}{1-\hat m},\quad
 \hat p_1=\mathbb{E}_n[D].
 \]</div>
 <section id="ate-score-aipw-dr">
-<h2>ATE score (AIPW/DR)<a class="headerlink" href="#ate-score-aipw-dr" title="Link to this heading">#</a></h2>
+<h3>ATE score (AIPW/DR)<a class="headerlink" href="#ate-score-aipw-dr" title="Link to this heading">#</a></h3>
 <div class="math notranslate nohighlight">
 \[
 \psi_a^{\mathrm{ATE}}=-1,\qquad
@@ -447,7 +568,7 @@ h_0 = \frac{1-D}{1-\hat m},\quad
 \]</div>
 </section>
 <section id="atte-score">
-<h2>ATTE score<a class="headerlink" href="#atte-score" title="Link to this heading">#</a></h2>
+<h3>ATTE score<a class="headerlink" href="#atte-score" title="Link to this heading">#</a></h3>
 <p>Let <span class="math notranslate nohighlight">\((p_1=\mathbb{E}[D])\)</span> (estimate with <span class="math notranslate nohighlight">\((\hat p_1)\)</span>). Then</p>
 <div class="math notranslate nohighlight">
 \[
@@ -465,7 +586,7 @@ h_0 = \frac{1-D}{1-\hat m},\quad
 \]</div>
 </section>
 <section id="variance-ci-both-ate-and-atte">
-<h2>Variance &amp; CI (both ATE and ATTE)<a class="headerlink" href="#variance-ci-both-ate-and-atte" title="Link to this heading">#</a></h2>
+<h3>Variance &amp; CI (both ATE and ATTE)<a class="headerlink" href="#variance-ci-both-ate-and-atte" title="Link to this heading">#</a></h3>
 <p>For either target, using its corresponding <span class="math notranslate nohighlight">\((\hat\psi_i)\)</span>:</p>
 <div class="math notranslate nohighlight">
 \[
@@ -473,6 +594,7 @@ h_0 = \frac{1-D}{1-\hat m},\quad
 \mathrm{se}=\sqrt{\widehat{\mathrm{Var}}(\hat\theta)},\qquad
 \mathrm{CI}_{1-\alpha}=\hat\theta\pm z_{1-\alpha/2}se
 \]</div>
+</section>
 </section>
 </section>
 
@@ -486,6 +608,24 @@ h_0 = \frac{1-D}{1-\hat m},\quad
                 <footer class="prev-next-footer d-print-none">
                   
 <div class="prev-next-area">
+    <a class="left-prev"
+       href="installation.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Installation</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="causaldata.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">CausalData at a glance</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
 </div>
                 </footer>
               
@@ -504,15 +644,25 @@ h_0 = \frac{1-D}{1-\hat m},\quad
   </div>
   <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="visible nav section-nav flex-column">
-<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#">Notation</a></li>
-<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#scores">Scores</a><ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#ate-score-aipw-dr">ATE score (AIPW/DR)</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#atte-score">ATTE score</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#variance-ci-both-ate-and-atte">Variance &amp; CI (both ATE and ATTE)</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#combines-flexibility-with-rigor">1. Combines Flexibility with Rigor</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#doubly-robust-protection">2. Doubly Robust Protection</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#neyman-orthogonality-immunity-to-regularization-bias">3. Neyman Orthogonality: Immunity to Regularization Bias</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#cross-fitting-eliminates-overfitting-bias">4. Cross-Fitting Eliminates Overfitting Bias</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#high-dimensional-capability">5. High-Dimensional Capability</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#unified-framework-for-multiple-estimands">6. Unified Framework for Multiple Estimands</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#built-in-diagnostic-framework">7. Built-In Diagnostic Framework</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#proven-theoretical-foundation">8. Proven Theoretical Foundation</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#practical-performance">9. Practical Performance</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#transparent-confounding-adjustment">10. Transparent Confounding Adjustment</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#when-dml-irm-shines">When DML IRM Shines</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#math-of-dml-irm">Math of DML IRM</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#scores">Scores</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#ate-score-aipw-dr">ATE score (AIPW/DR)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#atte-score">ATTE score</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#variance-ci-both-ate-and-atte">Variance &amp; CI (both ATE and ATTE)</a></li>
 </ul>
 </li>
 </ul>
-
   </nav></div>
 
 </div></div>
