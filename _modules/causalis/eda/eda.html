@@ -1671,6 +1671,7 @@ document.write(`
 <span class="sd">        - Mean values of each confounder for treated group (treatment=1)</span>
 <span class="sd">        - Absolute difference between treatment groups</span>
 <span class="sd">        - Standardized Mean Difference (SMD) for formal balance assessment</span>
+<span class="sd">        - Kolmogorov–Smirnov statistic (ks) and p-value (ks_pvalue) for distributional differences</span>
 <span class="sd">        </span>
 <span class="sd">        This method provides a comprehensive view of confounder balance by showing</span>
 <span class="sd">        the actual mean values alongside the standardized differences, making it easier</span>
@@ -1684,6 +1685,8 @@ document.write(`
 <span class="sd">            - mean_t_1: mean value for treated group (treatment=1)  </span>
 <span class="sd">            - abs_diff: absolute difference abs(mean_t_1 - mean_t_0)</span>
 <span class="sd">            - smd: standardized mean difference (Cohen&#39;s d)</span>
+<span class="sd">            - ks: Kolmogorov–Smirnov statistic</span>
+<span class="sd">            - ks_pvalue: p-value of the KS test</span>
 <span class="sd">            </span>
 <span class="sd">        Notes</span>
 <span class="sd">        -----</span>
@@ -1701,48 +1704,13 @@ document.write(`
 <span class="sd">        income        45000.0   47500.0   2500.0     0.125</span>
 <span class="sd">        education         0.25      0.35      0.1     0.215</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">df</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">d</span><span class="o">.</span><span class="n">df</span>
-        <span class="n">X</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">d</span><span class="o">.</span><span class="n">confounders</span><span class="p">]</span>
-        <span class="n">t</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">d</span><span class="o">.</span><span class="n">treatment</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span><span class="o">.</span><span class="n">values</span>
-        
-        <span class="c1"># Convert categorical variables to dummy variables for analysis</span>
-        <span class="n">X_num</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">get_dummies</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">drop_first</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
-        
-        <span class="n">rows</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">X_num</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
-            <span class="n">x</span> <span class="o">=</span> <span class="n">X_num</span><span class="p">[</span><span class="n">col</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">float</span><span class="p">)</span>
-            
-            <span class="c1"># Calculate means for each treatment group</span>
-            <span class="n">mean_t_0</span> <span class="o">=</span> <span class="n">x</span><span class="p">[</span><span class="n">t</span> <span class="o">==</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
-            <span class="n">mean_t_1</span> <span class="o">=</span> <span class="n">x</span><span class="p">[</span><span class="n">t</span> <span class="o">==</span> <span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
-            
-            <span class="c1"># Calculate absolute difference</span>
-            <span class="n">abs_diff</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">mean_t_1</span> <span class="o">-</span> <span class="n">mean_t_0</span><span class="p">)</span>
-            
-            <span class="c1"># Calculate standardized mean difference (SMD)</span>
-            <span class="n">v_control</span> <span class="o">=</span> <span class="n">x</span><span class="p">[</span><span class="n">t</span> <span class="o">==</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">var</span><span class="p">(</span><span class="n">ddof</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="n">t</span> <span class="o">==</span> <span class="mi">0</span><span class="p">])</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="k">else</span> <span class="mf">0.0</span>
-            <span class="n">v_treated</span> <span class="o">=</span> <span class="n">x</span><span class="p">[</span><span class="n">t</span> <span class="o">==</span> <span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">var</span><span class="p">(</span><span class="n">ddof</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="n">t</span> <span class="o">==</span> <span class="mi">1</span><span class="p">])</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="k">else</span> <span class="mf">0.0</span>
-            <span class="n">pooled_std</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">((</span><span class="n">v_control</span> <span class="o">+</span> <span class="n">v_treated</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span>
-            <span class="n">smd</span> <span class="o">=</span> <span class="p">(</span><span class="n">mean_t_1</span> <span class="o">-</span> <span class="n">mean_t_0</span><span class="p">)</span> <span class="o">/</span> <span class="n">pooled_std</span> <span class="k">if</span> <span class="n">pooled_std</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">else</span> <span class="mf">0.0</span>
-            
-            <span class="n">rows</span><span class="o">.</span><span class="n">append</span><span class="p">({</span>
-                <span class="s2">&quot;confounders&quot;</span><span class="p">:</span> <span class="n">col</span><span class="p">,</span>
-                <span class="s2">&quot;mean_t_0&quot;</span><span class="p">:</span> <span class="n">mean_t_0</span><span class="p">,</span>
-                <span class="s2">&quot;mean_t_1&quot;</span><span class="p">:</span> <span class="n">mean_t_1</span><span class="p">,</span> 
-                <span class="s2">&quot;abs_diff&quot;</span><span class="p">:</span> <span class="n">abs_diff</span><span class="p">,</span>
-                <span class="s2">&quot;smd&quot;</span><span class="p">:</span> <span class="n">smd</span>
-            <span class="p">})</span>
-        
-        <span class="c1"># Create DataFrame and set confounders as index</span>
-        <span class="n">balance_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">rows</span><span class="p">)</span>
-        <span class="n">balance_df</span> <span class="o">=</span> <span class="n">balance_df</span><span class="o">.</span><span class="n">set_index</span><span class="p">(</span><span class="s2">&quot;confounders&quot;</span><span class="p">)</span>
-        
-        <span class="c1"># Sort by absolute SMD value (most imbalanced first)</span>
-        <span class="n">balance_df</span> <span class="o">=</span> <span class="n">balance_df</span><span class="o">.</span><span class="n">reindex</span><span class="p">(</span>
-            <span class="n">balance_df</span><span class="p">[</span><span class="s1">&#39;smd&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">abs</span><span class="p">()</span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="n">ascending</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span><span class="o">.</span><span class="n">index</span>
-        <span class="p">)</span>
-        
-        <span class="k">return</span> <span class="n">balance_df</span></div>
+        <span class="c1"># Delegate implementation to dedicated balance module for reuse and testing</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">.cofounders_balance</span><span class="w"> </span><span class="kn">import</span> <span class="n">confounders_balance</span>
+        <span class="k">return</span> <span class="n">confounders_balance</span><span class="p">(</span>
+            <span class="n">df</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">d</span><span class="o">.</span><span class="n">df</span><span class="p">,</span>
+            <span class="n">treatment</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">d</span><span class="o">.</span><span class="n">treatment</span><span class="p">,</span>
+            <span class="n">confounders</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">d</span><span class="o">.</span><span class="n">confounders</span><span class="p">,</span>
+        <span class="p">)</span></div>
 
 
     <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span>
