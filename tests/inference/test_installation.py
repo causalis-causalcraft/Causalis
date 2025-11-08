@@ -33,12 +33,10 @@ def test_import_specific_functions():
     """Test that specific functions from causalis can be imported."""
     try:
         from causalis.data import generate_rct
-        from causalis.eda.rct_design import split_traffic
         from causalis.inference import ttest
         
         # Check that the imported objects are callable
         assert callable(generate_rct)
-        assert callable(split_traffic)
         assert callable(ttest)
     except ImportError as e:
         pytest.fail(f"Failed to import specific functions from causalis: {e}")

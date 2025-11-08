@@ -1203,6 +1203,7 @@ class CausalEDA:
         - Mean values of each confounder for treated group (treatment=1)
         - Absolute difference between treatment groups
         - Standardized Mean Difference (SMD) for formal balance assessment
+        - Kolmogorov–Smirnov statistic (ks) and p-value (ks_pvalue) for distributional differences
         
         This method provides a comprehensive view of confounder balance by showing
         the actual mean values alongside the standardized differences, making it easier
@@ -1216,6 +1217,8 @@ class CausalEDA:
             - mean_t_1: mean value for treated group (treatment=1)  
             - abs_diff: absolute difference abs(mean_t_1 - mean_t_0)
             - smd: standardized mean difference (Cohen's d)
+            - ks: Kolmogorov–Smirnov statistic
+            - ks_pvalue: p-value of the KS test
             
         Notes
         -----
@@ -1233,48 +1236,13 @@ class CausalEDA:
         income        45000.0   47500.0   2500.0     0.125
         education         0.25      0.35      0.1     0.215
         """
-        df = self.d.df
-        X = df[self.d.confounders]
-        t = df[self.d.treatment].astype(int).values
-        
-        # Convert categorical variables to dummy variables for analysis
-        X_num = pd.get_dummies(X, drop_first=False)
-        
-        rows = []
-        for col in X_num.columns:
-            x = X_num[col].values.astype(float)
-            
-            # Calculate means for each treatment group
-            mean_t_0 = x[t == 0].mean()
-            mean_t_1 = x[t == 1].mean()
-            
-            # Calculate absolute difference
-            abs_diff = abs(mean_t_1 - mean_t_0)
-            
-            # Calculate standardized mean difference (SMD)
-            v_control = x[t == 0].var(ddof=1) if len(x[t == 0]) > 1 else 0.0
-            v_treated = x[t == 1].var(ddof=1) if len(x[t == 1]) > 1 else 0.0
-            pooled_std = np.sqrt((v_control + v_treated) / 2)
-            smd = (mean_t_1 - mean_t_0) / pooled_std if pooled_std > 0 else 0.0
-            
-            rows.append({
-                "confounders": col,
-                "mean_t_0": mean_t_0,
-                "mean_t_1": mean_t_1, 
-                "abs_diff": abs_diff,
-                "smd": smd
-            })
-        
-        # Create DataFrame and set confounders as index
-        balance_df = pd.DataFrame(rows)
-        balance_df = balance_df.set_index("confounders")
-        
-        # Sort by absolute SMD value (most imbalanced first)
-        balance_df = balance_df.reindex(
-            balance_df['smd'].abs().sort_values(ascending=False).index
+        # Delegate implementation to dedicated balance module for reuse and testing
+        from .cofounders_balance import confounders_balance
+        return confounders_balance(
+            df=self.d.df,
+            treatment=self.d.treatment,
+            confounders=self.d.confounders,
         )
-        
-        return balance_df
 
     from typing import Optional, Tuple
 
