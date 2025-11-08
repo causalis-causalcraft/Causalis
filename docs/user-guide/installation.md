@@ -22,12 +22,12 @@ pip install causalis
 ## Install from GitHub
 ```bash
 pip install --upgrade pip
-pip install "git+https://github.com/ioannmartynov/causalkit.git"
+pip install "git+https://github.com/ioannmartynov/causalis.git"
 ```
 
 ### Verify the installation
 ```bash
-python -c "import causalkit; print(causalkit.__version__)"
+python -c "import causalis; print(causalis.__version__)"
 ```
 
 ## Optional: conda environment after cloning the repo
