@@ -355,6 +355,7 @@ document.write(`
 <li class="toctree-l1 current active"><a class="current reference internal" href="#">DML ATE Example</a></li>
 <li class="toctree-l1"><a class="reference internal" href="dml_atte.html">DML ATT Example</a></li>
 
+<li class="toctree-l1"><a class="reference internal" href="gate.html">DML GATE Example</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Famous Datasets</span></p>
 <ul class="nav bd-sidenav">
@@ -709,7 +710,7 @@ eda.outcome_stats()
 </div>
 </div>
 <div class="cell_output docutils container">
-<img alt="../_images/b10d1480fed6e415f5202dc4c8915143deb10171565c9ccfdd1e5e4b9e03f08c.png" src="../_images/b10d1480fed6e415f5202dc4c8915143deb10171565c9ccfdd1e5e4b9e03f08c.png" />
+<img alt="../_images/f1946e252b6aa5220e5fc9b797e5be0282e421f6e27b3abef952df7c1f5fac02.png" src="../_images/f1946e252b6aa5220e5fc9b797e5be0282e421f6e27b3abef952df7c1f5fac02.png" />
 </div>
 </div>
 <div class="cell docutils container">
@@ -719,7 +720,7 @@ eda.outcome_stats()
 </div>
 </div>
 <div class="cell_output docutils container">
-<img alt="../_images/dd32508273fdcc9c21d5df9e7d0a76611e36c894981077d02b1344677e90c6a4.png" src="../_images/dd32508273fdcc9c21d5df9e7d0a76611e36c894981077d02b1344677e90c6a4.png" />
+<img alt="../_images/76f4797f23e483420154fc88bd749e787c34d9508861d461be0b567d030049a4.png" src="../_images/76f4797f23e483420154fc88bd749e787c34d9508861d461be0b567d030049a4.png" />
 </div>
 </div>
 </section>
@@ -757,9 +758,13 @@ display(confounders_balance_df)
       <th>mean_t_1</th>
       <th>abs_diff</th>
       <th>smd</th>
+      <th>ks</th>
+      <th>ks_pvalue</th>
     </tr>
     <tr>
       <th>confounders</th>
+      <th></th>
+      <th></th>
       <th></th>
       <th></th>
       <th></th>
@@ -773,6 +778,8 @@ display(confounders_balance_df)
       <td>0.382234</td>
       <td>0.164176</td>
       <td>0.364037</td>
+      <td>0.164176</td>
+      <td>1.061599e-37</td>
     </tr>
     <tr>
       <th>tenure_months</th>
@@ -780,6 +787,8 @@ display(confounders_balance_df)
       <td>25.799499</td>
       <td>2.394143</td>
       <td>0.199024</td>
+      <td>0.087485</td>
+      <td>5.511096e-11</td>
     </tr>
     <tr>
       <th>avg_sessions_week</th>
@@ -787,6 +796,8 @@ display(confounders_balance_df)
       <td>5.302999</td>
       <td>0.326645</td>
       <td>0.163509</td>
+      <td>0.075782</td>
+      <td>2.382131e-08</td>
     </tr>
     <tr>
       <th>urban_resident</th>
@@ -794,6 +805,8 @@ display(confounders_balance_df)
       <td>0.655330</td>
       <td>0.067783</td>
       <td>0.140072</td>
+      <td>0.067783</td>
+      <td>9.127269e-07</td>
     </tr>
     <tr>
       <th>spend_last_month</th>
@@ -801,6 +814,8 @@ display(confounders_balance_df)
       <td>104.941250</td>
       <td>5.653137</td>
       <td>0.097172</td>
+      <td>0.057348</td>
+      <td>5.761025e-05</td>
     </tr>
   </tbody>
 </table>
@@ -924,7 +939,7 @@ ps_model.plot_m_overlap()
 </div>
 </div>
 <div class="cell_output docutils container">
-<img alt="../_images/c2be5b2795a3ca9358911c50a5d555e0a53f44f2832930086341d58739017acd.png" src="../_images/c2be5b2795a3ca9358911c50a5d555e0a53f44f2832930086341d58739017acd.png" />
+<img alt="../_images/a3fda565981754afce9b6d33f8e04b43daa173330bb44b3900370e54b1858779.png" src="../_images/a3fda565981754afce9b6d33f8e04b43daa173330bb44b3900370e54b1858779.png" />
 </div>
 </div>
 </section>
@@ -1319,61 +1334,13 @@ rep_uc[&#39;summary&#39;]
     <tr>
       <th>0</th>
       <td>balance_max_smd</td>
-      <td>2.195631e-02</td>
+      <td>0.021956</td>
       <td>GREEN</td>
     </tr>
     <tr>
       <th>1</th>
       <td>balance_frac_violations</td>
-      <td>0.000000e+00</td>
-      <td>GREEN</td>
-    </tr>
-    <tr>
-      <th>2</th>
-      <td>ess_treated_ratio</td>
-      <td>7.422239e-01</td>
-      <td>YELLOW</td>
-    </tr>
-    <tr>
-      <th>3</th>
-      <td>ess_control_ratio</td>
-      <td>9.704552e-01</td>
-      <td>GREEN</td>
-    </tr>
-    <tr>
-      <th>4</th>
-      <td>w_tail_ratio_treated</td>
-      <td>1.167923e+13</td>
-      <td>RED</td>
-    </tr>
-    <tr>
-      <th>5</th>
-      <td>w_tail_ratio_control</td>
-      <td>1.729690e+00</td>
-      <td>GREEN</td>
-    </tr>
-    <tr>
-      <th>6</th>
-      <td>top1_mass_share_treated</td>
-      <td>1.412602e-01</td>
-      <td>GREEN</td>
-    </tr>
-    <tr>
-      <th>7</th>
-      <td>top1_mass_share_control</td>
-      <td>2.566909e-02</td>
-      <td>GREEN</td>
-    </tr>
-    <tr>
-      <th>8</th>
-      <td>ks_m_treated_vs_control</td>
-      <td>1.396717e-01</td>
-      <td>GREEN</td>
-    </tr>
-    <tr>
-      <th>9</th>
-      <td>pct_m_outside_overlap</td>
-      <td>1.000000e-02</td>
+      <td>0.000000</td>
       <td>GREEN</td>
     </tr>
   </tbody>
@@ -1382,7 +1349,7 @@ rep_uc[&#39;summary&#39;]
 </div>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython2 notranslate"><div class="highlight"><pre><span></span>from causalis.refutation.unconfoundedness.uncofoundedness_validation import (
+<div class="highlight-ipython2 notranslate"><div class="highlight"><pre><span></span>from causalis.refutation.unconfoundedness.sensitivity import (
     sensitivity_analysis, sensitivity_benchmark
 )
 

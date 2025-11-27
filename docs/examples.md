@@ -7,6 +7,7 @@
 
 examples/dml_ate
 examples/dml_atte
+examples/gate
 ```
 
 ```{toctree}
@@ -50,6 +51,16 @@ ATE estimation workflow
 :class-card: sd-shadow-sm sd-rounded-2xl sd-text-center
 
 ATTE estimation workflow
+```
+
+```{grid-item-card} GATE example
+:img-top: _static/dml_ate.png
+:img-alt: GATE example
+:link: examples/gate
+:link-type: doc
+:class-card: sd-shadow-sm sd-rounded-2xl sd-text-center
+
+GATE estimation workflow
 ```
 
 ````
