@@ -667,53 +667,28 @@ If use_blp is True and X_new is provided: returns a DataFrame with ‘cate’ co
 </section>
 <section id="module-causalis.inference.gate.gate_esimand">
 <span id="gate-utilities"></span><h2>GATE Utilities<a class="headerlink" href="#module-causalis.inference.gate.gate_esimand" title="Link to this heading">#</a></h2>
-<p>Group Average Treatment Effect (GATE) estimation using DoubleML orthogonal signals.</p>
-<p>This module provides a function that, given a (possibly filtered) CausalData object,
-fits a DoubleML IRM model, computes per-observation CATEs (orthogonal signals),
-forms groups (by default CATE quintiles), and returns group-level estimates
-(theta), standard errors, p-values, and confidence intervals.</p>
-<p>It prefers DoubleML’s native <cite>gate()</cite> and <cite>confint()</cite> methods if available;
-otherwise falls back to a simple normal approximation using the group mean of
-orthogonal signals and its standard error.</p>
+<p>Group Average Treatment Effect (GATE) estimation using local DML IRM and BLP.</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="causalis.inference.gate.gate_esimand.gate_esimand">
 <span class="sig-prename descclassname"><span class="pre">causalis.inference.gate.gate_esimand.</span></span><span class="sig-name descname"><span class="pre">gate_esimand</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">groups</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_groups</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ml_g</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ml_m</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_folds</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_rep</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">confidence_level</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.95</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/causalis/inference/gate/gate_esimand.html#gate_esimand"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#causalis.inference.gate.gate_esimand.gate_esimand" title="Link to this definition">#</a></dt>
-<dd><p>Estimate Group Average Treatment Effects (GATEs) by grouping observations
-using CATE-based quantiles unless custom groups are provided.</p>
+<dd><p>Estimate Group Average Treatment Effects (GATEs).</p>
+<p>If <cite>groups</cite> is None, observations are grouped by quantiles of the
+plugin CATE proxy (g1_hat - g0_hat).</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>data</strong> (<a class="reference internal" href="generated/causalis.data.causaldata.CausalData.html#causalis.data.causaldata.CausalData" title="causalis.data.causaldata.CausalData"><em>CausalData</em></a>) – The (possibly filtered) CausalData object. Filtering should be done by
-subsetting data.df before constructing CausalData, or by preparing a
-filtered CausalData instance.</p></li>
-<li><p><strong>groups</strong> (<em>pd.Series</em><em> or </em><em>pd.DataFrame</em><em>, </em><em>optional</em>) – Group assignments per observation. If a Series is passed, it will be
-used as a single column named ‘q’. If a DataFrame, it should contain a
-single column specifying groups. If None, groups are formed by
-pd.qcut over the in-sample CATEs into <cite>n_groups</cite> quantiles labeled 0..n_groups-1.</p></li>
-<li><p><strong>n_groups</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><em>int</em></a><em>, </em><em>default 5</em>) – Number of quantile groups if <cite>groups</cite> is None.</p></li>
-<li><p><strong>ml_g</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code></a>]</span>) – Learners and DoubleML cross-fitting controls (as in ATE/ATT).</p></li>
-<li><p><strong>ml_m</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code></a>]</span>) – Learners and DoubleML cross-fitting controls (as in ATE/ATT).</p></li>
-<li><p><strong>n_folds</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></span>) – Learners and DoubleML cross-fitting controls (as in ATE/ATT).</p></li>
-<li><p><strong>n_rep</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></span>) – Learners and DoubleML cross-fitting controls (as in ATE/ATT).</p></li>
-<li><p><strong>confidence_level</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><em>float</em></a><em>, </em><em>default 0.95</em>) – Confidence level for two-sided normal-approximation intervals.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p><dl class="simple">
-<dt>A DataFrame with columns:</dt><dd><ul class="simple">
-<li><p>group: group label</p></li>
-<li><p>n: group size</p></li>
-<li><p>theta: estimated group average treatment effect</p></li>
-<li><p>std_error: standard error (normal approx if fallback path)</p></li>
-<li><p>p_value: two-sided p-value for H0: theta=0</p></li>
-<li><p>ci_lower, ci_upper: confidence interval bounds</p></li>
-</ul>
-</dd>
-</dl>
-</p>
-</dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>pd.DataFrame</p>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html#pandas.DataFrame" title="(in pandas v2.3.3)"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code></a></span></p>
+</dd>
+<dt class="field-even">Parameters<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>data</strong> (<a class="reference internal" href="generated/causalis.data.causaldata.CausalData.html#causalis.data.causaldata.CausalData" title="causalis.data.causaldata.CausalData"><em>CausalData</em></a>)</p></li>
+<li><p><strong>groups</strong> (<a class="reference external" href="https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.Series.html#pandas.Series" title="(in pandas v2.3.3)"><em>Series</em></a><em> | </em><a class="reference external" href="https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html#pandas.DataFrame" title="(in pandas v2.3.3)"><em>DataFrame</em></a><em> | </em><em>None</em>)</p></li>
+<li><p><strong>n_groups</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><em>int</em></a>)</p></li>
+<li><p><strong>ml_g</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.14)"><em>Any</em></a><em> | </em><em>None</em>)</p></li>
+<li><p><strong>ml_m</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.14)"><em>Any</em></a><em> | </em><em>None</em>)</p></li>
+<li><p><strong>n_folds</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><em>int</em></a>)</p></li>
+<li><p><strong>n_rep</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><em>int</em></a>)</p></li>
+<li><p><strong>confidence_level</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><em>float</em></a>)</p></li>
+</ul>
 </dd>
 </dl>
 </dd></dl>

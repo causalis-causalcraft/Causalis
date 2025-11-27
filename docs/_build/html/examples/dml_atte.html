@@ -50,7 +50,7 @@
     <link rel="icon" href="../_static/new_logo.svg"/>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Impact of 401(k) on Financial Assets" href="401k.html" />
+    <link rel="next" title="DML GATE Example" href="gate.html" />
     <link rel="prev" title="DML ATE Example" href="dml_ate.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
@@ -355,6 +355,7 @@ document.write(`
 <li class="toctree-l1"><a class="reference internal" href="dml_ate.html">DML ATE Example</a></li>
 <li class="toctree-l1 current active"><a class="current reference internal" href="#">DML ATT Example</a></li>
 
+<li class="toctree-l1"><a class="reference internal" href="gate.html">DML GATE Example</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Famous Datasets</span></p>
 <ul class="nav bd-sidenav">
@@ -1087,7 +1088,7 @@ display(shap_outcome_df)
 </section>
 <section class="tex2jax_ignore mathjax_ignore" id="inference">
 <h1>Inference<a class="headerlink" href="#inference" title="Link to this heading">#</a></h1>
-<p>Now time to estimate ATЕE with Double Machine Learning</p>
+<p>Now time to estimate ATTE with Double Machine Learning</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython2 notranslate"><div class="highlight"><pre><span></span>from causalis.inference.atte import dml_atte
@@ -1456,7 +1457,7 @@ rep_uc[&#39;summary&#39;]
 </div>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython2 notranslate"><div class="highlight"><pre><span></span>from causalis.refutation.unconfoundedness.uncofoundedness_validation import (
+<div class="highlight-ipython2 notranslate"><div class="highlight"><pre><span></span>from causalis.refutation.unconfoundedness.sensitivity import (
     sensitivity_analysis, sensitivity_benchmark
 )
 
@@ -1550,11 +1551,11 @@ sensitivity_analysis(atte_result, cf_y=0.01, cf_d=0.01, rho=1.0, level=0.95)
       </div>
     </a>
     <a class="right-next"
-       href="401k.html"
+       href="gate.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">Impact of 401(k) on Financial Assets</p>
+        <p class="prev-next-title">DML GATE Example</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>

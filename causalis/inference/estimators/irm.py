@@ -27,6 +27,7 @@ from sklearn.utils.validation import check_is_fitted
 from scipy.stats import norm
 
 from causalis.data.causaldata import CausalData
+from .blp import BLP
 
 
 def _compute_sensitivity_bias(sigma2: np.ndarray | float,
@@ -424,6 +425,61 @@ class IRM:
     def summary(self) -> pd.DataFrame:
         check_is_fitted(self, attributes=["summary_"])
         return self.summary_
+
+    @property
+    def orth_signal(self) -> np.ndarray:
+        """
+        Returns the cross-fitted orthogonal signal (psi).
+        """
+        check_is_fitted(self, attributes=["psi_b_"])
+        return self.psi_b_
+
+    def gate(self, groups: pd.DataFrame | pd.Series, level: float = 0.95) -> BLP:
+        """
+        Estimate Group Average Treatment Effects via BLP on orthogonal signal.
+
+        Parameters
+        ----------
+        groups : pd.DataFrame or pd.Series
+            Group indicators or labels.
+            - If a single column (Series or 1-col DataFrame) with non-boolean values,
+              it is treated as categorical labels and one-hot encoded.
+            - If multiple columns or boolean/int indicators, it is used as the basis directly.
+        level : float
+            Confidence level for intervals (passed to BLP).
+
+        Returns
+        -------
+        BLP
+            Fitted Best Linear Predictor model.
+        """
+        check_is_fitted(self, attributes=["psi_"])
+
+        if isinstance(groups, pd.Series):
+            groups = groups.to_frame()
+
+        # Prepare basis
+        if groups.shape[1] == 1:
+            col = groups.iloc[:, 0]
+            # If single column is not boolean, assume it's categorical labels -> one-hot encode
+            # Even if it is boolean, get_dummies creates False/True columns which is a valid partition
+            # We use prefix to ensure unique column names
+            basis = pd.get_dummies(col, prefix=col.name, dtype=int)
+        else:
+            # Assume multiple columns are already indicators (dummy basis)
+            basis = groups.astype(int)
+
+        # Instantiate and fit BLP using the orthogonal signal
+        # We use the existing BLP class from causalis.inference.estimators.blp
+        blp_model = BLP(
+            orth_signal=self.orth_signal,
+            basis=basis,
+            is_gate=True
+        )
+        # BLP.fit() uses HC0 covariance by default, which is correct for DML
+        blp_model.fit()
+        
+        return blp_model
 
     # --------- Sensitivity (DoubleML-style) ---------
     def _sensitivity_element_est(self) -> dict:
