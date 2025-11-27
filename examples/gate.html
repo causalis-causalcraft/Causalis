@@ -1,0 +1,1030 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>DML GATE Example &#8212; Causalis 0.1.0 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../_static/styles/bootstrap.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+
+  
+  <link href="../_static/vendor/fontawesome/6.5.2/css/all.min.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../_static/mystnb.8ecb98da25f57f5357bf6f572d296f466b2cfe2517ffebfabe82451661e28f02.css?v=6644e6bb" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=95c83b7e" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/custom.css?v=e0b54744" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
+  <script src="../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+    <script src="../_static/documentation_options.js?v=2caa9db7"></script>
+    <script src="../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../_static/copybutton.js?v=f281be69"></script>
+    <script src="../_static/design-tabs.js?v=df1d7cd1"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'examples/gate';</script>
+    <link rel="icon" href="../_static/new_logo.svg"/>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Impact of 401(k) on Financial Assets" href="401k.html" />
+    <link rel="prev" title="DML ATT Example" href="dml_atte.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-primary-sidebar-checkbox"/>
+  <label class="overlay overlay-primary" for="pst-primary-sidebar-checkbox"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-secondary-sidebar-checkbox"/>
+  <label class="overlay overlay-secondary" for="pst-secondary-sidebar-checkbox"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../_static/new_logo_big.svg" class="logo__image only-light" alt=""/>
+    <script>document.write(`<img src="../_static/new_logo_big.svg" class="logo__image only-dark" alt=""/>`);</script>
+  
+  
+    <p class="title logo__title">Causalis</p>
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../user-guide.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="../examples.html">
+    Real World Examples
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../research.html">
+    Research
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../api.html">
+    API Reference
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+ <script>
+ document.write(`
+   <button class="btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<script>
+document.write(`
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"></i>
+  </button>
+`);
+</script></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/IoannMartynov/Causalis" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+ <script>
+ document.write(`
+   <button class="btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script>
+    </div>
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../user-guide.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="../examples.html">
+    Real World Examples
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../research.html">
+    Research
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../api.html">
+    API Reference
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<script>
+document.write(`
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"></i>
+  </button>
+`);
+</script></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/IoannMartynov/Causalis" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"><p aria-level="2" class="caption" role="heading"><span class="caption-text">Basic synthetic examples</span></p>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="dml_ate.html">DML ATE Example</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dml_atte.html">DML ATT Example</a></li>
+
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">DML GATE Example</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Famous Datasets</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="401k.html">Impact of 401(k) on Financial Assets</a></li>
+</ul>
+</div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../examples.html" class="nav-link">Real World Examples</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page">DML GATE Example</li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section class="tex2jax_ignore mathjax_ignore" id="dml-gate-example">
+<h1>DML GATE Example<a class="headerlink" href="#dml-gate-example" title="Link to this heading">#</a></h1>
+<p>This notebook demonstrates how to estimate <strong>Group Average Treatment Effects (GATE)</strong> using Double Machine Learning.
+GATE allows us to understand treatment effect heterogeneity by estimating the average effect within specific groups defined by covariates.</p>
+<section id="mathematical-formulation">
+<h2>Mathematical Formulation<a class="headerlink" href="#mathematical-formulation" title="Link to this heading">#</a></h2>
+<p>Let <span class="math notranslate nohighlight">\(Y\)</span> be the outcome, <span class="math notranslate nohighlight">\(D\)</span> the binary treatment, and <span class="math notranslate nohighlight">\(X\)</span> the covariates. We define the Conditional Average Treatment Effect (CATE) as:</p>
+<div class="math notranslate nohighlight">
+\[ \tau(X) = \mathbb{E}[Y(1) - Y(0) \mid X] \]</div>
+<p>For a set of groups <span class="math notranslate nohighlight">\(G_1, \dots, G_K\)</span> (where <span class="math notranslate nohighlight">\(G_k(X)\)</span> is an indicator that unit falls into group <span class="math notranslate nohighlight">\(k\)</span>), the <strong>GATE</strong> for group <span class="math notranslate nohighlight">\(k\)</span> is:</p>
+<div class="math notranslate nohighlight">
+\[ \theta_k = \mathbb{E}[\tau(X) \mid G_k(X)=1] \]</div>
+<p>We will:</p>
+<ol class="arabic simple">
+<li><p>Generate synthetic data with heterogeneous treatment effects.</p></li>
+<li><p>Perform Exploratory Data Analysis (EDA).</p></li>
+<li><p>Estimate GATEs using <code class="docutils literal notranslate"><span class="pre">gate_esimand</span></code> with both automatic quantile groups and custom user-defined groups.</p></li>
+</ol>
+</section>
+<section id="generate-data">
+<h2>Generate data<a class="headerlink" href="#generate-data" title="Link to this heading">#</a></h2>
+<p>We generate observational data with a nonlinear outcome model, nonlinear treatment assignment, and a heterogeneous (nonlinear) treatment effect <span class="math notranslate nohighlight">\(\tau(X)\)</span>.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">causalis.data</span><span class="w"> </span><span class="kn">import</span> <span class="n">CausalDatasetGenerator</span><span class="p">,</span> <span class="n">CausalData</span>
+
+<span class="c1"># Reproducibility</span>
+<span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="mi">42</span><span class="p">)</span>
+
+<span class="c1"># 1) Confounders and their distributions</span>
+<span class="n">confounder_specs</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;tenure_months&quot;</span><span class="p">,</span>     <span class="s2">&quot;dist&quot;</span><span class="p">:</span> <span class="s2">&quot;normal&quot;</span><span class="p">,</span>   <span class="s2">&quot;mu&quot;</span><span class="p">:</span> <span class="mi">24</span><span class="p">,</span> <span class="s2">&quot;sd&quot;</span><span class="p">:</span> <span class="mi">12</span><span class="p">},</span>
+    <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;avg_sessions_week&quot;</span><span class="p">,</span> <span class="s2">&quot;dist&quot;</span><span class="p">:</span> <span class="s2">&quot;normal&quot;</span><span class="p">,</span>   <span class="s2">&quot;mu&quot;</span><span class="p">:</span> <span class="mi">5</span><span class="p">,</span>  <span class="s2">&quot;sd&quot;</span><span class="p">:</span> <span class="mi">2</span><span class="p">},</span>
+    <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;spend_last_month&quot;</span><span class="p">,</span>  <span class="s2">&quot;dist&quot;</span><span class="p">:</span> <span class="s2">&quot;uniform&quot;</span><span class="p">,</span>  <span class="s2">&quot;a&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>   <span class="s2">&quot;b&quot;</span><span class="p">:</span> <span class="mi">200</span><span class="p">},</span>
+    <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;premium_user&quot;</span><span class="p">,</span>      <span class="s2">&quot;dist&quot;</span><span class="p">:</span> <span class="s2">&quot;bernoulli&quot;</span><span class="p">,</span><span class="s2">&quot;p&quot;</span><span class="p">:</span> <span class="mf">0.25</span><span class="p">},</span>
+    <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;urban_resident&quot;</span><span class="p">,</span>    <span class="s2">&quot;dist&quot;</span><span class="p">:</span> <span class="s2">&quot;bernoulli&quot;</span><span class="p">,</span><span class="s2">&quot;p&quot;</span><span class="p">:</span> <span class="mf">0.60</span><span class="p">},</span>
+<span class="p">]</span>
+
+<span class="c1"># Indices</span>
+<span class="n">TENURE</span><span class="p">,</span> <span class="n">SESS</span><span class="p">,</span> <span class="n">SPEND</span><span class="p">,</span> <span class="n">PREMIUM</span><span class="p">,</span> <span class="n">URBAN</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
+
+<span class="c1"># 2) Nonlinear baseline for outcome f_y(X) = X @ beta_y + g_y(X)</span>
+<span class="n">beta_y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">0.03</span><span class="p">,</span> <span class="mf">0.20</span><span class="p">,</span> <span class="mf">0.01</span><span class="p">,</span> <span class="mf">1.20</span><span class="p">,</span> <span class="mf">0.60</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">g_y</span><span class="p">(</span><span class="n">X</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+    <span class="n">tenure_years</span> <span class="o">=</span> <span class="n">X</span><span class="p">[:,</span> <span class="n">TENURE</span><span class="p">]</span> <span class="o">/</span> <span class="mf">12.0</span>
+    <span class="n">sessions</span> <span class="o">=</span> <span class="n">X</span><span class="p">[:,</span> <span class="n">SESS</span><span class="p">]</span>
+    <span class="n">spend</span> <span class="o">=</span> <span class="n">X</span><span class="p">[:,</span> <span class="n">SPEND</span><span class="p">]</span>
+    <span class="n">premium</span> <span class="o">=</span> <span class="n">X</span><span class="p">[:,</span> <span class="n">PREMIUM</span><span class="p">]</span>
+    <span class="n">urban</span> <span class="o">=</span> <span class="n">X</span><span class="p">[:,</span> <span class="n">URBAN</span><span class="p">]</span>
+    <span class="k">return</span> <span class="p">(</span>
+        <span class="mf">1.2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="mf">2.0</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">*</span> <span class="n">tenure_years</span><span class="p">)</span>
+        <span class="o">+</span> <span class="mf">0.02</span> <span class="o">*</span> <span class="p">(</span><span class="n">sessions</span> <span class="o">-</span> <span class="mf">5.0</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span>
+        <span class="o">+</span> <span class="mf">0.0015</span> <span class="o">*</span> <span class="p">(</span><span class="n">spend</span> <span class="o">-</span> <span class="mf">100.0</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">sessions</span> <span class="o">-</span> <span class="mf">5.0</span><span class="p">)</span>
+        <span class="o">+</span> <span class="mf">0.4</span> <span class="o">*</span> <span class="n">premium</span> <span class="o">*</span> <span class="p">(</span><span class="n">sessions</span> <span class="o">-</span> <span class="mf">5.0</span><span class="p">)</span>
+        <span class="o">+</span> <span class="mf">0.3</span> <span class="o">*</span> <span class="n">urban</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">tanh</span><span class="p">((</span><span class="n">spend</span> <span class="o">-</span> <span class="mf">100.0</span><span class="p">)</span> <span class="o">/</span> <span class="mf">50.0</span><span class="p">)</span>
+    <span class="p">)</span>
+
+<span class="c1"># 3) Nonlinear treatment score f_t(X) = X @ beta_t + g_t(X)</span>
+<span class="n">beta_d</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">0.010</span><span class="p">,</span> <span class="mf">0.12</span><span class="p">,</span> <span class="mf">0.001</span><span class="p">,</span> <span class="mf">0.80</span><span class="p">,</span> <span class="mf">0.25</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">g_d</span><span class="p">(</span><span class="n">X</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+    <span class="n">tenure_years</span> <span class="o">=</span> <span class="n">X</span><span class="p">[:,</span> <span class="n">TENURE</span><span class="p">]</span> <span class="o">/</span> <span class="mf">12.0</span>
+    <span class="n">sessions</span> <span class="o">=</span> <span class="n">X</span><span class="p">[:,</span> <span class="n">SESS</span><span class="p">]</span>
+    <span class="n">spend</span> <span class="o">=</span> <span class="n">X</span><span class="p">[:,</span> <span class="n">SPEND</span><span class="p">]</span>
+    <span class="n">premium</span> <span class="o">=</span> <span class="n">X</span><span class="p">[:,</span> <span class="n">PREMIUM</span><span class="p">]</span>
+    <span class="n">urban</span> <span class="o">=</span> <span class="n">X</span><span class="p">[:,</span> <span class="n">URBAN</span><span class="p">]</span>
+    <span class="n">soft_spend</span> <span class="o">=</span> <span class="mf">1.2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">tanh</span><span class="p">((</span><span class="n">spend</span> <span class="o">-</span> <span class="mf">80.0</span><span class="p">)</span> <span class="o">/</span> <span class="mf">40.0</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">(</span>
+        <span class="mf">0.6</span> <span class="o">*</span> <span class="n">soft_spend</span>
+        <span class="o">+</span> <span class="mf">0.15</span> <span class="o">*</span> <span class="p">(</span><span class="n">sessions</span> <span class="o">-</span> <span class="mf">5.0</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">tenure_years</span> <span class="o">-</span> <span class="mf">2.0</span><span class="p">)</span>
+        <span class="o">+</span> <span class="mf">0.25</span> <span class="o">*</span> <span class="n">premium</span> <span class="o">*</span> <span class="p">(</span><span class="n">urban</span> <span class="o">-</span> <span class="mf">0.5</span><span class="p">)</span>
+    <span class="p">)</span>
+
+<span class="c1"># 4) Heterogeneous, nonlinear treatment effect tau(X)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">tau_fn</span><span class="p">(</span><span class="n">X</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+    <span class="n">tenure_years</span> <span class="o">=</span> <span class="n">X</span><span class="p">[:,</span> <span class="n">TENURE</span><span class="p">]</span> <span class="o">/</span> <span class="mf">12.0</span>
+    <span class="n">sessions</span> <span class="o">=</span> <span class="n">X</span><span class="p">[:,</span> <span class="n">SESS</span><span class="p">]</span>
+    <span class="n">spend</span> <span class="o">=</span> <span class="n">X</span><span class="p">[:,</span> <span class="n">SPEND</span><span class="p">]</span>
+    <span class="n">premium</span> <span class="o">=</span> <span class="n">X</span><span class="p">[:,</span> <span class="n">PREMIUM</span><span class="p">]</span>
+    <span class="n">urban</span> <span class="o">=</span> <span class="n">X</span><span class="p">[:,</span> <span class="n">URBAN</span><span class="p">]</span>
+    <span class="n">tau</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="mf">1.0</span>
+        <span class="o">+</span> <span class="mf">0.8</span> <span class="o">*</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">/</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="p">(</span><span class="n">sessions</span> <span class="o">-</span> <span class="mf">5.0</span><span class="p">))))</span>
+        <span class="o">+</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">premium</span>
+        <span class="o">-</span> <span class="mf">0.6</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">tenure_years</span> <span class="o">/</span> <span class="mf">5.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span>
+        <span class="o">+</span> <span class="mf">0.2</span> <span class="o">*</span> <span class="n">urban</span> <span class="o">*</span> <span class="p">(</span><span class="n">spend</span> <span class="o">-</span> <span class="mf">100.0</span><span class="p">)</span> <span class="o">/</span> <span class="mf">100.0</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">tau</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">,</span> <span class="mf">2.5</span><span class="p">)</span>
+
+<span class="c1"># 5) Noise and prevalence</span>
+<span class="n">sigma_y</span> <span class="o">=</span> <span class="mf">3.5</span>
+<span class="n">target_d_rate</span> <span class="o">=</span> <span class="mf">0.35</span>
+
+<span class="c1"># 6) Build generator</span>
+<span class="n">gen</span> <span class="o">=</span> <span class="n">CausalDatasetGenerator</span><span class="p">(</span>
+    <span class="n">outcome_type</span><span class="o">=</span><span class="s2">&quot;continuous&quot;</span><span class="p">,</span>
+    <span class="n">sigma_y</span><span class="o">=</span><span class="n">sigma_y</span><span class="p">,</span>
+    <span class="n">target_d_rate</span><span class="o">=</span><span class="n">target_d_rate</span><span class="p">,</span>
+    <span class="n">seed</span><span class="o">=</span><span class="mi">42</span><span class="p">,</span>
+    <span class="n">confounder_specs</span><span class="o">=</span><span class="n">confounder_specs</span><span class="p">,</span>
+    <span class="n">beta_y</span><span class="o">=</span><span class="n">beta_y</span><span class="p">,</span>
+    <span class="n">beta_d</span><span class="o">=</span><span class="n">beta_d</span><span class="p">,</span>
+    <span class="n">g_y</span><span class="o">=</span><span class="n">g_y</span><span class="p">,</span>
+    <span class="n">g_d</span><span class="o">=</span><span class="n">g_d</span><span class="p">,</span>
+    <span class="n">tau</span><span class="o">=</span><span class="n">tau_fn</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="c1"># 7) Generate data</span>
+<span class="n">n</span> <span class="o">=</span> <span class="mi">10000</span>
+<span class="n">generated_df</span> <span class="o">=</span> <span class="n">gen</span><span class="o">.</span><span class="n">generate</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+
+<span class="c1"># Ground-truth ATT</span>
+<span class="n">true_att</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">generated_df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">generated_df</span><span class="p">[</span><span class="s2">&quot;d&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;cate&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">mean</span><span class="p">())</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Ground-truth ATT from the DGP: </span><span class="si">{</span><span class="n">true_att</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+<span class="c1"># 8) Wrap as CausalData</span>
+<span class="n">causal_data</span> <span class="o">=</span> <span class="n">CausalData</span><span class="p">(</span>
+    <span class="n">df</span><span class="o">=</span><span class="n">generated_df</span><span class="p">,</span>
+    <span class="n">treatment</span><span class="o">=</span><span class="s2">&quot;d&quot;</span><span class="p">,</span>
+    <span class="n">outcome</span><span class="o">=</span><span class="s2">&quot;y&quot;</span><span class="p">,</span>
+    <span class="n">confounders</span><span class="o">=</span><span class="p">[</span>
+        <span class="s2">&quot;tenure_months&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;avg_sessions_week&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;spend_last_month&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;premium_user&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;urban_resident&quot;</span><span class="p">,</span>
+    <span class="p">],</span>
+<span class="p">)</span>
+
+<span class="n">causal_data</span><span class="o">.</span><span class="n">df</span><span class="o">.</span><span class="n">head</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Ground-truth ATT from the DGP: 1.386
+</pre></div>
+</div>
+<div class="output text_html"><div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>y</th>
+      <th>d</th>
+      <th>tenure_months</th>
+      <th>avg_sessions_week</th>
+      <th>spend_last_month</th>
+      <th>premium_user</th>
+      <th>urban_resident</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>2.237316</td>
+      <td>0.0</td>
+      <td>27.656605</td>
+      <td>5.352554</td>
+      <td>72.552568</td>
+      <td>1.0</td>
+      <td>0.0</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>5.771469</td>
+      <td>0.0</td>
+      <td>11.520191</td>
+      <td>6.798247</td>
+      <td>188.481287</td>
+      <td>1.0</td>
+      <td>0.0</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>6.374653</td>
+      <td>1.0</td>
+      <td>33.005414</td>
+      <td>2.055459</td>
+      <td>51.040440</td>
+      <td>0.0</td>
+      <td>1.0</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>2.364177</td>
+      <td>1.0</td>
+      <td>35.286777</td>
+      <td>4.429404</td>
+      <td>166.992239</td>
+      <td>0.0</td>
+      <td>1.0</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>8.378079</td>
+      <td>0.0</td>
+      <td>0.587578</td>
+      <td>6.658307</td>
+      <td>179.371126</td>
+      <td>0.0</td>
+      <td>0.0</td>
+    </tr>
+  </tbody>
+</table>
+</div></div></div>
+</div>
+</section>
+<section id="eda">
+<h2>EDA<a class="headerlink" href="#eda" title="Link to this heading">#</a></h2>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">causalis.eda</span><span class="w"> </span><span class="kn">import</span> <span class="n">CausalEDA</span>
+<span class="n">eda</span> <span class="o">=</span> <span class="n">CausalEDA</span><span class="p">(</span><span class="n">causal_data</span><span class="p">)</span>
+<span class="n">eda</span><span class="o">.</span><span class="n">outcome_stats</span><span class="p">()</span>
+<span class="n">eda</span><span class="o">.</span><span class="n">outcome_hist</span><span class="p">()</span>
+<span class="n">eda</span><span class="o">.</span><span class="n">outcome_boxplot</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<img alt="../_images/7605b9ef925a0f5b074c65f98fc1af0f8065237ff5a0be3b91674415fbb18135.png" src="../_images/7605b9ef925a0f5b074c65f98fc1af0f8065237ff5a0be3b91674415fbb18135.png" />
+<img alt="../_images/7605b9ef925a0f5b074c65f98fc1af0f8065237ff5a0be3b91674415fbb18135.png" src="../_images/7605b9ef925a0f5b074c65f98fc1af0f8065237ff5a0be3b91674415fbb18135.png" />
+</div>
+</div>
+</section>
+<section id="inference-estimating-gate">
+<h2>Inference: Estimating GATE<a class="headerlink" href="#inference-estimating-gate" title="Link to this heading">#</a></h2>
+<p>We use <code class="docutils literal notranslate"><span class="pre">gate_esimand</span></code> to estimate Group Average Treatment Effects.
+This function works by leveraging the <strong>orthogonal signal</strong> from the DoubleML framework.</p>
+<section id="methodology">
+<h3>Methodology<a class="headerlink" href="#methodology" title="Link to this heading">#</a></h3>
+<ol class="arabic">
+<li><p><strong>Orthogonal Signal</strong>: We fit a DoubleML IRM model to obtain a score <span class="math notranslate nohighlight">\(\psi(W;\hat{\eta})\)</span> such that:</p>
+<div class="math notranslate nohighlight">
+\[ \mathbb{E}[\psi(W; \hat{\eta}) \mid X] \approx \tau(X) \]</div>
+<p>where <span class="math notranslate nohighlight">\(W = (Y, D, X)\)</span> and <span class="math notranslate nohighlight">\(\hat{\eta}\)</span> are the estimated nuisance parameters.</p>
+</li>
+<li><p><strong>Best Linear Predictor (BLP)</strong>: We assume a linear model for the CATE using group indicators <span class="math notranslate nohighlight">\(G(X)\)</span>:</p>
+<div class="math notranslate nohighlight">
+\[ \tau(X) \approx \sum_k \theta_k G_k(X) \]</div>
+<p>We estimate coefficients <span class="math notranslate nohighlight">\(\theta\)</span> by solving the BLP optimization:</p>
+<div class="math notranslate nohighlight">
+\[ \hat{\theta} = \arg\min_{\theta} \sum_{i=1}^N (\psi(W_i) - \theta^\top G(X_i))^2\]</div>
+</li>
+</ol>
+<p>When <span class="math notranslate nohighlight">\(G(X)\)</span> consists of mutually exclusive group indicators, <span class="math notranslate nohighlight">\(\hat{\theta}_k\)</span> corresponds to the average of the orthogonal signal within group <span class="math notranslate nohighlight">\(k\)</span>, providing a consistent estimate of the GATE.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">causalis.inference.gate.gate_esimand</span><span class="w"> </span><span class="kn">import</span> <span class="n">gate_esimand</span>
+</pre></div>
+</div>
+</div>
+</div>
+</section>
+<section id="gate-by-cate-quantiles">
+<h3>1. GATE by CATE Quantiles<a class="headerlink" href="#gate-by-cate-quantiles" title="Link to this heading">#</a></h3>
+<p>If no groups are provided, <code class="docutils literal notranslate"><span class="pre">gate_esimand</span></code> automatically creates groups based on quantiles of the estimated CATE (Conditional Average Treatment Effect).</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Estimate GATE with 5 quantile groups</span>
+<span class="n">gate_quantiles</span> <span class="o">=</span> <span class="n">gate_esimand</span><span class="p">(</span><span class="n">causal_data</span><span class="p">,</span> <span class="n">n_groups</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">confidence_level</span><span class="o">=</span><span class="mf">0.95</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;GATE Results (Quantiles):&quot;</span><span class="p">)</span>
+<span class="n">display</span><span class="p">(</span><span class="n">gate_quantiles</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>GATE Results (Quantiles):
+</pre></div>
+</div>
+<div class="output text_html"><div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>group</th>
+      <th>n</th>
+      <th>theta</th>
+      <th>std_error</th>
+      <th>p_value</th>
+      <th>ci_lower</th>
+      <th>ci_upper</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>Group_0</td>
+      <td>2000</td>
+      <td>1.376851</td>
+      <td>0.212620</td>
+      <td>9.441200e-11</td>
+      <td>0.960123</td>
+      <td>1.793579</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>Group_1</td>
+      <td>2000</td>
+      <td>0.899152</td>
+      <td>0.196052</td>
+      <td>4.512072e-06</td>
+      <td>0.514896</td>
+      <td>1.283408</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>Group_2</td>
+      <td>2000</td>
+      <td>1.114911</td>
+      <td>0.194088</td>
+      <td>9.226342e-09</td>
+      <td>0.734507</td>
+      <td>1.495316</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>Group_3</td>
+      <td>2000</td>
+      <td>1.190621</td>
+      <td>0.188706</td>
+      <td>2.801072e-10</td>
+      <td>0.820765</td>
+      <td>1.560478</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>Group_4</td>
+      <td>2000</td>
+      <td>1.332698</td>
+      <td>0.207103</td>
+      <td>1.235086e-10</td>
+      <td>0.926784</td>
+      <td>1.738612</td>
+    </tr>
+  </tbody>
+</table>
+</div></div></div>
+</div>
+</section>
+<section id="gate-by-user-defined-groups">
+<h3>2. GATE by User-Defined Groups<a class="headerlink" href="#gate-by-user-defined-groups" title="Link to this heading">#</a></h3>
+<p>We can also define custom groups based on covariates. For example, let’s group users by their tenure:</p>
+<ul class="simple">
+<li><p><strong>&lt; 1 year</strong></p></li>
+<li><p><strong>1-3 years</strong></p></li>
+<li><p><strong>&gt; 3 years</strong></p></li>
+</ul>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Define custom groups</span>
+<span class="n">tenure</span> <span class="o">=</span> <span class="n">causal_data</span><span class="o">.</span><span class="n">df</span><span class="p">[</span><span class="s1">&#39;tenure_months&#39;</span><span class="p">]</span>
+<span class="n">groups</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">cut</span><span class="p">(</span><span class="n">tenure</span><span class="p">,</span> <span class="n">bins</span><span class="o">=</span><span class="p">[</span><span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span> <span class="mi">12</span><span class="p">,</span> <span class="mi">36</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">],</span> <span class="n">labels</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;&lt;1y&#39;</span><span class="p">,</span> <span class="s1">&#39;1-3y&#39;</span><span class="p">,</span> <span class="s1">&#39;&gt;3y&#39;</span><span class="p">])</span>
+
+<span class="c1"># Estimate GATE</span>
+<span class="n">gate_custom</span> <span class="o">=</span> <span class="n">gate_esimand</span><span class="p">(</span><span class="n">causal_data</span><span class="p">,</span> <span class="n">groups</span><span class="o">=</span><span class="n">groups</span><span class="p">,</span> <span class="n">confidence_level</span><span class="o">=</span><span class="mf">0.95</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;GATE Results (Tenure Groups):&quot;</span><span class="p">)</span>
+<span class="n">display</span><span class="p">(</span><span class="n">gate_custom</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>GATE Results (Tenure Groups):
+</pre></div>
+</div>
+<div class="output text_html"><div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>group</th>
+      <th>n</th>
+      <th>theta</th>
+      <th>std_error</th>
+      <th>p_value</th>
+      <th>ci_lower</th>
+      <th>ci_upper</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>tenure_months_1-3y</td>
+      <td>6785</td>
+      <td>1.187370</td>
+      <td>0.107453</td>
+      <td>2.189553e-28</td>
+      <td>0.976765</td>
+      <td>1.397974</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>tenure_months_&lt;1y</td>
+      <td>1649</td>
+      <td>1.231591</td>
+      <td>0.221586</td>
+      <td>2.727795e-08</td>
+      <td>0.797290</td>
+      <td>1.665891</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>tenure_months_&gt;3y</td>
+      <td>1566</td>
+      <td>1.104541</td>
+      <td>0.221472</td>
+      <td>6.123645e-07</td>
+      <td>0.670464</td>
+      <td>1.538617</td>
+    </tr>
+  </tbody>
+</table>
+</div></div></div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Plot the results</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">6</span><span class="p">))</span>
+
+<span class="c1"># Calculate error bars (distance from the mean)</span>
+<span class="n">yerr</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="n">gate_custom</span><span class="p">[</span><span class="s1">&#39;theta&#39;</span><span class="p">]</span> <span class="o">-</span> <span class="n">gate_custom</span><span class="p">[</span><span class="s1">&#39;ci_lower&#39;</span><span class="p">],</span>
+    <span class="n">gate_custom</span><span class="p">[</span><span class="s1">&#39;ci_upper&#39;</span><span class="p">]</span> <span class="o">-</span> <span class="n">gate_custom</span><span class="p">[</span><span class="s1">&#39;theta&#39;</span><span class="p">]</span>
+<span class="p">]</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">errorbar</span><span class="p">(</span>
+    <span class="n">x</span><span class="o">=</span><span class="n">gate_custom</span><span class="p">[</span><span class="s1">&#39;group&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">str</span><span class="p">),</span>
+    <span class="n">y</span><span class="o">=</span><span class="n">gate_custom</span><span class="p">[</span><span class="s1">&#39;theta&#39;</span><span class="p">],</span>
+    <span class="n">yerr</span><span class="o">=</span><span class="n">yerr</span><span class="p">,</span>
+    <span class="n">fmt</span><span class="o">=</span><span class="s1">&#39;o&#39;</span><span class="p">,</span>
+    <span class="n">capsize</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>
+    <span class="n">label</span><span class="o">=</span><span class="s1">&#39;GATE Estimate&#39;</span>
+<span class="p">)</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">axhline</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;gray&#39;</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s1">&#39;--&#39;</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.7</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">&#39;Group&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s1">&#39;GATE&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s1">&#39;Group Average Treatment Effects (Custom Groups)&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="s1">&#39;y&#39;</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.3</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+</div>
+</section>
+</section>
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="dml_atte.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">DML ATT Example</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="401k.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Impact of 401(k) on Financial Assets</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#mathematical-formulation">Mathematical Formulation</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#generate-data">Generate data</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#eda">EDA</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#inference-estimating-gate">Inference: Estimating GATE</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#methodology">Methodology</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#gate-by-cate-quantiles">1. GATE by CATE Quantiles</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#gate-by-user-defined-groups">2. GATE by User-Defined Groups</a></li>
+</ul>
+</li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b"></script>
+<script src="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2025, Causalis Team.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.1.3.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.15.4.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>
