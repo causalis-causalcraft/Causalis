@@ -8,7 +8,7 @@ The `CausalData` class wraps a pandas DataFrame and stores metadata about column
 
 - **Target**: The outcome variable(s) you're measuring
 - **Treatment**: The intervention or treatment variable(s)
-- **Cofounders**: The covariates or confounding variables
+- **confounders**: The covariates or confounding variables
 
 This organization makes it easier to perform causal inference analyses and ensures data quality through built-in validation.
 
@@ -27,7 +27,7 @@ causal_data = CausalData(
     df=rct_df,
     treatment='treatment',
     outcome='outcome',
-    cofounders=['age', 'cnt_trans', 'platform_Android', 'platform_iOS', 'invited_friend']
+    confounders=['age', 'cnt_trans', 'platform_Android', 'platform_iOS', 'invited_friend']
 )
 ```
 
@@ -37,7 +37,7 @@ The `CausalData` class performs several validations when you create an object:
 
 1. The DataFrame cannot contain NaN values
 2. All specified columns must exist in the DataFrame
-3. Target, treatment, and cofounder columns must contain only numeric values (int or float)
+3. Target, treatment, and confounder columns must contain only numeric values (int or float)
 
 If any of these validations fail, an error will be raised with a descriptive message.
 
@@ -58,7 +58,7 @@ causal_data = CausalData(
     df=rct_df,
     treatment='treatment',
     outcome='outcome',
-    cofounders=['age', 'cnt_trans', 'platform_Android', 'platform_iOS', 'invited_friend']
+    confounders=['age', 'cnt_trans', 'platform_Android', 'platform_iOS', 'invited_friend']
 )
 
 # Get the full DataFrame
@@ -67,7 +67,7 @@ full_df = causal_data.df
 full_df = causal_data.get_df()
 ```
 
-### Accessing Treatment, Target, and Cofounders
+### Accessing Treatment, Target, and confounders
 
 ```python
 from causalkit.data import generate_rct_data, CausalData
@@ -80,14 +80,14 @@ causal_data = CausalData(
     df=rct_df,
     treatment='treatment',
     outcome='outcome',
-    cofounders=['age', 'cnt_trans', 'platform_Android', 'platform_iOS', 'invited_friend']
+    confounders=['age', 'cnt_trans', 'platform_Android', 'platform_iOS', 'invited_friend']
 )
 # Access treatment
 causal_data.treatment
 # Access outcome
 causal_data.target
-# Access cofounders
-causal_data.cofounders
+# Access confounders
+causal_data.confounders
 ```
 
 If you specified multiple columns for any category (e.g., multiple target columns), the corresponding property will return a DataFrame. If you specified a single column, it will return a Series.
@@ -107,7 +107,7 @@ causal_data = CausalData(
     df=rct_df,
     treatment='treatment',
     outcome='outcome',
-    cofounders=['age', 'cnt_trans', 'platform_Android', 'platform_iOS', 'invited_friend']
+    confounders=['age', 'cnt_trans', 'platform_Android', 'platform_iOS', 'invited_friend']
 )
 # Get specific columns
 causal_data.get_df(columns=['age'])
@@ -121,7 +121,7 @@ Here are some best practices for working with `CausalData`:
 
 1. **Clean your data before creating a CausalData object**: Handle missing values and ensure numeric columns are properly formatted.
 
-2. **Be explicit about column roles**: Clearly identify which columns are targets, treatments, and cofounders to make your analysis more interpretable.
+2. **Be explicit about column roles**: Clearly identify which columns are targets, treatments, and confounders to make your analysis more interpretable.
 
 3. **Use meaningful column names**: This makes your code more readable and helps prevent errors.
 

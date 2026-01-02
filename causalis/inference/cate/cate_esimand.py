@@ -64,7 +64,7 @@ def cate_esimand(
     # Basic validation similar to ATE/ATT implementations for consistency
     if data.treatment is None:
         raise ValueError("CausalData object must have a treatment variable defined")
-    if data.target is None:
+    if data.outcome is None:
         raise ValueError("CausalData object must have a outcome variable defined")
     if data.confounders is None:
         raise ValueError("CausalData object must have confounders variables defined")
@@ -86,8 +86,8 @@ def cate_esimand(
     df = data.get_df()
     dml_data = dml.DoubleMLData(
         df,
-        y_col=data._target,
-        d_cols=data._treatment,
+        y_col=data.outcome.name,
+        d_cols=data.treatment.name,
         x_cols=data.confounders,
     )
 

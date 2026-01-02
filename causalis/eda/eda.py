@@ -11,7 +11,7 @@ What the main outputs mean
   percentiles, min/max) for outcome grouped by treatment.
 - fit_propensity(): Numpy array of cross-validated propensity scores P(T=1|X).
 - confounders_roc_auc(): Float ROC AUC of treatment vs. propensity score.
-  Higher AUC implies treatment is predictable from confounders (more confounding risk).
+  Higher AUC implies treatment is predictable from confounders (more cofounding risk).
 - positivity_check(): Dict with bounds, share_below, share_above, and flag.
   It reports what share of units have PS outside [low, high]; a large share
   signals poor overlap (violated positivity).
@@ -208,7 +208,7 @@ class PropensityModel:
         
         Higher AUC means treatment is more predictable from confounders,
         indicating stronger systematic differences between groups (potential
-        confounding). Values near 0.5 suggest random-like assignment.
+        cofounding). Values near 0.5 suggest random-like assignment.
         
         Returns
         -------
@@ -730,12 +730,12 @@ class CausalDataLite:
     Attributes
     - df: The full pandas DataFrame containing treatment, outcome and covariates.
     - treatment: Column name of the binary treatment indicator (0/1).
-    - target: Column name of the outcome variable.
+    - outcome: Column name of the outcome variable.
     - confounders: List of covariate column names used to model treatment.
     """
     df: pd.DataFrame
     treatment: str
-    target: str
+    outcome: str
     confounders: List[str]
 
 
@@ -745,45 +745,36 @@ def _extract_roles(data_obj: Any) -> Dict[str, Any]:
     Accepts:
     - CausalDataLite
     - Project's CausalData (duck-typed: attributes df, treatment, outcome,
-      and either confounders or confounders)
+      and confounders)
     - Any object exposing the same attributes/properties
 
     Returns a dict with keys: df, treatment, outcome, confounders.
-    If both confounders/confounders are absent, it assumes all columns except
+    If confounders are absent, it assumes all columns except
     treatment/outcome are confounders.
     """
     # Direct dataclass-like attributes
     df = getattr(data_obj, "df")
     treatment_attr = getattr(data_obj, "treatment")
-    # Support both 'outcome' (project's CausalData) and 'target' (CausalDataLite)
-    target_attr = getattr(data_obj, "outcome", None)
-    if target_attr is None:
-        target_attr = getattr(data_obj, "target")
+    outcome_attr = getattr(data_obj, "outcome")
+
     # If these are Series (as in causalis.data.CausalData properties), convert to column names
     if isinstance(treatment_attr, pd.Series):
         treatment = treatment_attr.name
     else:
         treatment = treatment_attr
-    if isinstance(target_attr, pd.Series):
-        target = target_attr.name
+    if isinstance(outcome_attr, pd.Series):
+        outcome = outcome_attr.name
     else:
-        target = target_attr
+        outcome = outcome_attr
 
     if hasattr(data_obj, "confounders") and getattr(data_obj, "confounders") is not None:
+        # causalis.data.CausalData.confounders returns a List[str]
         confs = list(getattr(data_obj, "confounders"))
-    elif hasattr(data_obj, "confounders") and getattr(data_obj, "confounders") is not None:
-        # causalis.data.CausalData.confounders returns a DataFrame or None; if it's a
-        # DataFrame, use its columns; if it's a list/iterable, cast to list.
-        cofs = getattr(data_obj, "confounders")
-        if isinstance(cofs, pd.DataFrame):
-            confs = list(cofs.columns)
-        else:
-            confs = list(cofs) if cofs is not None else []
     else:
         # Last resort: assume all columns except treatment/outcome are confounders
-        confs = [c for c in df.columns if c not in {treatment, target}]
+        confs = [c for c in df.columns if c not in {treatment, outcome}]
 
-    return {"df": df, "treatment": treatment, "outcome": target, "confounders": confs}
+    return {"df": df, "treatment": treatment, "outcome": outcome, "confounders": confs}
 
 
 class CausalEDA:
@@ -800,7 +791,7 @@ class CausalEDA:
     """
     def __init__(self, data: Any, ps_model: Optional[Any] = None, n_splits: int = 5, random_state: int = 42):
         roles = _extract_roles(data)
-        self.d = CausalDataLite(df=roles["df"], treatment=roles["treatment"], target=roles["outcome"], confounders=roles["confounders"])
+        self.d = CausalDataLite(df=roles["df"], treatment=roles["treatment"], outcome=roles["outcome"], confounders=roles["confounders"])
         self.n_splits = n_splits
         self.random_state = random_state
         self.ps_model = ps_model or CatBoostClassifier(
@@ -892,7 +883,7 @@ class CausalEDA:
         0        3000  5.123456  2.345678  0.123456  2.345678  3.456789  5.123456  6.789012  7.890123  9.876543
         1        2000  6.789012  2.456789  0.234567  3.456789  4.567890  6.789012  8.901234  9.012345  10.987654
         """
-        df, t, y = self.d.df, self.d.treatment, self.d.target
+        df, t, y = self.d.df, self.d.treatment, self.d.outcome
         
         # Ensure treatment is numeric for grouping
         if not pd.api.types.is_numeric_dtype(df[t]):
@@ -1028,7 +1019,7 @@ class CausalEDA:
         df = self.d.df
         # Features: confounders only (treatment excluded for proper causal analysis)
         X = df[self.d.confounders]
-        y = df[self.d.target].values
+        y = df[self.d.outcome].values
         cv = KFold(n_splits=self.n_splits, shuffle=True, random_state=self.random_state)
         
         # Default to CatBoostRegressor if no custom model provided
@@ -1237,7 +1228,7 @@ class CausalEDA:
         education         0.25      0.35      0.1     0.215
         """
         # Delegate implementation to dedicated balance module for reuse and testing
-        from .cofounders_balance import confounders_balance
+        from .confounders_balance import confounders_balance
         return confounders_balance(
             df=self.d.df,
             treatment=self.d.treatment,
@@ -1249,7 +1240,7 @@ class CausalEDA:
     def outcome_hist(
             self,
             treatment: Optional[str] = None,
-            target: Optional[str] = None,
+            outcome: Optional[str] = None,
             bins="fd",  # smarter default (still accepts int)
             density: bool = True,
             alpha: float = 0.45,
@@ -1318,7 +1309,7 @@ class CausalEDA:
         # ---------- Data & columns ---------------------------------------------
         df = self.d.df
         t_col = treatment or self.d.treatment
-        y_col = target or self.d.target
+        y_col = outcome or self.d.outcome
         if t_col not in df.columns or y_col not in df.columns:
             raise ValueError("Specified treatment/outcome columns not found in DataFrame.")
 
@@ -1490,7 +1481,7 @@ class CausalEDA:
     def outcome_boxplot(
             self,
             treatment: Optional[str] = None,
-            target: Optional[str] = None,
+            outcome: Optional[str] = None,
             figsize: Tuple[float, float] = (9, 5.5),
             dpi: int = 220,
             font_scale: float = 1.15,
@@ -1518,7 +1509,7 @@ class CausalEDA:
         # --- Data setup --------------------------------------------------------
         df = self.d.df
         t_col = treatment or self.d.treatment
-        y_col = target or self.d.target
+        y_col = outcome or self.d.outcome
 
         if t_col not in df.columns or y_col not in df.columns:
             raise ValueError("Specified treatment/outcome columns not found in DataFrame.")
@@ -1600,7 +1591,7 @@ class CausalEDA:
 
     def outcome_plots(self,
                       treatment: Optional[str] = None,
-                      target: Optional[str] = None,
+                      outcome: Optional[str] = None,
                       bins: int = 30,
                       density: bool = True,
                       alpha: float = 0.5,
@@ -1614,8 +1605,8 @@ class CausalEDA:
         ----------
         treatment : Optional[str]
             Treatment column name. Defaults to the treatment stored in the CausalEDA data.
-        target : Optional[str]
-            Target/outcome column name. Defaults to the outcome stored in the CausalEDA data.
+        outcome : Optional[str]
+            Outcome column name. Defaults to the outcome stored in the CausalEDA data.
         bins : int
             Number of bins for histograms when the outcome is numeric.
         density : bool
@@ -1634,7 +1625,7 @@ class CausalEDA:
         """
         fig_hist = self.outcome_hist(
             treatment=treatment,
-            target=target,
+            outcome=outcome,
             bins=bins,
             density=density,
             alpha=alpha,
@@ -1643,7 +1634,7 @@ class CausalEDA:
         )
         fig_box = self.outcome_boxplot(
             treatment=treatment,
-            target=target,
+            outcome=outcome,
             figsize=figsize,
         )
         return fig_hist, fig_box

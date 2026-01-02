@@ -30,19 +30,21 @@ try:
 except Exception:
     design = None  # type: ignore
 
-__version__ = "0.1.0"
-__all__ = ["data", "inference"]
+__version__ = "0.1.2"
+__all__ = ["data", "inference", "eda", "refutation"]
 
 # Lazily import heavy optional subpackages (e.g., inference depends on optional ML libs like catboost)
 from typing import TYPE_CHECKING
 import importlib
 
 def __getattr__(name):  # pragma: no cover - behavior tested via subprocess
-    if name == "inference":
-        module = importlib.import_module(".inference", __name__)
+    if name in ["inference", "eda", "refutation"]:
+        module = importlib.import_module("." + name, __name__)
         globals()[name] = module
         return module
     raise AttributeError(f"module '{__name__}' has no attribute '{name}'")
 
 if TYPE_CHECKING:  # Hint for static type checkers without importing at runtime
     from . import inference as inference  # noqa: F401
+    from . import eda as eda  # noqa: F401
+    from . import refutation as refutation  # noqa: F401

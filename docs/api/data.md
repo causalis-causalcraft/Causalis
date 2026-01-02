@@ -17,31 +17,9 @@ This module includes functions for generating:
 
 .. autosummary::
    :toctree: generated
-   :caption: Public objects in causalis.data
    :recursive:
    :nosignatures:
 
-   causaldata.CausalData
-   generators.generate_rct_data
-```
-
-```{eval-rst}
-.. currentmodule:: causalis.data.causaldata
-
-CausalData
-----------
-
-.. autoclass:: CausalData
-   :members:
-   :inherited-members:
-   :show-inheritance:
-   :special-members: __init__
-   :exclude-members: __weakref__
-```
-
-```{eval-rst}
-.. automodule:: causalis.data.generators
-   :members:
-   :undoc-members:
-   :show-inheritance:
+   causaldata
+   dgps
 ```

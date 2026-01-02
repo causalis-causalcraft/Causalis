@@ -23,50 +23,9 @@ Main capabilities:
 
 .. autosummary::
    :toctree: generated
-   :caption: Public objects in causalis.eda
    :recursive:
    :nosignatures:
 
-   CausalEDA
-   CausalDataLite
-```
-
-### CausalEDA
-
-```{eval-rst}
-.. automodule:: causalis.eda.eda
-   :members: CausalEDA
-   :undoc-members:
-   :show-inheritance:
-```
-
-Selected methods:
-
-```{eval-rst}
-.. currentmodule:: causalis.eda.eda
-
-.. autosummary::
-   :toctree: generated
-   :nosignatures:
-
-   CausalEDA.data_shape
-   CausalEDA.outcome_stats
-   CausalEDA.fit_propensity
-   CausalEDA.confounders_roc_auc
-   CausalEDA.positivity_check
-   CausalEDA.plot_ps_overlap
-   CausalEDA.confounders_means
-   CausalEDA.outcome_fit
-   CausalEDA.outcome_plots
-   CausalEDA.treatment_features
-```
-
-### CausalDataLite
-
-```{eval-rst}
-.. currentmodule:: causalis.eda.eda
-
-.. autoclass:: CausalDataLite
-   :members:
-   :show-inheritance:
+   eda
+   confounders_balance
 ```

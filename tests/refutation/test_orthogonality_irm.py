@@ -1,4 +1,4 @@
-from causalis.data.generators import CausalDatasetGenerator
+from causalis.data.dgps import CausalDatasetGenerator
 from causalis.refutation.score.score_validation import refute_irm_orthogonality
 from causalis.inference.atte.dml_atte import dml_atte
 

@@ -73,7 +73,7 @@ def dml_ate(
     # Basic validations mirroring dml_ate
     if data.treatment is None:
         raise ValueError("CausalData object must have a treatment variable defined")
-    if data.target is None:
+    if data.outcome is None:
         raise ValueError("CausalData object must have a outcome variable defined")
     if not data.confounders:
         raise ValueError("CausalData object must have confounders variables defined")
@@ -102,7 +102,7 @@ def dml_ate(
     if df[tname].dtype == bool:
         df[tname] = df[tname].astype(int)
         # Construct a new CausalData with coerced dtype to keep internal consistency
-        data = CausalData(df=df, treatment=tname, outcome=data.target.name, confounders=data.confounders)
+        data = CausalData(df=df, treatment=tname, outcome=data.outcome.name, confounders=data.confounders)
     else:
         # Ensure binary encoding
         uniq = np.unique(df[tname].values)
@@ -135,7 +135,7 @@ def dml_ate(
     diagnostic_data = None
     if store_diagnostic_data:
         df_diag = data.get_df()
-        y_diag = df_diag[data.target.name].to_numpy(dtype=float)
+        y_diag = df_diag[data.outcome.name].to_numpy(dtype=float)
         d_diag = df_diag[data.treatment.name].to_numpy().astype(int)
         x_diag = df_diag[data.confounders].to_numpy(dtype=float)
         p1_diag = float(np.mean(d_diag))

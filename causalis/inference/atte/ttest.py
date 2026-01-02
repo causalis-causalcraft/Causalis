@@ -40,11 +40,11 @@ def ttest(data: CausalData, confidence_level: float = 0.95) -> Dict[str, Any]:
     """
     # Basic validation: ensure treatment and outcome are proper Series and non-empty
     treatment_var = data.treatment
-    target_var = data.target
+    outcome_var = data.outcome
 
     if not isinstance(treatment_var, pd.Series) or treatment_var.empty:
         raise ValueError("causaldata object must have a treatment variable defined")
-    if not isinstance(target_var, pd.Series) or target_var.empty:
+    if not isinstance(outcome_var, pd.Series) or outcome_var.empty:
         raise ValueError("causaldata object must have a outcome variable defined")
 
     # Ensure binary treatment
@@ -53,8 +53,8 @@ def ttest(data: CausalData, confidence_level: float = 0.95) -> Dict[str, Any]:
         raise ValueError("Treatment variable must be binary (have exactly 2 unique values)")
 
     # Build groups by conventional 0/1 coding
-    control_data = target_var[treatment_var == 0]
-    treatment_data = target_var[treatment_var == 1]
+    control_data = outcome_var[treatment_var == 0]
+    treatment_data = outcome_var[treatment_var == 1]
 
     # Independent two-sample t-test (pooled variance by default equal_var=True)
     t_stat, p_value = stats.ttest_ind(treatment_data, control_data, equal_var=True)

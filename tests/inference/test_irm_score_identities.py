@@ -3,13 +3,13 @@ import pytest
 
 from sklearn.linear_model import LinearRegression, LogisticRegression
 
-from causalis.data.generators import CausalDatasetGenerator
+from causalis.data.dgps import CausalDatasetGenerator
 from causalis.inference.atte.dml_atte import dml_atte
 
 
 @pytest.mark.parametrize("normalize_ipw", [False, True])
 def test_irm_atte_score_identities(normalize_ipw):
-    # Build a dataset with confounding so ATT is well-defined
+    # Build a dataset with cofounding so ATT is well-defined
     gen = CausalDatasetGenerator(
         theta=0.8,
         beta_y=np.array([0.7, -0.2, 0.3]),

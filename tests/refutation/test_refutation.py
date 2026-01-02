@@ -116,11 +116,11 @@ def test_placebo_outcome_generates_random_outcome(sample_data):
     # Create a mock inference function that returns the mean of the outcome
     def outcome_mean_fn(data, **kwargs):
         df = data.get_df()
-        mean_outcome = df[data._target].mean()
+        mean_outcome = df[data.outcome.name].mean()
         return {'coefficient': mean_outcome, 'p_value': 0.5}
     
     # Get original outcome mean and std
-    original_outcome = sample_data.get_df()[sample_data._target]
+    original_outcome = sample_data.get_df()[sample_data.outcome.name]
     original_mean = original_outcome.mean()
     original_std = original_outcome.std()
     
@@ -141,9 +141,9 @@ def test_placebo_outcome_generates_random_outcome(sample_data):
     # Test that generated values are actually different from original (not shuffled)
     def data_comparison_fn(data, **kwargs):
         df = data.get_df()
-        return {'coefficient': df[data._target].iloc[0], 'p_value': 0.5}
+        return {'coefficient': df[data.outcome.name].iloc[0], 'p_value': 0.5}
     
-    original_first_value = sample_data.get_df()[sample_data._target].iloc[0]
+    original_first_value = sample_data.get_df()[sample_data.outcome.name].iloc[0]
     generated_result = refute_placebo_outcome(data_comparison_fn, sample_data, random_state=123)
     # Very unlikely that first generated value matches original first value
     # (this tests that we're generating, not shuffling)
@@ -155,11 +155,11 @@ def test_placebo_treatment_generates_random_treatment(sample_data):
     # Create a mock inference function that returns the treatment rate
     def treatment_rate_fn(data, **kwargs):
         df = data.get_df()
-        treatment_rate = df[data._treatment].mean()
+        treatment_rate = df[data.treatment.name].mean()
         return {'coefficient': treatment_rate, 'p_value': 0.5}
     
     # Get original treatment rate
-    original_rate = sample_data.get_df()[sample_data._treatment].mean()
+    original_rate = sample_data.get_df()[sample_data.treatment.name].mean()
     
     # Run refutation multiple times and check treatment rate is preserved
     rates = []
@@ -179,9 +179,9 @@ def test_placebo_treatment_generates_random_treatment(sample_data):
     # Test that generated values are different from original (not shuffled)
     def data_comparison_fn(data, **kwargs):
         df = data.get_df()
-        return {'coefficient': sum(df[data._treatment].values), 'p_value': 0.5}  # Sum of treatment values
+        return {'coefficient': sum(df[data.treatment.name].values), 'p_value': 0.5}  # Sum of treatment values
     
-    original_sum = sum(sample_data.get_df()[sample_data._treatment].values)
+    original_sum = sum(sample_data.get_df()[sample_data.treatment.name].values)
     generated_result = refute_placebo_treatment(data_comparison_fn, sample_data, random_state=123)
     # Sum should be similar (same proportion) but likely not identical (random generation)
     expected_sum = original_rate * len(sample_data.get_df())

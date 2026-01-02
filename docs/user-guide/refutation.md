@@ -69,7 +69,7 @@ print(rep_score['summary'])
 # Details: rep_score['oos_moment_test'], ['orthogonality_derivatives'], ['influence_diagnostics']
 ```
 
-## 4) Unconfoundedness/balance checks
+## 4) Uncofoundedness/balance checks
 - Goal: see if IPW (for your estimand) balances covariates.
 - Metrics:
   - balance_max_smd: max standardized mean difference across covariates (smaller is better; ≤0.1 common rule).
@@ -77,15 +77,15 @@ print(rep_score['summary'])
 
 Python
 ```python
-from causalis.refutation.unconfoundedness.uncofoundedness_validation import (
-    run_unconfoundedness_diagnostics
+from causalis.refutation.uncofoundedness.uncofoundedness_validation import (
+    run_uncofoundedness_diagnostics
 )
 res = ...  # your inference result dict
-rep_uc = run_unconfoundedness_diagnostics(res=res)
+rep_uc = run_uncofoundedness_diagnostics(res=res)
 print(rep_uc['summary'])
 ```
 
-## 5) Sensitivity analysis to hidden confounding
+## 5) Sensitivity analysis to hidden cofounding
 - Goal: widen intervals by a worst‑case additive bias derived from how ψ could move.
 - Math: max_bias = sqrt(ν²)·se where ν² aggregates two channels (outcome cf_y and treatment cf_d) and their correlation ρ.
 - Two entry points:
@@ -94,7 +94,7 @@ print(rep_uc['summary'])
 
 Python
 ```python
-from causalis.refutation.unconfoundedness.sensitivity import (
+from causalis.refutation.uncofoundedness.sensitivity import (
     sensitivity_analysis, sensitivity_benchmark
 )
 res = ...  # your inference result dict
@@ -127,10 +127,10 @@ from causalis.refutation import (
 )
 from causalis.refutation.overlap import run_overlap_diagnostics
 from causalis.refutation.score.score_validation import run_score_diagnostics
-from causalis.refutation.unconfoundedness.uncofoundedness_validation import (
-    run_unconfoundedness_diagnostics
+from causalis.refutation.uncofoundedness.uncofoundedness_validation import (
+    run_uncofoundedness_diagnostics
 )
-from causalis.refutation.unconfoundedness.sensitivity import sensitivity_analysis
+from causalis.refutation.uncofoundedness.sensitivity import sensitivity_analysis
 
 # Build your CausalData as in the guides
 causal_data = ...  # your CausalData
@@ -150,7 +150,7 @@ ov = run_overlap_diagnostics(res=res); print(ov['summary'])
 sc = run_score_diagnostics(res=res); print(sc['summary'])
 
 # 4) Balance
-uc = run_unconfoundedness_diagnostics(res=res); print(uc['summary'])
+uc = run_uncofoundedness_diagnostics(res=res); print(uc['summary'])
 
 # 5) Sensitivity (simple example)
 print(sensitivity_analysis(res, cf_y=0.02, cf_d=0.02, rho=0.5, level=0.95))

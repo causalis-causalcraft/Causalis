@@ -30,7 +30,7 @@ t₂ (observe Y)  — make sure no X measured here leaks into the model
 
 2. **Identification assumptions**
 
-* **Unconfoundedness**: $((Y(1),Y(0)) \perp D \mid X)$ (with your chosen, pre-treatment (X)).
+* **Uncofoundedness**: $((Y(1),Y(0)) \perp D \mid X)$ (with your chosen, pre-treatment (X)).
 * **Overlap (positivity)**: $(0<e(X)=P(D=1\mid X)<1)$ almost surely.
 * **Consistency/SUTVA**: well-defined treatment, no interference.
 * **Score check**: psi_mean, derivatives, psi_kurtosis

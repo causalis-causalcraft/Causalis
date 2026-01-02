@@ -8,7 +8,9 @@ dependencies:
   - pandas>=1.0.0
   - plotly>=5.0.0
   - scikit-learn
+  - catboost
   - pip
   - pip:
     - doubleml
     - -e .
+  - pydantic

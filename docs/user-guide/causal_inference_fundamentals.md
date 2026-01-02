@@ -24,7 +24,7 @@ We only ever observe one of them. This “missing counterfactual” is the funda
 
 Example dataset:
 
-| Unit | Treatment $D$ | Outcome $Y$ | Confounder\_1 | Confounder\_2 |
+| Unit | Treatment $D$ | Outcome $Y$ | confounder\_1 | confounder\_2 |
 | ---- |---------------| ----------- | ------------- | ------------- |
 | 1    | 1             | 100         | 1             | 13            |
 | 2    | 0             | 90          | 0             | 14            |
@@ -43,6 +43,12 @@ Example dataset:
   $\tau(x)=\mathbb{E}[Y(1)-Y(0)\mid X=x]$
   Use when you need personalization, uplift targeting, or to study heterogeneity.
 
+Note on outcome type and effect scale:
+for non-linear outcomes (e.g., binary with logit link, Poisson with log link), models often parameterize treatment
+effects on the *link* scale (log-odds / log-mean). In that case, the natural-scale effect
+$\mathbb{E}[Y(1)\mid X=x]-\mathbb{E}[Y(0)\mid X=x]$ can vary with the baseline risk/mean even when the link-scale
+effect is constant. In synthetic generators, we expose both: `tau_link` (link-scale) and `cate` (natural-scale).
+
 ### ATT: effect on the treated
 
 $\text{ATT}=\mathbb{E}[Y(1)-Y(0)\mid D=1]$
@@ -59,7 +65,7 @@ Use for headline impact or policy choices that affect the whole eligible populat
 
 In observational data, we typically rely on two key identification conditions:
 
-1. **Unconfoundedness (selection on observables):** given $X$, treatment is as good as random.
+1. **Uncofoundedness (selection on observables):** given $X$, treatment is as good as random.
    Formally, $(Y(0),Y(1)) \perp D \mid X$.
 2. **Overlap (positivity):** each unit had a nonzero chance to receive either treatment: $0<\Pr(T=1\mid X)<1$.
 

@@ -362,7 +362,7 @@ def refute_irm_orthogonality(
     m_propensity, g0_outcomes, g1_outcomes = extract_nuisances(dml_model)
     
     # Get observed data
-    y = data.target.values.astype(float)
+    y = data.outcome.values.astype(float)
     d = data.treatment.values.astype(float)
 
     # Determine score
@@ -429,7 +429,7 @@ def refute_irm_orthogonality(
             train_data = CausalData(
                 df=df_full.iloc[train_idx].copy(),
                 treatment=data.treatment.name,
-                outcome=data.target.name,
+                outcome=data.outcome.name,
                 confounders=list(data.confounders) if data.confounders else None
             )
             # Fit model on training fold to get theta
@@ -542,7 +542,7 @@ def refute_irm_orthogonality(
         data_trim_obj = CausalData(
             df=df_full_local.loc[trim_mask].copy(),
             treatment=data.treatment.name,
-            outcome=data.target.name,
+            outcome=data.outcome.name,
             confounders=list(data.confounders) if data.confounders else None
         )
         res_trim = inference_fn(data_trim_obj, **inference_kwargs)
@@ -737,7 +737,7 @@ def trim_sensitivity_curve_atte(
         df_trim = df_full.loc[keep].copy()
         data_trim = CausalData(
             df=df_trim, treatment=data.treatment.name,
-            outcome=data.target.name, confounders=list(data.confounders) if data.confounders else None
+            outcome=data.outcome.name, confounders=list(data.confounders) if data.confounders else None
         )
         res = inference_fn(data_trim, **inference_kwargs)
         rows.append({
@@ -931,8 +931,8 @@ def _run_inference(
 # ------------------------------------------------------------------
 
 def _public_names(data: CausalData) -> tuple[str, str]:
-    tname = getattr(getattr(data, "treatment", None), "name", None) or getattr(data, "_treatment", "D")
-    yname = getattr(getattr(data, "target", None), "name", None) or getattr(data, "_target", "Y")
+    tname = getattr(getattr(data, "treatment", None), "name", None) or getattr(data, "treatment_name", "D")
+    yname = getattr(getattr(data, "outcome", None), "name", None) or getattr(data, "outcome_name", "Y")
     return tname, yname
 
 
@@ -943,7 +943,7 @@ def refute_placebo_outcome(
     **inference_kwargs,
 ) -> Dict[str, float]:
     """
-    Generate random outcome (target) variables while keeping treatment
+    Generate random outcome variables while keeping treatment
     and covariates intact. For binary outcomes, generates random binary
     variables with the same proportion. For continuous outcomes, generates
     random variables from a normal distribution fitted to the original data.
@@ -1181,13 +1181,13 @@ def _extract_score_inputs_from_result(res: ResultLike) -> Tuple[np.ndarray, np.n
     if data_obj is not None and hasattr(data_obj, 'get_df'):
         df = data_obj.get_df()
         # Try robust attribute names
-        if hasattr(data_obj, 'treatment') and hasattr(data_obj, 'target'):
+        if hasattr(data_obj, 'treatment') and hasattr(data_obj, 'outcome'):
             tname = data_obj.treatment.name
-            yname = data_obj.target.name
+            yname = data_obj.outcome.name
         else:
             # Fallback to common attributes used in CausalData
-            tname = getattr(data_obj, '_treatment', 'D')
-            yname = getattr(data_obj, '_target', 'Y')
+            tname = getattr(data_obj, 'treatment_name', 'D')
+            yname = getattr(data_obj, 'outcome_name', 'Y')
         d = df[tname].to_numpy(dtype=float)
         y = df[yname].to_numpy(dtype=float)
     else:

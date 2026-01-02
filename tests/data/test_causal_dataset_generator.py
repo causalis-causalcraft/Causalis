@@ -204,8 +204,8 @@ def test_to_causal_data(basic_generator):
     assert isinstance(causal_data, CausalData)
     
     # Check that it has the correct columns
-    assert causal_data._target == "y"
-    assert causal_data._treatment == "d"
+    assert causal_data.outcome.name == "y"
+    assert causal_data.treatment.name == "d"
     assert set(causal_data.confounders) == {"age", "smoker", "bmi"}
     
     # Check that the data is accessible

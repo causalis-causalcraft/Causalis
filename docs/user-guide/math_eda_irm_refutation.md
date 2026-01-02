@@ -18,7 +18,7 @@ This note summarizes the core notation and formulas used by CausalKit’s EDA he
   * **ATT (a.k.a. ATET/ATTE)**: $\theta_{\mathrm{ATT}}=\mathbb E\big[Y(1)-Y(0)\mid D=1\big]$.
 
 **Assumptions (standard):**
-Unconfoundedness $(Y(1),Y(0))\perp D\mid X$; positivity $0<\Pr(D=1\mid X)<1$ a.s.; SUTVA; and regularity for cross-fitting and ML.
+Uncofoundedness $(Y(1),Y(0))\perp D\mid X$; positivity $0<\Pr(D=1\mid X)<1$ a.s.; SUTVA; and regularity for cross-fitting and ML.
 
 ## 2. Nuisance functions (IRM)
 

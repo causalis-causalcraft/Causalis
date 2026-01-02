@@ -1,6 +1,6 @@
 # CausalData at a glance
 
-CausalData is the light-weight input container used across Causalis. It wraps a pandas DataFrame and records which columns are the outcome (target), the treatment, and the confounders.
+CausalData is the light-weight input container used across Causalis. It wraps a pandas DataFrame and records which columns are the outcome, the treatment, and the confounders.
 
 ## Quick start
 
@@ -26,17 +26,16 @@ Note: Internally, the stored DataFrame is trimmed to only these columns: [outcom
 - Init parameters
   - df: pandas DataFrame (no NaNs)
   - treatment: name of the treatment column (numeric)
-  - outcome: name of the outcome/target column (numeric)
+  - outcome: name of the outcome column (numeric)
   - confounders: one or more confounder column names (numeric)
 
 - Properties
-  - target: pandas Series (the outcome)
-  - outcome: alias of target
+  - outcome: pandas Series
   - treatment: pandas Series
   - confounders: list[str] of confounder column names
 
 - Method
-  - get_df(columns=None, include_treatment=True, include_target=True, include_confounders=True) -> DataFrame
+  - get_df(columns=None, include_treatment=True, include_outcome=True, include_confounders=True) -> DataFrame
     Selects columns by name and/or by role. Returns a copy.
 
 ## Validation (on construction)
@@ -63,7 +62,7 @@ causal_data = CausalData(
 
 # Access pieces
 causal_data.treatment  # Series
-causal_data.target  # Series
+causal_data.outcome  # Series
 causal_data.confounders  # list[str]
 
 # Full data used by CausalData
@@ -71,7 +70,7 @@ default_df = causal_data.df  # or equivalently
 default_df = causal_data.get_df()
 
 # DataFrame of only confounders
-X = causal_data.get_df(include_target=False, include_treatment=False)
+X = causal_data.get_df(include_outcome=False, include_treatment=False)
 # or
 X = causal_data.df[causal_data.confounders]
 

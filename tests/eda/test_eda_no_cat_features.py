@@ -28,7 +28,7 @@ def make_dummy_data(n=200, seed=0):
 
 def test_fit_propensity_and_outcome_without_cat_features():
     df = make_dummy_data()
-    data = CausalDataLite(df=df, treatment='t', target='y', confounders=['age', 'income', 'category'])
+    data = CausalDataLite(df=df, treatment='t', outcome='y', confounders=['age', 'income', 'category'])
 
     eda = CausalEDA(data, n_splits=3, random_state=0)
 

@@ -31,7 +31,7 @@ def dummy_inference_fn(data: CausalData, **kwargs):
         'ml_g1': m1,
     }
     # Simple ATT estimate: E[Y|D=1] - E[m0(X)|D=1]
-    y = df[data.target.name].values.astype(float)
+    y = df[data.outcome.name].values.astype(float)
     d = df[data.treatment.name].values.astype(float)
     theta = float(y[d == 1].mean() - m0[d == 1].mean()) if (d == 1).any() else 0.0
     se = float(np.std(y - (d * m1 + (1 - d) * m0), ddof=1) / np.sqrt(len(df))) if len(df) > 1 else 0.0

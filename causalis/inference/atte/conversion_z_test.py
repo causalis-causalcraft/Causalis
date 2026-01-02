@@ -44,11 +44,11 @@ def conversion_z_test(data: CausalData, confidence_level: float = 0.95) -> Dict[
     """
     # Basic validation
     treatment_var = data.treatment
-    target_var = data.target
+    outcome_var = data.outcome
 
     if not isinstance(treatment_var, pd.Series) or treatment_var.empty:
         raise ValueError("causaldata object must have a treatment variable defined")
-    if not isinstance(target_var, pd.Series) or target_var.empty:
+    if not isinstance(outcome_var, pd.Series) or outcome_var.empty:
         raise ValueError("causaldata object must have a outcome variable defined")
 
     # Treatment must be binary 0/1
@@ -57,7 +57,7 @@ def conversion_z_test(data: CausalData, confidence_level: float = 0.95) -> Dict[
         raise ValueError("Treatment variable must be binary (have exactly 2 unique values)")
 
     # Target must be binary 0/1 for conversion test
-    tg_unique = set(pd.Series(target_var.unique()).dropna().tolist())
+    tg_unique = set(pd.Series(outcome_var.unique()).dropna().tolist())
     if not tg_unique.issubset({0, 1}):
         raise ValueError("Target must be binary (0/1) for conversion_z_test")
 
@@ -65,8 +65,8 @@ def conversion_z_test(data: CausalData, confidence_level: float = 0.95) -> Dict[
     control_mask = treatment_var == 0
     treat_mask = treatment_var == 1
 
-    control = target_var[control_mask]
-    treat = target_var[treat_mask]
+    control = outcome_var[control_mask]
+    treat = outcome_var[treat_mask]
 
     n0 = int(control.shape[0])
     n1 = int(treat.shape[0])

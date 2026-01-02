@@ -2,9 +2,11 @@
 Refutation and robustness utilities for CausalKit.
 
 Importing this package exposes the public functions from all refutation
-submodules (overlap, score, unconfoundedness, sutva) so you can access
+submodules (overlap, score, uncofoundedness, sutva) so you can access
 commonly used helpers directly via `causalis.refutation`.
 """
+
+from . import overlap, score, sutva, uncofoundedness
 
 # Re-export public API from subpackages
 # Overlap diagnostics (public API defined in overlap/__init__.py)
@@ -13,9 +15,9 @@ from .overlap import *  # noqa: F401,F403
 # Score-based refutations and diagnostics
 from .score.score_validation import *  # noqa: F401,F403
 
-# Unconfoundedness sensitivity and balance checks
-from .unconfoundedness.uncofoundedness_validation import *  # noqa: F401,F403
-from .unconfoundedness.sensitivity import *  # noqa: F401,F403
+# Uncofoundedness sensitivity and balance checks
+from .uncofoundedness.uncofoundedness_validation import *  # noqa: F401,F403
+from .uncofoundedness.sensitivity import *  # noqa: F401,F403
 
 # SUTVA helper
 from .sutva.sutva_validation import *  # noqa: F401,F403
@@ -32,7 +34,7 @@ try:
 except Exception:
     __all_sutva = []
 
-# score_validation and unconfoundedness modules don't define __all__; curate a minimal list
+# score_validation and uncofoundedness modules don't define __all__; curate a minimal list
 __all_score = [
     "refute_placebo_outcome",
     "refute_placebo_treatment",
@@ -44,8 +46,8 @@ __all_score = [
 __all_unconf = [
     "sensitivity_analysis",
     "get_sensitivity_summary",
-    "validate_unconfoundedness_balance",
+    "validate_uncofoundedness_balance",
     "sensitivity_benchmark",
 ]
 
-__all__ = list(dict.fromkeys([*__all_overlap, *__all_sutva, *__all_score, *__all_unconf]))
+__all__ = ["overlap", "score", "sutva", "uncofoundedness"] + list(dict.fromkeys([*__all_overlap, *__all_sutva, *__all_score, *__all_unconf]))

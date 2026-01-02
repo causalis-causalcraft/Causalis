@@ -1,0 +1,957 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="generator" content="pdoc 16.0.0"/>
+    <title>causalis.eda.rct_design API documentation</title>
+
+    <style>/*! * Bootstrap Reboot v5.0.0 (https://getbootstrap.com/) * Copyright 2011-2021 The Bootstrap Authors * Copyright 2011-2021 Twitter, Inc. * Licensed under MIT (https://github.com/twbs/bootstrap/blob/main/LICENSE) * Forked from Normalize.css, licensed MIT (https://github.com/necolas/normalize.css/blob/master/LICENSE.md) */*,::after,::before{box-sizing:border-box}@media (prefers-reduced-motion:no-preference){:root{scroll-behavior:smooth}}body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,"Noto Sans","Liberation Sans",sans-serif,"Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol","Noto Color Emoji";font-size:1rem;font-weight:400;line-height:1.5;color:#212529;background-color:#fff;-webkit-text-size-adjust:100%;-webkit-tap-highlight-color:transparent}hr{margin:1rem 0;color:inherit;background-color:currentColor;border:0;opacity:.25}hr:not([size]){height:1px}h1,h2,h3,h4,h5,h6{margin-top:0;margin-bottom:.5rem;font-weight:500;line-height:1.2}h1{font-size:calc(1.375rem + 1.5vw)}@media (min-width:1200px){h1{font-size:2.5rem}}h2{font-size:calc(1.325rem + .9vw)}@media (min-width:1200px){h2{font-size:2rem}}h3{font-size:calc(1.3rem + .6vw)}@media (min-width:1200px){h3{font-size:1.75rem}}h4{font-size:calc(1.275rem + .3vw)}@media (min-width:1200px){h4{font-size:1.5rem}}h5{font-size:1.25rem}h6{font-size:1rem}p{margin-top:0;margin-bottom:1rem}abbr[data-bs-original-title],abbr[title]{-webkit-text-decoration:underline dotted;text-decoration:underline dotted;cursor:help;-webkit-text-decoration-skip-ink:none;text-decoration-skip-ink:none}address{margin-bottom:1rem;font-style:normal;line-height:inherit}ol,ul{padding-left:2rem}dl,ol,ul{margin-top:0;margin-bottom:1rem}ol ol,ol ul,ul ol,ul ul{margin-bottom:0}dt{font-weight:700}dd{margin-bottom:.5rem;margin-left:0}blockquote{margin:0 0 1rem}b,strong{font-weight:bolder}small{font-size:.875em}mark{padding:.2em;background-color:#fcf8e3}sub,sup{position:relative;font-size:.75em;line-height:0;vertical-align:baseline}sub{bottom:-.25em}sup{top:-.5em}a{color:#0d6efd;text-decoration:underline}a:hover{color:#0a58ca}a:not([href]):not([class]),a:not([href]):not([class]):hover{color:inherit;text-decoration:none}code,kbd,pre,samp{font-family:SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace;font-size:1em;direction:ltr;unicode-bidi:bidi-override}pre{display:block;margin-top:0;margin-bottom:1rem;overflow:auto;font-size:.875em}pre code{font-size:inherit;color:inherit;word-break:normal}code{font-size:.875em;color:#d63384;word-wrap:break-word}a>code{color:inherit}kbd{padding:.2rem .4rem;font-size:.875em;color:#fff;background-color:#212529;border-radius:.2rem}kbd kbd{padding:0;font-size:1em;font-weight:700}figure{margin:0 0 1rem}img,svg{vertical-align:middle}table{caption-side:bottom;border-collapse:collapse}caption{padding-top:.5rem;padding-bottom:.5rem;color:#6c757d;text-align:left}th{text-align:inherit;text-align:-webkit-match-parent}tbody,td,tfoot,th,thead,tr{border-color:inherit;border-style:solid;border-width:0}label{display:inline-block}button{border-radius:0}button:focus:not(:focus-visible){outline:0}button,input,optgroup,select,textarea{margin:0;font-family:inherit;font-size:inherit;line-height:inherit}button,select{text-transform:none}[role=button]{cursor:pointer}select{word-wrap:normal}select:disabled{opacity:1}[list]::-webkit-calendar-picker-indicator{display:none}[type=button],[type=reset],[type=submit],button{-webkit-appearance:button}[type=button]:not(:disabled),[type=reset]:not(:disabled),[type=submit]:not(:disabled),button:not(:disabled){cursor:pointer}::-moz-focus-inner{padding:0;border-style:none}textarea{resize:vertical}fieldset{min-width:0;padding:0;margin:0;border:0}legend{float:left;width:100%;padding:0;margin-bottom:.5rem;font-size:calc(1.275rem + .3vw);line-height:inherit}@media (min-width:1200px){legend{font-size:1.5rem}}legend+*{clear:left}::-webkit-datetime-edit-day-field,::-webkit-datetime-edit-fields-wrapper,::-webkit-datetime-edit-hour-field,::-webkit-datetime-edit-minute,::-webkit-datetime-edit-month-field,::-webkit-datetime-edit-text,::-webkit-datetime-edit-year-field{padding:0}::-webkit-inner-spin-button{height:auto}[type=search]{outline-offset:-2px;-webkit-appearance:textfield}::-webkit-search-decoration{-webkit-appearance:none}::-webkit-color-swatch-wrapper{padding:0}::file-selector-button{font:inherit}::-webkit-file-upload-button{font:inherit;-webkit-appearance:button}output{display:inline-block}iframe{border:0}summary{display:list-item;cursor:pointer}progress{vertical-align:baseline}[hidden]{display:none!important}</style>
+    <style>/*! syntax-highlighting.css */pre{line-height:125%;}span.linenos{color:inherit; background-color:transparent; padding-left:5px; padding-right:20px;}.pdoc-code .hll{background-color:#ffffcc}.pdoc-code{background:#f8f8f8;}.pdoc-code .c{color:#3D7B7B; font-style:italic}.pdoc-code .err{border:1px solid #FF0000}.pdoc-code .k{color:#008000; font-weight:bold}.pdoc-code .o{color:#666666}.pdoc-code .ch{color:#3D7B7B; font-style:italic}.pdoc-code .cm{color:#3D7B7B; font-style:italic}.pdoc-code .cp{color:#9C6500}.pdoc-code .cpf{color:#3D7B7B; font-style:italic}.pdoc-code .c1{color:#3D7B7B; font-style:italic}.pdoc-code .cs{color:#3D7B7B; font-style:italic}.pdoc-code .gd{color:#A00000}.pdoc-code .ge{font-style:italic}.pdoc-code .gr{color:#E40000}.pdoc-code .gh{color:#000080; font-weight:bold}.pdoc-code .gi{color:#008400}.pdoc-code .go{color:#717171}.pdoc-code .gp{color:#000080; font-weight:bold}.pdoc-code .gs{font-weight:bold}.pdoc-code .gu{color:#800080; font-weight:bold}.pdoc-code .gt{color:#0044DD}.pdoc-code .kc{color:#008000; font-weight:bold}.pdoc-code .kd{color:#008000; font-weight:bold}.pdoc-code .kn{color:#008000; font-weight:bold}.pdoc-code .kp{color:#008000}.pdoc-code .kr{color:#008000; font-weight:bold}.pdoc-code .kt{color:#B00040}.pdoc-code .m{color:#666666}.pdoc-code .s{color:#BA2121}.pdoc-code .na{color:#687822}.pdoc-code .nb{color:#008000}.pdoc-code .nc{color:#0000FF; font-weight:bold}.pdoc-code .no{color:#880000}.pdoc-code .nd{color:#AA22FF}.pdoc-code .ni{color:#717171; font-weight:bold}.pdoc-code .ne{color:#CB3F38; font-weight:bold}.pdoc-code .nf{color:#0000FF}.pdoc-code .nl{color:#767600}.pdoc-code .nn{color:#0000FF; font-weight:bold}.pdoc-code .nt{color:#008000; font-weight:bold}.pdoc-code .nv{color:#19177C}.pdoc-code .ow{color:#AA22FF; font-weight:bold}.pdoc-code .w{color:#bbbbbb}.pdoc-code .mb{color:#666666}.pdoc-code .mf{color:#666666}.pdoc-code .mh{color:#666666}.pdoc-code .mi{color:#666666}.pdoc-code .mo{color:#666666}.pdoc-code .sa{color:#BA2121}.pdoc-code .sb{color:#BA2121}.pdoc-code .sc{color:#BA2121}.pdoc-code .dl{color:#BA2121}.pdoc-code .sd{color:#BA2121; font-style:italic}.pdoc-code .s2{color:#BA2121}.pdoc-code .se{color:#AA5D1F; font-weight:bold}.pdoc-code .sh{color:#BA2121}.pdoc-code .si{color:#A45A77; font-weight:bold}.pdoc-code .sx{color:#008000}.pdoc-code .sr{color:#A45A77}.pdoc-code .s1{color:#BA2121}.pdoc-code .ss{color:#19177C}.pdoc-code .bp{color:#008000}.pdoc-code .fm{color:#0000FF}.pdoc-code .vc{color:#19177C}.pdoc-code .vg{color:#19177C}.pdoc-code .vi{color:#19177C}.pdoc-code .vm{color:#19177C}.pdoc-code .il{color:#666666}</style>
+    <style>/*! theme.css */:root{--pdoc-background:#fff;}.pdoc{--text:#212529;--muted:#6c757d;--link:#3660a5;--link-hover:#1659c5;--code:#f8f8f8;--active:#fff598;--accent:#eee;--accent2:#c1c1c1;--nav-hover:rgba(255, 255, 255, 0.5);--name:#0066BB;--def:#008800;--annotation:#007020;}</style>
+    <style>/*! layout.css */html, body{width:100%;height:100%;}html, main{scroll-behavior:smooth;}body{background-color:var(--pdoc-background);}@media (max-width:769px){#navtoggle{cursor:pointer;position:absolute;width:50px;height:40px;top:1rem;right:1rem;border-color:var(--text);color:var(--text);display:flex;opacity:0.8;z-index:999;}#navtoggle:hover{opacity:1;}#togglestate + div{display:none;}#togglestate:checked + div{display:inherit;}main, header{padding:2rem 3vw;}header + main{margin-top:-3rem;}.git-button{display:none !important;}nav input[type="search"]{max-width:77%;}nav input[type="search"]:first-child{margin-top:-6px;}nav input[type="search"]:valid ~ *{display:none !important;}}@media (min-width:770px){:root{--sidebar-width:clamp(12.5rem, 28vw, 22rem);}nav{position:fixed;overflow:auto;height:100vh;width:var(--sidebar-width);}main, header{padding:3rem 2rem 3rem calc(var(--sidebar-width) + 3rem);width:calc(54rem + var(--sidebar-width));max-width:100%;}header + main{margin-top:-4rem;}#navtoggle{display:none;}}#togglestate{position:absolute;height:0;opacity:0;}nav.pdoc{--pad:clamp(0.5rem, 2vw, 1.75rem);--indent:1.5rem;background-color:var(--accent);border-right:1px solid var(--accent2);box-shadow:0 0 20px rgba(50, 50, 50, .2) inset;padding:0 0 0 var(--pad);overflow-wrap:anywhere;scrollbar-width:thin; scrollbar-color:var(--accent2) transparent; z-index:1}nav.pdoc::-webkit-scrollbar{width:.4rem; }nav.pdoc::-webkit-scrollbar-thumb{background-color:var(--accent2); }nav.pdoc > div{padding:var(--pad) 0;}nav.pdoc .module-list-button{display:inline-flex;align-items:center;color:var(--text);border-color:var(--muted);margin-bottom:1rem;}nav.pdoc .module-list-button:hover{border-color:var(--text);}nav.pdoc input[type=search]{display:block;outline-offset:0;width:calc(100% - var(--pad));}nav.pdoc .logo{max-width:calc(100% - var(--pad));max-height:35vh;display:block;margin:0 auto 1rem;transform:translate(calc(-.5 * var(--pad)), 0);}nav.pdoc ul{list-style:none;padding-left:0;}nav.pdoc > div > ul{margin-left:calc(0px - var(--pad));}nav.pdoc li a{padding:.2rem 0 .2rem calc(var(--pad) + var(--indent));}nav.pdoc > div > ul > li > a{padding-left:var(--pad);}nav.pdoc li{transition:all 100ms;}nav.pdoc li:hover{background-color:var(--nav-hover);}nav.pdoc a, nav.pdoc a:hover{color:var(--text);}nav.pdoc a{display:block;}nav.pdoc > h2:first-of-type{margin-top:1.5rem;}nav.pdoc .class:before{content:"class ";color:var(--muted);}nav.pdoc .function:after{content:"()";color:var(--muted);}nav.pdoc footer:before{content:"";display:block;width:calc(100% - var(--pad));border-top:solid var(--accent2) 1px;margin-top:1.5rem;padding-top:.5rem;}nav.pdoc footer{font-size:small;}</style>
+    <style>/*! content.css */.pdoc{color:var(--text);box-sizing:border-box;line-height:1.5;background:none;}.pdoc .pdoc-button{cursor:pointer;display:inline-block;border:solid black 1px;border-radius:2px;font-size:.75rem;padding:calc(0.5em - 1px) 1em;transition:100ms all;}.pdoc .alert{padding:1rem 1rem 1rem calc(1.5rem + 24px);border:1px solid transparent;border-radius:.25rem;background-repeat:no-repeat;background-position:.75rem center;margin-bottom:1rem;}.pdoc .alert > em{display:none;}.pdoc .alert > *:last-child{margin-bottom:0;}.pdoc .alert.note{color:#084298;background-color:#cfe2ff;border-color:#b6d4fe;background-image:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20width%3D%2224%22%20height%3D%2224%22%20fill%3D%22%23084298%22%20viewBox%3D%220%200%2016%2016%22%3E%3Cpath%20d%3D%22M8%2016A8%208%200%201%200%208%200a8%208%200%200%200%200%2016zm.93-9.412-1%204.705c-.07.34.029.533.304.533.194%200%20.487-.07.686-.246l-.088.416c-.287.346-.92.598-1.465.598-.703%200-1.002-.422-.808-1.319l.738-3.468c.064-.293.006-.399-.287-.47l-.451-.081.082-.381%202.29-.287zM8%205.5a1%201%200%201%201%200-2%201%201%200%200%201%200%202z%22/%3E%3C/svg%3E");}.pdoc .alert.tip{color:#0a3622;background-color:#d1e7dd;border-color:#a3cfbb;background-image:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20width%3D%2224%22%20height%3D%2224%22%20fill%3D%22%230a3622%22%20viewBox%3D%220%200%2016%2016%22%3E%3Cpath%20d%3D%22M2%206a6%206%200%201%201%2010.174%204.31c-.203.196-.359.4-.453.619l-.762%201.769A.5.5%200%200%201%2010.5%2013a.5.5%200%200%201%200%201%20.5.5%200%200%201%200%201l-.224.447a1%201%200%200%201-.894.553H6.618a1%201%200%200%201-.894-.553L5.5%2015a.5.5%200%200%201%200-1%20.5.5%200%200%201%200-1%20.5.5%200%200%201-.46-.302l-.761-1.77a2%202%200%200%200-.453-.618A5.98%205.98%200%200%201%202%206m6-5a5%205%200%200%200-3.479%208.592c.263.254.514.564.676.941L5.83%2012h4.342l.632-1.467c.162-.377.413-.687.676-.941A5%205%200%200%200%208%201%22/%3E%3C/svg%3E");}.pdoc .alert.important{color:#055160;background-color:#cff4fc;border-color:#9eeaf9;background-image:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20width%3D%2224%22%20height%3D%2224%22%20fill%3D%22%23055160%22%20viewBox%3D%220%200%2016%2016%22%3E%3Cpath%20d%3D%22M2%200a2%202%200%200%200-2%202v12a2%202%200%200%200%202%202h12a2%202%200%200%200%202-2V2a2%202%200%200%200-2-2zm6%204c.535%200%20.954.462.9.995l-.35%203.507a.552.552%200%200%201-1.1%200L7.1%204.995A.905.905%200%200%201%208%204m.002%206a1%201%200%201%201%200%202%201%201%200%200%201%200-2%22/%3E%3C/svg%3E");}.pdoc .alert.warning{color:#664d03;background-color:#fff3cd;border-color:#ffecb5;background-image:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20width%3D%2224%22%20height%3D%2224%22%20fill%3D%22%23664d03%22%20viewBox%3D%220%200%2016%2016%22%3E%3Cpath%20d%3D%22M8.982%201.566a1.13%201.13%200%200%200-1.96%200L.165%2013.233c-.457.778.091%201.767.98%201.767h13.713c.889%200%201.438-.99.98-1.767L8.982%201.566zM8%205c.535%200%20.954.462.9.995l-.35%203.507a.552.552%200%200%201-1.1%200L7.1%205.995A.905.905%200%200%201%208%205zm.002%206a1%201%200%201%201%200%202%201%201%200%200%201%200-2z%22/%3E%3C/svg%3E");}.pdoc .alert.caution{color:#842029;background-color:#f8d7da;border-color:#f5c2c7;background-image:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20width%3D%2224%22%20height%3D%2224%22%20fill%3D%22%23842029%22%20viewBox%3D%220%200%2016%2016%22%3E%3Cpath%20d%3D%22M11.46.146A.5.5%200%200%200%2011.107%200H4.893a.5.5%200%200%200-.353.146L.146%204.54A.5.5%200%200%200%200%204.893v6.214a.5.5%200%200%200%20.146.353l4.394%204.394a.5.5%200%200%200%20.353.146h6.214a.5.5%200%200%200%20.353-.146l4.394-4.394a.5.5%200%200%200%20.146-.353V4.893a.5.5%200%200%200-.146-.353zM8%204c.535%200%20.954.462.9.995l-.35%203.507a.552.552%200%200%201-1.1%200L7.1%204.995A.905.905%200%200%201%208%204m.002%206a1%201%200%201%201%200%202%201%201%200%200%201%200-2%22/%3E%3C/svg%3E");}.pdoc .alert.danger{color:#842029;background-color:#f8d7da;border-color:#f5c2c7;background-image:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20width%3D%2224%22%20height%3D%2224%22%20fill%3D%22%23842029%22%20viewBox%3D%220%200%2016%2016%22%3E%3Cpath%20d%3D%22M5.52.359A.5.5%200%200%201%206%200h4a.5.5%200%200%201%20.474.658L8.694%206H12.5a.5.5%200%200%201%20.395.807l-7%209a.5.5%200%200%201-.873-.454L6.823%209.5H3.5a.5.5%200%200%201-.48-.641l2.5-8.5z%22/%3E%3C/svg%3E");}.pdoc .visually-hidden{position:absolute !important;width:1px !important;height:1px !important;padding:0 !important;margin:-1px !important;overflow:hidden !important;clip:rect(0, 0, 0, 0) !important;white-space:nowrap !important;border:0 !important;}.pdoc h1, .pdoc h2, .pdoc h3{font-weight:300;margin:.3em 0;padding:.2em 0;}.pdoc > section:not(.module-info) h1{font-size:1.5rem;font-weight:500;}.pdoc > section:not(.module-info) h2{font-size:1.4rem;font-weight:500;}.pdoc > section:not(.module-info) h3{font-size:1.3rem;font-weight:500;}.pdoc > section:not(.module-info) h4{font-size:1.2rem;}.pdoc > section:not(.module-info) h5{font-size:1.1rem;}.pdoc a{text-decoration:none;color:var(--link);}.pdoc a:hover{color:var(--link-hover);}.pdoc blockquote{margin-left:2rem;}.pdoc pre{border-top:1px solid var(--accent2);border-bottom:1px solid var(--accent2);margin-top:0;margin-bottom:1em;padding:.5rem 0 .5rem .5rem;overflow-x:auto;background-color:var(--code);}.pdoc code{color:var(--text);padding:.2em .4em;margin:0;font-size:85%;background-color:var(--accent);border-radius:6px;}.pdoc a > code{color:inherit;}.pdoc pre > code{display:inline-block;font-size:inherit;background:none;border:none;padding:0;}.pdoc > section:not(.module-info){margin-bottom:1.5rem;}.pdoc .modulename{margin-top:0;font-weight:bold;}.pdoc .modulename a{color:var(--link);transition:100ms all;}.pdoc .git-button{float:right;border:solid var(--link) 1px;}.pdoc .git-button:hover{background-color:var(--link);color:var(--pdoc-background);}.view-source-toggle-state,.view-source-toggle-state ~ .pdoc-code{display:none;}.view-source-toggle-state:checked ~ .pdoc-code{display:block;}.view-source-button{display:inline-block;float:right;font-size:.75rem;line-height:1.5rem;color:var(--muted);padding:0 .4rem 0 1.3rem;cursor:pointer;text-indent:-2px;}.view-source-button > span{visibility:hidden;}.module-info .view-source-button{float:none;display:flex;justify-content:flex-end;margin:-1.2rem .4rem -.2rem 0;}.view-source-button::before{position:absolute;content:"View Source";display:list-item;list-style-type:disclosure-closed;}.view-source-toggle-state:checked ~ .attr .view-source-button::before,.view-source-toggle-state:checked ~ .view-source-button::before{list-style-type:disclosure-open;}.pdoc .docstring{margin-bottom:1.5rem;}.pdoc section:not(.module-info) .docstring{margin-left:clamp(0rem, 5vw - 2rem, 1rem);}.pdoc .docstring .pdoc-code{margin-left:1em;margin-right:1em;}.pdoc h1:target,.pdoc h2:target,.pdoc h3:target,.pdoc h4:target,.pdoc h5:target,.pdoc h6:target,.pdoc .pdoc-code > pre > span:target{background-color:var(--active);box-shadow:-1rem 0 0 0 var(--active);}.pdoc .pdoc-code > pre > span:target{display:block;}.pdoc div:target > .attr,.pdoc section:target > .attr,.pdoc dd:target > a{background-color:var(--active);}.pdoc *{scroll-margin:2rem;}.pdoc .pdoc-code .linenos{user-select:none;}.pdoc .attr:hover{filter:contrast(0.95);}.pdoc section, .pdoc .classattr{position:relative;}.pdoc .headerlink{--width:clamp(1rem, 3vw, 2rem);position:absolute;top:0;left:calc(0rem - var(--width));transition:all 100ms ease-in-out;opacity:0;}.pdoc .headerlink::before{content:"#";display:block;text-align:center;width:var(--width);height:2.3rem;line-height:2.3rem;font-size:1.5rem;}.pdoc .attr:hover ~ .headerlink,.pdoc *:target > .headerlink,.pdoc .headerlink:hover{opacity:1;}.pdoc .attr{display:block;margin:.5rem 0 .5rem;padding:.4rem .4rem .4rem 1rem;background-color:var(--accent);overflow-x:auto;}.pdoc .classattr{margin-left:2rem;}.pdoc .decorator-deprecated{color:#842029;}.pdoc .decorator-deprecated ~ span{filter:grayscale(1) opacity(0.8);}.pdoc .name{color:var(--name);font-weight:bold;}.pdoc .def{color:var(--def);font-weight:bold;}.pdoc .signature{background-color:transparent;}.pdoc .param, .pdoc .return-annotation{white-space:pre;}.pdoc .signature.multiline .param{display:block;}.pdoc .signature.condensed .param{display:inline-block;}.pdoc .annotation{color:var(--annotation);}.pdoc .view-value-toggle-state,.pdoc .view-value-toggle-state ~ .default_value{display:none;}.pdoc .view-value-toggle-state:checked ~ .default_value{display:inherit;}.pdoc .view-value-button{font-size:.5rem;vertical-align:middle;border-style:dashed;margin-top:-0.1rem;}.pdoc .view-value-button:hover{background:white;}.pdoc .view-value-button::before{content:"show";text-align:center;width:2.2em;display:inline-block;}.pdoc .view-value-toggle-state:checked ~ .view-value-button::before{content:"hide";}.pdoc .inherited{margin-left:2rem;}.pdoc .inherited dt{font-weight:700;}.pdoc .inherited dt, .pdoc .inherited dd{display:inline;margin-left:0;margin-bottom:.5rem;}.pdoc .inherited dd:not(:last-child):after{content:", ";}.pdoc .inherited .class:before{content:"class ";}.pdoc .inherited .function a:after{content:"()";}.pdoc .search-result .docstring{overflow:auto;max-height:25vh;}.pdoc .search-result.focused > .attr{background-color:var(--active);}.pdoc .attribution{margin-top:2rem;display:block;opacity:0.5;transition:all 200ms;filter:grayscale(100%);}.pdoc .attribution:hover{opacity:1;filter:grayscale(0%);}.pdoc .attribution img{margin-left:5px;height:27px;vertical-align:bottom;width:50px;transition:all 200ms;}.pdoc table{display:block;width:max-content;max-width:100%;overflow:auto;margin-bottom:1rem;}.pdoc table th{font-weight:600;}.pdoc table th, .pdoc table td{padding:6px 13px;border:1px solid var(--accent2);}</style>
+    <style>/*! custom.css */</style></head>
+<body>
+    <nav class="pdoc">
+        <label id="navtoggle" for="togglestate" class="pdoc-button"><svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'><path stroke-linecap='round' stroke="currentColor" stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/></svg></label>
+        <input id="togglestate" type="checkbox" aria-hidden="true" tabindex="-1">
+        <div>            <a class="pdoc-button module-list-button" href="../eda.html">
+<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-box-arrow-in-left" viewBox="0 0 16 16">
+  <path fill-rule="evenodd" d="M10 3.5a.5.5 0 0 0-.5-.5h-8a.5.5 0 0 0-.5.5v9a.5.5 0 0 0 .5.5h8a.5.5 0 0 0 .5-.5v-2a.5.5 0 0 1 1 0v2A1.5 1.5 0 0 1 9.5 14h-8A1.5 1.5 0 0 1 0 12.5v-9A1.5 1.5 0 0 1 1.5 2h8A1.5 1.5 0 0 1 11 3.5v2a.5.5 0 0 1-1 0v-2z"/>
+  <path fill-rule="evenodd" d="M4.146 8.354a.5.5 0 0 1 0-.708l3-3a.5.5 0 1 1 .708.708L5.707 7.5H14.5a.5.5 0 0 1 0 1H5.707l2.147 2.146a.5.5 0 0 1-.708.708l-3-3z"/>
+</svg>                &nbsp;causalis.eda</a>
+
+
+            <input type="search" placeholder="Search..." role="searchbox" aria-label="search"
+                   pattern=".+" required>
+
+
+
+            <h2>API Documentation</h2>
+                <ul class="memberlist">
+            <li>
+                    <a class="function" href="#calculate_mde">calculate_mde</a>
+            </li>
+            <li>
+                    <a class="function" href="#assign_variants_df">assign_variants_df</a>
+            </li>
+            <li>
+                    <a class="class" href="#SRMResult">SRMResult</a>
+                            <ul class="memberlist">
+                        <li>
+                                <a class="function" href="#SRMResult.__init__">SRMResult</a>
+                        </li>
+                        <li>
+                                <a class="variable" href="#SRMResult.chi2">chi2</a>
+                        </li>
+                        <li>
+                                <a class="variable" href="#SRMResult.df">df</a>
+                        </li>
+                        <li>
+                                <a class="variable" href="#SRMResult.p_value">p_value</a>
+                        </li>
+                        <li>
+                                <a class="variable" href="#SRMResult.expected">expected</a>
+                        </li>
+                        <li>
+                                <a class="variable" href="#SRMResult.observed">observed</a>
+                        </li>
+                        <li>
+                                <a class="variable" href="#SRMResult.alpha">alpha</a>
+                        </li>
+                        <li>
+                                <a class="variable" href="#SRMResult.is_srm">is_srm</a>
+                        </li>
+                        <li>
+                                <a class="variable" href="#SRMResult.warning">warning</a>
+                        </li>
+                </ul>
+
+            </li>
+            <li>
+                    <a class="function" href="#check_srm">check_srm</a>
+            </li>
+    </ul>
+
+
+
+        <a class="attribution" title="pdoc: Python API documentation generator" href="https://pdoc.dev" target="_blank">
+            built with <span class="visually-hidden">pdoc</span><img
+                alt="pdoc logo"
+                src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20role%3D%22img%22%20aria-label%3D%22pdoc%20logo%22%20width%3D%22300%22%20height%3D%22160%22%20viewBox%3D%220%200%20150%2080%22%3E%3Ctitle%3Epdoc%3C/title%3E%3Cpath%20d%3D%22M132.316%2048.886c.276-4.679%202.342-6.698%204.409-7.982s4.27-1.165%206.751-1.055c1.586.07%203.044.156%204.222-.482%201.142-.619%202.026-1.932%202.162-3.739.268-3.576-1.929-5.368-5.006-5.551s-7.599.524-10.517%201.606c-4.455%201.652-8.588%206.606-9.552%208.992s-2.342%206.193-1.745%2010.873%202.664%209.221%205.878%2011.79%205.878%203.808%2010.103%204.312%203.444.229%206.062.229%205.006-2.202%204.914-4.909-2.296-5.001-4.501-4.863-3.077.505-5.281.229-7.715-2.064-7.899-9.451z%22%20fill%3D%22%23198754%22/%3E%3Ccircle%20cx%3D%22101.504%22%20cy%3D%2248.943%22%20r%3D%2214.208%22%20fill%3D%22none%22%20stroke%3D%22%23198754%22%20stroke-width%3D%229.354%22/%3E%3Cpath%20d%3D%22M87.81.002c-3.637.065-5.001.454-7.014%201.232s-3.443%201.363-6.3%204.282c-1.723%201.76-3.148%205.019-3.776%207.329-.413%201.521-.316%202.63-.316%202.63l-.195%2034.612c.065%205.774-6.755%208.305-9.612%208.37s-9.678-1.038-9.743-9.408%207.128-9.521%208.362-9.521c1.413-.13%202.526-.021%203.718-.016%202.071.009%204.157-.778%204.092-4.671s-4.157-4.736-4.157-4.736c-6.3-.843-11.43%202.206-11.43%202.206S40.917%2038.15%2041.372%2049.634%2051.568%2068.19%2061.311%2068.125s18.316-7.007%2018.445-17.193l.13-22.772c.046-2.291%202.683-3.644%204.476-4.203.745-.232%201.694-.274%201.694-.274l10.457-.13s4.871-.324%207.729-3.114%204.352-6.294%204.352-6.294.974-3.049.13-4.606-.195-1.233-2.792-3.309-8.573-4.477-8.573-4.477S91.447-.063%2087.81.002zM0%2047.169l.065%2028.417S0%2080.127%204.481%2079.997s5.072-3.866%205.049-4.152l-.113-28.482s1.624-7.656%209.937-7.721%2010.002%206.942%2010.002%208.499-.909%2010.51-9.093%2010.51c-.948%200-2.99-.567-4.145-.272-3.919%201-3.194%204.554-3.194%204.554s.065%205.061%207.404%204.996%2018.575-6.034%2018.575-19.074S26.953%2030.04%2019.549%2029.91%201.234%2035.296%200%2047.169z%22%20fill%3D%22%23198754%22/%3E%3Cg%20transform%3D%22matrix%28.325601%200%200%20.325256%20-10.32669%20-45.802786%29%22%3E%3Ccircle%20cx%3D%22297.554%22%20cy%3D%22172.286%22%20r%3D%2216.5%22%20fill%3D%22%23fff%22/%3E%3Cellipse%20cx%3D%22297.709%22%20cy%3D%22172.642%22%20rx%3D%2211.071%22%20ry%3D%2210.871%22%20fill%3D%22%23105a48%22/%3E%3Ccircle%20cx%3D%22304.104%22%20cy%3D%22167.667%22%20r%3D%224.5%22%20fill%3D%22%23fff%22/%3E%3C/g%3E%3Cpath%20d%3D%22M94.661%2017.032l.893-1.476s.99.714%201.916.925%201.575.114%202.955.114l14.565-.162c1.283-.032%203.085-.762%203.02-3.293s-.373-3.503-.373-3.503l1.283-.487s.52.503.877%201.573.309%201.995.292%202.66-.227%201.541-.227%201.541%201.564-.308%202.359-1.038.823-.779%201.489-1.508.812-.86.812-.86.552-.13.877.26.341.957.065%201.46-1.672%202.206-3.247%203.066-2.76%201.427-3.929%201.768-3.848.73-7.063.714l-10.944-.114s-2.143-.081-3.02-.373-2.241-.973-2.598-1.265z%22%20fill%3D%22%23d36d49%22/%3E%3Cg%20fill%3D%22%23105a48%22%3E%3Cellipse%20cx%3D%2293.052%22%20cy%3D%2243.567%22%20rx%3D%22.869%22%20ry%3D%221.014%22%20transform%3D%22rotate%28341.022%29%22/%3E%3Cellipse%20cx%3D%22104.3%22%20cy%3D%22-16.184%22%20rx%3D%22.865%22%20ry%3D%221.009%22%20transform%3D%22rotate%2814.786%29%22/%3E%3C/g%3E%3C/svg%3E"/>
+        </a>
+</div>
+    </nav>
+    <main class="pdoc">
+            <section class="module-info">
+                    <h1 class="modulename">
+<a href="./../../causalis.html">causalis</a><wbr>.<a href="./../eda.html">eda</a><wbr>.rct_design    </h1>
+
+                        <div class="docstring"><p>Design module for experimental rct_design utilities.</p>
+</div>
+
+                        <input id="mod-rct_design-view-source" class="view-source-toggle-state" type="checkbox" aria-hidden="true" tabindex="-1">
+
+                        <label class="view-source-button" for="mod-rct_design-view-source"><span>View Source</span></label>
+
+                        <div class="pdoc-code codehilite"><pre><span></span><span id="L-1"><a href="#L-1"><span class="linenos">1</span></a><span class="sd">&quot;&quot;&quot;</span>
+</span><span id="L-2"><a href="#L-2"><span class="linenos">2</span></a><span class="sd">Design module for experimental rct_design utilities.</span>
+</span><span id="L-3"><a href="#L-3"><span class="linenos">3</span></a><span class="sd">&quot;&quot;&quot;</span>
+</span><span id="L-4"><a href="#L-4"><span class="linenos">4</span></a>
+</span><span id="L-5"><a href="#L-5"><span class="linenos">5</span></a><span class="kn">from</span><span class="w"> </span><span class="nn">causalis.eda.rct_design.mde</span><span class="w"> </span><span class="kn">import</span> <span class="n">calculate_mde</span>
+</span><span id="L-6"><a href="#L-6"><span class="linenos">6</span></a><span class="kn">from</span><span class="w"> </span><span class="nn">causalis.eda.rct_design.split</span><span class="w"> </span><span class="kn">import</span> <span class="n">assign_variants_df</span>
+</span><span id="L-7"><a href="#L-7"><span class="linenos">7</span></a><span class="kn">from</span><span class="w"> </span><span class="nn">causalis.eda.rct_design.srm</span><span class="w"> </span><span class="kn">import</span> <span class="n">SRMResult</span><span class="p">,</span> <span class="n">check_srm</span>
+</span><span id="L-8"><a href="#L-8"><span class="linenos">8</span></a>
+</span><span id="L-9"><a href="#L-9"><span class="linenos">9</span></a><span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;calculate_mde&quot;</span><span class="p">,</span> <span class="s2">&quot;assign_variants_df&quot;</span><span class="p">,</span> <span class="s2">&quot;SRMResult&quot;</span><span class="p">,</span> <span class="s2">&quot;check_srm&quot;</span><span class="p">]</span>
+</span></pre></div>
+
+
+            </section>
+                <section id="calculate_mde">
+                            <input id="calculate_mde-view-source" class="view-source-toggle-state" type="checkbox" aria-hidden="true" tabindex="-1">
+<div class="attr function">
+            
+        <span class="def">def</span>
+        <span class="name">calculate_mde</span><span class="signature pdoc-code multiline">(<span class="param">	<span class="n">sample_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span>,</span><span class="param">	<span class="n">baseline_rate</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>,</span><span class="param">	<span class="n">variance</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>,</span><span class="param">	<span class="n">alpha</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.05</span>,</span><span class="param">	<span class="n">power</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.8</span>,</span><span class="param">	<span class="n">data_type</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;conversion&#39;</span>,</span><span class="param">	<span class="n">ratio</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.5</span></span><span class="return-annotation">) -> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span>:</span></span>
+
+                <label class="view-source-button" for="calculate_mde-view-source"><span>View Source</span></label>
+
+    </div>
+    <a class="headerlink" href="#calculate_mde"></a>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="calculate_mde-10"><a href="#calculate_mde-10"><span class="linenos"> 10</span></a><span class="k">def</span><span class="w"> </span><span class="nf">calculate_mde</span><span class="p">(</span>
+</span><span id="calculate_mde-11"><a href="#calculate_mde-11"><span class="linenos"> 11</span></a>    <span class="n">sample_size</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]],</span>
+</span><span id="calculate_mde-12"><a href="#calculate_mde-12"><span class="linenos"> 12</span></a>    <span class="n">baseline_rate</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span id="calculate_mde-13"><a href="#calculate_mde-13"><span class="linenos"> 13</span></a>    <span class="n">variance</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span id="calculate_mde-14"><a href="#calculate_mde-14"><span class="linenos"> 14</span></a>    <span class="n">alpha</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.05</span><span class="p">,</span>
+</span><span id="calculate_mde-15"><a href="#calculate_mde-15"><span class="linenos"> 15</span></a>    <span class="n">power</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.8</span><span class="p">,</span>
+</span><span id="calculate_mde-16"><a href="#calculate_mde-16"><span class="linenos"> 16</span></a>    <span class="n">data_type</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;conversion&#39;</span><span class="p">,</span>
+</span><span id="calculate_mde-17"><a href="#calculate_mde-17"><span class="linenos"> 17</span></a>    <span class="n">ratio</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.5</span>
+</span><span id="calculate_mde-18"><a href="#calculate_mde-18"><span class="linenos"> 18</span></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+</span><span id="calculate_mde-19"><a href="#calculate_mde-19"><span class="linenos"> 19</span></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+</span><span id="calculate_mde-20"><a href="#calculate_mde-20"><span class="linenos"> 20</span></a><span class="sd">    Calculate the Minimum Detectable Effect (MDE) for conversion or continuous data.</span>
+</span><span id="calculate_mde-21"><a href="#calculate_mde-21"><span class="linenos"> 21</span></a><span class="sd">    </span>
+</span><span id="calculate_mde-22"><a href="#calculate_mde-22"><span class="linenos"> 22</span></a><span class="sd">    Parameters</span>
+</span><span id="calculate_mde-23"><a href="#calculate_mde-23"><span class="linenos"> 23</span></a><span class="sd">    ----------</span>
+</span><span id="calculate_mde-24"><a href="#calculate_mde-24"><span class="linenos"> 24</span></a><span class="sd">    sample_size : int or tuple of int</span>
+</span><span id="calculate_mde-25"><a href="#calculate_mde-25"><span class="linenos"> 25</span></a><span class="sd">        Total sample size or a tuple of (control_size, treatment_size).</span>
+</span><span id="calculate_mde-26"><a href="#calculate_mde-26"><span class="linenos"> 26</span></a><span class="sd">        If a single integer is provided, the sample will be split according to the ratio parameter.</span>
+</span><span id="calculate_mde-27"><a href="#calculate_mde-27"><span class="linenos"> 27</span></a><span class="sd">    baseline_rate : float, optional</span>
+</span><span id="calculate_mde-28"><a href="#calculate_mde-28"><span class="linenos"> 28</span></a><span class="sd">        Baseline conversion rate (for conversion data) or baseline mean (for continuous data).</span>
+</span><span id="calculate_mde-29"><a href="#calculate_mde-29"><span class="linenos"> 29</span></a><span class="sd">        Required for conversion data.</span>
+</span><span id="calculate_mde-30"><a href="#calculate_mde-30"><span class="linenos"> 30</span></a><span class="sd">    variance : float or tuple of float, optional</span>
+</span><span id="calculate_mde-31"><a href="#calculate_mde-31"><span class="linenos"> 31</span></a><span class="sd">        Variance of the data. For conversion data, this is calculated from the baseline rate if not provided.</span>
+</span><span id="calculate_mde-32"><a href="#calculate_mde-32"><span class="linenos"> 32</span></a><span class="sd">        For continuous data, this parameter is required.</span>
+</span><span id="calculate_mde-33"><a href="#calculate_mde-33"><span class="linenos"> 33</span></a><span class="sd">        Can be a single float (assumed same for both groups) or a tuple of (control_variance, treatment_variance).</span>
+</span><span id="calculate_mde-34"><a href="#calculate_mde-34"><span class="linenos"> 34</span></a><span class="sd">    alpha : float, default 0.05</span>
+</span><span id="calculate_mde-35"><a href="#calculate_mde-35"><span class="linenos"> 35</span></a><span class="sd">        Significance level (Type I error rate).</span>
+</span><span id="calculate_mde-36"><a href="#calculate_mde-36"><span class="linenos"> 36</span></a><span class="sd">    power : float, default 0.8</span>
+</span><span id="calculate_mde-37"><a href="#calculate_mde-37"><span class="linenos"> 37</span></a><span class="sd">        Statistical power (1 - Type II error rate).</span>
+</span><span id="calculate_mde-38"><a href="#calculate_mde-38"><span class="linenos"> 38</span></a><span class="sd">    data_type : str, default &#39;conversion&#39;</span>
+</span><span id="calculate_mde-39"><a href="#calculate_mde-39"><span class="linenos"> 39</span></a><span class="sd">        Type of data. Either &#39;conversion&#39; for binary/conversion data or &#39;continuous&#39; for continuous data.</span>
+</span><span id="calculate_mde-40"><a href="#calculate_mde-40"><span class="linenos"> 40</span></a><span class="sd">    ratio : float, default 0.5</span>
+</span><span id="calculate_mde-41"><a href="#calculate_mde-41"><span class="linenos"> 41</span></a><span class="sd">        Ratio of the sample allocated to the control group if sample_size is a single integer.</span>
+</span><span id="calculate_mde-42"><a href="#calculate_mde-42"><span class="linenos"> 42</span></a><span class="sd">        </span>
+</span><span id="calculate_mde-43"><a href="#calculate_mde-43"><span class="linenos"> 43</span></a><span class="sd">    Returns</span>
+</span><span id="calculate_mde-44"><a href="#calculate_mde-44"><span class="linenos"> 44</span></a><span class="sd">    -------</span>
+</span><span id="calculate_mde-45"><a href="#calculate_mde-45"><span class="linenos"> 45</span></a><span class="sd">    Dict[str, Any]</span>
+</span><span id="calculate_mde-46"><a href="#calculate_mde-46"><span class="linenos"> 46</span></a><span class="sd">        A dictionary containing:</span>
+</span><span id="calculate_mde-47"><a href="#calculate_mde-47"><span class="linenos"> 47</span></a><span class="sd">        - &#39;mde&#39;: The minimum detectable effect (absolute)</span>
+</span><span id="calculate_mde-48"><a href="#calculate_mde-48"><span class="linenos"> 48</span></a><span class="sd">        - &#39;mde_relative&#39;: The minimum detectable effect as a percentage of the baseline (relative)</span>
+</span><span id="calculate_mde-49"><a href="#calculate_mde-49"><span class="linenos"> 49</span></a><span class="sd">        - &#39;parameters&#39;: The parameters used for the calculation</span>
+</span><span id="calculate_mde-50"><a href="#calculate_mde-50"><span class="linenos"> 50</span></a><span class="sd">        </span>
+</span><span id="calculate_mde-51"><a href="#calculate_mde-51"><span class="linenos"> 51</span></a><span class="sd">    Examples</span>
+</span><span id="calculate_mde-52"><a href="#calculate_mde-52"><span class="linenos"> 52</span></a><span class="sd">    --------</span>
+</span><span id="calculate_mde-53"><a href="#calculate_mde-53"><span class="linenos"> 53</span></a><span class="sd">    &gt;&gt;&gt; # Calculate MDE for conversion data with 1000 total sample size and 10% baseline conversion rate</span>
+</span><span id="calculate_mde-54"><a href="#calculate_mde-54"><span class="linenos"> 54</span></a><span class="sd">    &gt;&gt;&gt; calculate_mde(1000, baseline_rate=0.1, data_type=&#39;conversion&#39;)</span>
+</span><span id="calculate_mde-55"><a href="#calculate_mde-55"><span class="linenos"> 55</span></a><span class="sd">    {&#39;mde&#39;: 0.0527..., &#39;mde_relative&#39;: 0.5272..., &#39;parameters&#39;: {...}}</span>
+</span><span id="calculate_mde-56"><a href="#calculate_mde-56"><span class="linenos"> 56</span></a><span class="sd">    </span>
+</span><span id="calculate_mde-57"><a href="#calculate_mde-57"><span class="linenos"> 57</span></a><span class="sd">    &gt;&gt;&gt; # Calculate MDE for continuous data with 500 samples in each group and variance of 4</span>
+</span><span id="calculate_mde-58"><a href="#calculate_mde-58"><span class="linenos"> 58</span></a><span class="sd">    &gt;&gt;&gt; calculate_mde((500, 500), variance=4, data_type=&#39;continuous&#39;)</span>
+</span><span id="calculate_mde-59"><a href="#calculate_mde-59"><span class="linenos"> 59</span></a><span class="sd">    {&#39;mde&#39;: 0.3482..., &#39;mde_relative&#39;: None, &#39;parameters&#39;: {...}}</span>
+</span><span id="calculate_mde-60"><a href="#calculate_mde-60"><span class="linenos"> 60</span></a><span class="sd">    </span>
+</span><span id="calculate_mde-61"><a href="#calculate_mde-61"><span class="linenos"> 61</span></a><span class="sd">    Notes</span>
+</span><span id="calculate_mde-62"><a href="#calculate_mde-62"><span class="linenos"> 62</span></a><span class="sd">    -----</span>
+</span><span id="calculate_mde-63"><a href="#calculate_mde-63"><span class="linenos"> 63</span></a><span class="sd">    For conversion data, the MDE is calculated using the formula:</span>
+</span><span id="calculate_mde-64"><a href="#calculate_mde-64"><span class="linenos"> 64</span></a><span class="sd">    MDE = (z_α/2 + z_β) * sqrt((p1*(1-p1)/n1) + (p2*(1-p2)/n2))</span>
+</span><span id="calculate_mde-65"><a href="#calculate_mde-65"><span class="linenos"> 65</span></a><span class="sd">    </span>
+</span><span id="calculate_mde-66"><a href="#calculate_mde-66"><span class="linenos"> 66</span></a><span class="sd">    For continuous data, the MDE is calculated using the formula:</span>
+</span><span id="calculate_mde-67"><a href="#calculate_mde-67"><span class="linenos"> 67</span></a><span class="sd">    MDE = (z_α/2 + z_β) * sqrt((σ1²/n1) + (σ2²/n2))</span>
+</span><span id="calculate_mde-68"><a href="#calculate_mde-68"><span class="linenos"> 68</span></a><span class="sd">    </span>
+</span><span id="calculate_mde-69"><a href="#calculate_mde-69"><span class="linenos"> 69</span></a><span class="sd">    where:</span>
+</span><span id="calculate_mde-70"><a href="#calculate_mde-70"><span class="linenos"> 70</span></a><span class="sd">    - z_α/2 is the critical value for significance level α</span>
+</span><span id="calculate_mde-71"><a href="#calculate_mde-71"><span class="linenos"> 71</span></a><span class="sd">    - z_β is the critical value for power</span>
+</span><span id="calculate_mde-72"><a href="#calculate_mde-72"><span class="linenos"> 72</span></a><span class="sd">    - p1 and p2 are the conversion rates in the control and treatment groups</span>
+</span><span id="calculate_mde-73"><a href="#calculate_mde-73"><span class="linenos"> 73</span></a><span class="sd">    - σ1² and σ2² are the variances in the control and treatment groups</span>
+</span><span id="calculate_mde-74"><a href="#calculate_mde-74"><span class="linenos"> 74</span></a><span class="sd">    - n1 and n2 are the sample sizes in the control and treatment groups</span>
+</span><span id="calculate_mde-75"><a href="#calculate_mde-75"><span class="linenos"> 75</span></a><span class="sd">    &quot;&quot;&quot;</span>
+</span><span id="calculate_mde-76"><a href="#calculate_mde-76"><span class="linenos"> 76</span></a>    <span class="c1"># Validate inputs</span>
+</span><span id="calculate_mde-77"><a href="#calculate_mde-77"><span class="linenos"> 77</span></a>    <span class="k">if</span> <span class="n">data_type</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;conversion&#39;</span><span class="p">,</span> <span class="s1">&#39;continuous&#39;</span><span class="p">]:</span>
+</span><span id="calculate_mde-78"><a href="#calculate_mde-78"><span class="linenos"> 78</span></a>        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;data_type must be either &#39;conversion&#39; or &#39;continuous&#39;&quot;</span><span class="p">)</span>
+</span><span id="calculate_mde-79"><a href="#calculate_mde-79"><span class="linenos"> 79</span></a>    
+</span><span id="calculate_mde-80"><a href="#calculate_mde-80"><span class="linenos"> 80</span></a>    <span class="k">if</span> <span class="n">data_type</span> <span class="o">==</span> <span class="s1">&#39;conversion&#39;</span> <span class="ow">and</span> <span class="n">baseline_rate</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+</span><span id="calculate_mde-81"><a href="#calculate_mde-81"><span class="linenos"> 81</span></a>        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;baseline_rate is required for conversion data&quot;</span><span class="p">)</span>
+</span><span id="calculate_mde-82"><a href="#calculate_mde-82"><span class="linenos"> 82</span></a>    
+</span><span id="calculate_mde-83"><a href="#calculate_mde-83"><span class="linenos"> 83</span></a>    <span class="k">if</span> <span class="n">data_type</span> <span class="o">==</span> <span class="s1">&#39;continuous&#39;</span> <span class="ow">and</span> <span class="n">variance</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+</span><span id="calculate_mde-84"><a href="#calculate_mde-84"><span class="linenos"> 84</span></a>        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;variance is required for continuous data&quot;</span><span class="p">)</span>
+</span><span id="calculate_mde-85"><a href="#calculate_mde-85"><span class="linenos"> 85</span></a>    
+</span><span id="calculate_mde-86"><a href="#calculate_mde-86"><span class="linenos"> 86</span></a>    <span class="c1"># Calculate critical values</span>
+</span><span id="calculate_mde-87"><a href="#calculate_mde-87"><span class="linenos"> 87</span></a>    <span class="n">z_alpha</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">percentile</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">100000</span><span class="p">),</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">alpha</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="mi">100</span><span class="p">))</span>
+</span><span id="calculate_mde-88"><a href="#calculate_mde-88"><span class="linenos"> 88</span></a>    <span class="n">z_beta</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">percentile</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">100000</span><span class="p">),</span> <span class="n">power</span> <span class="o">*</span> <span class="mi">100</span><span class="p">))</span>
+</span><span id="calculate_mde-89"><a href="#calculate_mde-89"><span class="linenos"> 89</span></a>    
+</span><span id="calculate_mde-90"><a href="#calculate_mde-90"><span class="linenos"> 90</span></a>    <span class="c1"># Determine sample sizes for control and treatment groups</span>
+</span><span id="calculate_mde-91"><a href="#calculate_mde-91"><span class="linenos"> 91</span></a>    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">sample_size</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">):</span>
+</span><span id="calculate_mde-92"><a href="#calculate_mde-92"><span class="linenos"> 92</span></a>        <span class="n">n_control</span><span class="p">,</span> <span class="n">n_treatment</span> <span class="o">=</span> <span class="n">sample_size</span>
+</span><span id="calculate_mde-93"><a href="#calculate_mde-93"><span class="linenos"> 93</span></a>    <span class="k">else</span><span class="p">:</span>
+</span><span id="calculate_mde-94"><a href="#calculate_mde-94"><span class="linenos"> 94</span></a>        <span class="n">n_control</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">sample_size</span> <span class="o">*</span> <span class="n">ratio</span><span class="p">)</span>
+</span><span id="calculate_mde-95"><a href="#calculate_mde-95"><span class="linenos"> 95</span></a>        <span class="n">n_treatment</span> <span class="o">=</span> <span class="n">sample_size</span> <span class="o">-</span> <span class="n">n_control</span>
+</span><span id="calculate_mde-96"><a href="#calculate_mde-96"><span class="linenos"> 96</span></a>    
+</span><span id="calculate_mde-97"><a href="#calculate_mde-97"><span class="linenos"> 97</span></a>    <span class="c1"># Calculate MDE based on data type</span>
+</span><span id="calculate_mde-98"><a href="#calculate_mde-98"><span class="linenos"> 98</span></a>    <span class="k">if</span> <span class="n">data_type</span> <span class="o">==</span> <span class="s1">&#39;conversion&#39;</span><span class="p">:</span>
+</span><span id="calculate_mde-99"><a href="#calculate_mde-99"><span class="linenos"> 99</span></a>        <span class="c1"># For conversion data</span>
+</span><span id="calculate_mde-100"><a href="#calculate_mde-100"><span class="linenos">100</span></a>        <span class="n">p_control</span> <span class="o">=</span> <span class="n">baseline_rate</span>
+</span><span id="calculate_mde-101"><a href="#calculate_mde-101"><span class="linenos">101</span></a>        
+</span><span id="calculate_mde-102"><a href="#calculate_mde-102"><span class="linenos">102</span></a>        <span class="c1"># If variance is not provided, calculate it from the baseline rate</span>
+</span><span id="calculate_mde-103"><a href="#calculate_mde-103"><span class="linenos">103</span></a>        <span class="k">if</span> <span class="n">variance</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+</span><span id="calculate_mde-104"><a href="#calculate_mde-104"><span class="linenos">104</span></a>            <span class="n">var_control</span> <span class="o">=</span> <span class="n">p_control</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">p_control</span><span class="p">)</span>
+</span><span id="calculate_mde-105"><a href="#calculate_mde-105"><span class="linenos">105</span></a>            <span class="n">var_treatment</span> <span class="o">=</span> <span class="n">p_control</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">p_control</span><span class="p">)</span>  <span class="c1"># Assuming same variance for treatment</span>
+</span><span id="calculate_mde-106"><a href="#calculate_mde-106"><span class="linenos">106</span></a>        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">variance</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">):</span>
+</span><span id="calculate_mde-107"><a href="#calculate_mde-107"><span class="linenos">107</span></a>            <span class="n">var_control</span><span class="p">,</span> <span class="n">var_treatment</span> <span class="o">=</span> <span class="n">variance</span>
+</span><span id="calculate_mde-108"><a href="#calculate_mde-108"><span class="linenos">108</span></a>        <span class="k">else</span><span class="p">:</span>
+</span><span id="calculate_mde-109"><a href="#calculate_mde-109"><span class="linenos">109</span></a>            <span class="n">var_control</span> <span class="o">=</span> <span class="n">var_treatment</span> <span class="o">=</span> <span class="n">variance</span>
+</span><span id="calculate_mde-110"><a href="#calculate_mde-110"><span class="linenos">110</span></a>        
+</span><span id="calculate_mde-111"><a href="#calculate_mde-111"><span class="linenos">111</span></a>        <span class="c1"># Calculate MDE</span>
+</span><span id="calculate_mde-112"><a href="#calculate_mde-112"><span class="linenos">112</span></a>        <span class="n">mde</span> <span class="o">=</span> <span class="p">(</span><span class="n">z_alpha</span> <span class="o">+</span> <span class="n">z_beta</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">((</span><span class="n">var_control</span> <span class="o">/</span> <span class="n">n_control</span><span class="p">)</span> <span class="o">+</span> <span class="p">(</span><span class="n">var_treatment</span> <span class="o">/</span> <span class="n">n_treatment</span><span class="p">))</span>
+</span><span id="calculate_mde-113"><a href="#calculate_mde-113"><span class="linenos">113</span></a>        
+</span><span id="calculate_mde-114"><a href="#calculate_mde-114"><span class="linenos">114</span></a>        <span class="c1"># Calculate relative MDE</span>
+</span><span id="calculate_mde-115"><a href="#calculate_mde-115"><span class="linenos">115</span></a>        <span class="n">mde_relative</span> <span class="o">=</span> <span class="n">mde</span> <span class="o">/</span> <span class="n">baseline_rate</span> <span class="k">if</span> <span class="n">baseline_rate</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">else</span> <span class="kc">None</span>
+</span><span id="calculate_mde-116"><a href="#calculate_mde-116"><span class="linenos">116</span></a>        
+</span><span id="calculate_mde-117"><a href="#calculate_mde-117"><span class="linenos">117</span></a>    <span class="k">else</span><span class="p">:</span>  <span class="c1"># data_type == &#39;continuous&#39;</span>
+</span><span id="calculate_mde-118"><a href="#calculate_mde-118"><span class="linenos">118</span></a>        <span class="c1"># For continuous data</span>
+</span><span id="calculate_mde-119"><a href="#calculate_mde-119"><span class="linenos">119</span></a>        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">variance</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">):</span>
+</span><span id="calculate_mde-120"><a href="#calculate_mde-120"><span class="linenos">120</span></a>            <span class="n">var_control</span><span class="p">,</span> <span class="n">var_treatment</span> <span class="o">=</span> <span class="n">variance</span>
+</span><span id="calculate_mde-121"><a href="#calculate_mde-121"><span class="linenos">121</span></a>        <span class="k">else</span><span class="p">:</span>
+</span><span id="calculate_mde-122"><a href="#calculate_mde-122"><span class="linenos">122</span></a>            <span class="n">var_control</span> <span class="o">=</span> <span class="n">var_treatment</span> <span class="o">=</span> <span class="n">variance</span>
+</span><span id="calculate_mde-123"><a href="#calculate_mde-123"><span class="linenos">123</span></a>        
+</span><span id="calculate_mde-124"><a href="#calculate_mde-124"><span class="linenos">124</span></a>        <span class="c1"># Calculate MDE</span>
+</span><span id="calculate_mde-125"><a href="#calculate_mde-125"><span class="linenos">125</span></a>        <span class="n">mde</span> <span class="o">=</span> <span class="p">(</span><span class="n">z_alpha</span> <span class="o">+</span> <span class="n">z_beta</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">((</span><span class="n">var_control</span> <span class="o">/</span> <span class="n">n_control</span><span class="p">)</span> <span class="o">+</span> <span class="p">(</span><span class="n">var_treatment</span> <span class="o">/</span> <span class="n">n_treatment</span><span class="p">))</span>
+</span><span id="calculate_mde-126"><a href="#calculate_mde-126"><span class="linenos">126</span></a>        
+</span><span id="calculate_mde-127"><a href="#calculate_mde-127"><span class="linenos">127</span></a>        <span class="c1"># Calculate relative MDE if baseline_rate is provided</span>
+</span><span id="calculate_mde-128"><a href="#calculate_mde-128"><span class="linenos">128</span></a>        <span class="n">mde_relative</span> <span class="o">=</span> <span class="n">mde</span> <span class="o">/</span> <span class="n">baseline_rate</span> <span class="k">if</span> <span class="n">baseline_rate</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">baseline_rate</span> <span class="o">!=</span> <span class="mi">0</span> <span class="k">else</span> <span class="kc">None</span>
+</span><span id="calculate_mde-129"><a href="#calculate_mde-129"><span class="linenos">129</span></a>    
+</span><span id="calculate_mde-130"><a href="#calculate_mde-130"><span class="linenos">130</span></a>    <span class="c1"># Prepare the result dictionary</span>
+</span><span id="calculate_mde-131"><a href="#calculate_mde-131"><span class="linenos">131</span></a>    <span class="n">result</span> <span class="o">=</span> <span class="p">{</span>
+</span><span id="calculate_mde-132"><a href="#calculate_mde-132"><span class="linenos">132</span></a>        <span class="s1">&#39;mde&#39;</span><span class="p">:</span> <span class="n">mde</span><span class="p">,</span>
+</span><span id="calculate_mde-133"><a href="#calculate_mde-133"><span class="linenos">133</span></a>        <span class="s1">&#39;mde_relative&#39;</span><span class="p">:</span> <span class="n">mde_relative</span><span class="p">,</span>
+</span><span id="calculate_mde-134"><a href="#calculate_mde-134"><span class="linenos">134</span></a>        <span class="s1">&#39;parameters&#39;</span><span class="p">:</span> <span class="p">{</span>
+</span><span id="calculate_mde-135"><a href="#calculate_mde-135"><span class="linenos">135</span></a>            <span class="s1">&#39;sample_size&#39;</span><span class="p">:</span> <span class="p">{</span>
+</span><span id="calculate_mde-136"><a href="#calculate_mde-136"><span class="linenos">136</span></a>                <span class="s1">&#39;total&#39;</span><span class="p">:</span> <span class="n">n_control</span> <span class="o">+</span> <span class="n">n_treatment</span><span class="p">,</span>
+</span><span id="calculate_mde-137"><a href="#calculate_mde-137"><span class="linenos">137</span></a>                <span class="s1">&#39;control&#39;</span><span class="p">:</span> <span class="n">n_control</span><span class="p">,</span>
+</span><span id="calculate_mde-138"><a href="#calculate_mde-138"><span class="linenos">138</span></a>                <span class="s1">&#39;treatment&#39;</span><span class="p">:</span> <span class="n">n_treatment</span>
+</span><span id="calculate_mde-139"><a href="#calculate_mde-139"><span class="linenos">139</span></a>            <span class="p">},</span>
+</span><span id="calculate_mde-140"><a href="#calculate_mde-140"><span class="linenos">140</span></a>            <span class="s1">&#39;alpha&#39;</span><span class="p">:</span> <span class="n">alpha</span><span class="p">,</span>
+</span><span id="calculate_mde-141"><a href="#calculate_mde-141"><span class="linenos">141</span></a>            <span class="s1">&#39;power&#39;</span><span class="p">:</span> <span class="n">power</span><span class="p">,</span>
+</span><span id="calculate_mde-142"><a href="#calculate_mde-142"><span class="linenos">142</span></a>            <span class="s1">&#39;data_type&#39;</span><span class="p">:</span> <span class="n">data_type</span>
+</span><span id="calculate_mde-143"><a href="#calculate_mde-143"><span class="linenos">143</span></a>        <span class="p">}</span>
+</span><span id="calculate_mde-144"><a href="#calculate_mde-144"><span class="linenos">144</span></a>    <span class="p">}</span>
+</span><span id="calculate_mde-145"><a href="#calculate_mde-145"><span class="linenos">145</span></a>    
+</span><span id="calculate_mde-146"><a href="#calculate_mde-146"><span class="linenos">146</span></a>    <span class="c1"># Add data-type specific parameters</span>
+</span><span id="calculate_mde-147"><a href="#calculate_mde-147"><span class="linenos">147</span></a>    <span class="k">if</span> <span class="n">data_type</span> <span class="o">==</span> <span class="s1">&#39;conversion&#39;</span><span class="p">:</span>
+</span><span id="calculate_mde-148"><a href="#calculate_mde-148"><span class="linenos">148</span></a>        <span class="n">result</span><span class="p">[</span><span class="s1">&#39;parameters&#39;</span><span class="p">][</span><span class="s1">&#39;baseline_rate&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">baseline_rate</span>
+</span><span id="calculate_mde-149"><a href="#calculate_mde-149"><span class="linenos">149</span></a>    <span class="k">else</span><span class="p">:</span>  <span class="c1"># data_type == &#39;continuous&#39;</span>
+</span><span id="calculate_mde-150"><a href="#calculate_mde-150"><span class="linenos">150</span></a>        <span class="n">result</span><span class="p">[</span><span class="s1">&#39;parameters&#39;</span><span class="p">][</span><span class="s1">&#39;variance&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+</span><span id="calculate_mde-151"><a href="#calculate_mde-151"><span class="linenos">151</span></a>            <span class="s1">&#39;control&#39;</span><span class="p">:</span> <span class="n">var_control</span><span class="p">,</span>
+</span><span id="calculate_mde-152"><a href="#calculate_mde-152"><span class="linenos">152</span></a>            <span class="s1">&#39;treatment&#39;</span><span class="p">:</span> <span class="n">var_treatment</span>
+</span><span id="calculate_mde-153"><a href="#calculate_mde-153"><span class="linenos">153</span></a>        <span class="p">}</span>
+</span><span id="calculate_mde-154"><a href="#calculate_mde-154"><span class="linenos">154</span></a>        <span class="k">if</span> <span class="n">baseline_rate</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+</span><span id="calculate_mde-155"><a href="#calculate_mde-155"><span class="linenos">155</span></a>            <span class="n">result</span><span class="p">[</span><span class="s1">&#39;parameters&#39;</span><span class="p">][</span><span class="s1">&#39;baseline_mean&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">baseline_rate</span>
+</span><span id="calculate_mde-156"><a href="#calculate_mde-156"><span class="linenos">156</span></a>    
+</span><span id="calculate_mde-157"><a href="#calculate_mde-157"><span class="linenos">157</span></a>    <span class="k">return</span> <span class="n">result</span>
+</span></pre></div>
+
+
+            <div class="docstring"><p>Calculate the Minimum Detectable Effect (MDE) for conversion or continuous data.</p>
+
+<h6 id="parameters">Parameters</h6>
+
+<ul>
+<li><strong>sample_size</strong> (int or tuple of int):
+Total sample size or a tuple of (control_size, treatment_size).
+If a single integer is provided, the sample will be split according to the ratio parameter.</li>
+<li><strong>baseline_rate</strong> (float, optional):
+Baseline conversion rate (for conversion data) or baseline mean (for continuous data).
+Required for conversion data.</li>
+<li><strong>variance</strong> (float or tuple of float, optional):
+Variance of the data. For conversion data, this is calculated from the baseline rate if not provided.
+For continuous data, this parameter is required.
+Can be a single float (assumed same for both groups) or a tuple of (control_variance, treatment_variance).</li>
+<li><strong>alpha</strong> (float, default 0.05):
+Significance level (Type I error rate).</li>
+<li><strong>power</strong> (float, default 0.8):
+Statistical power (1 - Type II error rate).</li>
+<li><strong>data_type</strong> (str, default 'conversion'):
+Type of data. Either 'conversion' for binary/conversion data or 'continuous' for continuous data.</li>
+<li><strong>ratio</strong> (float, default 0.5):
+Ratio of the sample allocated to the control group if sample_size is a single integer.</li>
+</ul>
+
+<h6 id="returns">Returns</h6>
+
+<ul>
+<li><strong>Dict[str, Any]</strong>: A dictionary containing:
+<ul>
+<li>'mde': The minimum detectable effect (absolute)</li>
+<li>'mde_relative': The minimum detectable effect as a percentage of the baseline (relative)</li>
+<li>'parameters': The parameters used for the calculation</li>
+</ul></li>
+</ul>
+
+<h6 id="examples">Examples</h6>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Calculate MDE for conversion data with 1000 total sample size and 10% baseline conversion rate</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">calculate_mde</span><span class="p">(</span><span class="mi">1000</span><span class="p">,</span> <span class="n">baseline_rate</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">data_type</span><span class="o">=</span><span class="s1">&#39;conversion&#39;</span><span class="p">)</span>
+<span class="go">{&#39;mde&#39;: 0.0527..., &#39;mde_relative&#39;: 0.5272..., &#39;parameters&#39;: {...}}</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Calculate MDE for continuous data with 500 samples in each group and variance of 4</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">calculate_mde</span><span class="p">((</span><span class="mi">500</span><span class="p">,</span> <span class="mi">500</span><span class="p">),</span> <span class="n">variance</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">data_type</span><span class="o">=</span><span class="s1">&#39;continuous&#39;</span><span class="p">)</span>
+<span class="go">{&#39;mde&#39;: 0.3482..., &#39;mde_relative&#39;: None, &#39;parameters&#39;: {...}}</span>
+</code></pre>
+</div>
+
+<h6 id="notes">Notes</h6>
+
+<p>For conversion data, the MDE is calculated using the formula:
+MDE = (z_α/2 + z_β) * sqrt((p1<em>(1-p1)/n1) + (p2</em>(1-p2)/n2))</p>
+
+<p>For continuous data, the MDE is calculated using the formula:
+MDE = (z_α/2 + z_β) * sqrt((σ1²/n1) + (σ2²/n2))</p>
+
+<p>where:</p>
+
+<ul>
+<li>z_α/2 is the critical value for significance level α</li>
+<li>z_β is the critical value for power</li>
+<li>p1 and p2 are the conversion rates in the control and treatment groups</li>
+<li>σ1² and σ2² are the variances in the control and treatment groups</li>
+<li>n1 and n2 are the sample sizes in the control and treatment groups</li>
+</ul>
+</div>
+
+
+                </section>
+                <section id="assign_variants_df">
+                            <input id="assign_variants_df-view-source" class="view-source-toggle-state" type="checkbox" aria-hidden="true" tabindex="-1">
+<div class="attr function">
+            
+        <span class="def">def</span>
+        <span class="name">assign_variants_df</span><span class="signature pdoc-code multiline">(<span class="param">	<span class="n">df</span><span class="p">:</span> <span class="n">pandas</span><span class="o">.</span><span class="n">core</span><span class="o">.</span><span class="n">frame</span><span class="o">.</span><span class="n">DataFrame</span>,</span><span class="param">	<span class="n">id_col</span><span class="p">:</span> <span class="nb">str</span>,</span><span class="param">	<span class="n">experiment_id</span><span class="p">:</span> <span class="nb">str</span>,</span><span class="param">	<span class="n">variants</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span>,</span><span class="param">	<span class="o">*</span>,</span><span class="param">	<span class="n">salt</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;global_ab_salt&#39;</span>,</span><span class="param">	<span class="n">layer_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;default&#39;</span>,</span><span class="param">	<span class="n">variant_col</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;variant&#39;</span></span><span class="return-annotation">) -> <span class="n">pandas</span><span class="o">.</span><span class="n">core</span><span class="o">.</span><span class="n">frame</span><span class="o">.</span><span class="n">DataFrame</span>:</span></span>
+
+                <label class="view-source-button" for="assign_variants_df-view-source"><span>View Source</span></label>
+
+    </div>
+    <a class="headerlink" href="#assign_variants_df"></a>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="assign_variants_df-54"><a href="#assign_variants_df-54"><span class="linenos"> 54</span></a><span class="k">def</span><span class="w"> </span><span class="nf">assign_variants_df</span><span class="p">(</span>
+</span><span id="assign_variants_df-55"><a href="#assign_variants_df-55"><span class="linenos"> 55</span></a>    <span class="n">df</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span>
+</span><span id="assign_variants_df-56"><a href="#assign_variants_df-56"><span class="linenos"> 56</span></a>    <span class="n">id_col</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+</span><span id="assign_variants_df-57"><a href="#assign_variants_df-57"><span class="linenos"> 57</span></a>    <span class="n">experiment_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+</span><span id="assign_variants_df-58"><a href="#assign_variants_df-58"><span class="linenos"> 58</span></a>    <span class="n">variants</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">],</span>
+</span><span id="assign_variants_df-59"><a href="#assign_variants_df-59"><span class="linenos"> 59</span></a>    <span class="o">*</span><span class="p">,</span>
+</span><span id="assign_variants_df-60"><a href="#assign_variants_df-60"><span class="linenos"> 60</span></a>    <span class="n">salt</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;global_ab_salt&quot;</span><span class="p">,</span>
+</span><span id="assign_variants_df-61"><a href="#assign_variants_df-61"><span class="linenos"> 61</span></a>    <span class="n">layer_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;default&quot;</span><span class="p">,</span>
+</span><span id="assign_variants_df-62"><a href="#assign_variants_df-62"><span class="linenos"> 62</span></a>    <span class="n">variant_col</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;variant&quot;</span><span class="p">,</span>
+</span><span id="assign_variants_df-63"><a href="#assign_variants_df-63"><span class="linenos"> 63</span></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
+</span><span id="assign_variants_df-64"><a href="#assign_variants_df-64"><span class="linenos"> 64</span></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+</span><span id="assign_variants_df-65"><a href="#assign_variants_df-65"><span class="linenos"> 65</span></a><span class="sd">    Deterministically assign variants for each row in df based on id_col.</span>
+</span><span id="assign_variants_df-66"><a href="#assign_variants_df-66"><span class="linenos"> 66</span></a>
+</span><span id="assign_variants_df-67"><a href="#assign_variants_df-67"><span class="linenos"> 67</span></a><span class="sd">    Parameters</span>
+</span><span id="assign_variants_df-68"><a href="#assign_variants_df-68"><span class="linenos"> 68</span></a><span class="sd">    ----------</span>
+</span><span id="assign_variants_df-69"><a href="#assign_variants_df-69"><span class="linenos"> 69</span></a><span class="sd">    df : pd.DataFrame</span>
+</span><span id="assign_variants_df-70"><a href="#assign_variants_df-70"><span class="linenos"> 70</span></a><span class="sd">        Input DataFrame with an identifier column.</span>
+</span><span id="assign_variants_df-71"><a href="#assign_variants_df-71"><span class="linenos"> 71</span></a><span class="sd">    id_col : str</span>
+</span><span id="assign_variants_df-72"><a href="#assign_variants_df-72"><span class="linenos"> 72</span></a><span class="sd">        Column name in df containing entity identifiers (user_id, session_id, etc.).</span>
+</span><span id="assign_variants_df-73"><a href="#assign_variants_df-73"><span class="linenos"> 73</span></a><span class="sd">    experiment_id : str</span>
+</span><span id="assign_variants_df-74"><a href="#assign_variants_df-74"><span class="linenos"> 74</span></a><span class="sd">        Unique identifier for the experiment (versioned for reruns).</span>
+</span><span id="assign_variants_df-75"><a href="#assign_variants_df-75"><span class="linenos"> 75</span></a><span class="sd">    variants : Dict[str, float]</span>
+</span><span id="assign_variants_df-76"><a href="#assign_variants_df-76"><span class="linenos"> 76</span></a><span class="sd">        Mapping from variant name to weight (coverage). Weights must be non-negative</span>
+</span><span id="assign_variants_df-77"><a href="#assign_variants_df-77"><span class="linenos"> 77</span></a><span class="sd">        and their sum must be in (0, 1]. If the sum is &lt; 1, the remaining mass</span>
+</span><span id="assign_variants_df-78"><a href="#assign_variants_df-78"><span class="linenos"> 78</span></a><span class="sd">        corresponds to &quot;not in experiment&quot; and the assignment will be None.</span>
+</span><span id="assign_variants_df-79"><a href="#assign_variants_df-79"><span class="linenos"> 79</span></a><span class="sd">    salt : str, default &quot;global_ab_salt&quot;</span>
+</span><span id="assign_variants_df-80"><a href="#assign_variants_df-80"><span class="linenos"> 80</span></a><span class="sd">        Secret string to de-correlate from other hash uses and make assignments</span>
+</span><span id="assign_variants_df-81"><a href="#assign_variants_df-81"><span class="linenos"> 81</span></a><span class="sd">        non-gameable.</span>
+</span><span id="assign_variants_df-82"><a href="#assign_variants_df-82"><span class="linenos"> 82</span></a><span class="sd">    layer_id : str, default &quot;default&quot;</span>
+</span><span id="assign_variants_df-83"><a href="#assign_variants_df-83"><span class="linenos"> 83</span></a><span class="sd">        Identifier for mutual exclusivity layer or surface. In this case work like</span>
+</span><span id="assign_variants_df-84"><a href="#assign_variants_df-84"><span class="linenos"> 84</span></a><span class="sd">        another random</span>
+</span><span id="assign_variants_df-85"><a href="#assign_variants_df-85"><span class="linenos"> 85</span></a><span class="sd">    variant_col : str, default &quot;variant&quot;</span>
+</span><span id="assign_variants_df-86"><a href="#assign_variants_df-86"><span class="linenos"> 86</span></a><span class="sd">        Name of output column to store assigned variant labels.</span>
+</span><span id="assign_variants_df-87"><a href="#assign_variants_df-87"><span class="linenos"> 87</span></a>
+</span><span id="assign_variants_df-88"><a href="#assign_variants_df-88"><span class="linenos"> 88</span></a><span class="sd">    Returns</span>
+</span><span id="assign_variants_df-89"><a href="#assign_variants_df-89"><span class="linenos"> 89</span></a><span class="sd">    -------</span>
+</span><span id="assign_variants_df-90"><a href="#assign_variants_df-90"><span class="linenos"> 90</span></a><span class="sd">    pd.DataFrame</span>
+</span><span id="assign_variants_df-91"><a href="#assign_variants_df-91"><span class="linenos"> 91</span></a><span class="sd">        A copy of df with an extra column `variant_col`.</span>
+</span><span id="assign_variants_df-92"><a href="#assign_variants_df-92"><span class="linenos"> 92</span></a><span class="sd">        Entities outside experiment coverage will have None in the variant column.</span>
+</span><span id="assign_variants_df-93"><a href="#assign_variants_df-93"><span class="linenos"> 93</span></a><span class="sd">    &quot;&quot;&quot;</span>
+</span><span id="assign_variants_df-94"><a href="#assign_variants_df-94"><span class="linenos"> 94</span></a>    <span class="k">if</span> <span class="n">id_col</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">df</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
+</span><span id="assign_variants_df-95"><a href="#assign_variants_df-95"><span class="linenos"> 95</span></a>        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;id_col &#39;</span><span class="si">{</span><span class="n">id_col</span><span class="si">}</span><span class="s2">&#39; not found in DataFrame&quot;</span><span class="p">)</span>
+</span><span id="assign_variants_df-96"><a href="#assign_variants_df-96"><span class="linenos"> 96</span></a>
+</span><span id="assign_variants_df-97"><a href="#assign_variants_df-97"><span class="linenos"> 97</span></a>    <span class="n">_validate_variants</span><span class="p">(</span><span class="n">variants</span><span class="p">)</span>
+</span><span id="assign_variants_df-98"><a href="#assign_variants_df-98"><span class="linenos"> 98</span></a>
+</span><span id="assign_variants_df-99"><a href="#assign_variants_df-99"><span class="linenos"> 99</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">_row_assign</span><span class="p">(</span><span class="n">entity_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+</span><span id="assign_variants_df-100"><a href="#assign_variants_df-100"><span class="linenos">100</span></a>        <span class="n">key</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">salt</span><span class="si">}</span><span class="s2">|</span><span class="si">{</span><span class="n">layer_id</span><span class="si">}</span><span class="s2">|</span><span class="si">{</span><span class="n">experiment_id</span><span class="si">}</span><span class="s2">|</span><span class="si">{</span><span class="n">entity_id</span><span class="si">}</span><span class="s2">&quot;</span>
+</span><span id="assign_variants_df-101"><a href="#assign_variants_df-101"><span class="linenos">101</span></a>        <span class="n">u</span> <span class="o">=</span> <span class="n">_hash_to_unit_interval</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+</span><span id="assign_variants_df-102"><a href="#assign_variants_df-102"><span class="linenos">102</span></a>
+</span><span id="assign_variants_df-103"><a href="#assign_variants_df-103"><span class="linenos">103</span></a>        <span class="n">cumulative</span> <span class="o">=</span> <span class="mf">0.0</span>
+</span><span id="assign_variants_df-104"><a href="#assign_variants_df-104"><span class="linenos">104</span></a>        <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">weight</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">variants</span><span class="o">.</span><span class="n">items</span><span class="p">()):</span>
+</span><span id="assign_variants_df-105"><a href="#assign_variants_df-105"><span class="linenos">105</span></a>            <span class="k">if</span> <span class="n">weight</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+</span><span id="assign_variants_df-106"><a href="#assign_variants_df-106"><span class="linenos">106</span></a>                <span class="k">continue</span>
+</span><span id="assign_variants_df-107"><a href="#assign_variants_df-107"><span class="linenos">107</span></a>            <span class="n">cumulative</span> <span class="o">+=</span> <span class="nb">float</span><span class="p">(</span><span class="n">weight</span><span class="p">)</span>
+</span><span id="assign_variants_df-108"><a href="#assign_variants_df-108"><span class="linenos">108</span></a>            <span class="k">if</span> <span class="n">u</span> <span class="o">&lt;</span> <span class="n">cumulative</span><span class="p">:</span>
+</span><span id="assign_variants_df-109"><a href="#assign_variants_df-109"><span class="linenos">109</span></a>                <span class="k">return</span> <span class="n">name</span>
+</span><span id="assign_variants_df-110"><a href="#assign_variants_df-110"><span class="linenos">110</span></a>
+</span><span id="assign_variants_df-111"><a href="#assign_variants_df-111"><span class="linenos">111</span></a>        <span class="k">return</span> <span class="kc">None</span>  <span class="c1"># Not in experiment</span>
+</span><span id="assign_variants_df-112"><a href="#assign_variants_df-112"><span class="linenos">112</span></a>
+</span><span id="assign_variants_df-113"><a href="#assign_variants_df-113"><span class="linenos">113</span></a>    <span class="n">out</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+</span><span id="assign_variants_df-114"><a href="#assign_variants_df-114"><span class="linenos">114</span></a>    <span class="n">out</span><span class="p">[</span><span class="n">variant_col</span><span class="p">]</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="n">id_col</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">str</span><span class="p">)</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="n">_row_assign</span><span class="p">)</span>
+</span><span id="assign_variants_df-115"><a href="#assign_variants_df-115"><span class="linenos">115</span></a>    <span class="k">return</span> <span class="n">out</span>
+</span></pre></div>
+
+
+            <div class="docstring"><p>Deterministically assign variants for each row in df based on id_col.</p>
+
+<h6 id="parameters">Parameters</h6>
+
+<ul>
+<li><strong>df</strong> (pd.DataFrame):
+Input DataFrame with an identifier column.</li>
+<li><strong>id_col</strong> (str):
+Column name in df containing entity identifiers (user_id, session_id, etc.).</li>
+<li><strong>experiment_id</strong> (str):
+Unique identifier for the experiment (versioned for reruns).</li>
+<li><strong>variants</strong> (Dict[str, float]):
+Mapping from variant name to weight (coverage). Weights must be non-negative
+and their sum must be in (0, 1]. If the sum is &lt; 1, the remaining mass
+corresponds to "not in experiment" and the assignment will be None.</li>
+<li><strong>salt</strong> (str, default "global_ab_salt"):
+Secret string to de-correlate from other hash uses and make assignments
+non-gameable.</li>
+<li><strong>layer_id</strong> (str, default "default"):
+Identifier for mutual exclusivity layer or surface. In this case work like
+another random</li>
+<li><strong>variant_col</strong> (str, default "variant"):
+Name of output column to store assigned variant labels.</li>
+</ul>
+
+<h6 id="returns">Returns</h6>
+
+<ul>
+<li><strong>pd.DataFrame</strong>: A copy of df with an extra column <code>variant_col</code>.
+Entities outside experiment coverage will have None in the variant column.</li>
+</ul>
+</div>
+
+
+                </section>
+                <section id="SRMResult">
+                            <input id="SRMResult-view-source" class="view-source-toggle-state" type="checkbox" aria-hidden="true" tabindex="-1">
+<div class="attr class">
+                    <div class="decorator decorator-dataclass">@dataclass</div>
+
+    <span class="def">class</span>
+    <span class="name">SRMResult</span>:
+
+                <label class="view-source-button" for="SRMResult-view-source"><span>View Source</span></label>
+
+    </div>
+    <a class="headerlink" href="#SRMResult"></a>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="SRMResult-28"><a href="#SRMResult-28"><span class="linenos">28</span></a><span class="nd">@dataclass</span>
+</span><span id="SRMResult-29"><a href="#SRMResult-29"><span class="linenos">29</span></a><span class="k">class</span><span class="w"> </span><span class="nc">SRMResult</span><span class="p">:</span>
+</span><span id="SRMResult-30"><a href="#SRMResult-30"><span class="linenos">30</span></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+</span><span id="SRMResult-31"><a href="#SRMResult-31"><span class="linenos">31</span></a><span class="sd">    Result of a Sample Ratio Mismatch (SRM) check.</span>
+</span><span id="SRMResult-32"><a href="#SRMResult-32"><span class="linenos">32</span></a><span class="sd">    &quot;&quot;&quot;</span>
+</span><span id="SRMResult-33"><a href="#SRMResult-33"><span class="linenos">33</span></a>    <span class="n">chi2</span><span class="p">:</span> <span class="nb">float</span>
+</span><span id="SRMResult-34"><a href="#SRMResult-34"><span class="linenos">34</span></a>    <span class="n">df</span><span class="p">:</span> <span class="nb">int</span>
+</span><span id="SRMResult-35"><a href="#SRMResult-35"><span class="linenos">35</span></a>    <span class="n">p_value</span><span class="p">:</span> <span class="nb">float</span>
+</span><span id="SRMResult-36"><a href="#SRMResult-36"><span class="linenos">36</span></a>    <span class="n">expected</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="n">Hashable</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span>
+</span><span id="SRMResult-37"><a href="#SRMResult-37"><span class="linenos">37</span></a>    <span class="n">observed</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="n">Hashable</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span>
+</span><span id="SRMResult-38"><a href="#SRMResult-38"><span class="linenos">38</span></a>    <span class="n">alpha</span><span class="p">:</span> <span class="nb">float</span>
+</span><span id="SRMResult-39"><a href="#SRMResult-39"><span class="linenos">39</span></a>    <span class="n">is_srm</span><span class="p">:</span> <span class="nb">bool</span>
+</span><span id="SRMResult-40"><a href="#SRMResult-40"><span class="linenos">40</span></a>    <span class="n">warning</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+</span><span id="SRMResult-41"><a href="#SRMResult-41"><span class="linenos">41</span></a>
+</span><span id="SRMResult-42"><a href="#SRMResult-42"><span class="linenos">42</span></a>    <span class="k">def</span><span class="w"> </span><span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>  <span class="c1"># pragma: no cover - repr formatting</span>
+</span><span id="SRMResult-43"><a href="#SRMResult-43"><span class="linenos">43</span></a>        <span class="n">status</span> <span class="o">=</span> <span class="s2">&quot;SRM DETECTED&quot;</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_srm</span> <span class="k">else</span> <span class="s2">&quot;no SRM&quot;</span>
+</span><span id="SRMResult-44"><a href="#SRMResult-44"><span class="linenos">44</span></a>        <span class="k">return</span> <span class="p">(</span>
+</span><span id="SRMResult-45"><a href="#SRMResult-45"><span class="linenos">45</span></a>            <span class="sa">f</span><span class="s2">&quot;SRMResult(status=</span><span class="si">{</span><span class="n">status</span><span class="si">}</span><span class="s2">, p_value=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">p_value</span><span class="si">:</span><span class="s2">.3e</span><span class="si">}</span><span class="s2">, &quot;</span>
+</span><span id="SRMResult-46"><a href="#SRMResult-46"><span class="linenos">46</span></a>            <span class="sa">f</span><span class="s2">&quot;chi2=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">chi2</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">, df=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">df</span><span class="si">}</span><span class="s2">)&quot;</span>
+</span><span id="SRMResult-47"><a href="#SRMResult-47"><span class="linenos">47</span></a>        <span class="p">)</span>
+</span></pre></div>
+
+
+            <div class="docstring"><p>Result of a Sample Ratio Mismatch (SRM) check.</p>
+</div>
+
+
+                            <div id="SRMResult.__init__" class="classattr">
+                                <div class="attr function">
+            
+        <span class="name">SRMResult</span><span class="signature pdoc-code multiline">(<span class="param">	<span class="n">chi2</span><span class="p">:</span> <span class="nb">float</span>,</span><span class="param">	<span class="n">df</span><span class="p">:</span> <span class="nb">int</span>,</span><span class="param">	<span class="n">p_value</span><span class="p">:</span> <span class="nb">float</span>,</span><span class="param">	<span class="n">expected</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="n">Hashable</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span>,</span><span class="param">	<span class="n">observed</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="n">Hashable</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span>,</span><span class="param">	<span class="n">alpha</span><span class="p">:</span> <span class="nb">float</span>,</span><span class="param">	<span class="n">is_srm</span><span class="p">:</span> <span class="nb">bool</span>,</span><span class="param">	<span class="n">warning</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span></span>)</span>
+
+        
+    </div>
+    <a class="headerlink" href="#SRMResult.__init__"></a>
+    
+    
+
+                            </div>
+                            <div id="SRMResult.chi2" class="classattr">
+                                <div class="attr variable">
+            <span class="name">chi2</span><span class="annotation">: float</span>
+
+        
+    </div>
+    <a class="headerlink" href="#SRMResult.chi2"></a>
+    
+    
+
+                            </div>
+                            <div id="SRMResult.df" class="classattr">
+                                <div class="attr variable">
+            <span class="name">df</span><span class="annotation">: int</span>
+
+        
+    </div>
+    <a class="headerlink" href="#SRMResult.df"></a>
+    
+    
+
+                            </div>
+                            <div id="SRMResult.p_value" class="classattr">
+                                <div class="attr variable">
+            <span class="name">p_value</span><span class="annotation">: float</span>
+
+        
+    </div>
+    <a class="headerlink" href="#SRMResult.p_value"></a>
+    
+    
+
+                            </div>
+                            <div id="SRMResult.expected" class="classattr">
+                                <div class="attr variable">
+            <span class="name">expected</span><span class="annotation">: Dict[Hashable, float]</span>
+
+        
+    </div>
+    <a class="headerlink" href="#SRMResult.expected"></a>
+    
+    
+
+                            </div>
+                            <div id="SRMResult.observed" class="classattr">
+                                <div class="attr variable">
+            <span class="name">observed</span><span class="annotation">: Dict[Hashable, int]</span>
+
+        
+    </div>
+    <a class="headerlink" href="#SRMResult.observed"></a>
+    
+    
+
+                            </div>
+                            <div id="SRMResult.alpha" class="classattr">
+                                <div class="attr variable">
+            <span class="name">alpha</span><span class="annotation">: float</span>
+
+        
+    </div>
+    <a class="headerlink" href="#SRMResult.alpha"></a>
+    
+    
+
+                            </div>
+                            <div id="SRMResult.is_srm" class="classattr">
+                                <div class="attr variable">
+            <span class="name">is_srm</span><span class="annotation">: bool</span>
+
+        
+    </div>
+    <a class="headerlink" href="#SRMResult.is_srm"></a>
+    
+    
+
+                            </div>
+                            <div id="SRMResult.warning" class="classattr">
+                                <div class="attr variable">
+            <span class="name">warning</span><span class="annotation">: str | None</span>        =
+<span class="default_value">None</span>
+
+        
+    </div>
+    <a class="headerlink" href="#SRMResult.warning"></a>
+    
+    
+
+                            </div>
+                </section>
+                <section id="check_srm">
+                            <input id="check_srm-view-source" class="view-source-toggle-state" type="checkbox" aria-hidden="true" tabindex="-1">
+<div class="attr function">
+            
+        <span class="def">def</span>
+        <span class="name">check_srm</span><span class="signature pdoc-code multiline">(<span class="param">	<span class="n">assignments</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Hashable</span><span class="p">]</span> <span class="o">|</span> <span class="n">pandas</span><span class="o">.</span><span class="n">core</span><span class="o">.</span><span class="n">series</span><span class="o">.</span><span class="n">Series</span>,</span><span class="param">	<span class="n">target_allocation</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="n">Hashable</span><span class="p">,</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">float</span><span class="p">]</span>,</span><span class="param">	<span class="n">alpha</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.001</span>,</span><span class="param">	<span class="n">min_expected</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">5.0</span>,</span><span class="param">	<span class="n">strict_variants</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span></span><span class="return-annotation">) -> <span class="n"><a href="#SRMResult">SRMResult</a></span>:</span></span>
+
+                <label class="view-source-button" for="check_srm-view-source"><span>View Source</span></label>
+
+    </div>
+    <a class="headerlink" href="#check_srm"></a>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="check_srm-50"><a href="#check_srm-50"><span class="linenos"> 50</span></a><span class="k">def</span><span class="w"> </span><span class="nf">check_srm</span><span class="p">(</span>
+</span><span id="check_srm-51"><a href="#check_srm-51"><span class="linenos"> 51</span></a>    <span class="n">assignments</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Iterable</span><span class="p">[</span><span class="n">Hashable</span><span class="p">],</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">],</span>
+</span><span id="check_srm-52"><a href="#check_srm-52"><span class="linenos"> 52</span></a>    <span class="n">target_allocation</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="n">Hashable</span><span class="p">,</span> <span class="n">Number</span><span class="p">],</span>
+</span><span id="check_srm-53"><a href="#check_srm-53"><span class="linenos"> 53</span></a>    <span class="n">alpha</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e-3</span><span class="p">,</span>
+</span><span id="check_srm-54"><a href="#check_srm-54"><span class="linenos"> 54</span></a>    <span class="n">min_expected</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">5.0</span><span class="p">,</span>
+</span><span id="check_srm-55"><a href="#check_srm-55"><span class="linenos"> 55</span></a>    <span class="n">strict_variants</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+</span><span id="check_srm-56"><a href="#check_srm-56"><span class="linenos"> 56</span></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SRMResult</span><span class="p">:</span>
+</span><span id="check_srm-57"><a href="#check_srm-57"><span class="linenos"> 57</span></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+</span><span id="check_srm-58"><a href="#check_srm-58"><span class="linenos"> 58</span></a><span class="sd">    Check Sample Ratio Mismatch (SRM) for an RCT via chi-square goodness-of-fit test.</span>
+</span><span id="check_srm-59"><a href="#check_srm-59"><span class="linenos"> 59</span></a>
+</span><span id="check_srm-60"><a href="#check_srm-60"><span class="linenos"> 60</span></a><span class="sd">    Parameters</span>
+</span><span id="check_srm-61"><a href="#check_srm-61"><span class="linenos"> 61</span></a><span class="sd">    ----------</span>
+</span><span id="check_srm-62"><a href="#check_srm-62"><span class="linenos"> 62</span></a><span class="sd">    assignments:</span>
+</span><span id="check_srm-63"><a href="#check_srm-63"><span class="linenos"> 63</span></a><span class="sd">        Iterable of assigned variant labels for each unit (user_id, session_id, etc.).</span>
+</span><span id="check_srm-64"><a href="#check_srm-64"><span class="linenos"> 64</span></a><span class="sd">        E.g. Series of [&quot;control&quot;, &quot;treatment&quot;, ...].</span>
+</span><span id="check_srm-65"><a href="#check_srm-65"><span class="linenos"> 65</span></a>
+</span><span id="check_srm-66"><a href="#check_srm-66"><span class="linenos"> 66</span></a><span class="sd">    target_allocation:</span>
+</span><span id="check_srm-67"><a href="#check_srm-67"><span class="linenos"> 67</span></a><span class="sd">        Mapping {variant: p} describing intended allocation as PROBABILITIES.</span>
+</span><span id="check_srm-68"><a href="#check_srm-68"><span class="linenos"> 68</span></a><span class="sd">        - Each p must be &gt; 0.</span>
+</span><span id="check_srm-69"><a href="#check_srm-69"><span class="linenos"> 69</span></a><span class="sd">        - Sum of all p must be 1.0 (within numerical tolerance).</span>
+</span><span id="check_srm-70"><a href="#check_srm-70"><span class="linenos"> 70</span></a>
+</span><span id="check_srm-71"><a href="#check_srm-71"><span class="linenos"> 71</span></a><span class="sd">        Examples:</span>
+</span><span id="check_srm-72"><a href="#check_srm-72"><span class="linenos"> 72</span></a><span class="sd">            {&quot;control&quot;: 0.5, &quot;treatment&quot;: 0.5}</span>
+</span><span id="check_srm-73"><a href="#check_srm-73"><span class="linenos"> 73</span></a><span class="sd">            {&quot;A&quot;: 0.2, &quot;B&quot;: 0.3, &quot;C&quot;: 0.5}</span>
+</span><span id="check_srm-74"><a href="#check_srm-74"><span class="linenos"> 74</span></a>
+</span><span id="check_srm-75"><a href="#check_srm-75"><span class="linenos"> 75</span></a><span class="sd">    alpha:</span>
+</span><span id="check_srm-76"><a href="#check_srm-76"><span class="linenos"> 76</span></a><span class="sd">        Significance level. Use strict values like 1e-3 or 1e-4 in production.</span>
+</span><span id="check_srm-77"><a href="#check_srm-77"><span class="linenos"> 77</span></a>
+</span><span id="check_srm-78"><a href="#check_srm-78"><span class="linenos"> 78</span></a><span class="sd">    min_expected:</span>
+</span><span id="check_srm-79"><a href="#check_srm-79"><span class="linenos"> 79</span></a><span class="sd">        If any expected count &lt; min_expected, a warning is attached.</span>
+</span><span id="check_srm-80"><a href="#check_srm-80"><span class="linenos"> 80</span></a>
+</span><span id="check_srm-81"><a href="#check_srm-81"><span class="linenos"> 81</span></a><span class="sd">    strict_variants:</span>
+</span><span id="check_srm-82"><a href="#check_srm-82"><span class="linenos"> 82</span></a><span class="sd">        - True: fail if observed variants differ from target keys.</span>
+</span><span id="check_srm-83"><a href="#check_srm-83"><span class="linenos"> 83</span></a><span class="sd">        - False: drop unknown variants and test only on declared ones.</span>
+</span><span id="check_srm-84"><a href="#check_srm-84"><span class="linenos"> 84</span></a>
+</span><span id="check_srm-85"><a href="#check_srm-85"><span class="linenos"> 85</span></a><span class="sd">    Returns</span>
+</span><span id="check_srm-86"><a href="#check_srm-86"><span class="linenos"> 86</span></a><span class="sd">    -------</span>
+</span><span id="check_srm-87"><a href="#check_srm-87"><span class="linenos"> 87</span></a><span class="sd">    SRMResult</span>
+</span><span id="check_srm-88"><a href="#check_srm-88"><span class="linenos"> 88</span></a><span class="sd">    &quot;&quot;&quot;</span>
+</span><span id="check_srm-89"><a href="#check_srm-89"><span class="linenos"> 89</span></a>    <span class="c1"># --- Prepare data</span>
+</span><span id="check_srm-90"><a href="#check_srm-90"><span class="linenos"> 90</span></a>    <span class="n">s</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">assignments</span><span class="p">))</span><span class="o">.</span><span class="n">dropna</span><span class="p">()</span>
+</span><span id="check_srm-91"><a href="#check_srm-91"><span class="linenos"> 91</span></a>    <span class="k">if</span> <span class="n">s</span><span class="o">.</span><span class="n">empty</span><span class="p">:</span>
+</span><span id="check_srm-92"><a href="#check_srm-92"><span class="linenos"> 92</span></a>        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;No assignments provided for SRM check.&quot;</span><span class="p">)</span>
+</span><span id="check_srm-93"><a href="#check_srm-93"><span class="linenos"> 93</span></a>
+</span><span id="check_srm-94"><a href="#check_srm-94"><span class="linenos"> 94</span></a>    <span class="k">if</span> <span class="ow">not</span> <span class="n">target_allocation</span><span class="p">:</span>
+</span><span id="check_srm-95"><a href="#check_srm-95"><span class="linenos"> 95</span></a>        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;target_allocation cannot be empty.&quot;</span><span class="p">)</span>
+</span><span id="check_srm-96"><a href="#check_srm-96"><span class="linenos"> 96</span></a>
+</span><span id="check_srm-97"><a href="#check_srm-97"><span class="linenos"> 97</span></a>    <span class="c1"># Validate probabilities</span>
+</span><span id="check_srm-98"><a href="#check_srm-98"><span class="linenos"> 98</span></a>    <span class="n">probs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">target_allocation</span><span class="o">.</span><span class="n">values</span><span class="p">()),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+</span><span id="check_srm-99"><a href="#check_srm-99"><span class="linenos"> 99</span></a>
+</span><span id="check_srm-100"><a href="#check_srm-100"><span class="linenos">100</span></a>    <span class="k">if</span> <span class="p">(</span><span class="n">probs</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">any</span><span class="p">():</span>
+</span><span id="check_srm-101"><a href="#check_srm-101"><span class="linenos">101</span></a>        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;All target allocation probabilities must be &gt; 0.&quot;</span><span class="p">)</span>
+</span><span id="check_srm-102"><a href="#check_srm-102"><span class="linenos">102</span></a>
+</span><span id="check_srm-103"><a href="#check_srm-103"><span class="linenos">103</span></a>    <span class="n">total</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">probs</span><span class="o">.</span><span class="n">sum</span><span class="p">())</span>
+</span><span id="check_srm-104"><a href="#check_srm-104"><span class="linenos">104</span></a>    <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">total</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="n">rtol</span><span class="o">=</span><span class="mf">1e-6</span><span class="p">,</span> <span class="n">atol</span><span class="o">=</span><span class="mf">1e-8</span><span class="p">):</span>
+</span><span id="check_srm-105"><a href="#check_srm-105"><span class="linenos">105</span></a>        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+</span><span id="check_srm-106"><a href="#check_srm-106"><span class="linenos">106</span></a>            <span class="sa">f</span><span class="s2">&quot;target_allocation probabilities must sum to 1.0, got </span><span class="si">{</span><span class="n">total</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2">.&quot;</span>
+</span><span id="check_srm-107"><a href="#check_srm-107"><span class="linenos">107</span></a>        <span class="p">)</span>
+</span><span id="check_srm-108"><a href="#check_srm-108"><span class="linenos">108</span></a>
+</span><span id="check_srm-109"><a href="#check_srm-109"><span class="linenos">109</span></a>    <span class="n">variants</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">target_allocation</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+</span><span id="check_srm-110"><a href="#check_srm-110"><span class="linenos">110</span></a>    <span class="n">target_map</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">variants</span><span class="p">,</span> <span class="n">probs</span><span class="p">))</span>
+</span><span id="check_srm-111"><a href="#check_srm-111"><span class="linenos">111</span></a>
+</span><span id="check_srm-112"><a href="#check_srm-112"><span class="linenos">112</span></a>    <span class="c1"># Observed counts</span>
+</span><span id="check_srm-113"><a href="#check_srm-113"><span class="linenos">113</span></a>    <span class="k">if</span> <span class="n">strict_variants</span><span class="p">:</span>
+</span><span id="check_srm-114"><a href="#check_srm-114"><span class="linenos">114</span></a>        <span class="n">unexpected</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">unique</span><span class="p">())</span> <span class="o">-</span> <span class="nb">set</span><span class="p">(</span><span class="n">variants</span><span class="p">)</span>
+</span><span id="check_srm-115"><a href="#check_srm-115"><span class="linenos">115</span></a>        <span class="k">if</span> <span class="n">unexpected</span><span class="p">:</span>
+</span><span id="check_srm-116"><a href="#check_srm-116"><span class="linenos">116</span></a>            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+</span><span id="check_srm-117"><a href="#check_srm-117"><span class="linenos">117</span></a>                <span class="sa">f</span><span class="s2">&quot;Found assignments to variants not in target_allocation: </span><span class="si">{</span><span class="n">unexpected</span><span class="si">}</span><span class="s2">&quot;</span>
+</span><span id="check_srm-118"><a href="#check_srm-118"><span class="linenos">118</span></a>            <span class="p">)</span>
+</span><span id="check_srm-119"><a href="#check_srm-119"><span class="linenos">119</span></a>
+</span><span id="check_srm-120"><a href="#check_srm-120"><span class="linenos">120</span></a>    <span class="k">if</span> <span class="ow">not</span> <span class="n">strict_variants</span><span class="p">:</span>
+</span><span id="check_srm-121"><a href="#check_srm-121"><span class="linenos">121</span></a>        <span class="n">s</span> <span class="o">=</span> <span class="n">s</span><span class="p">[</span><span class="n">s</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="n">variants</span><span class="p">)]</span>
+</span><span id="check_srm-122"><a href="#check_srm-122"><span class="linenos">122</span></a>        <span class="k">if</span> <span class="n">s</span><span class="o">.</span><span class="n">empty</span><span class="p">:</span>
+</span><span id="check_srm-123"><a href="#check_srm-123"><span class="linenos">123</span></a>            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+</span><span id="check_srm-124"><a href="#check_srm-124"><span class="linenos">124</span></a>                <span class="s2">&quot;After filtering to target variants, no assignments remain.&quot;</span>
+</span><span id="check_srm-125"><a href="#check_srm-125"><span class="linenos">125</span></a>            <span class="p">)</span>
+</span><span id="check_srm-126"><a href="#check_srm-126"><span class="linenos">126</span></a>
+</span><span id="check_srm-127"><a href="#check_srm-127"><span class="linenos">127</span></a>    <span class="n">observed_counts</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">value_counts</span><span class="p">()</span><span class="o">.</span><span class="n">reindex</span><span class="p">(</span><span class="n">variants</span><span class="p">)</span><span class="o">.</span><span class="n">fillna</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+</span><span id="check_srm-128"><a href="#check_srm-128"><span class="linenos">128</span></a>    <span class="n">n</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">observed_counts</span><span class="o">.</span><span class="n">sum</span><span class="p">())</span>
+</span><span id="check_srm-129"><a href="#check_srm-129"><span class="linenos">129</span></a>    <span class="k">if</span> <span class="n">n</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+</span><span id="check_srm-130"><a href="#check_srm-130"><span class="linenos">130</span></a>        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Total sample size is zero after preprocessing.&quot;</span><span class="p">)</span>
+</span><span id="check_srm-131"><a href="#check_srm-131"><span class="linenos">131</span></a>
+</span><span id="check_srm-132"><a href="#check_srm-132"><span class="linenos">132</span></a>    <span class="c1"># Expected counts from probabilities * n</span>
+</span><span id="check_srm-133"><a href="#check_srm-133"><span class="linenos">133</span></a>    <span class="n">expected_counts</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
+</span><span id="check_srm-134"><a href="#check_srm-134"><span class="linenos">134</span></a>        <span class="p">[</span><span class="n">target_map</span><span class="p">[</span><span class="n">v</span><span class="p">]</span> <span class="o">*</span> <span class="n">n</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">variants</span><span class="p">],</span>
+</span><span id="check_srm-135"><a href="#check_srm-135"><span class="linenos">135</span></a>        <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span>
+</span><span id="check_srm-136"><a href="#check_srm-136"><span class="linenos">136</span></a>    <span class="p">)</span>
+</span><span id="check_srm-137"><a href="#check_srm-137"><span class="linenos">137</span></a>
+</span><span id="check_srm-138"><a href="#check_srm-138"><span class="linenos">138</span></a>    <span class="c1"># Chi-square statistic</span>
+</span><span id="check_srm-139"><a href="#check_srm-139"><span class="linenos">139</span></a>    <span class="k">with</span> <span class="n">np</span><span class="o">.</span><span class="n">errstate</span><span class="p">(</span><span class="n">divide</span><span class="o">=</span><span class="s2">&quot;ignore&quot;</span><span class="p">,</span> <span class="n">invalid</span><span class="o">=</span><span class="s2">&quot;ignore&quot;</span><span class="p">):</span>
+</span><span id="check_srm-140"><a href="#check_srm-140"><span class="linenos">140</span></a>        <span class="n">chi2_components</span> <span class="o">=</span> <span class="p">(</span><span class="n">observed_counts</span><span class="o">.</span><span class="n">values</span> <span class="o">-</span> <span class="n">expected_counts</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">/</span> <span class="n">expected_counts</span>
+</span><span id="check_srm-141"><a href="#check_srm-141"><span class="linenos">141</span></a>    <span class="n">chi2_components</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nan_to_num</span><span class="p">(</span><span class="n">chi2_components</span><span class="p">,</span> <span class="n">nan</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">posinf</span><span class="o">=</span><span class="mf">0.0</span><span class="p">)</span>
+</span><span id="check_srm-142"><a href="#check_srm-142"><span class="linenos">142</span></a>    <span class="n">chi2_stat</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">chi2_components</span><span class="o">.</span><span class="n">sum</span><span class="p">())</span>
+</span><span id="check_srm-143"><a href="#check_srm-143"><span class="linenos">143</span></a>
+</span><span id="check_srm-144"><a href="#check_srm-144"><span class="linenos">144</span></a>    <span class="c1"># Degrees of freedom</span>
+</span><span id="check_srm-145"><a href="#check_srm-145"><span class="linenos">145</span></a>    <span class="n">k</span> <span class="o">=</span> <span class="p">(</span><span class="n">expected_counts</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+</span><span id="check_srm-146"><a href="#check_srm-146"><span class="linenos">146</span></a>    <span class="n">df</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">k</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+</span><span id="check_srm-147"><a href="#check_srm-147"><span class="linenos">147</span></a>
+</span><span id="check_srm-148"><a href="#check_srm-148"><span class="linenos">148</span></a>    <span class="k">if</span> <span class="n">chi2</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+</span><span id="check_srm-149"><a href="#check_srm-149"><span class="linenos">149</span></a>        <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span>
+</span><span id="check_srm-150"><a href="#check_srm-150"><span class="linenos">150</span></a>            <span class="s2">&quot;scipy is required for p-value computation in check_srm(). &quot;</span>
+</span><span id="check_srm-151"><a href="#check_srm-151"><span class="linenos">151</span></a>            <span class="sa">f</span><span class="s2">&quot;Original error: </span><span class="si">{</span><span class="n">_scipy_import_error</span><span class="si">}</span><span class="s2">&quot;</span>
+</span><span id="check_srm-152"><a href="#check_srm-152"><span class="linenos">152</span></a>        <span class="p">)</span>
+</span><span id="check_srm-153"><a href="#check_srm-153"><span class="linenos">153</span></a>
+</span><span id="check_srm-154"><a href="#check_srm-154"><span class="linenos">154</span></a>    <span class="n">p_value</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">chi2</span><span class="o">.</span><span class="n">sf</span><span class="p">(</span><span class="n">chi2_stat</span><span class="p">,</span> <span class="n">df</span><span class="p">))</span>
+</span><span id="check_srm-155"><a href="#check_srm-155"><span class="linenos">155</span></a>
+</span><span id="check_srm-156"><a href="#check_srm-156"><span class="linenos">156</span></a>    <span class="n">warning</span> <span class="o">=</span> <span class="kc">None</span>
+</span><span id="check_srm-157"><a href="#check_srm-157"><span class="linenos">157</span></a>    <span class="k">if</span> <span class="p">(</span><span class="n">expected_counts</span> <span class="o">&lt;</span> <span class="n">min_expected</span><span class="p">)</span><span class="o">.</span><span class="n">any</span><span class="p">():</span>
+</span><span id="check_srm-158"><a href="#check_srm-158"><span class="linenos">158</span></a>        <span class="n">warning</span> <span class="o">=</span> <span class="p">(</span>
+</span><span id="check_srm-159"><a href="#check_srm-159"><span class="linenos">159</span></a>            <span class="sa">f</span><span class="s2">&quot;Some expected cell counts are &lt; </span><span class="si">{</span><span class="n">min_expected</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2">. &quot;</span>
+</span><span id="check_srm-160"><a href="#check_srm-160"><span class="linenos">160</span></a>            <span class="s2">&quot;Chi-square approximation may be unreliable; &quot;</span>
+</span><span id="check_srm-161"><a href="#check_srm-161"><span class="linenos">161</span></a>            <span class="s2">&quot;consider exact or simulation-based tests.&quot;</span>
+</span><span id="check_srm-162"><a href="#check_srm-162"><span class="linenos">162</span></a>        <span class="p">)</span>
+</span><span id="check_srm-163"><a href="#check_srm-163"><span class="linenos">163</span></a>
+</span><span id="check_srm-164"><a href="#check_srm-164"><span class="linenos">164</span></a>    <span class="n">is_srm</span> <span class="o">=</span> <span class="n">p_value</span> <span class="o">&lt;</span> <span class="n">alpha</span>
+</span><span id="check_srm-165"><a href="#check_srm-165"><span class="linenos">165</span></a>
+</span><span id="check_srm-166"><a href="#check_srm-166"><span class="linenos">166</span></a>    <span class="k">return</span> <span class="n">SRMResult</span><span class="p">(</span>
+</span><span id="check_srm-167"><a href="#check_srm-167"><span class="linenos">167</span></a>        <span class="n">chi2</span><span class="o">=</span><span class="n">chi2_stat</span><span class="p">,</span>
+</span><span id="check_srm-168"><a href="#check_srm-168"><span class="linenos">168</span></a>        <span class="n">df</span><span class="o">=</span><span class="n">df</span><span class="p">,</span>
+</span><span id="check_srm-169"><a href="#check_srm-169"><span class="linenos">169</span></a>        <span class="n">p_value</span><span class="o">=</span><span class="n">p_value</span><span class="p">,</span>
+</span><span id="check_srm-170"><a href="#check_srm-170"><span class="linenos">170</span></a>        <span class="n">expected</span><span class="o">=</span><span class="p">{</span><span class="n">v</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span><span class="n">e</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span><span class="p">,</span> <span class="n">e</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">variants</span><span class="p">,</span> <span class="n">expected_counts</span><span class="p">)},</span>
+</span><span id="check_srm-171"><a href="#check_srm-171"><span class="linenos">171</span></a>        <span class="n">observed</span><span class="o">=</span><span class="p">{</span><span class="n">v</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="n">o</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span><span class="p">,</span> <span class="n">o</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">variants</span><span class="p">,</span> <span class="n">observed_counts</span><span class="p">)},</span>
+</span><span id="check_srm-172"><a href="#check_srm-172"><span class="linenos">172</span></a>        <span class="n">alpha</span><span class="o">=</span><span class="n">alpha</span><span class="p">,</span>
+</span><span id="check_srm-173"><a href="#check_srm-173"><span class="linenos">173</span></a>        <span class="n">is_srm</span><span class="o">=</span><span class="n">is_srm</span><span class="p">,</span>
+</span><span id="check_srm-174"><a href="#check_srm-174"><span class="linenos">174</span></a>        <span class="n">warning</span><span class="o">=</span><span class="n">warning</span><span class="p">,</span>
+</span><span id="check_srm-175"><a href="#check_srm-175"><span class="linenos">175</span></a>    <span class="p">)</span>
+</span></pre></div>
+
+
+            <div class="docstring"><p>Check Sample Ratio Mismatch (SRM) for an RCT via chi-square goodness-of-fit test.</p>
+
+<h6 id="parameters">Parameters</h6>
+
+<ul>
+<li><strong>assignments:</strong>: Iterable of assigned variant labels for each unit (user_id, session_id, etc.).
+E.g. Series of ["control", "treatment", ...].</li>
+<li><strong>target_allocation:</strong>: Mapping {variant: p} describing intended allocation as PROBABILITIES.
+<ul>
+<li>Each p must be &gt; 0.</li>
+<li>Sum of all p must be 1.0 (within numerical tolerance).</li>
+</ul></li>
+</ul>
+
+<p>Examples:
+    {"control": 0.5, "treatment": 0.5}
+    {"A": 0.2, "B": 0.3, "C": 0.5}</p>
+
+<ul>
+<li><strong>alpha:</strong>: Significance level. Use strict values like 1e-3 or 1e-4 in production.</li>
+<li><strong>min_expected:</strong>: If any expected count &lt; min_expected, a warning is attached.</li>
+<li><strong>strict_variants:</strong>: - True: fail if observed variants differ from target keys.
+<ul>
+<li>False: drop unknown variants and test only on declared ones.</li>
+</ul></li>
+</ul>
+
+<h6 id="returns">Returns</h6>
+
+<ul>
+<li><strong>SRMResult</strong></li>
+</ul>
+</div>
+
+
+                </section>
+    </main>
+<script>
+    function escapeHTML(html) {
+        return document.createElement('div').appendChild(document.createTextNode(html)).parentNode.innerHTML;
+    }
+
+    const originalContent = document.querySelector("main.pdoc");
+    let currentContent = originalContent;
+
+    function setContent(innerHTML) {
+        let elem;
+        if (innerHTML) {
+            elem = document.createElement("main");
+            elem.classList.add("pdoc");
+            elem.innerHTML = innerHTML;
+        } else {
+            elem = originalContent;
+        }
+        if (currentContent !== elem) {
+            currentContent.replaceWith(elem);
+            currentContent = elem;
+        }
+    }
+
+    function getSearchTerm() {
+        return (new URL(window.location)).searchParams.get("search");
+    }
+
+    const searchBox = document.querySelector(".pdoc input[type=search]");
+    searchBox.addEventListener("input", function () {
+        let url = new URL(window.location);
+        if (searchBox.value.trim()) {
+            url.hash = "";
+            url.searchParams.set("search", searchBox.value);
+        } else {
+            url.searchParams.delete("search");
+        }
+        history.replaceState("", "", url.toString());
+        onInput();
+    });
+    window.addEventListener("popstate", onInput);
+
+
+    let search, searchErr;
+
+    async function initialize() {
+        try {
+            search = await new Promise((resolve, reject) => {
+                const script = document.createElement("script");
+                script.type = "text/javascript";
+                script.async = true;
+                script.onload = () => resolve(window.pdocSearch);
+                script.onerror = (e) => reject(e);
+                script.src = "../../search.js";
+                document.getElementsByTagName("head")[0].appendChild(script);
+            });
+        } catch (e) {
+            console.error("Cannot fetch pdoc search index");
+            searchErr = "Cannot fetch search index.";
+        }
+        onInput();
+
+        document.querySelector("nav.pdoc").addEventListener("click", e => {
+            if (e.target.hash) {
+                searchBox.value = "";
+                searchBox.dispatchEvent(new Event("input"));
+            }
+        });
+    }
+
+    function onInput() {
+        setContent((() => {
+            const term = getSearchTerm();
+            if (!term) {
+                return null
+            }
+            if (searchErr) {
+                return `<h3>Error: ${searchErr}</h3>`
+            }
+            if (!search) {
+                return "<h3>Searching...</h3>"
+            }
+
+            window.scrollTo({top: 0, left: 0, behavior: 'auto'});
+
+            const results = search(term);
+
+            let html;
+            if (results.length === 0) {
+                html = `No search results for '${escapeHTML(term)}'.`
+            } else {
+                html = `<h4>${results.length} search result${results.length > 1 ? "s" : ""} for '${escapeHTML(term)}'.</h4>`;
+            }
+            for (let result of results.slice(0, 10)) {
+                let doc = result.doc;
+                let url = `../../${doc.modulename.replaceAll(".", "/")}.html`;
+                if (doc.qualname) {
+                    url += `#${doc.qualname}`;
+                }
+
+                let heading;
+                switch (result.doc.kind) {
+                    case "function":
+                        if (doc.fullname.endsWith(".__init__")) {
+                            heading = `<span class="name">${doc.fullname.replace(/\.__init__$/, "")}</span>${doc.signature}`;
+                        } else {
+                            heading = `<span class="def">${doc.funcdef}</span> <span class="name">${doc.fullname}</span>${doc.signature}`;
+                        }
+                        break;
+                    case "class":
+                        heading = `<span class="def">class</span> <span class="name">${doc.fullname}</span>`;
+                        if (doc.bases)
+                            heading += `<wbr>(<span class="base">${doc.bases}</span>)`;
+                        heading += `:`;
+                        break;
+                    case "variable":
+                        heading = `<span class="name">${doc.fullname}</span>`;
+                        if (doc.annotation)
+                            heading += `<span class="annotation">${doc.annotation}</span>`;
+                        if (doc.default_value)
+                            heading += `<span class="default_value"> = ${doc.default_value}</span>`;
+                        break;
+                    default:
+                        heading = `<span class="name">${doc.fullname}</span>`;
+                        break;
+                }
+                html += `
+                        <section class="search-result">
+                        <a href="${url}" class="attr ${doc.kind}">${heading}</a>
+                        <div class="docstring">${doc.doc}</div>
+                        </section>
+                    `;
+
+            }
+            return html;
+        })());
+    }
+
+    if (getSearchTerm()) {
+        initialize();
+        searchBox.value = getSearchTerm();
+        onInput();
+    } else {
+        searchBox.addEventListener("focus", initialize, {once: true});
+    }
+
+    searchBox.addEventListener("keydown", e => {
+        if (["ArrowDown", "ArrowUp", "Enter"].includes(e.key)) {
+            let focused = currentContent.querySelector(".search-result.focused");
+            if (!focused) {
+                currentContent.querySelector(".search-result").classList.add("focused");
+            } else if (
+                e.key === "ArrowDown"
+                && focused.nextElementSibling
+                && focused.nextElementSibling.classList.contains("search-result")
+            ) {
+                focused.classList.remove("focused");
+                focused.nextElementSibling.classList.add("focused");
+                focused.nextElementSibling.scrollIntoView({
+                    behavior: "smooth",
+                    block: "nearest",
+                    inline: "nearest"
+                });
+            } else if (
+                e.key === "ArrowUp"
+                && focused.previousElementSibling
+                && focused.previousElementSibling.classList.contains("search-result")
+            ) {
+                focused.classList.remove("focused");
+                focused.previousElementSibling.classList.add("focused");
+                focused.previousElementSibling.scrollIntoView({
+                    behavior: "smooth",
+                    block: "nearest",
+                    inline: "nearest"
+                });
+            } else if (
+                e.key === "Enter"
+            ) {
+                focused.querySelector("a").click();
+            }
+        }
+    });
+</script></body>
+</html>
