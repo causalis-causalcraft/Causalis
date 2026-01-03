@@ -7,7 +7,7 @@ from sklearn.ensemble import RandomForestRegressor, RandomForestClassifier
 
 from causalis.data.causaldata import CausalData
 from causalis.inference.estimators.irm import IRM
-from causalis.refutation.unconfoundedness.sensitivity import sensitivity_benchmark
+from causalis.refutation.uncofoundedness.sensitivity import sensitivity_benchmark
 
 
 def make_synthetic(n=400, seed=42):
@@ -25,7 +25,7 @@ def make_synthetic(n=400, seed=42):
 
 
 def fit_irm(df):
-    data = CausalData(df, treatment="d", outcome="y", confounders=["x1", "x2"])
+    data = CausalData(df=df, treatment="d", outcome="y", confounders=["x1", "x2"])
     ml_g = RandomForestRegressor(n_estimators=50, random_state=1)
     ml_m = LogisticRegression(max_iter=1000)
     irm = IRM(data=data, ml_g=ml_g, ml_m=ml_m, n_folds=3, random_state=1)

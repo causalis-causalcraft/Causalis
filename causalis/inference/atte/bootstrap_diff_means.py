@@ -63,19 +63,19 @@ def bootstrap_diff_means(
         raise ValueError("n_simul must be a positive integer")
 
     treatment = data.treatment
-    target = data.target
+    outcome = data.outcome
 
     if not isinstance(treatment, pd.Series) or treatment.empty:
         raise ValueError("causaldata object must have a treatment variable defined")
-    if not isinstance(target, pd.Series) or target.empty:
+    if not isinstance(outcome, pd.Series) or outcome.empty:
         raise ValueError("causaldata object must have a outcome variable defined")
 
     uniq = treatment.unique()
     if len(uniq) != 2:
         raise ValueError("Treatment variable must be binary (have exactly 2 unique values)")
 
-    control = target[treatment == 0]
-    treated = target[treatment == 1]
+    control = outcome[treatment == 0]
+    treated = outcome[treatment == 1]
 
     n0 = int(control.shape[0])
     n1 = int(treated.shape[0])

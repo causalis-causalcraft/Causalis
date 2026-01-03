@@ -82,6 +82,7 @@ napoleon_attr_annotations = True
 # Allow autosummary to generate stubs for API pages that declare them.
 # With autodoc_mock_imports below, this should be safe in docs environments.
 autosummary_generate = True
+autosummary_imported_members = True
 # Mock optional heavy dependencies to allow docs build in minimal CI environments
 autodoc_mock_imports = [
     'catboost',

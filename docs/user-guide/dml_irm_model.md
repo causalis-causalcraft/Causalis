@@ -49,7 +49,7 @@ Simply by changing the score function, you get valid inference for different cau
 Modern DML IRM implementations provide comprehensive diagnostics:
 - **Overlap/positivity checks**: Ensure common support between treated and control
 - **Orthogonality validation**: Verify Neyman orthogonality via out-of-sample moment checks
-- **Sensitivity analysis**: Assess robustness to potential unobserved confounding
+- **Sensitivity analysis**: Assess robustness to potential unobserved cofounding
 - **Score diagnostics**: Check for extreme influence values or distributional issues
 
 ## 8. Proven Theoretical Foundation
@@ -68,7 +68,7 @@ Empirical studies consistently show DML IRM outperforms alternatives:
 - More stable estimates than purely parametric methods in complex settings
 - Competitive or superior to propensity score methods while being more automatic
 
-## 10. Transparent Confounding Adjustment
+## 10. Transparent Cofounding Adjustment
 
 Unlike black-box methods, DML IRM makes explicit:
 - What confounders are being adjusted for
@@ -103,7 +103,7 @@ DML IRM is particularly powerful for:
   * **ATTE**: $\theta_{\mathrm{ATTE}}=\mathbb E\big[Y(1)-Y(0)\mid D=1\big]$.
 
 **Assumptions:**
-* Unconfoundedness $(Y(1),Y(0))\perp D\mid X$
+* Uncofoundedness $(Y(1),Y(0))\perp D\mid X$
 * Positivity $0<\Pr(D=1\mid X)<1$
 * SUTVA
 * Regularity for cross-fitting and ML.

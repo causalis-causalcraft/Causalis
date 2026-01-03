@@ -21,7 +21,7 @@ import warnings
 from dataclasses import dataclass
 from typing import Any, Dict, Optional, Tuple
 
-from sklearn.base import is_classifier, clone
+from sklearn.base import is_classifier, clone, BaseEstimator
 from sklearn.model_selection import StratifiedKFold
 from sklearn.utils.validation import check_is_fitted
 from scipy.stats import norm
@@ -94,8 +94,15 @@ def _is_binary(values: np.ndarray) -> bool:
     return np.array_equal(np.sort(uniq), np.array([0, 1])) or np.array_equal(np.sort(uniq), np.array([0.0, 1.0]))
 
 
+def _safe_is_classifier(estimator) -> bool:
+    try:
+        return is_classifier(estimator)
+    except (AttributeError, TypeError):
+        return getattr(estimator, "_estimator_type", None) == "classifier"
+
+
 def _predict_prob_or_value(model, X: np.ndarray) -> np.ndarray:
-    if is_classifier(model) and hasattr(model, "predict_proba"):
+    if _safe_is_classifier(model) and hasattr(model, "predict_proba"):
         proba = model.predict_proba(X)
         if proba.ndim == 1 or proba.shape[1] == 1:
             return np.clip(proba.ravel(), 1e-12, 1 - 1e-12)
@@ -120,7 +127,7 @@ class IRMResults:
     summary: pd.DataFrame
 
 
-class IRM:
+class IRM(BaseEstimator):
     """Interactive Regression Model (IRM) with DoubleML-style cross-fitting using CausalData.
 
     Parameters
@@ -198,7 +205,7 @@ class IRM:
     # --------- Helpers ---------
     def _check_data(self) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
         df = self.data.get_df().copy()
-        y = df[self.data.target.name].to_numpy(dtype=float)
+        y = df[self.data.outcome.name].to_numpy(dtype=float)
         d = df[self.data.treatment.name].to_numpy()
         # Ensure binary 0/1
         if df[self.data.treatment.name].dtype == bool:
@@ -271,10 +278,10 @@ class IRM:
         n = X.shape[0]
 
         # Enforce valid propensity model: must expose predict_proba when classifier
-        if is_classifier(self.ml_m) and not hasattr(self.ml_m, "predict_proba"):
+        if _safe_is_classifier(self.ml_m) and not hasattr(self.ml_m, "predict_proba"):
             raise ValueError("ml_m must support predict_proba() to produce valid propensity probabilities.")
         # For binary outcomes, require probabilistic outcome models when using classifiers
-        if y_is_binary and is_classifier(self.ml_g) and not hasattr(self.ml_g, "predict_proba"):
+        if y_is_binary and _safe_is_classifier(self.ml_g) and not hasattr(self.ml_g, "predict_proba"):
             raise ValueError("Binary outcome: ml_g is a classifier but does not expose predict_proba(). Use a probabilistic classifier or calibrate it.")
 
         if self.n_rep != 1:
@@ -306,7 +313,7 @@ class IRM:
             else:
                 X_g0, y_g0 = X_tr[mask0], y_tr[mask0]
             model_g0.fit(X_g0, y_g0)
-            if y_is_binary and is_classifier(model_g0) and hasattr(model_g0, "predict_proba"):
+            if y_is_binary and _safe_is_classifier(model_g0) and hasattr(model_g0, "predict_proba"):
                 pred_g0 = model_g0.predict_proba(X_te)
                 pred_g0 = pred_g0[:, 1] if pred_g0.ndim == 2 else pred_g0.ravel()
             else:
@@ -325,7 +332,7 @@ class IRM:
             else:
                 X_g1, y_g1 = X_tr[mask1], y_tr[mask1]
             model_g1.fit(X_g1, y_g1)
-            if y_is_binary and is_classifier(model_g1) and hasattr(model_g1, "predict_proba"):
+            if y_is_binary and _safe_is_classifier(model_g1) and hasattr(model_g1, "predict_proba"):
                 pred_g1 = model_g1.predict_proba(X_te)
                 pred_g1 = pred_g1[:, 1] if pred_g1.ndim == 2 else pred_g1.ravel()
             else:
@@ -494,7 +501,7 @@ class IRM:
         if y is None or d is None:
             # fallback to current data
             df = self.data.get_df()
-            y = df[self.data.target.name].to_numpy(dtype=float)
+            y = df[self.data.outcome.name].to_numpy(dtype=float)
             d = df[self.data.treatment.name].to_numpy(dtype=int)
         m_hat = np.asarray(self.m_hat_, dtype=float)
         g0 = np.asarray(self.g0_hat_, dtype=float)

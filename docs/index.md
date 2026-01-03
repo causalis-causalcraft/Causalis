@@ -4,7 +4,7 @@
 ```{container} hero
 :class: sd-text-center sd-shadow-sm sd-rounded-2xl
 
-Evaluate the impact of the `treatment` on the `outcome` metric within the sample population, while controlling for `confounding` factors, to inform resource allocation decisions.
+Evaluate the impact of the `treatment` on the `outcome` metric within the sample population, while controlling for `cofounding` factors, to inform resource allocation decisions.
 ````
 ## Why Causalis?
 ````{grid} 1
@@ -38,7 +38,7 @@ Propensity score distribution, SMD, and other useful plots
 ```{grid-item-card} **Advanced DGP**:
 :class-card: sd-shadow-sm sd-rounded-2xl
 
-Data Generating Process with non-linear effects, unobserved confounding,
+Data Generating Process with non-linear effects, unobserved cofounding,
 target treatment rate calibration, Gaussian copula, heterogeneous treatment effects and more
 ```
 

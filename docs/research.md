@@ -30,7 +30,7 @@ research/refutation_flow
 :link-type: doc
 :class-card: sd-shadow-sm sd-rounded-2xl sd-text-center
 
-Benchmark simple DGP from causalis.data.generators.
+Benchmark simple DGP from causalis.data.dgps.
 ```
 
 ```{grid-item-card} Compare Implementation of DML IRM in Causalis and DML IRM in DoubleML

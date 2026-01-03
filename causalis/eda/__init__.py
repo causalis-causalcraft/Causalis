@@ -1,4 +1,5 @@
+from . import eda, confounders_balance as cb_module, rct_design
 from .eda import CausalEDA, CausalDataLite
-from .cofounders_balance import confounders_balance
+from .confounders_balance import confounders_balance
+__all__ = ["eda", "cb_module", "rct_design", "CausalEDA", "CausalDataLite", "confounders_balance"]
 
-__all__ = ["CausalEDA", "CausalDataLite", "confounders_balance"]

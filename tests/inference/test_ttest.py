@@ -140,28 +140,28 @@ def test_ttest_error_no_treatment(test_data):
         confounders=['age', 'gender']
     )
     
-    # Manually set _treatment to empty list to simulate no treatment
-    ck_no_treatment._treatment = []
+    # Manually set outcome_name to empty to simulate no treatment
+    ck_no_treatment.treatment_name = ""
     
     with pytest.raises(ValueError):
         ttest(ck_no_treatment)
 
 
-def test_ttest_error_no_target(test_data):
+def test_ttest_error_no_outcome(test_data):
     """Test error handling when no outcome is specified."""
     # Create CausalData with required parameters
-    ck_no_target = CausalData(
+    ck_no_outcome = CausalData(
         df=test_data['df'],
         outcome='outcome',
         treatment='treatment',
         confounders=['age', 'gender']
     )
     
-    # Manually set _target to empty list to simulate no outcome
-    ck_no_target._target = []
+    # Manually set outcome_name to empty to simulate no outcome
+    ck_no_outcome.outcome_name = ""
     
     with pytest.raises(ValueError):
-        ttest(ck_no_target)
+        ttest(ck_no_outcome)
 
 
 def test_ttest_error_non_binary_treatment(test_data):

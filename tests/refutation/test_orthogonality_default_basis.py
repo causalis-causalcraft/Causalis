@@ -8,7 +8,7 @@ from causalis.refutation.score.score_validation import refute_irm_orthogonality
 def _dummy_inference(data: CausalData, **kwargs):
     # Build simple, stable predictions for testing
     df = data.get_df()
-    y = data.target.values.astype(float)
+    y = data.outcome.values.astype(float)
     d = data.treatment.values.astype(float)
     confs = list(data.confounders)
     X = df[confs].values.astype(float) if len(confs) > 0 else np.zeros((len(df), 0))
@@ -68,7 +68,7 @@ def test_default_basis_uses_all_confounders_plus_constant():
     res = refute_irm_orthogonality(
         _dummy_inference,
         data,
-        target='ATE',
+        outcome='ATE',
         n_folds_oos=3,  # keep it light for the test
     )
     ortho = res['orthogonality_derivatives']['full_sample']
@@ -81,7 +81,7 @@ def test_explicit_n_basis_funcs_is_respected():
     res = refute_irm_orthogonality(
         _dummy_inference,
         data,
-        target='ATE',
+        outcome='ATE',
         n_basis_funcs=2,  # constant + 1 covariate
         n_folds_oos=3,
     )

@@ -8,7 +8,7 @@ from sklearn.ensemble import RandomForestRegressor
 
 from causalis.data.causaldata import CausalData
 from causalis.inference.estimators.irm import IRM
-from causalis.refutation.unconfoundedness.sensitivity import sensitivity_analysis, get_sensitivity_summary
+from causalis.refutation.uncofoundedness.sensitivity import sensitivity_analysis, get_sensitivity_summary
 
 
 def make_synth(n=400, seed=123):
@@ -24,7 +24,7 @@ def make_synth(n=400, seed=123):
 
 
 def fit_irm(df):
-    data = CausalData(df, treatment="d", outcome="y", confounders=["x1", "x2"])
+    data = CausalData(df=df, treatment="d", outcome="y", confounders=["x1", "x2"])
     ml_g = RandomForestRegressor(n_estimators=60, random_state=1)
     ml_m = LogisticRegression(max_iter=1000)
     irm = IRM(data=data, ml_g=ml_g, ml_m=ml_m, n_folds=3, random_state=1)
@@ -34,7 +34,7 @@ def fit_irm(df):
 
 
 
-def test_zero_confounding_collapses_bounds():
+def test_zero_cofounding_collapses_bounds():
     df = make_synth()
     irm = fit_irm(df)
     effect = {"model": irm}
@@ -43,8 +43,8 @@ def test_zero_confounding_collapses_bounds():
     # summary should be obtainable
     s = get_sensitivity_summary(effect)
     assert isinstance(s, str)
-    # Confounding bounds collapse to theta when cf_y=cf_d=0
-    tl, tu = out['theta_bounds_confounding']
+    # Cofounding bounds collapse to theta when cf_y=cf_d=0
+    tl, tu = out['theta_bounds_cofounding']
     th = out['theta']
     assert pytest.approx(tl, 1e-10) == th
     assert pytest.approx(tu, 1e-10) == th
@@ -56,9 +56,9 @@ def test_rho_sign_affects_bounds():
     effect = {"model": irm}
     out_pos = sensitivity_analysis(effect, cf_y=0.2, cf_d=0.2, rho=+1.0, level=0.95)
     out_neg = sensitivity_analysis(effect, cf_y=0.2, cf_d=0.2, rho=-1.0, level=0.95)
-    # Widths of confounding bounds
-    w_pos = out_pos['theta_bounds_confounding'][1] - out_pos['theta_bounds_confounding'][0]
-    w_neg = out_neg['theta_bounds_confounding'][1] - out_neg['theta_bounds_confounding'][0]
+    # Widths of cofounding bounds
+    w_pos = out_pos['theta_bounds_cofounding'][1] - out_pos['theta_bounds_cofounding'][0]
+    w_neg = out_neg['theta_bounds_cofounding'][1] - out_neg['theta_bounds_cofounding'][0]
     assert w_pos >= 0 and w_neg >= 0
     # Positive rho should widen more than negative rho
     assert w_pos >= w_neg

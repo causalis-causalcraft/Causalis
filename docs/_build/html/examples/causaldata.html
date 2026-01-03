@@ -364,7 +364,7 @@ document.write(`
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">causal_data</span> <span class="o">=</span> <span class="n">CausalData</span><span class="p">(</span><span class="n">df</span><span class="o">=</span><span class="n">df</span><span class="p">,</span>
-                         <span class="n">outcome</span><span class="o">=</span><span class="s1">&#39;outcome&#39;</span><span class="p">,</span> <span class="n">cofounders</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;age&#39;</span><span class="p">,</span> <span class="s1">&#39;platform_Android&#39;</span><span class="p">],</span>
+                         <span class="n">outcome</span><span class="o">=</span><span class="s1">&#39;outcome&#39;</span><span class="p">,</span> <span class="n">confounders</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;age&#39;</span><span class="p">,</span> <span class="s1">&#39;platform_Android&#39;</span><span class="p">],</span>
                          <span class="n">treatment</span><span class="o">=</span><span class="s1">&#39;treatment&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -377,14 +377,14 @@ document.write(`
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>CausalData(df=(20000, 4), treatment=&#39;treatment&#39;)outcome=&#39;outcome&#39;, cofounders=[&#39;age&#39;, &#39;platform_Android&#39;], 
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>CausalData(df=(20000, 4), treatment=&#39;treatment&#39;)outcome=&#39;outcome&#39;, confounders=[&#39;age&#39;, &#39;platform_Android&#39;],
 </pre></div>
 </div>
 </div>
 </div>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">causal_data</span><span class="o">.</span><span class="n">cofounders</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">causal_data</span><span class="o">.</span><span class="n">confounders</span>
 </pre></div>
 </div>
 </div>

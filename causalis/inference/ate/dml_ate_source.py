@@ -90,7 +90,7 @@ def dml_ate_source(
     # Validate inputs
     if data.treatment is None:
         raise ValueError("CausalData object must have a treatment variable defined")
-    if data.target is None:
+    if data.outcome is None:
         raise ValueError("CausalData object must have a outcome variable defined")
     if not data.confounders:
         raise ValueError("CausalData object must have confounders variables defined")
@@ -108,7 +108,7 @@ def dml_ate_source(
     # Prepare DataFrame and normalize treatment
     df = data.get_df().copy()
     tname = data.treatment.name
-    yname = data.target.name
+    yname = data.outcome.name
     xnames = list(data.confounders)
 
     # Normalize binary treatment

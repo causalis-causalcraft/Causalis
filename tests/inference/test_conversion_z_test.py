@@ -98,7 +98,7 @@ def test_errors_non_binary_treatment(conv_test_data):
         conversion_z_test(ck)
 
 
-def test_errors_non_binary_target(conv_test_data):
+def test_errors_non_binary_outcome(conv_test_data):
     df = conv_test_data['df'].copy()
     # make the outcome non-binary
     df['outcome'] = np.random.normal(size=conv_test_data['n'])

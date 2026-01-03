@@ -46,7 +46,7 @@
    "cell_type": "code",
    "source": [
     "causal_data = CausalData(df=df,\n",
-    "                         outcome='outcome', cofounders=['age', 'platform_Android'],\n",
+    "                         outcome='outcome', confounders=['age', 'platform_Android'],\n",
     "                         treatment='treatment')"
    ],
    "id": "7d24ef042c73da7b",
@@ -67,7 +67,7 @@
     {
      "data": {
       "text/plain": [
-       "CausalData(df=(20000, 4), target='target', cofounders=['age', 'platform_Android'], treatment='treatment')"
+       "CausalData(df=(20000, 4), target='target', confounders=['age', 'platform_Android'], treatment='treatment')"
       ]
      },
      "execution_count": 20,
@@ -85,7 +85,7 @@
     }
    },
    "cell_type": "code",
-   "source": "causal_data.cofounders",
+   "source": "causal_data.confounders",
    "id": "413617b680470383",
    "outputs": [
     {

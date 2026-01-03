@@ -23,7 +23,7 @@ def test_dml_att():
     smoker = np.random.binomial(1, 0.3, n)
     bmi = np.random.normal(27, 4, n)
     
-    # Generate treatment (with confounding)
+    # Generate treatment (with cofounding)
     propensity = 1 / (1 + np.exp(-(0.2 * age + 0.4 * smoker - 0.3 * bmi - 0.5)))
     treatment = np.random.binomial(1, propensity, n)
     
