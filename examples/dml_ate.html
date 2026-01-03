@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>DML ATE Example &#8212; Causalis 0.1.0 documentation</title>
+    <title>DML ATE Example &#8212; Causalis 0.1.2 documentation</title>
   
   
   
@@ -39,7 +39,7 @@
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../_static/documentation_options.js?v=2caa9db7"></script>
+    <script src="../_static/documentation_options.js?v=e5353d3f"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -47,7 +47,6 @@
     <script src="../_static/design-tabs.js?v=df1d7cd1"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'examples/dml_ate';</script>
-    <link rel="icon" href="../_static/new_logo.svg"/>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="DML ATT Example" href="dml_atte.html" />
@@ -125,14 +124,6 @@
   
   
   
-  
-    
-    
-      
-    
-    
-    <img src="../_static/new_logo_big.svg" class="logo__image only-light" alt=""/>
-    <script>document.write(`<img src="../_static/new_logo_big.svg" class="logo__image only-dark" alt=""/>`);</script>
   
   
     <p class="title logo__title">Causalis</p>
@@ -762,7 +753,7 @@ document.write(`
       <th>ks_pvalue</th>
     </tr>
     <tr>
-      <th>confounders</th>
+      <th>cofounders</th>
       <th></th>
       <th></th>
       <th></th>
@@ -1286,8 +1277,8 @@ document.write(`
 </div>
 <div class="cell_output docutils container">
 <div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>1.) Are your clients independent (i)?
-2.) Do you measure confounders, treatment, and outcome in the same intervals?
-3.) Do you measure confounders before treatment and outcome after?
+2.) Do you measure cofounders, treatment, and outcome in the same intervals?
+3.) Do you measure cofounders before treatment and outcome after?
 4.) Do you have a consistent label of treatment, such as if a person does not receive a treatment, he has a label 0?
 </pre></div>
 </div>
@@ -1299,9 +1290,9 @@ document.write(`
 <h2>Uncofoundedness<a class="headerlink" href="#uncofoundedness" title="Link to this heading">#</a></h2>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython2 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">causalis.refutation.unconfoundedness.uncofoundedness_validation</span><span class="w"> </span><span class="kn">import</span> <span class="n">run_unconfoundedness_diagnostics</span>
+<div class="highlight-ipython2 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">causalis.refutation.uncofoundedness.uncofoundedness_validation</span><span class="w"> </span><span class="kn">import</span> <span class="n">run_uncofoundedness_diagnostics</span>
 
-<span class="n">rep_uc</span> <span class="o">=</span> <span class="n">run_unconfoundedness_diagnostics</span><span class="p">(</span><span class="n">res</span><span class="o">=</span><span class="n">ate_result</span><span class="p">)</span>
+<span class="n">rep_uc</span> <span class="o">=</span> <span class="n">run_uncofoundedness_diagnostics</span><span class="p">(</span><span class="n">res</span><span class="o">=</span><span class="n">ate_result</span><span class="p">)</span>
 <span class="n">rep_uc</span><span class="p">[</span><span class="s1">&#39;summary&#39;</span><span class="p">]</span>
 </pre></div>
 </div>
@@ -1349,7 +1340,7 @@ document.write(`
 </div>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython2 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">causalis.refutation.unconfoundedness.sensitivity</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+<div class="highlight-ipython2 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">causalis.refutation.uncofoundedness.sensitivity</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">sensitivity_analysis</span><span class="p">,</span> <span class="n">sensitivity_benchmark</span>
 <span class="p">)</span>
 
@@ -1363,7 +1354,7 @@ document.write(`
  &#39;level&#39;: 0.95,
  &#39;z&#39;: 1.959963984540054,
  &#39;sampling_ci&#39;: (1.5329683790491713, 1.9995386624939646),
- &#39;theta_bounds_confounding&#39;: (1.6875916811818483, 1.8449153603612876),
+ &#39;theta_bounds_cofounding&#39;: (1.6875916811818483, 1.8449153603612876),
  &#39;bias_aware_ci&#39;: (1.4543065394594517, 2.0782005020836842),
  &#39;max_bias&#39;: 0.07866183958971962,
  &#39;sigma2&#39;: 13.136641553423134,
@@ -1512,7 +1503,7 @@ document.write(`
 
   <p class="copyright">
     
-      © Copyright 2025, Causalis Team.
+      © Copyright 2026, Causalis Team.
       <br/>
     
   </p>

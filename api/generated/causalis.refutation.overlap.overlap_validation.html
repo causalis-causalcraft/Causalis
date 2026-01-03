@@ -1,0 +1,956 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>causalis.refutation.overlap.overlap_validation &#8212; Causalis 0.1.2 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../_static/styles/theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../../_static/styles/bootstrap.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+
+  
+  <link href="../../_static/vendor/fontawesome/6.5.2/css/all.min.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.5.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.5.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.5.2/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../../_static/mystnb.8ecb98da25f57f5357bf6f572d296f466b2cfe2517ffebfabe82451661e28f02.css?v=6644e6bb" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
+    <link rel="stylesheet" type="text/css" href="../../_static/css/custom.css?v=e0b54744" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b" />
+<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
+  <script src="../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+    <script src="../../_static/documentation_options.js?v=e5353d3f"></script>
+    <script src="../../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../_static/design-tabs.js?v=df1d7cd1"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'api/generated/causalis.refutation.overlap.overlap_validation';</script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="causalis.refutation.score" href="causalis.refutation.score.html" />
+    <link rel="prev" title="causalis.refutation.overlap" href="causalis.refutation.overlap.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-primary-sidebar-checkbox"/>
+  <label class="overlay overlay-primary" for="pst-primary-sidebar-checkbox"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-secondary-sidebar-checkbox"/>
+  <label class="overlay overlay-secondary" for="pst-secondary-sidebar-checkbox"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">Causalis</p>
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../user-guide.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../examples.html">
+    Real World Examples
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../research.html">
+    Research
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="../../api.html">
+    API Reference
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+ <script>
+ document.write(`
+   <button class="btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<script>
+document.write(`
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"></i>
+  </button>
+`);
+</script></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/IoannMartynov/Causalis" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+ <script>
+ document.write(`
+   <button class="btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script>
+    </div>
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../user-guide.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../examples.html">
+    Real World Examples
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../research.html">
+    Research
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="../../api.html">
+    API Reference
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<script>
+document.write(`
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"></i>
+  </button>
+`);
+</script></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/IoannMartynov/Causalis" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"><ul class="current nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../data.html">Data Module</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="causalis.data.causaldata.html">causalis.data.causaldata</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="causalis.data.dgps.html">causalis.data.dgps</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="causalis.data.dgps.base.html">causalis.data.dgps.base</a></li>
+<li class="toctree-l3"><a class="reference internal" href="causalis.data.dgps.functional.html">causalis.data.dgps.functional</a></li>
+<li class="toctree-l3"><a class="reference internal" href="causalis.data.dgps.library.html">causalis.data.dgps.library</a></li>
+</ul>
+</details></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../eda.html">EDA Module</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="causalis.eda.eda.html">causalis.eda.eda</a></li>
+<li class="toctree-l2"><a class="reference internal" href="causalis.eda.confounders_balance.html">causalis.eda.confounders_balance</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../inference.html">Inference Module</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="causalis.inference.html">causalis.inference</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="causalis.inference.ate.html">causalis.inference.ate</a></li>
+<li class="toctree-l3"><a class="reference internal" href="causalis.inference.atte.html">causalis.inference.atte</a></li>
+<li class="toctree-l3"><a class="reference internal" href="causalis.inference.cate.html">causalis.inference.cate</a></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="causalis.inference.estimators.html">causalis.inference.estimators</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="causalis.inference.estimators.blp.html">causalis.inference.estimators.blp</a></li>
+<li class="toctree-l4"><a class="reference internal" href="causalis.inference.estimators.irm.html">causalis.inference.estimators.irm</a></li>
+</ul>
+</details></li>
+<li class="toctree-l3"><a class="reference internal" href="causalis.inference.gate.html">causalis.inference.gate</a></li>
+</ul>
+</details></li>
+</ul>
+</details></li>
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="../refutation.html">Refutation Module</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l2 current active has-children"><a class="reference internal" href="causalis.refutation.html">causalis.refutation</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l3 current active has-children"><a class="reference internal" href="causalis.refutation.overlap.html">causalis.refutation.overlap</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l4 current active"><a class="current reference internal" href="#">causalis.refutation.overlap.overlap_validation</a></li>
+</ul>
+</details></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="causalis.refutation.score.html">causalis.refutation.score</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="causalis.refutation.score.score_validation.html">causalis.refutation.score.score_validation</a></li>
+</ul>
+</details></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="causalis.refutation.sutva.html">causalis.refutation.sutva</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="causalis.refutation.sutva.sutva_validation.html">causalis.refutation.sutva.sutva_validation</a></li>
+</ul>
+</details></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="causalis.refutation.uncofoundedness.html">causalis.refutation.uncofoundedness</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="causalis.refutation.uncofoundedness.sensitivity.html">causalis.refutation.uncofoundedness.sensitivity</a></li>
+<li class="toctree-l4"><a class="reference internal" href="causalis.refutation.uncofoundedness.uncofoundedness_validation.html">causalis.refutation.uncofoundedness.uncofoundedness_validation</a></li>
+</ul>
+</details></li>
+</ul>
+</details></li>
+</ul>
+</details></li>
+</ul>
+</div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+
+
+
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../../api.html" class="nav-link">API Reference</a></li>
+    
+    
+    <li class="breadcrumb-item"><i class="fa-solid fa-ellipsis"></i></li>
+    
+    
+    <li class="breadcrumb-item"><a href="causalis.refutation.overlap.html" class="nav-link">causalis.refutation.overlap</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page">causalis.ref...</li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="module-causalis.refutation.overlap.overlap_validation">
+<span id="causalis-refutation-overlap-overlap-validation"></span><h1>causalis.refutation.overlap.overlap_validation<a class="headerlink" href="#module-causalis.refutation.overlap.overlap_validation" title="Link to this heading">#</a></h1>
+<p>Overlap validation module</p>
+<p class="rubric">Functions</p>
+<div class="pst-scrollable-table-container"><table class="autosummary longtable table autosummary">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#causalis.refutation.overlap.overlap_validation.att_overlap_tests" title="causalis.refutation.overlap.overlap_validation.att_overlap_tests"><code class="xref py py-obj docutils literal notranslate"><span class="pre">att_overlap_tests</span></code></a></p></td>
+<td><p>Compute ATT overlap/weight diagnostics from a dml_att(_source) result dict.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#causalis.refutation.overlap.overlap_validation.att_weight_sum_identity" title="causalis.refutation.overlap.overlap_validation.att_weight_sum_identity"><code class="xref py py-obj docutils literal notranslate"><span class="pre">att_weight_sum_identity</span></code></a></p></td>
+<td><p>ATT weight-sum identity check (un-normalized IPW form).</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#causalis.refutation.overlap.overlap_validation.auc_for_m" title="causalis.refutation.overlap.overlap_validation.auc_for_m"><code class="xref py py-obj docutils literal notranslate"><span class="pre">auc_for_m</span></code></a></p></td>
+<td><p>ROC AUC using scores m_hat vs labels D.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#causalis.refutation.overlap.overlap_validation.calibration_report_m" title="causalis.refutation.overlap.overlap_validation.calibration_report_m"><code class="xref py py-obj docutils literal notranslate"><span class="pre">calibration_report_m</span></code></a></p></td>
+<td><p>Propensity calibration report for cross-fitted propensities m_hat against treatment D.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#causalis.refutation.overlap.overlap_validation.ece_binary" title="causalis.refutation.overlap.overlap_validation.ece_binary"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ece_binary</span></code></a></p></td>
+<td><p>Expected Calibration Error (ECE) for binary labels using equal-width bins on [0,1].</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#causalis.refutation.overlap.overlap_validation.edge_mass" title="causalis.refutation.overlap.overlap_validation.edge_mass"><code class="xref py py-obj docutils literal notranslate"><span class="pre">edge_mass</span></code></a></p></td>
+<td><p>Edge mass diagnostics.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#causalis.refutation.overlap.overlap_validation.ess_per_group" title="causalis.refutation.overlap.overlap_validation.ess_per_group"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ess_per_group</span></code></a></p></td>
+<td><p>Effective sample size (ESS) for ATE-style inverse-probability weights per arm.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#causalis.refutation.overlap.overlap_validation.extract_diag_from_result" title="causalis.refutation.overlap.overlap_validation.extract_diag_from_result"><code class="xref py py-obj docutils literal notranslate"><span class="pre">extract_diag_from_result</span></code></a></p></td>
+<td><p>Extract m_hat, D, and trimming epsilon from dml_ate/dml_att result dict or model.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#causalis.refutation.overlap.overlap_validation.ks_distance" title="causalis.refutation.overlap.overlap_validation.ks_distance"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ks_distance</span></code></a></p></td>
+<td><p>Two-sample Kolmogorov–Smirnov distance between m_hat|D=1 and m_hat|D=0.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#causalis.refutation.overlap.overlap_validation.overlap_report_from_result" title="causalis.refutation.overlap.overlap_validation.overlap_report_from_result"><code class="xref py py-obj docutils literal notranslate"><span class="pre">overlap_report_from_result</span></code></a></p></td>
+<td><p>High-level helper that takes dml_ate/dml_att output (or IRM model) and returns a positivity/overlap report as a dict.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#causalis.refutation.overlap.overlap_validation.positivity_overlap_checks" title="causalis.refutation.overlap.overlap_validation.positivity_overlap_checks"><code class="xref py py-obj docutils literal notranslate"><span class="pre">positivity_overlap_checks</span></code></a></p></td>
+<td><p>Run positivity/overlap diagnostics for DML-IRM (ATE &amp; ATT).</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#causalis.refutation.overlap.overlap_validation.run_overlap_diagnostics" title="causalis.refutation.overlap.overlap_validation.run_overlap_diagnostics"><code class="xref py py-obj docutils literal notranslate"><span class="pre">run_overlap_diagnostics</span></code></a></p></td>
+<td><p>Single entry-point for overlap / positivity / calibration diagnostics.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<dl class="py function">
+<dt class="sig sig-object py" id="causalis.refutation.overlap.overlap_validation.edge_mass">
+<span class="sig-prename descclassname"><span class="pre">causalis.refutation.overlap.overlap_validation.</span></span><span class="sig-name descname"><span class="pre">edge_mass</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">m_hat</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">eps</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.01</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/causalis/refutation/overlap/overlap_validation.html#edge_mass"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#causalis.refutation.overlap.overlap_validation.edge_mass" title="Link to this definition">#</a></dt>
+<dd><p>Edge mass diagnostics.</p>
+<dl class="simple">
+<dt>Math:</dt><dd><p>share_below = (1/n) * sum_i 1{ m_hat_i &lt; ε }
+share_above = (1/n) * sum_i 1{ m_hat_i &gt; 1 - ε }</p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>m_hat</strong> (<em>-</em>) – array of propensities m_hat in [0,1]</p></li>
+<li><p><strong>eps</strong> (<em>-</em>) – a single ε or a sequence of ε values.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>{‘eps’: ε, ‘share_below’: float, ‘share_above’: float}
+- If eps is a sequence: {ε: {‘share_below’: float, ‘share_above’: float}, …}</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><ul class="simple">
+<li><p>If eps is a scalar</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="causalis.refutation.overlap.overlap_validation.ks_distance">
+<span class="sig-prename descclassname"><span class="pre">causalis.refutation.overlap.overlap_validation.</span></span><span class="sig-name descname"><span class="pre">ks_distance</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">m_hat</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">D</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/causalis/refutation/overlap/overlap_validation.html#ks_distance"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#causalis.refutation.overlap.overlap_validation.ks_distance" title="Link to this definition">#</a></dt>
+<dd><p>Two-sample Kolmogorov–Smirnov distance between m_hat|D=1 and m_hat|D=0.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a></span></p>
+</dd>
+<dt class="field-even">Parameters<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>m_hat</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)"><em>ndarray</em></a>)</p></li>
+<li><p><strong>D</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)"><em>ndarray</em></a>)</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="simple">
+<dt>Math:</dt><dd><p>KS = sup_t | F_{m|D=1}(t) - F_{m|D=0}(t) |</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="causalis.refutation.overlap.overlap_validation.auc_for_m">
+<span class="sig-prename descclassname"><span class="pre">causalis.refutation.overlap.overlap_validation.</span></span><span class="sig-name descname"><span class="pre">auc_for_m</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">m_hat</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">D</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/causalis/refutation/overlap/overlap_validation.html#auc_for_m"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#causalis.refutation.overlap.overlap_validation.auc_for_m" title="Link to this definition">#</a></dt>
+<dd><p>ROC AUC using scores m_hat vs labels D.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a></span></p>
+</dd>
+<dt class="field-even">Parameters<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>m_hat</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)"><em>ndarray</em></a>)</p></li>
+<li><p><strong>D</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)"><em>ndarray</em></a>)</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="simple">
+<dt>Math (Mann–Whitney relation):</dt><dd><p>AUC = P(m_i^+ &gt; m_j^-) + 0.5 P(m_i^+ = m_j^-)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="causalis.refutation.overlap.overlap_validation.ess_per_group">
+<span class="sig-prename descclassname"><span class="pre">causalis.refutation.overlap.overlap_validation.</span></span><span class="sig-name descname"><span class="pre">ess_per_group</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">m_hat</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">D</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/causalis/refutation/overlap/overlap_validation.html#ess_per_group"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#causalis.refutation.overlap.overlap_validation.ess_per_group" title="Link to this definition">#</a></dt>
+<dd><p>Effective sample size (ESS) for ATE-style inverse-probability weights per arm.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Dict" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a>]</span></p>
+</dd>
+<dt class="field-even">Parameters<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>m_hat</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)"><em>ndarray</em></a>)</p></li>
+<li><p><strong>D</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)"><em>ndarray</em></a>)</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="simple">
+<dt>Weights:</dt><dd><p>w1_i = D_i / m_hat_i,
+w0_i = (1 - D_i) / (1 - m_hat_i).</p>
+</dd>
+<dt>ESS:</dt><dd><p>ESS(w_g) = (sum_i w_{gi})^2 / sum_i w_{gi}^2.</p>
+</dd>
+</dl>
+<p>Returns dict with ess and ratios (ESS / group size).</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="causalis.refutation.overlap.overlap_validation.att_weight_sum_identity">
+<span class="sig-prename descclassname"><span class="pre">causalis.refutation.overlap.overlap_validation.</span></span><span class="sig-name descname"><span class="pre">att_weight_sum_identity</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">m_hat</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">D</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/causalis/refutation/overlap/overlap_validation.html#att_weight_sum_identity"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#causalis.refutation.overlap.overlap_validation.att_weight_sum_identity" title="Link to this definition">#</a></dt>
+<dd><p>ATT weight-sum identity check (un-normalized IPW form).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Dict" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a>]</span></p>
+</dd>
+<dt class="field-even">Parameters<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>m_hat</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)"><em>ndarray</em></a>)</p></li>
+<li><p><strong>D</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)"><em>ndarray</em></a>)</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="simple">
+<dt>Math:</dt><dd><p>w1_i = D_i / p1,   w0_i = (1 - D_i) * m_hat_i / ((1 - m_hat_i) * p1),  where p1 = (1/n) sum_i D_i.
+Sum check:  sum_i (1 - D_i) * m_hat_i / (1 - m_hat_i)  ?≈  sum_i D_i.</p>
+</dd>
+</dl>
+<p>Returns: {‘lhs_sum’: float, ‘rhs_sum’: float, ‘rel_err’: float}</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="causalis.refutation.overlap.overlap_validation.ece_binary">
+<span class="sig-prename descclassname"><span class="pre">causalis.refutation.overlap.overlap_validation.</span></span><span class="sig-name descname"><span class="pre">ece_binary</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">p</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_bins</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/causalis/refutation/overlap/overlap_validation.html#ece_binary"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#causalis.refutation.overlap.overlap_validation.ece_binary" title="Link to this definition">#</a></dt>
+<dd><p>Expected Calibration Error (ECE) for binary labels using equal-width bins on [0,1].</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>p</strong> (<em>np.ndarray</em>) – Predicted probabilities in [0,1]. Will be clipped to [0,1].</p></li>
+<li><p><strong>y</strong> (<em>np.ndarray</em>) – Binary labels {0,1}.</p></li>
+<li><p><strong>n_bins</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><em>int</em></a><em>, </em><em>default 10</em>) – Number of bins.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>ECE value in [0,1].</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)">float</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="causalis.refutation.overlap.overlap_validation.calibration_report_m">
+<span class="sig-prename descclassname"><span class="pre">causalis.refutation.overlap.overlap_validation.</span></span><span class="sig-name descname"><span class="pre">calibration_report_m</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">m_hat</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">D</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_bins</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">thresholds</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/causalis/refutation/overlap/overlap_validation.html#calibration_report_m"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#causalis.refutation.overlap.overlap_validation.calibration_report_m" title="Link to this definition">#</a></dt>
+<dd><p>Propensity calibration report for cross-fitted propensities m_hat against treatment D.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Dict" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code></a>]</span></p>
+</dd>
+<dt class="field-even">Parameters<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>m_hat</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)"><em>ndarray</em></a>)</p></li>
+<li><p><strong>D</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)"><em>ndarray</em></a>)</p></li>
+<li><p><strong>n_bins</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><em>int</em></a>)</p></li>
+<li><p><strong>thresholds</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Dict" title="(in Python v3.14)"><em>Dict</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><em>float</em></a><em>] </em><em>| </em><em>None</em>)</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="simple">
+<dt>Returns a dictionary with:</dt><dd><ul class="simple">
+<li><p>auc: ROC AUC of m_hat vs D (Mann–Whitney)</p></li>
+<li><p>brier: Brier score (mean squared error)</p></li>
+<li><p>ece: Expected Calibration Error (equal-width bins)</p></li>
+<li><p>reliability_table: pd.DataFrame with per-bin stats</p></li>
+<li><p>recalibration: {‘intercept’: alpha, ‘slope’: beta} from logistic recalibration</p></li>
+<li><p>flags: {‘ece’: …, ‘slope’: …, ‘intercept’: …} using GREEN/YELLOW/RED</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="causalis.refutation.overlap.overlap_validation.positivity_overlap_checks">
+<span class="sig-prename descclassname"><span class="pre">causalis.refutation.overlap.overlap_validation.</span></span><span class="sig-name descname"><span class="pre">positivity_overlap_checks</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">m_hat</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">D</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">m_clipped_from</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">g_clipped_share</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_hajek</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">thresholds</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{'auc_strong':</span> <span class="pre">0.9,</span> <span class="pre">'auc_warn':</span> <span class="pre">0.8,</span> <span class="pre">'clip_share_strong':</span> <span class="pre">0.05,</span> <span class="pre">'clip_share_warn':</span> <span class="pre">0.02,</span> <span class="pre">'edge_mass_strong_001':</span> <span class="pre">0.05,</span> <span class="pre">'edge_mass_strong_002':</span> <span class="pre">0.1,</span> <span class="pre">'edge_mass_warn_001':</span> <span class="pre">0.02,</span> <span class="pre">'edge_mass_warn_002':</span> <span class="pre">0.05,</span> <span class="pre">'ess_ratio_strong':</span> <span class="pre">0.15,</span> <span class="pre">'ess_ratio_warn':</span> <span class="pre">0.3,</span> <span class="pre">'ipw_relerr_strong':</span> <span class="pre">0.1,</span> <span class="pre">'ipw_relerr_warn':</span> <span class="pre">0.05,</span> <span class="pre">'ks_strong':</span> <span class="pre">0.4,</span> <span class="pre">'ks_warn':</span> <span class="pre">0.3,</span> <span class="pre">'tail_vs_med_warn':</span> <span class="pre">10.0}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_bins</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cal_thresholds</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">auc_flip_margin</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.05</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/causalis/refutation/overlap/overlap_validation.html#positivity_overlap_checks"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#causalis.refutation.overlap.overlap_validation.positivity_overlap_checks" title="Link to this definition">#</a></dt>
+<dd><p>Run positivity/overlap diagnostics for DML-IRM (ATE &amp; ATT).
+Inputs are cross-fitted m̂ and treatment D (0/1). Returns a structured report with GREEN/YELLOW/RED flags.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Dict" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code></a>]</span></p>
+</dd>
+<dt class="field-even">Parameters<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>m_hat</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)"><em>ndarray</em></a>)</p></li>
+<li><p><strong>D</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)"><em>ndarray</em></a>)</p></li>
+<li><p><strong>m_clipped_from</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Tuple" title="(in Python v3.14)"><em>Tuple</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><em>float</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><em>float</em></a><em>] </em><em>| </em><em>None</em>)</p></li>
+<li><p><strong>g_clipped_share</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><em>float</em></a><em> | </em><em>None</em>)</p></li>
+<li><p><strong>use_hajek</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><em>bool</em></a>)</p></li>
+<li><p><strong>thresholds</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Dict" title="(in Python v3.14)"><em>Dict</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><em>float</em></a><em>]</em>)</p></li>
+<li><p><strong>n_bins</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><em>int</em></a>)</p></li>
+<li><p><strong>cal_thresholds</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Dict" title="(in Python v3.14)"><em>Dict</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><em>float</em></a><em>] </em><em>| </em><em>None</em>)</p></li>
+<li><p><strong>auc_flip_margin</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><em>float</em></a>)</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="causalis.refutation.overlap.overlap_validation.extract_diag_from_result">
+<span class="sig-prename descclassname"><span class="pre">causalis.refutation.overlap.overlap_validation.</span></span><span class="sig-name descname"><span class="pre">extract_diag_from_result</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">res</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/causalis/refutation/overlap/overlap_validation.html#extract_diag_from_result"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#causalis.refutation.overlap.overlap_validation.extract_diag_from_result" title="Link to this definition">#</a></dt>
+<dd><p>Extract m_hat, D, and trimming epsilon from dml_ate/dml_att result dict or model.
+Accepts:
+- dict returned by dml_ate/dml_att (prefers key ‘diagnostic_data’; otherwise uses ‘model’), or
+- a fitted IRM/DoubleMLIRM-like model instance with a .data attribute.
+Returns (m_hat, D, trimming_threshold_if_any).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Tuple" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code></a>[<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)"><code class="xref py py-class docutils literal notranslate"><span class="pre">ndarray</span></code></a>, <a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)"><code class="xref py py-class docutils literal notranslate"><span class="pre">ndarray</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a>]]</span></p>
+</dd>
+<dt class="field-even">Parameters<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>res</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Dict" title="(in Python v3.14)"><em>Dict</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.14)"><em>Any</em></a><em>] </em><em>| </em><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.14)"><em>Any</em></a>)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="causalis.refutation.overlap.overlap_validation.overlap_report_from_result">
+<span class="sig-prename descclassname"><span class="pre">causalis.refutation.overlap.overlap_validation.</span></span><span class="sig-name descname"><span class="pre">overlap_report_from_result</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">res</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_hajek</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">thresholds</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{'auc_strong':</span> <span class="pre">0.9,</span> <span class="pre">'auc_warn':</span> <span class="pre">0.8,</span> <span class="pre">'clip_share_strong':</span> <span class="pre">0.05,</span> <span class="pre">'clip_share_warn':</span> <span class="pre">0.02,</span> <span class="pre">'edge_mass_strong_001':</span> <span class="pre">0.05,</span> <span class="pre">'edge_mass_strong_002':</span> <span class="pre">0.1,</span> <span class="pre">'edge_mass_warn_001':</span> <span class="pre">0.02,</span> <span class="pre">'edge_mass_warn_002':</span> <span class="pre">0.05,</span> <span class="pre">'ess_ratio_strong':</span> <span class="pre">0.15,</span> <span class="pre">'ess_ratio_warn':</span> <span class="pre">0.3,</span> <span class="pre">'ipw_relerr_strong':</span> <span class="pre">0.1,</span> <span class="pre">'ipw_relerr_warn':</span> <span class="pre">0.05,</span> <span class="pre">'ks_strong':</span> <span class="pre">0.4,</span> <span class="pre">'ks_warn':</span> <span class="pre">0.3,</span> <span class="pre">'tail_vs_med_warn':</span> <span class="pre">10.0}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_bins</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cal_thresholds</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">auc_flip_margin</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.05</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/causalis/refutation/overlap/overlap_validation.html#overlap_report_from_result"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#causalis.refutation.overlap.overlap_validation.overlap_report_from_result" title="Link to this definition">#</a></dt>
+<dd><p>High-level helper that takes dml_ate/dml_att output (or IRM model) and returns a positivity/overlap report as a dict.</p>
+<p>If the input result contains a flag indicating normalized IPW (Hájek), this function will
+auto-detect it and pass use_hajek=True to the underlying diagnostics, so users of
+dml_ate(normalize_ipw=True) get meaningful ipw_sum_* checks without extra arguments.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Dict" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code></a>]</span></p>
+</dd>
+<dt class="field-even">Parameters<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>res</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Dict" title="(in Python v3.14)"><em>Dict</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.14)"><em>Any</em></a><em>] </em><em>| </em><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.14)"><em>Any</em></a>)</p></li>
+<li><p><strong>use_hajek</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><em>bool</em></a>)</p></li>
+<li><p><strong>thresholds</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Dict" title="(in Python v3.14)"><em>Dict</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><em>float</em></a><em>]</em>)</p></li>
+<li><p><strong>n_bins</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><em>int</em></a>)</p></li>
+<li><p><strong>cal_thresholds</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Dict" title="(in Python v3.14)"><em>Dict</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><em>float</em></a><em>] </em><em>| </em><em>None</em>)</p></li>
+<li><p><strong>auc_flip_margin</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><em>float</em></a>)</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="causalis.refutation.overlap.overlap_validation.run_overlap_diagnostics">
+<span class="sig-prename descclassname"><span class="pre">causalis.refutation.overlap.overlap_validation.</span></span><span class="sig-name descname"><span class="pre">run_overlap_diagnostics</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">res</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">m_hat</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">D</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">thresholds</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{'auc_strong':</span> <span class="pre">0.9,</span> <span class="pre">'auc_warn':</span> <span class="pre">0.8,</span> <span class="pre">'clip_share_strong':</span> <span class="pre">0.05,</span> <span class="pre">'clip_share_warn':</span> <span class="pre">0.02,</span> <span class="pre">'edge_mass_strong_001':</span> <span class="pre">0.05,</span> <span class="pre">'edge_mass_strong_002':</span> <span class="pre">0.1,</span> <span class="pre">'edge_mass_warn_001':</span> <span class="pre">0.02,</span> <span class="pre">'edge_mass_warn_002':</span> <span class="pre">0.05,</span> <span class="pre">'ess_ratio_strong':</span> <span class="pre">0.15,</span> <span class="pre">'ess_ratio_warn':</span> <span class="pre">0.3,</span> <span class="pre">'ipw_relerr_strong':</span> <span class="pre">0.1,</span> <span class="pre">'ipw_relerr_warn':</span> <span class="pre">0.05,</span> <span class="pre">'ks_strong':</span> <span class="pre">0.4,</span> <span class="pre">'ks_warn':</span> <span class="pre">0.3,</span> <span class="pre">'tail_vs_med_warn':</span> <span class="pre">10.0}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_bins</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_hajek</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">m_clipped_from</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">g_clipped_share</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_summary</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cal_thresholds</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">auc_flip_margin</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.05</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/causalis/refutation/overlap/overlap_validation.html#run_overlap_diagnostics"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#causalis.refutation.overlap.overlap_validation.run_overlap_diagnostics" title="Link to this definition">#</a></dt>
+<dd><p>Single entry-point for overlap / positivity / calibration diagnostics.</p>
+<dl class="simple">
+<dt>You can call it in TWO ways:</dt><dd><ol class="upperalpha simple">
+<li><p>With raw arrays:
+run_overlap_diagnostics(m_hat=…, D=…)</p></li>
+<li><p>With a model/result:
+run_overlap_diagnostics(res=&lt;dml_ate/dml_att result dict or IRM/DoubleML-like model&gt;)</p></li>
+</ol>
+</dd>
+<dt>The function:</dt><dd><ul class="simple">
+<li><p>Auto-extracts (m_hat, D, trimming_threshold) from <cite>res</cite> if provided.</p></li>
+<li><p>Auto-detects Hájek normalization if available on <cite>res</cite> (normalize_ipw).</p></li>
+<li><p>Runs positivity/overlap checks (edge mass, KS, AUC, ESS, tails, ATT identity),
+clipping audit, and calibration (ECE + logistic recalibration).</p></li>
+<li><p>Returns a dict with full details and, optionally, a compact summary DataFrame.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><ul class="simple">
+<li><p>n, n_treated, p1</p></li>
+<li><p>edge_mass, edge_mass_by_arm, ks, auc</p></li>
+<li><p>ate_ipw, ate_ess, ate_tails</p></li>
+<li><p>att_weights, att_ess</p></li>
+<li><p>clipping</p></li>
+<li><p>calibration (with reliability_table)</p></li>
+<li><p>flags  (GREEN/YELLOW/RED/NA)</p></li>
+<li><p>summary (pd.DataFrame) if return_summary=True</p></li>
+<li><p>meta (use_hajek, thresholds)</p></li>
+</ul>
+</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>dict with keys including</p>
+</dd>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>res</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Dict" title="(in Python v3.14)"><em>Dict</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.14)"><em>Any</em></a><em>] </em><em>| </em><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.14)"><em>Any</em></a><em> | </em><em>None</em>)</p></li>
+<li><p><strong>m_hat</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)"><em>ndarray</em></a><em> | </em><em>None</em>)</p></li>
+<li><p><strong>D</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)"><em>ndarray</em></a><em> | </em><em>None</em>)</p></li>
+<li><p><strong>thresholds</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Dict" title="(in Python v3.14)"><em>Dict</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><em>float</em></a><em>]</em>)</p></li>
+<li><p><strong>n_bins</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><em>int</em></a>)</p></li>
+<li><p><strong>use_hajek</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><em>bool</em></a><em> | </em><em>None</em>)</p></li>
+<li><p><strong>m_clipped_from</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Tuple" title="(in Python v3.14)"><em>Tuple</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><em>float</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><em>float</em></a><em>] </em><em>| </em><em>None</em>)</p></li>
+<li><p><strong>g_clipped_share</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><em>float</em></a><em> | </em><em>None</em>)</p></li>
+<li><p><strong>return_summary</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><em>bool</em></a>)</p></li>
+<li><p><strong>cal_thresholds</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Dict" title="(in Python v3.14)"><em>Dict</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><em>float</em></a><em>] </em><em>| </em><em>None</em>)</p></li>
+<li><p><strong>auc_flip_margin</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><em>float</em></a>)</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="causalis.refutation.overlap.overlap_validation.att_overlap_tests">
+<span class="sig-prename descclassname"><span class="pre">causalis.refutation.overlap.overlap_validation.</span></span><span class="sig-name descname"><span class="pre">att_overlap_tests</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dml_att_result</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">epsilon_list</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(0.01,</span> <span class="pre">0.02)</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/causalis/refutation/overlap/overlap_validation.html#att_overlap_tests"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#causalis.refutation.overlap.overlap_validation.att_overlap_tests" title="Link to this definition">#</a></dt>
+<dd><p>Compute ATT overlap/weight diagnostics from a dml_att(_source) result dict.</p>
+<dl class="simple">
+<dt>Inputs expected in result[‘diagnostic_data’]:</dt><dd><ul class="simple">
+<li><p>m_hat: np.ndarray of cross-fitted propensity scores Pr(D=1|X)</p></li>
+<li><p>d: np.ndarray of treatment indicators {0,1}</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><ul class="simple">
+<li><p>edge_mass: {‘eps’: {eps: {‘share_below’: float, ‘share_above’: float, ‘warn’: bool}}}</p></li>
+<li><p>ks: {‘value’: float, ‘warn’: bool}</p></li>
+<li><p>auc: {‘value’: float or nan, ‘flag’: str}  # ‘GREEN’/’YELLOW’/’RED’ or ‘NA’ if undefined</p></li>
+<li><dl class="simple">
+<dt>ess: {‘treated’: {‘ess’: float, ‘n’: int, ‘ratio’: float, ‘flag’: str},</dt><dd><p>’control’: {‘ess’: float, ‘n’: int, ‘ratio’: float, ‘flag’: str}}</p>
+</dd>
+</dl>
+</li>
+<li><p>att_weight_identity: {‘lhs_sum’: float, ‘rhs_sum’: float, ‘rel_err’: float, ‘flag’: str}</p></li>
+</ul>
+</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>dict with keys</p>
+</dd>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>dml_att_result</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)"><em>dict</em></a>)</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="causalis.refutation.overlap.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">causalis.refutation.overlap</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="causalis.refutation.score.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">causalis.refutation.score</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#causalis.refutation.overlap.overlap_validation.edge_mass"><code class="docutils literal notranslate"><span class="pre">edge_mass()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#causalis.refutation.overlap.overlap_validation.ks_distance"><code class="docutils literal notranslate"><span class="pre">ks_distance()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#causalis.refutation.overlap.overlap_validation.auc_for_m"><code class="docutils literal notranslate"><span class="pre">auc_for_m()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#causalis.refutation.overlap.overlap_validation.ess_per_group"><code class="docutils literal notranslate"><span class="pre">ess_per_group()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#causalis.refutation.overlap.overlap_validation.att_weight_sum_identity"><code class="docutils literal notranslate"><span class="pre">att_weight_sum_identity()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#causalis.refutation.overlap.overlap_validation.ece_binary"><code class="docutils literal notranslate"><span class="pre">ece_binary()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#causalis.refutation.overlap.overlap_validation.calibration_report_m"><code class="docutils literal notranslate"><span class="pre">calibration_report_m()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#causalis.refutation.overlap.overlap_validation.positivity_overlap_checks"><code class="docutils literal notranslate"><span class="pre">positivity_overlap_checks()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#causalis.refutation.overlap.overlap_validation.extract_diag_from_result"><code class="docutils literal notranslate"><span class="pre">extract_diag_from_result()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#causalis.refutation.overlap.overlap_validation.overlap_report_from_result"><code class="docutils literal notranslate"><span class="pre">overlap_report_from_result()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#causalis.refutation.overlap.overlap_validation.run_overlap_diagnostics"><code class="docutils literal notranslate"><span class="pre">run_overlap_diagnostics()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#causalis.refutation.overlap.overlap_validation.att_overlap_tests"><code class="docutils literal notranslate"><span class="pre">att_overlap_tests()</span></code></a></li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b"></script>
+<script src="../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2026, Causalis Team.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.1.3.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.15.4.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

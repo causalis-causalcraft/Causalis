@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>causalis.inference.ate.dml_ate &#8212; Causalis 0.1.0 documentation</title>
+    <title>causalis.inference.ate.dml_ate &#8212; Causalis 0.1.2 documentation</title>
   
   
   
@@ -38,7 +38,7 @@
 <link rel="preload" as="script" href="../../../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../../../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../../../../_static/documentation_options.js?v=2caa9db7"></script>
+    <script src="../../../../_static/documentation_options.js?v=e5353d3f"></script>
     <script src="../../../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -46,7 +46,6 @@
     <script src="../../../../_static/design-tabs.js?v=df1d7cd1"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = '_modules/causalis/inference/ate/dml_ate';</script>
-    <link rel="icon" href="../../../../_static/new_logo.svg"/>
     <link rel="index" title="Index" href="../../../../genindex.html" />
     <link rel="search" title="Search" href="../../../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
@@ -122,14 +121,6 @@
   
   
   
-  
-    
-    
-      
-    
-    
-    <img src="../../../../_static/new_logo_big.svg" class="logo__image only-light" alt=""/>
-    <script>document.write(`<img src="../../../../_static/new_logo_big.svg" class="logo__image only-dark" alt=""/>`);</script>
   
   
     <p class="title logo__title">Causalis</p>
@@ -413,7 +404,7 @@ document.write(`
 
 
 <div class="viewcode-block" id="dml_ate">
-<a class="viewcode-back" href="../../../../api/inference.html#causalis.inference.ate.dml_ate.dml_ate">[docs]</a>
+<a class="viewcode-back" href="../../../../api/generated/causalis.inference.ate.html#causalis.inference.ate.dml_ate">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">dml_ate</span><span class="p">(</span>
     <span class="n">data</span><span class="p">:</span> <span class="n">CausalData</span><span class="p">,</span>
     <span class="n">ml_g</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -470,7 +461,7 @@ document.write(`
     <span class="c1"># Basic validations mirroring dml_ate</span>
     <span class="k">if</span> <span class="n">data</span><span class="o">.</span><span class="n">treatment</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;CausalData object must have a treatment variable defined&quot;</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">data</span><span class="o">.</span><span class="n">target</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">data</span><span class="o">.</span><span class="n">outcome</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;CausalData object must have a outcome variable defined&quot;</span><span class="p">)</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">data</span><span class="o">.</span><span class="n">confounders</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;CausalData object must have confounders variables defined&quot;</span><span class="p">)</span>
@@ -499,7 +490,7 @@ document.write(`
     <span class="k">if</span> <span class="n">df</span><span class="p">[</span><span class="n">tname</span><span class="p">]</span><span class="o">.</span><span class="n">dtype</span> <span class="o">==</span> <span class="nb">bool</span><span class="p">:</span>
         <span class="n">df</span><span class="p">[</span><span class="n">tname</span><span class="p">]</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="n">tname</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
         <span class="c1"># Construct a new CausalData with coerced dtype to keep internal consistency</span>
-        <span class="n">data</span> <span class="o">=</span> <span class="n">CausalData</span><span class="p">(</span><span class="n">df</span><span class="o">=</span><span class="n">df</span><span class="p">,</span> <span class="n">treatment</span><span class="o">=</span><span class="n">tname</span><span class="p">,</span> <span class="n">outcome</span><span class="o">=</span><span class="n">data</span><span class="o">.</span><span class="n">target</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">confounders</span><span class="o">=</span><span class="n">data</span><span class="o">.</span><span class="n">confounders</span><span class="p">)</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">CausalData</span><span class="p">(</span><span class="n">df</span><span class="o">=</span><span class="n">df</span><span class="p">,</span> <span class="n">treatment</span><span class="o">=</span><span class="n">tname</span><span class="p">,</span> <span class="n">outcome</span><span class="o">=</span><span class="n">data</span><span class="o">.</span><span class="n">outcome</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">confounders</span><span class="o">=</span><span class="n">data</span><span class="o">.</span><span class="n">confounders</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="c1"># Ensure binary encoding</span>
         <span class="n">uniq</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="n">tname</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">)</span>
@@ -532,7 +523,7 @@ document.write(`
     <span class="n">diagnostic_data</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="k">if</span> <span class="n">store_diagnostic_data</span><span class="p">:</span>
         <span class="n">df_diag</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">get_df</span><span class="p">()</span>
-        <span class="n">y_diag</span> <span class="o">=</span> <span class="n">df_diag</span><span class="p">[</span><span class="n">data</span><span class="o">.</span><span class="n">target</span><span class="o">.</span><span class="n">name</span><span class="p">]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+        <span class="n">y_diag</span> <span class="o">=</span> <span class="n">df_diag</span><span class="p">[</span><span class="n">data</span><span class="o">.</span><span class="n">outcome</span><span class="o">.</span><span class="n">name</span><span class="p">]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
         <span class="n">d_diag</span> <span class="o">=</span> <span class="n">df_diag</span><span class="p">[</span><span class="n">data</span><span class="o">.</span><span class="n">treatment</span><span class="o">.</span><span class="n">name</span><span class="p">]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
         <span class="n">x_diag</span> <span class="o">=</span> <span class="n">df_diag</span><span class="p">[</span><span class="n">data</span><span class="o">.</span><span class="n">confounders</span><span class="p">]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
         <span class="n">p1_diag</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">d_diag</span><span class="p">))</span>
@@ -604,7 +595,7 @@ document.write(`
 
   <p class="copyright">
     
-      © Copyright 2025, Causalis Team.
+      © Copyright 2026, Causalis Team.
       <br/>
     
   </p>

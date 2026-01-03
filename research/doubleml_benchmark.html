@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Compare Implementation of DML IRM in Causalis and DML IRM in DoubleMl &#8212; Causalis 0.1.0 documentation</title>
+    <title>Compare Implementation of DML IRM in Causalis and DML IRM in DoubleMl &#8212; Causalis 0.1.2 documentation</title>
   
   
   
@@ -39,7 +39,7 @@
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../_static/documentation_options.js?v=2caa9db7"></script>
+    <script src="../_static/documentation_options.js?v=e5353d3f"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -47,7 +47,6 @@
     <script src="../_static/design-tabs.js?v=df1d7cd1"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'research/doubleml_benchmark';</script>
-    <link rel="icon" href="../_static/new_logo.svg"/>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="RCT Benchmark: t-test vs Linear Regression vs DML ATE" href="rct_benchmark.html" />
@@ -125,14 +124,6 @@
   
   
   
-  
-    
-    
-      
-    
-    
-    <img src="../_static/new_logo_big.svg" class="logo__image only-light" alt=""/>
-    <script>document.write(`<img src="../_static/new_logo_big.svg" class="logo__image only-dark" alt=""/>`);</script>
   
   
     <p class="title logo__title">Causalis</p>
@@ -532,88 +523,6 @@ Ground-truth ATT from the DGP: 0.800
 </pre></div>
 </div>
 </div>
-<div class="cell_output docutils container">
-<div class="output text_html"><div>
-<style scoped>
-    .dataframe tbody tr th:only-of-type {
-        vertical-align: middle;
-    }
-
-    .dataframe tbody tr th {
-        vertical-align: top;
-    }
-
-    .dataframe thead th {
-        text-align: right;
-    }
-</style>
-<table border="1" class="dataframe">
-  <thead>
-    <tr style="text-align: right;">
-      <th></th>
-      <th>y</th>
-      <th>d</th>
-      <th>tenure_months</th>
-      <th>avg_sessions_week</th>
-      <th>spend_last_month</th>
-      <th>premium_user</th>
-      <th>urban_resident</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>0</th>
-      <td>1.903910</td>
-      <td>0.0</td>
-      <td>12.130544</td>
-      <td>4.056687</td>
-      <td>181.570607</td>
-      <td>0.0</td>
-      <td>0.0</td>
-    </tr>
-    <tr>
-      <th>1</th>
-      <td>3.388144</td>
-      <td>0.0</td>
-      <td>19.586560</td>
-      <td>1.671561</td>
-      <td>182.793598</td>
-      <td>0.0</td>
-      <td>0.0</td>
-    </tr>
-    <tr>
-      <th>2</th>
-      <td>8.456512</td>
-      <td>1.0</td>
-      <td>39.455103</td>
-      <td>5.452889</td>
-      <td>125.185708</td>
-      <td>1.0</td>
-      <td>1.0</td>
-    </tr>
-    <tr>
-      <th>3</th>
-      <td>5.535970</td>
-      <td>1.0</td>
-      <td>26.327693</td>
-      <td>5.051629</td>
-      <td>4.932905</td>
-      <td>0.0</td>
-      <td>1.0</td>
-    </tr>
-    <tr>
-      <th>4</th>
-      <td>4.965140</td>
-      <td>1.0</td>
-      <td>35.042771</td>
-      <td>4.933996</td>
-      <td>23.577407</td>
-      <td>0.0</td>
-      <td>0.0</td>
-    </tr>
-  </tbody>
-</table>
-</div></div></div>
 </div>
 <section id="ate">
 <h2>ATE<a class="headerlink" href="#ate" title="Link to this heading">#</a></h2>
@@ -642,13 +551,6 @@ Ground-truth ATT from the DGP: 0.800
 <div class="highlight-ipython2 notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Real ATE = 0.8&quot;</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Estimated with Causalis = </span><span class="si">{</span><span class="n">ate_result_causalis</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;coefficient&#39;</span><span class="p">)</span><span class="si">}</span><span class="s2"> in </span><span class="si">{</span><span class="n">ate_result_causalis</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;confidence_interval&#39;</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Estimated with DoubleML = </span><span class="si">{</span><span class="n">ate_result_doubleml</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;coefficient&#39;</span><span class="p">)</span><span class="si">}</span><span class="s2"> in </span><span class="si">{</span><span class="n">ate_result_doubleml</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;confidence_interval&#39;</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-</pre></div>
-</div>
-</div>
-<div class="cell_output docutils container">
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Real ATE = 0.8
-Estimated with Causalis = 0.7506313322797796 in (0.6668061755942251, 0.8344564889653342)
-Estimated with DoubleML = 0.7951243102839649 in (0.7340549132666624, 0.8561937073012674)
 </pre></div>
 </div>
 </div>
@@ -681,13 +583,6 @@ Estimated with DoubleML = 0.7951243102839649 in (0.7340549132666624, 0.856193707
 <div class="highlight-ipython2 notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Real ATTE = 0.8&quot;</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Estimated with Causalis = </span><span class="si">{</span><span class="n">atte_result</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;coefficient&#39;</span><span class="p">)</span><span class="si">}</span><span class="s2"> in </span><span class="si">{</span><span class="n">atte_result</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;confidence_interval&#39;</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Estimated with DoubleML = </span><span class="si">{</span><span class="n">ate_result_doubleml</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;coefficient&#39;</span><span class="p">)</span><span class="si">}</span><span class="s2"> in </span><span class="si">{</span><span class="n">ate_result_doubleml</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;confidence_interval&#39;</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-</pre></div>
-</div>
-</div>
-<div class="cell_output docutils container">
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Real ATTE = 0.8
-Estimated with Causalis = 0.8238669785039335 in (0.7558326760362799, 0.8919012809715872)
-Estimated with DoubleML = 0.7951243102839649 in (0.7340549132666624, 0.8561937073012674)
 </pre></div>
 </div>
 </div>
@@ -776,7 +671,7 @@ Estimated with DoubleML = 0.7951243102839649 in (0.7340549132666624, 0.856193707
 
   <p class="copyright">
     
-      © Copyright 2025, Causalis Team.
+      © Copyright 2026, Causalis Team.
       <br/>
     
   </p>

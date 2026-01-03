@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>causalis.inference.cate.cate_esimand &#8212; Causalis 0.1.0 documentation</title>
+    <title>causalis.inference.cate.cate_esimand &#8212; Causalis 0.1.2 documentation</title>
   
   
   
@@ -38,7 +38,7 @@
 <link rel="preload" as="script" href="../../../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../../../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../../../../_static/documentation_options.js?v=2caa9db7"></script>
+    <script src="../../../../_static/documentation_options.js?v=e5353d3f"></script>
     <script src="../../../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -46,7 +46,6 @@
     <script src="../../../../_static/design-tabs.js?v=df1d7cd1"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = '_modules/causalis/inference/cate/cate_esimand';</script>
-    <link rel="icon" href="../../../../_static/new_logo.svg"/>
     <link rel="index" title="Index" href="../../../../genindex.html" />
     <link rel="search" title="Search" href="../../../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
@@ -122,14 +121,6 @@
   
   
   
-  
-    
-    
-      
-    
-    
-    <img src="../../../../_static/new_logo_big.svg" class="logo__image only-light" alt=""/>
-    <script>document.write(`<img src="../../../../_static/new_logo_big.svg" class="logo__image only-dark" alt=""/>`);</script>
   
   
     <p class="title logo__title">Causalis</p>
@@ -413,7 +404,7 @@ document.write(`
 
 
 <div class="viewcode-block" id="cate_esimand">
-<a class="viewcode-back" href="../../../../api/inference.html#causalis.inference.cate.cate_esimand.cate_esimand">[docs]</a>
+<a class="viewcode-back" href="../../../../api/generated/causalis.inference.cate.html#causalis.inference.cate.cate_esimand">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">cate_esimand</span><span class="p">(</span>
     <span class="n">data</span><span class="p">:</span> <span class="n">CausalData</span><span class="p">,</span>
     <span class="n">ml_g</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -461,7 +452,7 @@ document.write(`
     <span class="c1"># Basic validation similar to ATE/ATT implementations for consistency</span>
     <span class="k">if</span> <span class="n">data</span><span class="o">.</span><span class="n">treatment</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;CausalData object must have a treatment variable defined&quot;</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">data</span><span class="o">.</span><span class="n">target</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">data</span><span class="o">.</span><span class="n">outcome</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;CausalData object must have a outcome variable defined&quot;</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">data</span><span class="o">.</span><span class="n">confounders</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;CausalData object must have confounders variables defined&quot;</span><span class="p">)</span>
@@ -483,8 +474,8 @@ document.write(`
     <span class="n">df</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">get_df</span><span class="p">()</span>
     <span class="n">dml_data</span> <span class="o">=</span> <span class="n">dml</span><span class="o">.</span><span class="n">DoubleMLData</span><span class="p">(</span>
         <span class="n">df</span><span class="p">,</span>
-        <span class="n">y_col</span><span class="o">=</span><span class="n">data</span><span class="o">.</span><span class="n">_target</span><span class="p">,</span>
-        <span class="n">d_cols</span><span class="o">=</span><span class="n">data</span><span class="o">.</span><span class="n">_treatment</span><span class="p">,</span>
+        <span class="n">y_col</span><span class="o">=</span><span class="n">data</span><span class="o">.</span><span class="n">outcome</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+        <span class="n">d_cols</span><span class="o">=</span><span class="n">data</span><span class="o">.</span><span class="n">treatment</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
         <span class="n">x_cols</span><span class="o">=</span><span class="n">data</span><span class="o">.</span><span class="n">confounders</span><span class="p">,</span>
     <span class="p">)</span>
 
@@ -574,7 +565,7 @@ document.write(`
 
   <p class="copyright">
     
-      © Copyright 2025, Causalis Team.
+      © Copyright 2026, Causalis Team.
       <br/>
     
   </p>

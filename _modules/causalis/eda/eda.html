@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>causalis.eda.eda &#8212; Causalis 0.1.0 documentation</title>
+    <title>causalis.eda.eda &#8212; Causalis 0.1.2 documentation</title>
   
   
   
@@ -38,7 +38,7 @@
 <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../../../_static/documentation_options.js?v=2caa9db7"></script>
+    <script src="../../../_static/documentation_options.js?v=e5353d3f"></script>
     <script src="../../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -46,7 +46,6 @@
     <script src="../../../_static/design-tabs.js?v=df1d7cd1"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = '_modules/causalis/eda/eda';</script>
-    <link rel="icon" href="../../../_static/new_logo.svg"/>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
@@ -122,14 +121,6 @@
   
   
   
-  
-    
-    
-      
-    
-    
-    <img src="../../../_static/new_logo_big.svg" class="logo__image only-light" alt=""/>
-    <script>document.write(`<img src="../../../_static/new_logo_big.svg" class="logo__image only-dark" alt=""/>`);</script>
   
   
     <p class="title logo__title">Causalis</p>
@@ -406,7 +397,7 @@ document.write(`
 <span class="sd">  percentiles, min/max) for outcome grouped by treatment.</span>
 <span class="sd">- fit_propensity(): Numpy array of cross-validated propensity scores P(T=1|X).</span>
 <span class="sd">- confounders_roc_auc(): Float ROC AUC of treatment vs. propensity score.</span>
-<span class="sd">  Higher AUC implies treatment is predictable from confounders (more confounding risk).</span>
+<span class="sd">  Higher AUC implies treatment is predictable from confounders (more cofounding risk).</span>
 <span class="sd">- positivity_check(): Dict with bounds, share_below, share_above, and flag.</span>
 <span class="sd">  It reports what share of units have PS outside [low, high]; a large share</span>
 <span class="sd">  signals poor overlap (violated positivity).</span>
@@ -450,7 +441,7 @@ document.write(`
 
 
 <div class="viewcode-block" id="PropensityModel">
-<a class="viewcode-back" href="../../../api/eda.html#causalis.eda.eda.PropensityModel">[docs]</a>
+<a class="viewcode-back" href="../../../api/generated/causalis.eda.eda.html#causalis.eda.eda.PropensityModel">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">PropensityModel</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;A model for m(x) = P(D=1|X) and related diagnostics.</span>
 <span class="sd">    </span>
@@ -465,7 +456,7 @@ document.write(`
 <span class="sd">    &quot;&quot;&quot;</span>
     
 <div class="viewcode-block" id="PropensityModel.__init__">
-<a class="viewcode-back" href="../../../api/eda.html#causalis.eda.eda.PropensityModel.__init__">[docs]</a>
+<a class="viewcode-back" href="../../../api/generated/causalis.eda.eda.html#causalis.eda.eda.PropensityModel.__init__">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> 
                  <span class="n">m</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
                  <span class="n">d</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -508,7 +499,7 @@ document.write(`
 
 
 <div class="viewcode-block" id="PropensityModel.from_kfold">
-<a class="viewcode-back" href="../../../api/eda.html#causalis.eda.eda.PropensityModel.from_kfold">[docs]</a>
+<a class="viewcode-back" href="../../../api/generated/causalis.eda.eda.html#causalis.eda.eda.PropensityModel.from_kfold">[docs]</a>
     <span class="nd">@classmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">from_kfold</span><span class="p">(</span>
         <span class="bp">cls</span><span class="p">,</span>
@@ -611,7 +602,7 @@ document.write(`
 <span class="sd">        </span>
 <span class="sd">        Higher AUC means treatment is more predictable from confounders,</span>
 <span class="sd">        indicating stronger systematic differences between groups (potential</span>
-<span class="sd">        confounding). Values near 0.5 suggest random-like assignment.</span>
+<span class="sd">        cofounding). Values near 0.5 suggest random-like assignment.</span>
 <span class="sd">        </span>
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
@@ -689,7 +680,7 @@ document.write(`
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">m</span>
 
 <div class="viewcode-block" id="PropensityModel.plot_m_overlap">
-<a class="viewcode-back" href="../../../api/eda.html#causalis.eda.eda.PropensityModel.plot_m_overlap">[docs]</a>
+<a class="viewcode-back" href="../../../api/generated/causalis.eda.eda.html#causalis.eda.eda.PropensityModel.plot_m_overlap">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">plot_m_overlap</span><span class="p">(</span>
             <span class="bp">self</span><span class="p">,</span>
             <span class="n">clip</span><span class="o">=</span><span class="p">(</span><span class="mf">0.01</span><span class="p">,</span> <span class="mf">0.99</span><span class="p">),</span>
@@ -850,7 +841,7 @@ document.write(`
 
 
 <div class="viewcode-block" id="PropensityModel.positivity_check_m">
-<a class="viewcode-back" href="../../../api/eda.html#causalis.eda.eda.PropensityModel.positivity_check_m">[docs]</a>
+<a class="viewcode-back" href="../../../api/generated/causalis.eda.eda.html#causalis.eda.eda.PropensityModel.positivity_check_m">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">positivity_check_m</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">bounds</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="mf">0.05</span><span class="p">,</span> <span class="mf">0.95</span><span class="p">))</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Check overlap/positivity for m(x) based on thresholds.&quot;&quot;&quot;</span>
         <span class="n">low</span><span class="p">,</span> <span class="n">high</span> <span class="o">=</span> <span class="n">bounds</span>
@@ -865,14 +856,14 @@ document.write(`
 
     <span class="c1"># Back-compat shims</span>
 <div class="viewcode-block" id="PropensityModel.ps_graph">
-<a class="viewcode-back" href="../../../api/eda.html#causalis.eda.eda.PropensityModel.ps_graph">[docs]</a>
+<a class="viewcode-back" href="../../../api/generated/causalis.eda.eda.html#causalis.eda.eda.PropensityModel.ps_graph">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">ps_graph</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="n">_warn_once</span><span class="p">(</span><span class="s2">&quot;ps_graph()&quot;</span><span class="p">,</span> <span class="s2">&quot;plot_m_overlap()&quot;</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">plot_m_overlap</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="PropensityModel.positivity_check">
-<a class="viewcode-back" href="../../../api/eda.html#causalis.eda.eda.PropensityModel.positivity_check">[docs]</a>
+<a class="viewcode-back" href="../../../api/generated/causalis.eda.eda.html#causalis.eda.eda.PropensityModel.positivity_check">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">positivity_check</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="n">_warn_once</span><span class="p">(</span><span class="s2">&quot;positivity_check()&quot;</span><span class="p">,</span> <span class="s2">&quot;positivity_check_m()&quot;</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">positivity_check_m</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
@@ -881,7 +872,7 @@ document.write(`
 
 
 <div class="viewcode-block" id="OutcomeModel">
-<a class="viewcode-back" href="../../../api/eda.html#causalis.eda.eda.OutcomeModel">[docs]</a>
+<a class="viewcode-back" href="../../../api/generated/causalis.eda.eda.html#causalis.eda.eda.OutcomeModel">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">OutcomeModel</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;A model for outcome prediction and related diagnostics.</span>
 
@@ -894,7 +885,7 @@ document.write(`
 <span class="sd">    &quot;&quot;&quot;</span>
 
 <div class="viewcode-block" id="OutcomeModel.__init__">
-<a class="viewcode-back" href="../../../api/eda.html#causalis.eda.eda.OutcomeModel.__init__">[docs]</a>
+<a class="viewcode-back" href="../../../api/generated/causalis.eda.eda.html#causalis.eda.eda.OutcomeModel.__init__">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
                  <span class="n">predicted_outcomes</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
                  <span class="n">actual_outcomes</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
@@ -928,7 +919,7 @@ document.write(`
 
 
 <div class="viewcode-block" id="OutcomeModel.from_kfold">
-<a class="viewcode-back" href="../../../api/eda.html#causalis.eda.eda.OutcomeModel.from_kfold">[docs]</a>
+<a class="viewcode-back" href="../../../api/generated/causalis.eda.eda.html#causalis.eda.eda.OutcomeModel.from_kfold">[docs]</a>
     <span class="nd">@classmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">from_kfold</span><span class="p">(</span>
         <span class="bp">cls</span><span class="p">,</span>
@@ -1149,7 +1140,7 @@ document.write(`
 <span class="c1"># Optional lightweight dataclass for standalone usage, but CausalEDA also</span>
 <span class="c1"># supports the existing causalis.data.CausalData which uses `confounders`.</span>
 <div class="viewcode-block" id="CausalDataLite">
-<a class="viewcode-back" href="../../../api/generated/causalis.eda.CausalDataLite.html#causalis.eda.eda.CausalDataLite">[docs]</a>
+<a class="viewcode-back" href="../../../api/generated/causalis.eda.eda.html#causalis.eda.eda.CausalDataLite">[docs]</a>
 <span class="nd">@dataclass</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">CausalDataLite</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;A minimal container for dataset roles used by CausalEDA.</span>
@@ -1157,12 +1148,12 @@ document.write(`
 <span class="sd">    Attributes</span>
 <span class="sd">    - df: The full pandas DataFrame containing treatment, outcome and covariates.</span>
 <span class="sd">    - treatment: Column name of the binary treatment indicator (0/1).</span>
-<span class="sd">    - target: Column name of the outcome variable.</span>
+<span class="sd">    - outcome: Column name of the outcome variable.</span>
 <span class="sd">    - confounders: List of covariate column names used to model treatment.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">df</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span>
     <span class="n">treatment</span><span class="p">:</span> <span class="nb">str</span>
-    <span class="n">target</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">outcome</span><span class="p">:</span> <span class="nb">str</span>
     <span class="n">confounders</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span></div>
 
 
@@ -1173,49 +1164,40 @@ document.write(`
 <span class="sd">    Accepts:</span>
 <span class="sd">    - CausalDataLite</span>
 <span class="sd">    - Project&#39;s CausalData (duck-typed: attributes df, treatment, outcome,</span>
-<span class="sd">      and either confounders or confounders)</span>
+<span class="sd">      and confounders)</span>
 <span class="sd">    - Any object exposing the same attributes/properties</span>
 
 <span class="sd">    Returns a dict with keys: df, treatment, outcome, confounders.</span>
-<span class="sd">    If both confounders/confounders are absent, it assumes all columns except</span>
+<span class="sd">    If confounders are absent, it assumes all columns except</span>
 <span class="sd">    treatment/outcome are confounders.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="c1"># Direct dataclass-like attributes</span>
     <span class="n">df</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">data_obj</span><span class="p">,</span> <span class="s2">&quot;df&quot;</span><span class="p">)</span>
     <span class="n">treatment_attr</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">data_obj</span><span class="p">,</span> <span class="s2">&quot;treatment&quot;</span><span class="p">)</span>
-    <span class="c1"># Support both &#39;outcome&#39; (project&#39;s CausalData) and &#39;target&#39; (CausalDataLite)</span>
-    <span class="n">target_attr</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">data_obj</span><span class="p">,</span> <span class="s2">&quot;outcome&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">target_attr</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">target_attr</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">data_obj</span><span class="p">,</span> <span class="s2">&quot;target&quot;</span><span class="p">)</span>
+    <span class="n">outcome_attr</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">data_obj</span><span class="p">,</span> <span class="s2">&quot;outcome&quot;</span><span class="p">)</span>
+
     <span class="c1"># If these are Series (as in causalis.data.CausalData properties), convert to column names</span>
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">treatment_attr</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">):</span>
         <span class="n">treatment</span> <span class="o">=</span> <span class="n">treatment_attr</span><span class="o">.</span><span class="n">name</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="n">treatment</span> <span class="o">=</span> <span class="n">treatment_attr</span>
-    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">target_attr</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">):</span>
-        <span class="n">target</span> <span class="o">=</span> <span class="n">target_attr</span><span class="o">.</span><span class="n">name</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">outcome_attr</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">):</span>
+        <span class="n">outcome</span> <span class="o">=</span> <span class="n">outcome_attr</span><span class="o">.</span><span class="n">name</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="n">target</span> <span class="o">=</span> <span class="n">target_attr</span>
+        <span class="n">outcome</span> <span class="o">=</span> <span class="n">outcome_attr</span>
 
     <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">data_obj</span><span class="p">,</span> <span class="s2">&quot;confounders&quot;</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">data_obj</span><span class="p">,</span> <span class="s2">&quot;confounders&quot;</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="c1"># causalis.data.CausalData.confounders returns a List[str]</span>
         <span class="n">confs</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">data_obj</span><span class="p">,</span> <span class="s2">&quot;confounders&quot;</span><span class="p">))</span>
-    <span class="k">elif</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">data_obj</span><span class="p">,</span> <span class="s2">&quot;confounders&quot;</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">data_obj</span><span class="p">,</span> <span class="s2">&quot;confounders&quot;</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="c1"># causalis.data.CausalData.confounders returns a DataFrame or None; if it&#39;s a</span>
-        <span class="c1"># DataFrame, use its columns; if it&#39;s a list/iterable, cast to list.</span>
-        <span class="n">cofs</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">data_obj</span><span class="p">,</span> <span class="s2">&quot;confounders&quot;</span><span class="p">)</span>
-        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">cofs</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">):</span>
-            <span class="n">confs</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">cofs</span><span class="o">.</span><span class="n">columns</span><span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">confs</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">cofs</span><span class="p">)</span> <span class="k">if</span> <span class="n">cofs</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="p">[]</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="c1"># Last resort: assume all columns except treatment/outcome are confounders</span>
-        <span class="n">confs</span> <span class="o">=</span> <span class="p">[</span><span class="n">c</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">df</span><span class="o">.</span><span class="n">columns</span> <span class="k">if</span> <span class="n">c</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">{</span><span class="n">treatment</span><span class="p">,</span> <span class="n">target</span><span class="p">}]</span>
+        <span class="n">confs</span> <span class="o">=</span> <span class="p">[</span><span class="n">c</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">df</span><span class="o">.</span><span class="n">columns</span> <span class="k">if</span> <span class="n">c</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">{</span><span class="n">treatment</span><span class="p">,</span> <span class="n">outcome</span><span class="p">}]</span>
 
-    <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;df&quot;</span><span class="p">:</span> <span class="n">df</span><span class="p">,</span> <span class="s2">&quot;treatment&quot;</span><span class="p">:</span> <span class="n">treatment</span><span class="p">,</span> <span class="s2">&quot;outcome&quot;</span><span class="p">:</span> <span class="n">target</span><span class="p">,</span> <span class="s2">&quot;confounders&quot;</span><span class="p">:</span> <span class="n">confs</span><span class="p">}</span>
+    <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;df&quot;</span><span class="p">:</span> <span class="n">df</span><span class="p">,</span> <span class="s2">&quot;treatment&quot;</span><span class="p">:</span> <span class="n">treatment</span><span class="p">,</span> <span class="s2">&quot;outcome&quot;</span><span class="p">:</span> <span class="n">outcome</span><span class="p">,</span> <span class="s2">&quot;confounders&quot;</span><span class="p">:</span> <span class="n">confs</span><span class="p">}</span>
 
 
 <div class="viewcode-block" id="CausalEDA">
-<a class="viewcode-back" href="../../../api/generated/causalis.eda.CausalEDA.html#causalis.eda.eda.CausalEDA">[docs]</a>
+<a class="viewcode-back" href="../../../api/generated/causalis.eda.eda.html#causalis.eda.eda.CausalEDA">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">CausalEDA</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Exploratory diagnostics for causal designs with binary treatment.</span>
 
@@ -1229,10 +1211,10 @@ document.write(`
 <span class="sd">    - Inspect weight distributions and effective sample size (ESS).</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 <div class="viewcode-block" id="CausalEDA.__init__">
-<a class="viewcode-back" href="../../../api/generated/causalis.eda.CausalEDA.html#causalis.eda.eda.CausalEDA.__init__">[docs]</a>
+<a class="viewcode-back" href="../../../api/generated/causalis.eda.eda.html#causalis.eda.eda.CausalEDA.__init__">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">ps_model</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">n_splits</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">5</span><span class="p">,</span> <span class="n">random_state</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">42</span><span class="p">):</span>
         <span class="n">roles</span> <span class="o">=</span> <span class="n">_extract_roles</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">d</span> <span class="o">=</span> <span class="n">CausalDataLite</span><span class="p">(</span><span class="n">df</span><span class="o">=</span><span class="n">roles</span><span class="p">[</span><span class="s2">&quot;df&quot;</span><span class="p">],</span> <span class="n">treatment</span><span class="o">=</span><span class="n">roles</span><span class="p">[</span><span class="s2">&quot;treatment&quot;</span><span class="p">],</span> <span class="n">target</span><span class="o">=</span><span class="n">roles</span><span class="p">[</span><span class="s2">&quot;outcome&quot;</span><span class="p">],</span> <span class="n">confounders</span><span class="o">=</span><span class="n">roles</span><span class="p">[</span><span class="s2">&quot;confounders&quot;</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">d</span> <span class="o">=</span> <span class="n">CausalDataLite</span><span class="p">(</span><span class="n">df</span><span class="o">=</span><span class="n">roles</span><span class="p">[</span><span class="s2">&quot;df&quot;</span><span class="p">],</span> <span class="n">treatment</span><span class="o">=</span><span class="n">roles</span><span class="p">[</span><span class="s2">&quot;treatment&quot;</span><span class="p">],</span> <span class="n">outcome</span><span class="o">=</span><span class="n">roles</span><span class="p">[</span><span class="s2">&quot;outcome&quot;</span><span class="p">],</span> <span class="n">confounders</span><span class="o">=</span><span class="n">roles</span><span class="p">[</span><span class="s2">&quot;confounders&quot;</span><span class="p">])</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">n_splits</span> <span class="o">=</span> <span class="n">n_splits</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">random_state</span> <span class="o">=</span> <span class="n">random_state</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">ps_model</span> <span class="o">=</span> <span class="n">ps_model</span> <span class="ow">or</span> <span class="n">CatBoostClassifier</span><span class="p">(</span>
@@ -1266,7 +1248,7 @@ document.write(`
     <span class="c1"># ---------- basics ----------</span>
 
 <div class="viewcode-block" id="CausalEDA.data_shape">
-<a class="viewcode-back" href="../../../api/generated/causalis.eda.eda.CausalEDA.data_shape.html#causalis.eda.eda.CausalEDA.data_shape">[docs]</a>
+<a class="viewcode-back" href="../../../api/generated/causalis.eda.eda.html#causalis.eda.eda.CausalEDA.data_shape">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">data_shape</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the shape information of the causal dataset.</span>
 
@@ -1296,7 +1278,7 @@ document.write(`
 
 
 <div class="viewcode-block" id="CausalEDA.outcome_stats">
-<a class="viewcode-back" href="../../../api/generated/causalis.eda.eda.CausalEDA.outcome_stats.html#causalis.eda.eda.CausalEDA.outcome_stats">[docs]</a>
+<a class="viewcode-back" href="../../../api/generated/causalis.eda.eda.html#causalis.eda.eda.CausalEDA.outcome_stats">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">outcome_stats</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Comprehensive outcome statistics grouped by treatment.</span>
 
@@ -1330,7 +1312,7 @@ document.write(`
 <span class="sd">        0        3000  5.123456  2.345678  0.123456  2.345678  3.456789  5.123456  6.789012  7.890123  9.876543</span>
 <span class="sd">        1        2000  6.789012  2.456789  0.234567  3.456789  4.567890  6.789012  8.901234  9.012345  10.987654</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">df</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">d</span><span class="o">.</span><span class="n">df</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">d</span><span class="o">.</span><span class="n">treatment</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">d</span><span class="o">.</span><span class="n">target</span>
+        <span class="n">df</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">d</span><span class="o">.</span><span class="n">df</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">d</span><span class="o">.</span><span class="n">treatment</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">d</span><span class="o">.</span><span class="n">outcome</span>
         
         <span class="c1"># Ensure treatment is numeric for grouping</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">pd</span><span class="o">.</span><span class="n">api</span><span class="o">.</span><span class="n">types</span><span class="o">.</span><span class="n">is_numeric_dtype</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="n">t</span><span class="p">]):</span>
@@ -1370,7 +1352,7 @@ document.write(`
 
     <span class="c1"># ---------- propensity &amp; overlap ----------</span>
 <div class="viewcode-block" id="CausalEDA.fit_m">
-<a class="viewcode-back" href="../../../api/generated/causalis.eda.CausalEDA.html#causalis.eda.eda.CausalEDA.fit_m">[docs]</a>
+<a class="viewcode-back" href="../../../api/generated/causalis.eda.eda.html#causalis.eda.eda.CausalEDA.fit_m">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">fit_m</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;PropensityModel&#39;</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Estimate cross-validated m(x) = P(D=1|X).</span>
 
@@ -1441,14 +1423,14 @@ document.write(`
 
     <span class="c1"># Back-compat shim</span>
 <div class="viewcode-block" id="CausalEDA.fit_propensity">
-<a class="viewcode-back" href="../../../api/generated/causalis.eda.eda.CausalEDA.fit_propensity.html#causalis.eda.eda.CausalEDA.fit_propensity">[docs]</a>
+<a class="viewcode-back" href="../../../api/generated/causalis.eda.eda.html#causalis.eda.eda.CausalEDA.fit_propensity">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">fit_propensity</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;PropensityModel&#39;</span><span class="p">:</span>
         <span class="n">_warn_once</span><span class="p">(</span><span class="s2">&quot;fit_propensity()&quot;</span><span class="p">,</span> <span class="s2">&quot;fit_m()&quot;</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">fit_m</span><span class="p">()</span></div>
 
 
 <div class="viewcode-block" id="CausalEDA.outcome_fit">
-<a class="viewcode-back" href="../../../api/generated/causalis.eda.eda.CausalEDA.outcome_fit.html#causalis.eda.eda.CausalEDA.outcome_fit">[docs]</a>
+<a class="viewcode-back" href="../../../api/generated/causalis.eda.eda.html#causalis.eda.eda.CausalEDA.outcome_fit">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">outcome_fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">outcome_model</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;OutcomeModel&#39;</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Fit a regression model to predict outcome from confounders only.</span>
 
@@ -1475,7 +1457,7 @@ document.write(`
         <span class="n">df</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">d</span><span class="o">.</span><span class="n">df</span>
         <span class="c1"># Features: confounders only (treatment excluded for proper causal analysis)</span>
         <span class="n">X</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">d</span><span class="o">.</span><span class="n">confounders</span><span class="p">]</span>
-        <span class="n">y</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">d</span><span class="o">.</span><span class="n">target</span><span class="p">]</span><span class="o">.</span><span class="n">values</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">d</span><span class="o">.</span><span class="n">outcome</span><span class="p">]</span><span class="o">.</span><span class="n">values</span>
         <span class="n">cv</span> <span class="o">=</span> <span class="n">KFold</span><span class="p">(</span><span class="n">n_splits</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">n_splits</span><span class="p">,</span> <span class="n">shuffle</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">random_state</span><span class="p">)</span>
         
         <span class="c1"># Default to CatBoostRegressor if no custom model provided</span>
@@ -1586,7 +1568,7 @@ document.write(`
 
 
 <div class="viewcode-block" id="CausalEDA.auc_m">
-<a class="viewcode-back" href="../../../api/generated/causalis.eda.CausalEDA.html#causalis.eda.eda.CausalEDA.auc_m">[docs]</a>
+<a class="viewcode-back" href="../../../api/generated/causalis.eda.eda.html#causalis.eda.eda.CausalEDA.auc_m">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">auc_m</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">m</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Compute ROC AUC of treatment assignment vs. m(x).&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">m</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -1599,7 +1581,7 @@ document.write(`
 
 
 <div class="viewcode-block" id="CausalEDA.positivity_check_m">
-<a class="viewcode-back" href="../../../api/generated/causalis.eda.CausalEDA.html#causalis.eda.eda.CausalEDA.positivity_check_m">[docs]</a>
+<a class="viewcode-back" href="../../../api/generated/causalis.eda.eda.html#causalis.eda.eda.CausalEDA.positivity_check_m">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">positivity_check_m</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">m</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">bounds</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="mf">0.05</span><span class="p">,</span> <span class="mf">0.95</span><span class="p">))</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Check overlap/positivity for m(x) based on thresholds.&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">m</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -1617,7 +1599,7 @@ document.write(`
 
 
 <div class="viewcode-block" id="CausalEDA.plot_m_overlap">
-<a class="viewcode-back" href="../../../api/generated/causalis.eda.CausalEDA.html#causalis.eda.eda.CausalEDA.plot_m_overlap">[docs]</a>
+<a class="viewcode-back" href="../../../api/generated/causalis.eda.eda.html#causalis.eda.eda.CausalEDA.plot_m_overlap">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">plot_m_overlap</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">m</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Plot overlaid histograms of m(x) for treated vs control.&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">m</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -1639,21 +1621,21 @@ document.write(`
 
     <span class="c1"># Back-compat shims for public API</span>
 <div class="viewcode-block" id="CausalEDA.confounders_roc_auc">
-<a class="viewcode-back" href="../../../api/generated/causalis.eda.eda.CausalEDA.confounders_roc_auc.html#causalis.eda.eda.CausalEDA.confounders_roc_auc">[docs]</a>
+<a class="viewcode-back" href="../../../api/generated/causalis.eda.eda.html#causalis.eda.eda.CausalEDA.confounders_roc_auc">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">confounders_roc_auc</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ps</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
         <span class="n">_warn_once</span><span class="p">(</span><span class="s2">&quot;confounders_roc_auc()&quot;</span><span class="p">,</span> <span class="s2">&quot;auc_m()&quot;</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">auc_m</span><span class="p">(</span><span class="n">m</span><span class="o">=</span><span class="n">ps</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="CausalEDA.positivity_check">
-<a class="viewcode-back" href="../../../api/generated/causalis.eda.eda.CausalEDA.positivity_check.html#causalis.eda.eda.CausalEDA.positivity_check">[docs]</a>
+<a class="viewcode-back" href="../../../api/generated/causalis.eda.eda.html#causalis.eda.eda.CausalEDA.positivity_check">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">positivity_check</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ps</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">bounds</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="mf">0.05</span><span class="p">,</span> <span class="mf">0.95</span><span class="p">))</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
         <span class="n">_warn_once</span><span class="p">(</span><span class="s2">&quot;positivity_check()&quot;</span><span class="p">,</span> <span class="s2">&quot;positivity_check_m()&quot;</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">positivity_check_m</span><span class="p">(</span><span class="n">m</span><span class="o">=</span><span class="n">ps</span><span class="p">,</span> <span class="n">bounds</span><span class="o">=</span><span class="n">bounds</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="CausalEDA.plot_ps_overlap">
-<a class="viewcode-back" href="../../../api/generated/causalis.eda.eda.CausalEDA.plot_ps_overlap.html#causalis.eda.eda.CausalEDA.plot_ps_overlap">[docs]</a>
+<a class="viewcode-back" href="../../../api/generated/causalis.eda.eda.html#causalis.eda.eda.CausalEDA.plot_ps_overlap">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">plot_ps_overlap</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ps</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
         <span class="n">_warn_once</span><span class="p">(</span><span class="s2">&quot;plot_ps_overlap()&quot;</span><span class="p">,</span> <span class="s2">&quot;plot_m_overlap()&quot;</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">plot_m_overlap</span><span class="p">(</span><span class="n">m</span><span class="o">=</span><span class="n">ps</span><span class="p">)</span></div>
@@ -1662,7 +1644,7 @@ document.write(`
     <span class="c1"># ---------- balance ----------</span>
 
 <div class="viewcode-block" id="CausalEDA.confounders_means">
-<a class="viewcode-back" href="../../../api/generated/causalis.eda.eda.CausalEDA.confounders_means.html#causalis.eda.eda.CausalEDA.confounders_means">[docs]</a>
+<a class="viewcode-back" href="../../../api/generated/causalis.eda.eda.html#causalis.eda.eda.CausalEDA.confounders_means">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">confounders_means</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Comprehensive confounders balance assessment with means by treatment group.</span>
 
@@ -1705,7 +1687,7 @@ document.write(`
 <span class="sd">        education         0.25      0.35      0.1     0.215</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="c1"># Delegate implementation to dedicated balance module for reuse and testing</span>
-        <span class="kn">from</span><span class="w"> </span><span class="nn">.cofounders_balance</span><span class="w"> </span><span class="kn">import</span> <span class="n">confounders_balance</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">.confounders_balance</span><span class="w"> </span><span class="kn">import</span> <span class="n">confounders_balance</span>
         <span class="k">return</span> <span class="n">confounders_balance</span><span class="p">(</span>
             <span class="n">df</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">d</span><span class="o">.</span><span class="n">df</span><span class="p">,</span>
             <span class="n">treatment</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">d</span><span class="o">.</span><span class="n">treatment</span><span class="p">,</span>
@@ -1716,11 +1698,11 @@ document.write(`
     <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span>
 
 <div class="viewcode-block" id="CausalEDA.outcome_hist">
-<a class="viewcode-back" href="../../../api/generated/causalis.eda.CausalEDA.html#causalis.eda.eda.CausalEDA.outcome_hist">[docs]</a>
+<a class="viewcode-back" href="../../../api/generated/causalis.eda.eda.html#causalis.eda.eda.CausalEDA.outcome_hist">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">outcome_hist</span><span class="p">(</span>
             <span class="bp">self</span><span class="p">,</span>
             <span class="n">treatment</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-            <span class="n">target</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="n">outcome</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
             <span class="n">bins</span><span class="o">=</span><span class="s2">&quot;fd&quot;</span><span class="p">,</span>  <span class="c1"># smarter default (still accepts int)</span>
             <span class="n">density</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
             <span class="n">alpha</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.45</span><span class="p">,</span>
@@ -1789,7 +1771,7 @@ document.write(`
         <span class="c1"># ---------- Data &amp; columns ---------------------------------------------</span>
         <span class="n">df</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">d</span><span class="o">.</span><span class="n">df</span>
         <span class="n">t_col</span> <span class="o">=</span> <span class="n">treatment</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">d</span><span class="o">.</span><span class="n">treatment</span>
-        <span class="n">y_col</span> <span class="o">=</span> <span class="n">target</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">d</span><span class="o">.</span><span class="n">target</span>
+        <span class="n">y_col</span> <span class="o">=</span> <span class="n">outcome</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">d</span><span class="o">.</span><span class="n">outcome</span>
         <span class="k">if</span> <span class="n">t_col</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">df</span><span class="o">.</span><span class="n">columns</span> <span class="ow">or</span> <span class="n">y_col</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">df</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Specified treatment/outcome columns not found in DataFrame.&quot;</span><span class="p">)</span>
 
@@ -1960,11 +1942,11 @@ document.write(`
     <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span>
 
 <div class="viewcode-block" id="CausalEDA.outcome_boxplot">
-<a class="viewcode-back" href="../../../api/generated/causalis.eda.CausalEDA.html#causalis.eda.eda.CausalEDA.outcome_boxplot">[docs]</a>
+<a class="viewcode-back" href="../../../api/generated/causalis.eda.eda.html#causalis.eda.eda.CausalEDA.outcome_boxplot">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">outcome_boxplot</span><span class="p">(</span>
             <span class="bp">self</span><span class="p">,</span>
             <span class="n">treatment</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-            <span class="n">target</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="n">outcome</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
             <span class="n">figsize</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="mi">9</span><span class="p">,</span> <span class="mf">5.5</span><span class="p">),</span>
             <span class="n">dpi</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">220</span><span class="p">,</span>
             <span class="n">font_scale</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.15</span><span class="p">,</span>
@@ -1992,7 +1974,7 @@ document.write(`
         <span class="c1"># --- Data setup --------------------------------------------------------</span>
         <span class="n">df</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">d</span><span class="o">.</span><span class="n">df</span>
         <span class="n">t_col</span> <span class="o">=</span> <span class="n">treatment</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">d</span><span class="o">.</span><span class="n">treatment</span>
-        <span class="n">y_col</span> <span class="o">=</span> <span class="n">target</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">d</span><span class="o">.</span><span class="n">target</span>
+        <span class="n">y_col</span> <span class="o">=</span> <span class="n">outcome</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">d</span><span class="o">.</span><span class="n">outcome</span>
 
         <span class="k">if</span> <span class="n">t_col</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">df</span><span class="o">.</span><span class="n">columns</span> <span class="ow">or</span> <span class="n">y_col</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">df</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Specified treatment/outcome columns not found in DataFrame.&quot;</span><span class="p">)</span>
@@ -2074,10 +2056,10 @@ document.write(`
 
 
 <div class="viewcode-block" id="CausalEDA.outcome_plots">
-<a class="viewcode-back" href="../../../api/generated/causalis.eda.eda.CausalEDA.outcome_plots.html#causalis.eda.eda.CausalEDA.outcome_plots">[docs]</a>
+<a class="viewcode-back" href="../../../api/generated/causalis.eda.eda.html#causalis.eda.eda.CausalEDA.outcome_plots">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">outcome_plots</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
                       <span class="n">treatment</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-                      <span class="n">target</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                      <span class="n">outcome</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
                       <span class="n">bins</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">30</span><span class="p">,</span>
                       <span class="n">density</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
                       <span class="n">alpha</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.5</span><span class="p">,</span>
@@ -2091,8 +2073,8 @@ document.write(`
 <span class="sd">        ----------</span>
 <span class="sd">        treatment : Optional[str]</span>
 <span class="sd">            Treatment column name. Defaults to the treatment stored in the CausalEDA data.</span>
-<span class="sd">        target : Optional[str]</span>
-<span class="sd">            Target/outcome column name. Defaults to the outcome stored in the CausalEDA data.</span>
+<span class="sd">        outcome : Optional[str]</span>
+<span class="sd">            Outcome column name. Defaults to the outcome stored in the CausalEDA data.</span>
 <span class="sd">        bins : int</span>
 <span class="sd">            Number of bins for histograms when the outcome is numeric.</span>
 <span class="sd">        density : bool</span>
@@ -2111,7 +2093,7 @@ document.write(`
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">fig_hist</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">outcome_hist</span><span class="p">(</span>
             <span class="n">treatment</span><span class="o">=</span><span class="n">treatment</span><span class="p">,</span>
-            <span class="n">target</span><span class="o">=</span><span class="n">target</span><span class="p">,</span>
+            <span class="n">outcome</span><span class="o">=</span><span class="n">outcome</span><span class="p">,</span>
             <span class="n">bins</span><span class="o">=</span><span class="n">bins</span><span class="p">,</span>
             <span class="n">density</span><span class="o">=</span><span class="n">density</span><span class="p">,</span>
             <span class="n">alpha</span><span class="o">=</span><span class="n">alpha</span><span class="p">,</span>
@@ -2120,14 +2102,14 @@ document.write(`
         <span class="p">)</span>
         <span class="n">fig_box</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">outcome_boxplot</span><span class="p">(</span>
             <span class="n">treatment</span><span class="o">=</span><span class="n">treatment</span><span class="p">,</span>
-            <span class="n">target</span><span class="o">=</span><span class="n">target</span><span class="p">,</span>
+            <span class="n">outcome</span><span class="o">=</span><span class="n">outcome</span><span class="p">,</span>
             <span class="n">figsize</span><span class="o">=</span><span class="n">figsize</span><span class="p">,</span>
         <span class="p">)</span>
         <span class="k">return</span> <span class="n">fig_hist</span><span class="p">,</span> <span class="n">fig_box</span></div>
 
 
 <div class="viewcode-block" id="CausalEDA.m_features">
-<a class="viewcode-back" href="../../../api/generated/causalis.eda.CausalEDA.html#causalis.eda.eda.CausalEDA.m_features">[docs]</a>
+<a class="viewcode-back" href="../../../api/generated/causalis.eda.eda.html#causalis.eda.eda.CausalEDA.m_features">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">m_features</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Return feature attribution from the fitted m(x) model.</span>
 <span class="sd">        </span>
@@ -2210,7 +2192,7 @@ document.write(`
 
     <span class="c1"># Back-compat shim</span>
 <div class="viewcode-block" id="CausalEDA.treatment_features">
-<a class="viewcode-back" href="../../../api/generated/causalis.eda.eda.CausalEDA.treatment_features.html#causalis.eda.eda.CausalEDA.treatment_features">[docs]</a>
+<a class="viewcode-back" href="../../../api/generated/causalis.eda.eda.html#causalis.eda.eda.CausalEDA.treatment_features">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">treatment_features</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
         <span class="n">_warn_once</span><span class="p">(</span><span class="s2">&quot;treatment_features()&quot;</span><span class="p">,</span> <span class="s2">&quot;m_features()&quot;</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">m_features</span><span class="p">()</span></div>
@@ -2258,7 +2240,7 @@ document.write(`
 
   <p class="copyright">
     
-      © Copyright 2025, Causalis Team.
+      © Copyright 2026, Causalis Team.
       <br/>
     
   </p>

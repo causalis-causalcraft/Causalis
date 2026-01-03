@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>CausalData at a glance &#8212; Causalis 0.1.0 documentation</title>
+    <title>CausalData at a glance &#8212; Causalis 0.1.2 documentation</title>
   
   
   
@@ -39,7 +39,7 @@
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../_static/documentation_options.js?v=2caa9db7"></script>
+    <script src="../_static/documentation_options.js?v=e5353d3f"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -47,7 +47,6 @@
     <script src="../_static/design-tabs.js?v=df1d7cd1"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'user-guide/causaldata';</script>
-    <link rel="icon" href="../_static/new_logo.svg"/>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Inference" href="inference.html" />
@@ -125,14 +124,6 @@
   
   
   
-  
-    
-    
-      
-    
-    
-    <img src="../_static/new_logo_big.svg" class="logo__image only-light" alt=""/>
-    <script>document.write(`<img src="../_static/new_logo_big.svg" class="logo__image only-dark" alt=""/>`);</script>
   
   
     <p class="title logo__title">Causalis</p>
@@ -417,7 +408,7 @@ document.write(`
                   
   <section class="tex2jax_ignore mathjax_ignore" id="causaldata-at-a-glance">
 <h1>CausalData at a glance<a class="headerlink" href="#causaldata-at-a-glance" title="Link to this heading">#</a></h1>
-<p>CausalData is the light-weight input container used across Causalis. It wraps a pandas DataFrame and records which columns are the outcome (target), the treatment, and the confounders.</p>
+<p>CausalData is the light-weight input container used across Causalis. It wraps a pandas DataFrame and records which columns are the outcome, the treatment, and the confounders.</p>
 <section id="quick-start">
 <h2>Quick start<a class="headerlink" href="#quick-start" title="Link to this heading">#</a></h2>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">causalis.data</span><span class="w"> </span><span class="kn">import</span> <span class="n">generate_rct_data</span><span class="p">,</span> <span class="n">CausalData</span>
@@ -443,21 +434,20 @@ document.write(`
 <ul>
 <li><p>df: pandas DataFrame (no NaNs)</p></li>
 <li><p>treatment: name of the treatment column (numeric)</p></li>
-<li><p>outcome: name of the outcome/target column (numeric)</p></li>
+<li><p>outcome: name of the outcome column (numeric)</p></li>
 <li><p>confounders: one or more confounder column names (numeric)</p></li>
 </ul>
 </li>
 <li><p>Properties</p>
 <ul>
-<li><p>target: pandas Series (the outcome)</p></li>
-<li><p>outcome: alias of target</p></li>
+<li><p>outcome: pandas Series</p></li>
 <li><p>treatment: pandas Series</p></li>
 <li><p>confounders: list[str] of confounder column names</p></li>
 </ul>
 </li>
 <li><p>Method</p>
 <ul>
-<li><p>get_df(columns=None, include_treatment=True, include_target=True, include_confounders=True) -&gt; DataFrame
+<li><p>get_df(columns=None, include_treatment=True, include_outcome=True, include_confounders=True) -&gt; DataFrame
 Selects columns by name and/or by role. Returns a copy.</p></li>
 </ul>
 </li>
@@ -488,7 +478,7 @@ Selects columns by name and/or by role. Returns a copy.</p></li>
 
 <span class="c1"># Access pieces</span>
 <span class="n">causal_data</span><span class="o">.</span><span class="n">treatment</span>  <span class="c1"># Series</span>
-<span class="n">causal_data</span><span class="o">.</span><span class="n">target</span>  <span class="c1"># Series</span>
+<span class="n">causal_data</span><span class="o">.</span><span class="n">outcome</span>  <span class="c1"># Series</span>
 <span class="n">causal_data</span><span class="o">.</span><span class="n">confounders</span>  <span class="c1"># list[str]</span>
 
 <span class="c1"># Full data used by CausalData</span>
@@ -496,7 +486,7 @@ Selects columns by name and/or by role. Returns a copy.</p></li>
 <span class="n">default_df</span> <span class="o">=</span> <span class="n">causal_data</span><span class="o">.</span><span class="n">get_df</span><span class="p">()</span>
 
 <span class="c1"># DataFrame of only confounders</span>
-<span class="n">X</span> <span class="o">=</span> <span class="n">causal_data</span><span class="o">.</span><span class="n">get_df</span><span class="p">(</span><span class="n">include_target</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">include_treatment</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="n">X</span> <span class="o">=</span> <span class="n">causal_data</span><span class="o">.</span><span class="n">get_df</span><span class="p">(</span><span class="n">include_outcome</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">include_treatment</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 <span class="c1"># or</span>
 <span class="n">X</span> <span class="o">=</span> <span class="n">causal_data</span><span class="o">.</span><span class="n">df</span><span class="p">[</span><span class="n">causal_data</span><span class="o">.</span><span class="n">confounders</span><span class="p">]</span>
 
@@ -594,7 +584,7 @@ Selects columns by name and/or by role. Returns a copy.</p></li>
 
   <p class="copyright">
     
-      © Copyright 2025, Causalis Team.
+      © Copyright 2026, Causalis Team.
       <br/>
     
   </p>

@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>RCT Benchmark: t-test vs Linear Regression vs DML ATE &#8212; Causalis 0.1.0 documentation</title>
+    <title>RCT Benchmark: t-test vs Linear Regression vs DML ATE &#8212; Causalis 0.1.2 documentation</title>
   
   
   
@@ -39,7 +39,7 @@
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../_static/documentation_options.js?v=2caa9db7"></script>
+    <script src="../_static/documentation_options.js?v=e5353d3f"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -47,7 +47,6 @@
     <script src="../_static/design-tabs.js?v=df1d7cd1"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'research/rct_benchmark';</script>
-    <link rel="icon" href="../_static/new_logo.svg"/>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Refutation of DML IRM inference" href="refutation_flow.html" />
@@ -125,14 +124,6 @@
   
   
   
-  
-    
-    
-      
-    
-    
-    <img src="../_static/new_logo_big.svg" class="logo__image only-light" alt=""/>
-    <script>document.write(`<img src="../_static/new_logo_big.svg" class="logo__image only-dark" alt=""/>`);</script>
   
   
     <p class="title logo__title">Causalis</p>
@@ -428,7 +419,7 @@ document.write(`
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">causalis.data.generators</span><span class="w"> </span><span class="kn">import</span> <span class="n">generate_rct</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">causalis.data.dgps</span><span class="w"> </span><span class="kn">import</span> <span class="n">generate_rct</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">causalis.data.causaldata</span><span class="w"> </span><span class="kn">import</span> <span class="n">CausalData</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">causalis.inference.atte.ttest</span><span class="w"> </span><span class="kn">import</span> <span class="n">ttest</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">causalis.inference.ate.dml_ate_source</span><span class="w"> </span><span class="kn">import</span> <span class="n">dml_ate_source</span>
@@ -451,10 +442,9 @@ document.write(`
     <span class="n">n</span><span class="o">=</span><span class="n">n</span><span class="p">,</span>
     <span class="n">split</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
     <span class="n">random_state</span><span class="o">=</span><span class="mi">42</span><span class="p">,</span>
-    <span class="n">target_type</span><span class="o">=</span><span class="s2">&quot;normal&quot;</span><span class="p">,</span>
-    <span class="n">target_params</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;mean&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;A&quot;</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">,</span> <span class="s2">&quot;B&quot;</span><span class="p">:</span> <span class="n">theta</span><span class="p">},</span> <span class="s2">&quot;std&quot;</span><span class="p">:</span> <span class="mf">1.0</span><span class="p">},</span>
+    <span class="n">outcome_type</span><span class="o">=</span><span class="s2">&quot;normal&quot;</span><span class="p">,</span>
+    <span class="n">outcome_params</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;mean&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;A&quot;</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">,</span> <span class="s2">&quot;B&quot;</span><span class="p">:</span> <span class="n">theta</span><span class="p">},</span> <span class="s2">&quot;std&quot;</span><span class="p">:</span> <span class="mf">1.0</span><span class="p">},</span>
     <span class="n">k</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>                  <span class="c1"># 5 pre-treatment covariates X independent of T</span>
-    <span class="n">add_ancillary</span><span class="o">=</span><span class="kc">False</span>   <span class="c1"># &lt;- no legacy/post-treatment columns</span>
 <span class="p">)</span>
 
 <span class="c1"># Use only baseline X columns as confounders</span>
@@ -463,7 +453,7 @@ document.write(`
 <span class="c1"># Wrap in CausalData with new column names</span>
 <span class="n">causal_data</span> <span class="o">=</span> <span class="n">CausalData</span><span class="p">(</span>
     <span class="n">df</span><span class="o">=</span><span class="n">df</span><span class="p">,</span>
-    <span class="n">treatment</span><span class="o">=</span><span class="s1">&#39;t&#39;</span><span class="p">,</span>
+    <span class="n">treatment</span><span class="o">=</span><span class="s1">&#39;d&#39;</span><span class="p">,</span>
     <span class="n">outcome</span><span class="o">=</span><span class="s1">&#39;y&#39;</span><span class="p">,</span>
     <span class="n">confounders</span><span class="o">=</span><span class="n">confounders</span>
 <span class="p">)</span>
@@ -497,7 +487,7 @@ document.write(`
     <tr style="text-align: right;">
       <th></th>
       <th>y</th>
-      <th>t</th>
+      <th>d</th>
       <th>x1</th>
       <th>x2</th>
       <th>x3</th>
@@ -508,8 +498,8 @@ document.write(`
   <tbody>
     <tr>
       <th>0</th>
-      <td>0.302852</td>
-      <td>0.0</td>
+      <td>1.242044</td>
+      <td>1.0</td>
       <td>0.304717</td>
       <td>-1.039984</td>
       <td>0.750451</td>
@@ -518,8 +508,8 @@ document.write(`
     </tr>
     <tr>
       <th>1</th>
-      <td>-0.942206</td>
-      <td>1.0</td>
+      <td>0.983041</td>
+      <td>0.0</td>
       <td>-1.302180</td>
       <td>0.127840</td>
       <td>-0.316243</td>
@@ -528,7 +518,7 @@ document.write(`
     </tr>
     <tr>
       <th>2</th>
-      <td>0.910524</td>
+      <td>1.886970</td>
       <td>1.0</td>
       <td>0.879398</td>
       <td>0.777792</td>
@@ -538,7 +528,7 @@ document.write(`
     </tr>
     <tr>
       <th>3</th>
-      <td>2.332408</td>
+      <td>1.473005</td>
       <td>1.0</td>
       <td>-0.859292</td>
       <td>0.368751</td>
@@ -548,8 +538,8 @@ document.write(`
     </tr>
     <tr>
       <th>4</th>
-      <td>-1.012732</td>
-      <td>0.0</td>
+      <td>-0.383807</td>
+      <td>1.0</td>
       <td>-0.184862</td>
       <td>-0.680930</td>
       <td>1.222541</td>
@@ -568,8 +558,8 @@ document.write(`
     </tr>
     <tr>
       <th>95</th>
-      <td>0.305495</td>
-      <td>0.0</td>
+      <td>0.436576</td>
+      <td>1.0</td>
       <td>-0.339258</td>
       <td>1.063852</td>
       <td>-1.141938</td>
@@ -578,8 +568,8 @@ document.write(`
     </tr>
     <tr>
       <th>96</th>
-      <td>-0.865824</td>
-      <td>1.0</td>
+      <td>-0.826800</td>
+      <td>0.0</td>
       <td>0.223080</td>
       <td>1.433215</td>
       <td>0.091520</td>
@@ -588,7 +578,7 @@ document.write(`
     </tr>
     <tr>
       <th>97</th>
-      <td>-0.027818</td>
+      <td>1.375048</td>
       <td>1.0</td>
       <td>-0.170408</td>
       <td>-0.779482</td>
@@ -598,7 +588,7 @@ document.write(`
     </tr>
     <tr>
       <th>98</th>
-      <td>-1.263472</td>
+      <td>1.878698</td>
       <td>0.0</td>
       <td>1.085287</td>
       <td>0.366531</td>
@@ -608,8 +598,8 @@ document.write(`
     </tr>
     <tr>
       <th>99</th>
-      <td>-0.421367</td>
-      <td>0.0</td>
+      <td>1.741941</td>
+      <td>1.0</td>
       <td>0.935547</td>
       <td>-1.831406</td>
       <td>-0.335607</td>
@@ -748,7 +738,7 @@ document.write(`
       <th>smd</th>
     </tr>
     <tr>
-      <th>confounders</th>
+      <th>cofounders</th>
       <th></th>
       <th></th>
       <th></th>
@@ -1077,7 +1067,7 @@ document.write(`
 
   <p class="copyright">
     
-      © Copyright 2025, Causalis Team.
+      © Copyright 2026, Causalis Team.
       <br/>
     
   </p>

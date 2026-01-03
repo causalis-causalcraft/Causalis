@@ -35,7 +35,7 @@ product if we are changing the landing page
 
 $$ Y_i $$
 
-**Covariates or cofounders**. These are variables that influence the 
+**Covariates or confounders**. These are variables that influence the
 propensity to receive a treatment and simultaneously predict the target, 
 thereby causing bias in the estimate.
 
@@ -43,7 +43,7 @@ $$ X_i $$
 
 It could look like this in a data
 
-| Client | Treatment | Outcome | Cofounder_1 | Cofounder_2 |
+| Client | Treatment | Outcome | confounder_1 | confounder_2 |
 |--------|-----------|---------|-------------|-------------|
 | 1      | 1         | 100     | 1           | 13          |
 | 2      | 0         | 90      | 0           | 14          |

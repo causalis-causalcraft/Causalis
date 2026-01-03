@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Refutation of DML IRM inference &#8212; Causalis 0.1.0 documentation</title>
+    <title>Refutation of DML IRM inference &#8212; Causalis 0.1.2 documentation</title>
   
   
   
@@ -39,7 +39,7 @@
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../_static/documentation_options.js?v=2caa9db7"></script>
+    <script src="../_static/documentation_options.js?v=e5353d3f"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -49,7 +49,6 @@
     <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
     <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'research/refutation_flow';</script>
-    <link rel="icon" href="../_static/new_logo.svg"/>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="API Reference" href="../api.html" />
@@ -127,14 +126,6 @@
   
   
   
-  
-    
-    
-      
-    
-    
-    <img src="../_static/new_logo_big.svg" class="logo__image only-light" alt=""/>
-    <script>document.write(`<img src="../_static/new_logo_big.svg" class="logo__image only-dark" alt=""/>`);</script>
   
   
     <p class="title logo__title">Causalis</p>
@@ -433,7 +424,7 @@ DGP took from <a class="reference external" href="https://ioannmartynov.github.i
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Tuple</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">causalis.data</span><span class="w"> </span><span class="kn">import</span> <span class="n">CausalDatasetGenerator</span>
 
-<span class="c1"># 1) Confounders</span>
+<span class="c1"># 1) confounders</span>
 <span class="n">confounder_specs</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[</span>
     <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;tenure_months&quot;</span><span class="p">,</span>     <span class="s2">&quot;dist&quot;</span><span class="p">:</span> <span class="s2">&quot;normal&quot;</span><span class="p">,</span>    <span class="s2">&quot;mu&quot;</span><span class="p">:</span> <span class="mi">24</span><span class="p">,</span> <span class="s2">&quot;sd&quot;</span><span class="p">:</span> <span class="mi">12</span><span class="p">},</span>
     <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;avg_sessions_week&quot;</span><span class="p">,</span> <span class="s2">&quot;dist&quot;</span><span class="p">:</span> <span class="s2">&quot;normal&quot;</span><span class="p">,</span>    <span class="s2">&quot;mu&quot;</span><span class="p">:</span> <span class="mi">5</span><span class="p">,</span>  <span class="s2">&quot;sd&quot;</span><span class="p">:</span> <span class="mi">2</span><span class="p">},</span>
@@ -709,7 +700,7 @@ there exists an <span class="math notranslate nohighlight">\(\varepsilon &gt; 0\
 <h3>Why it matters<a class="headerlink" href="#why-it-matters" title="Link to this heading">#</a></h3>
 <ul>
 <li><p><strong>Identification:</strong>
-Overlap + unconfoundedness are the two pillars that identify causal effects from observational data.
+Overlap + uncofoundedness are the two pillars that identify causal effects from observational data.
 Without overlap, the effect is <strong>not identified</strong> — you must extrapolate or model-specify what never occurs.</p></li>
 <li><p><strong>Estimation stability:</strong>
 IPW/DR estimators use weights</p>
@@ -905,7 +896,7 @@ e.g., ATE on the <strong>region of common support</strong>, not on the full popu
 <ul class="simple">
 <li><p>(D=0): identical distributions (perfect overlap).</p></li>
 <li><p>(D=1): complete separation (no overlap).</p></li>
-<li><p>Your value <strong>KS = 0.5116</strong> means there exists a threshold (t) such that the share of treated with <span class="math notranslate nohighlight">\((m\le t)\)</span> differs from the share of controls with <span class="math notranslate nohighlight">\((m\le t)\)</span> by <strong>~51 percentage points</strong>. That’s why it’s flagged <strong>RED</strong> (your thresholds mark RED when (D&gt;0.35)): treatment assignment is highly predictable from covariates ⇒ <strong>poor overlap / strong confounding risk</strong>.</p></li>
+<li><p>Your value <strong>KS = 0.5116</strong> means there exists a threshold (t) such that the share of treated with <span class="math notranslate nohighlight">\((m\le t)\)</span> differs from the share of controls with <span class="math notranslate nohighlight">\((m\le t)\)</span> by <strong>~51 percentage points</strong>. That’s why it’s flagged <strong>RED</strong> (your thresholds mark RED when (D&gt;0.35)): treatment assignment is highly predictable from covariates ⇒ <strong>poor overlap / strong cofounding risk</strong>.</p></li>
 </ul>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
@@ -1950,8 +1941,8 @@ Large <span class="math notranslate nohighlight">\(|t|\)</span> suggests overfit
 </div>
 <div class="cell_output docutils container">
 <div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>1.) Are your clients independent (i)?
-2.) Do you measure confounders, treatment, and outcome in the same intervals?
-3.) Do you measure confounders before treatment and outcome after?
+2.) Do you measure cofounders, treatment, and outcome in the same intervals?
+3.) Do you measure cofounders before treatment and outcome after?
 4.) Do you have a consistent label of treatment, such as if a person does not receive a treatment, he has a label 0?
 </pre></div>
 </div>
@@ -1963,9 +1954,9 @@ Large <span class="math notranslate nohighlight">\(|t|\)</span> suggests overfit
 <h1>Uncofoundedness<a class="headerlink" href="#uncofoundedness" title="Link to this heading">#</a></h1>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython2 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">causalis.refutation.unconfoundedness.uncofoundedness_validation</span><span class="w"> </span><span class="kn">import</span> <span class="n">run_unconfoundedness_diagnostics</span>
+<div class="highlight-ipython2 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">causalis.refutation.uncofoundedness.uncofoundedness_validation</span><span class="w"> </span><span class="kn">import</span> <span class="n">run_uncofoundedness_diagnostics</span>
 
-<span class="n">rep_uc</span> <span class="o">=</span> <span class="n">run_unconfoundedness_diagnostics</span><span class="p">(</span><span class="n">res</span><span class="o">=</span><span class="n">ate_result</span><span class="p">)</span>
+<span class="n">rep_uc</span> <span class="o">=</span> <span class="n">run_uncofoundedness_diagnostics</span><span class="p">(</span><span class="n">res</span><span class="o">=</span><span class="n">ate_result</span><span class="p">)</span>
 <span class="n">rep_uc</span><span class="p">[</span><span class="s1">&#39;summary&#39;</span><span class="p">]</span>
 </pre></div>
 </div>
@@ -2083,7 +2074,7 @@ computed only over finite SMDs (NaN / Inf are excluded from the denominator).</p
 <h3>1) <code class="docutils literal notranslate"><span class="pre">sensitivity_analysis</span></code>: bias-aware CI<a class="headerlink" href="#sensitivity-analysis-bias-aware-ci" title="Link to this heading">#</a></h3>
 <p><strong>Goal.</strong>
 Start from your estimator <span class="math notranslate nohighlight">\((\hat\theta)\)</span> with sampling standard error <span class="math notranslate nohighlight">\((se)\)</span>.
-Allow a controlled amount of <em>worst-case hidden confounding</em> through three knobs <span class="math notranslate nohighlight">\((cf_y, cf_d, \rho)\)</span>.
+Allow a controlled amount of <em>worst-case hidden cofounding</em> through three knobs <span class="math notranslate nohighlight">\((cf_y, cf_d, \rho)\)</span>.
 Inflate the uncertainty by an additive “max bias”.</p>
 </section>
 <hr class="docutils" />
@@ -2100,8 +2091,8 @@ Inflate the uncertainty by an additive “max bias”.</p>
 </ul>
 </section>
 <hr class="docutils" />
-<section id="step-b-confounding-geometry">
-<h3><strong>Step B — Confounding geometry</strong><a class="headerlink" href="#step-b-confounding-geometry" title="Link to this heading">#</a></h3>
+<section id="step-b-cofounding-geometry">
+<h3><strong>Step B — Cofounding geometry</strong><a class="headerlink" href="#step-b-cofounding-geometry" title="Link to this heading">#</a></h3>
 <p>The code pulls sensitivity elements from the fitted IRM:</p>
 <ul class="simple">
 <li><p><span class="math notranslate nohighlight">\(\sigma^2\)</span>: the <strong>asymptotic variance</strong> of the estimator’s EIF
@@ -2111,7 +2102,7 @@ Inflate the uncertainty by an additive “max bias”.</p>
 <li><p><span class="math notranslate nohighlight">\(r(i)\)</span> (“riesz_rep”): per-unit weight for the <strong>treatment channel</strong>
 (how propensity-model misspecification moves the EIF).</p></li>
 </ul>
-<p>We turn the user’s sensitivity knobs into a <strong>quadratic budget</strong> for adversarial confounding:
+<p>We turn the user’s sensitivity knobs into a <strong>quadratic budget</strong> for adversarial cofounding:
 $$
 \begin{aligned}
 a_i &amp;:= \sqrt{2,m_\alpha(i)}, \[1mm]
@@ -2146,13 +2137,13 @@ $$</p></li>
 \]</div>
 <p>Then the module reports:</p>
 <ul>
-<li><p><strong>Confounding bounds for <span class="math notranslate nohighlight">\(\theta\)</span>:</strong></p>
+<li><p><strong>Cofounding bounds for <span class="math notranslate nohighlight">\(\theta\)</span>:</strong></p>
 <div class="math notranslate nohighlight">
 \[
   [\,\hat\theta - \text{max\_bias},\; \hat\theta + \text{max\_bias}\,].
   \]</div>
 </li>
-<li><p><strong>Bias-aware CI (sampling + confounding, worst-case additive):</strong></p>
+<li><p><strong>Bias-aware CI (sampling + cofounding, worst-case additive):</strong></p>
 <div class="math notranslate nohighlight">
 \[
   \Big[\,\hat\theta - (\text{max\_bias} + z_\alpha\,se),\;
@@ -2212,7 +2203,7 @@ r_d := D - \hat m.
 <p>Regress <span class="math notranslate nohighlight">\(r_y\)</span> on <span class="math notranslate nohighlight">\(Z\)</span> and <span class="math notranslate nohighlight">\(r_d\)</span> on <span class="math notranslate nohighlight">\(Z\)</span> (unweighted OLS; <strong>ATT</strong> case uses ATT weights):</p>
 <ul>
 <li><p>Obtain <span class="math notranslate nohighlight">\(R^2_y\)</span> and <span class="math notranslate nohighlight">\(R^2_d\)</span>.</p></li>
-<li><p>Convert to <strong>signal-to-noise ratios</strong> (the “strength” of confounding channels):</p>
+<li><p>Convert to <strong>signal-to-noise ratios</strong> (the “strength” of cofounding channels):</p>
 <div class="math notranslate nohighlight">
 \[
   cf_y = \frac{R^2_y}{1 - R^2_y},
@@ -2257,10 +2248,10 @@ Intuitively, this calibrates <em>how strong hidden stuff would need to be</em> b
 </li>
 </ol>
 <p>Small <span class="math notranslate nohighlight">\(cf\)</span> values (or <span class="math notranslate nohighlight">\(\rho \approx 0\)</span>) ⇒ tiny <span class="math notranslate nohighlight">\(\nu^2\)</span> ⇒ bias-aware CI near the sampling CI.
-Large <span class="math notranslate nohighlight">\(cf\)</span> values and <span class="math notranslate nohighlight">\(|\rho|\approx 1\)</span> widen it, reflecting stronger plausible hidden confounding.</p>
+Large <span class="math notranslate nohighlight">\(cf\)</span> values and <span class="math notranslate nohighlight">\(|\rho|\approx 1\)</span> widen it, reflecting stronger plausible hidden cofounding.</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython2 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">causalis.refutation.unconfoundedness.sensitivity</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+<div class="highlight-ipython2 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">causalis.refutation.uncofoundedness.sensitivity</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">sensitivity_analysis</span><span class="p">,</span> <span class="n">sensitivity_benchmark</span>
 <span class="p">)</span>
 
@@ -2274,7 +2265,7 @@ Large <span class="math notranslate nohighlight">\(cf\)</span> values and <span 
  &#39;level&#39;: 0.95,
  &#39;z&#39;: 1.959963984540054,
  &#39;sampling_ci&#39;: (0.869543879249174, 1.1139114001007373),
- &#39;theta_bounds_confounding&#39;: (0.9282979061474285, 1.0551573732024828),
+ &#39;theta_bounds_cofounding&#39;: (0.9282979061474285, 1.0551573732024828),
  &#39;bias_aware_ci&#39;: (0.8061141457216469, 1.1773411336282644),
  &#39;max_bias&#39;: 0.06342973352752714,
  &#39;sigma2&#39;: 1.0690078122954034,
@@ -2456,7 +2447,7 @@ Large <span class="math notranslate nohighlight">\(cf\)</span> values and <span 
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sensitivity-analysis"><code class="docutils literal notranslate"><span class="pre">Sensitivity</span> <span class="pre">analysis</span></code></a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sensitivity-analysis-bias-aware-ci">1) <code class="docutils literal notranslate"><span class="pre">sensitivity_analysis</span></code>: bias-aware CI</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#step-a-sampling-part"><strong>Step A — Sampling part</strong></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#step-b-confounding-geometry"><strong>Step B — Confounding geometry</strong></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#step-b-cofounding-geometry"><strong>Step B — Cofounding geometry</strong></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#step-c-max-bias-and-intervals"><strong>Step C — Max bias and intervals</strong></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sensitivity-benchmark-calibrating-cf-y-cf-d-rho-from-omitted-covariates">2) <code class="docutils literal notranslate"><span class="pre">sensitivity_benchmark</span></code>: calibrating <span class="math notranslate nohighlight">\((cf_y, cf_d, \rho)\)</span> from omitted covariates</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#step-a-long-vs-short-estimates"><strong>Step A — Long vs short estimates</strong></a></li>
@@ -2497,7 +2488,7 @@ Large <span class="math notranslate nohighlight">\(cf\)</span> values and <span 
 
   <p class="copyright">
     
-      © Copyright 2025, Causalis Team.
+      © Copyright 2026, Causalis Team.
       <br/>
     
   </p>

@@ -405,7 +405,7 @@ document.write(`
 <span class="c1"># Create dataset</span>
 <span class="n">causal_data</span> <span class="o">=</span> <span class="n">gen</span><span class="o">.</span><span class="n">to_causal_data</span><span class="p">(</span>
     <span class="n">n</span><span class="o">=</span><span class="mi">5000</span><span class="p">,</span>
-    <span class="n">cofounders</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="n">confounders</span> <span class="o">=</span> <span class="p">[</span>
     <span class="s2">&quot;tenure_months&quot;</span><span class="p">,</span>
     <span class="s2">&quot;avg_sessions_week&quot;</span><span class="p">,</span>
     <span class="s2">&quot;spend_last_month&quot;</span><span class="p">,</span>
@@ -436,7 +436,7 @@ document.write(`
 <span class="g g-Whitespace">     </span><span class="mi">54</span> <span class="c1"># Create dataset</span>
 <span class="ne">---&gt; </span><span class="mi">55</span> <span class="n">causal_data</span> <span class="o">=</span> <span class="n">gen</span><span class="o">.</span><span class="n">to_causal_data</span><span class="p">(</span>
 <span class="g g-Whitespace">     </span><span class="mi">56</span>     <span class="n">n</span><span class="o">=</span><span class="mi">5000</span><span class="p">,</span>
-<span class="g g-Whitespace">     </span><span class="mi">57</span>     <span class="n">cofounders</span> <span class="o">=</span> <span class="p">[</span>
+<span class="g g-Whitespace">     </span><span class="mi">57</span>     <span class="n">confounders</span> <span class="o">=</span> <span class="p">[</span>
 <span class="g g-Whitespace">     </span><span class="mi">58</span>     <span class="s2">&quot;tenure_months&quot;</span><span class="p">,</span>
 <span class="g g-Whitespace">     </span><span class="mi">59</span>     <span class="s2">&quot;avg_sessions_week&quot;</span><span class="p">,</span>
 <span class="g g-Whitespace">     </span><span class="mi">60</span>     <span class="s2">&quot;spend_last_month&quot;</span><span class="p">,</span>
@@ -447,7 +447,7 @@ document.write(`
 <span class="g g-Whitespace">     </span><span class="mi">66</span> <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Generated </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">causal_data</span><span class="o">.</span><span class="n">df</span><span class="p">)</span><span class="si">}</span><span class="s2"> observations&quot;</span><span class="p">)</span>
 <span class="g g-Whitespace">     </span><span class="mi">67</span> <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;True causal effect: </span><span class="si">{</span><span class="n">gen</span><span class="o">.</span><span class="n">theta</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
-<span class="ne">TypeError</span>: CausalDatasetGenerator.to_causal_data() got an unexpected keyword argument &#39;cofounders&#39;. Did you mean &#39;confounders&#39;?
+<span class="ne">TypeError</span>: CausalDatasetGenerator.to_causal_data() got an unexpected keyword argument &#39;confounders&#39;. Did you mean &#39;confounders&#39;?
 </pre></div>
 </div>
 </div>

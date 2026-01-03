@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Refutation: quick checks and sensitivity &#8212; Causalis 0.1.0 documentation</title>
+    <title>Refutation: quick checks and sensitivity &#8212; Causalis 0.1.2 documentation</title>
   
   
   
@@ -39,7 +39,7 @@
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../_static/documentation_options.js?v=2caa9db7"></script>
+    <script src="../_static/documentation_options.js?v=e5353d3f"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -47,7 +47,6 @@
     <script src="../_static/design-tabs.js?v=df1d7cd1"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'user-guide/refutation';</script>
-    <link rel="icon" href="../_static/new_logo.svg"/>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Math notation for EDA, IRM, and refutation diagnostics (CausalKit)" href="math_eda_irm_refutation.html" />
@@ -125,14 +124,6 @@
   
   
   
-  
-    
-    
-      
-    
-    
-    <img src="../_static/new_logo_big.svg" class="logo__image only-light" alt=""/>
-    <script>document.write(`<img src="../_static/new_logo_big.svg" class="logo__image only-dark" alt=""/>`);</script>
   
   
     <p class="title logo__title">Causalis</p>
@@ -497,8 +488,8 @@ document.write(`
 </pre></div>
 </div>
 </section>
-<section id="unconfoundedness-balance-checks">
-<h2>4) Unconfoundedness/balance checks<a class="headerlink" href="#unconfoundedness-balance-checks" title="Link to this heading">#</a></h2>
+<section id="uncofoundedness-balance-checks">
+<h2>4) Uncofoundedness/balance checks<a class="headerlink" href="#uncofoundedness-balance-checks" title="Link to this heading">#</a></h2>
 <ul class="simple">
 <li><p>Goal: see if IPW (for your estimand) balances covariates.</p></li>
 <li><p>Metrics:</p>
@@ -509,17 +500,17 @@ document.write(`
 </li>
 </ul>
 <p>Python</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">causalis.refutation.unconfoundedness.uncofoundedness_validation</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
-    <span class="n">run_unconfoundedness_diagnostics</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">causalis.refutation.uncofoundedness.uncofoundedness_validation</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">run_uncofoundedness_diagnostics</span>
 <span class="p">)</span>
 <span class="n">res</span> <span class="o">=</span> <span class="o">...</span>  <span class="c1"># your inference result dict</span>
-<span class="n">rep_uc</span> <span class="o">=</span> <span class="n">run_unconfoundedness_diagnostics</span><span class="p">(</span><span class="n">res</span><span class="o">=</span><span class="n">res</span><span class="p">)</span>
+<span class="n">rep_uc</span> <span class="o">=</span> <span class="n">run_uncofoundedness_diagnostics</span><span class="p">(</span><span class="n">res</span><span class="o">=</span><span class="n">res</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">rep_uc</span><span class="p">[</span><span class="s1">&#39;summary&#39;</span><span class="p">])</span>
 </pre></div>
 </div>
 </section>
-<section id="sensitivity-analysis-to-hidden-confounding">
-<h2>5) Sensitivity analysis to hidden confounding<a class="headerlink" href="#sensitivity-analysis-to-hidden-confounding" title="Link to this heading">#</a></h2>
+<section id="sensitivity-analysis-to-hidden-cofounding">
+<h2>5) Sensitivity analysis to hidden cofounding<a class="headerlink" href="#sensitivity-analysis-to-hidden-cofounding" title="Link to this heading">#</a></h2>
 <ul class="simple">
 <li><p>Goal: widen intervals by a worst‑case additive bias derived from how ψ could move.</p></li>
 <li><p>Math: max_bias = sqrt(ν²)·se where ν² aggregates two channels (outcome cf_y and treatment cf_d) and their correlation ρ.</p></li>
@@ -531,7 +522,7 @@ document.write(`
 </li>
 </ul>
 <p>Python</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">causalis.refutation.unconfoundedness.sensitivity</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">causalis.refutation.uncofoundedness.sensitivity</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">sensitivity_analysis</span><span class="p">,</span> <span class="n">sensitivity_benchmark</span>
 <span class="p">)</span>
 <span class="n">res</span> <span class="o">=</span> <span class="o">...</span>  <span class="c1"># your inference result dict</span>
@@ -567,10 +558,10 @@ document.write(`
 <span class="p">)</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">causalis.refutation.overlap</span><span class="w"> </span><span class="kn">import</span> <span class="n">run_overlap_diagnostics</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">causalis.refutation.score.score_validation</span><span class="w"> </span><span class="kn">import</span> <span class="n">run_score_diagnostics</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">causalis.refutation.unconfoundedness.uncofoundedness_validation</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
-    <span class="n">run_unconfoundedness_diagnostics</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">causalis.refutation.uncofoundedness.uncofoundedness_validation</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">run_uncofoundedness_diagnostics</span>
 <span class="p">)</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">causalis.refutation.unconfoundedness.sensitivity</span><span class="w"> </span><span class="kn">import</span> <span class="n">sensitivity_analysis</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">causalis.refutation.uncofoundedness.sensitivity</span><span class="w"> </span><span class="kn">import</span> <span class="n">sensitivity_analysis</span>
 
 <span class="c1"># Build your CausalData as in the guides</span>
 <span class="n">causal_data</span> <span class="o">=</span> <span class="o">...</span>  <span class="c1"># your CausalData</span>
@@ -590,7 +581,7 @@ document.write(`
 <span class="n">sc</span> <span class="o">=</span> <span class="n">run_score_diagnostics</span><span class="p">(</span><span class="n">res</span><span class="o">=</span><span class="n">res</span><span class="p">);</span> <span class="nb">print</span><span class="p">(</span><span class="n">sc</span><span class="p">[</span><span class="s1">&#39;summary&#39;</span><span class="p">])</span>
 
 <span class="c1"># 4) Balance</span>
-<span class="n">uc</span> <span class="o">=</span> <span class="n">run_unconfoundedness_diagnostics</span><span class="p">(</span><span class="n">res</span><span class="o">=</span><span class="n">res</span><span class="p">);</span> <span class="nb">print</span><span class="p">(</span><span class="n">uc</span><span class="p">[</span><span class="s1">&#39;summary&#39;</span><span class="p">])</span>
+<span class="n">uc</span> <span class="o">=</span> <span class="n">run_uncofoundedness_diagnostics</span><span class="p">(</span><span class="n">res</span><span class="o">=</span><span class="n">res</span><span class="p">);</span> <span class="nb">print</span><span class="p">(</span><span class="n">uc</span><span class="p">[</span><span class="s1">&#39;summary&#39;</span><span class="p">])</span>
 
 <span class="c1"># 5) Sensitivity (simple example)</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">sensitivity_analysis</span><span class="p">(</span><span class="n">res</span><span class="p">,</span> <span class="n">cf_y</span><span class="o">=</span><span class="mf">0.02</span><span class="p">,</span> <span class="n">cf_d</span><span class="o">=</span><span class="mf">0.02</span><span class="p">,</span> <span class="n">rho</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">level</span><span class="o">=</span><span class="mf">0.95</span><span class="p">))</span>
@@ -654,8 +645,8 @@ document.write(`
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#placebo-and-subset-checks">1) Placebo and subset checks</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#overlap-positivity-diagnostics">2) Overlap (positivity) diagnostics</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#score-orthogonality-diagnostics-neyman">3) Score/orthogonality diagnostics (Neyman)</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#unconfoundedness-balance-checks">4) Unconfoundedness/balance checks</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sensitivity-analysis-to-hidden-confounding">5) Sensitivity analysis to hidden confounding</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#uncofoundedness-balance-checks">4) Uncofoundedness/balance checks</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sensitivity-analysis-to-hidden-cofounding">5) Sensitivity analysis to hidden cofounding</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sutva-design-prompts">6) SUTVA (design prompts)</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#minimal-workflow-ate">Minimal workflow (ATE)</a></li>
 </ul>
@@ -686,7 +677,7 @@ document.write(`
 
   <p class="copyright">
     
-      © Copyright 2025, Causalis Team.
+      © Copyright 2026, Causalis Team.
       <br/>
     
   </p>

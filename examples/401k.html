@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Impact of 401(k) on Financial Assets &#8212; Causalis 0.1.0 documentation</title>
+    <title>Impact of 401(k) on Financial Assets &#8212; Causalis 0.1.2 documentation</title>
   
   
   
@@ -39,7 +39,7 @@
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../_static/documentation_options.js?v=2caa9db7"></script>
+    <script src="../_static/documentation_options.js?v=e5353d3f"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -47,7 +47,6 @@
     <script src="../_static/design-tabs.js?v=df1d7cd1"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'examples/401k';</script>
-    <link rel="icon" href="../_static/new_logo.svg"/>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="&lt;no title&gt;" href="design_template.html" />
@@ -125,14 +124,6 @@
   
   
   
-  
-    
-    
-      
-    
-    
-    <img src="../_static/new_logo_big.svg" class="logo__image only-light" alt=""/>
-    <script>document.write(`<img src="../_static/new_logo_big.svg" class="logo__image only-dark" alt=""/>`);</script>
   
   
     <p class="title logo__title">Causalis</p>
@@ -449,7 +440,7 @@ Equals 1 if the individual contributes to an Individual Retirement Account (IRA)
 Equals 1 if the household owns its home; 0 if renting.</p></li>
 </ul>
 <p>We download it with fetch_401K function from doubleML.datasets</p>
-<p>This dataset has a problem. Cofounders were measured in the same year as treatment and outcome,
+<p>This dataset has a problem. confounders were measured in the same year as treatment and outcome,
 like they are demographic factors that do not change over time. So inference might still be biased.</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
@@ -645,7 +636,7 @@ solely to participation. The classes are imbalanced—only 26% are treated.</p>
       <th>smd</th>
     </tr>
     <tr>
-      <th>confounders</th>
+      <th>cofounders</th>
       <th></th>
       <th></th>
       <th></th>
@@ -1235,8 +1226,8 @@ we retain age and fsize in the model to gain efficiency</p>
 </div>
 <div class="cell_output docutils container">
 <div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>1.) Are your clients independent (i)?
-2.) Do you measure confounders, treatment, and outcome in the same intervals?
-3.) Do you measure confounders before treatment and outcome after?
+2.) Do you measure cofounders, treatment, and outcome in the same intervals?
+3.) Do you measure cofounders before treatment and outcome after?
 4.) Do you have a consistent label of treatment, such as if a person does not receive a treatment, he has a label 0?
 </pre></div>
 </div>
@@ -1246,15 +1237,15 @@ we retain age and fsize in the model to gain efficiency</p>
 2.) Yes<br />
 3.) No. We have problems with design<br />
 4.) Yes<br />
-In conclusion cofounders are measured not before treatment. So treatment affected cofounders</p>
+In conclusion confounders are measured not before treatment. So treatment affected confounders</p>
 </section>
 <section id="uncofoundedness">
 <h3>Uncofoundedness<a class="headerlink" href="#uncofoundedness" title="Link to this heading">#</a></h3>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython2 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">causalis.refutation.unconfoundedness.uncofoundedness_validation</span><span class="w"> </span><span class="kn">import</span> <span class="n">run_unconfoundedness_diagnostics</span>
+<div class="highlight-ipython2 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">causalis.refutation.uncofoundedness.uncofoundedness_validation</span><span class="w"> </span><span class="kn">import</span> <span class="n">run_uncofoundedness_diagnostics</span>
 
-<span class="n">rep_uc</span> <span class="o">=</span> <span class="n">run_unconfoundedness_diagnostics</span><span class="p">(</span><span class="n">res</span><span class="o">=</span><span class="n">ate_result</span><span class="p">)</span>
+<span class="n">rep_uc</span> <span class="o">=</span> <span class="n">run_uncofoundedness_diagnostics</span><span class="p">(</span><span class="n">res</span><span class="o">=</span><span class="n">ate_result</span><span class="p">)</span>
 <span class="n">rep_uc</span><span class="p">[</span><span class="s1">&#39;summary&#39;</span><span class="p">]</span>
 </pre></div>
 </div>
@@ -1351,7 +1342,7 @@ In conclusion cofounders are measured not before treatment. So treatment affecte
 <p>We see w_tail_ratio_treated and ess_treated_ratio are RED. It’s ok. These tests are unstable due to small sample</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython2 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">causalis.refutation.unconfoundedness.uncofoundedness_validation</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+<div class="highlight-ipython2 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">causalis.refutation.uncofoundedness.uncofoundedness_validation</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">sensitivity_analysis</span><span class="p">,</span> <span class="n">sensitivity_benchmark</span>
 <span class="p">)</span>
 
@@ -1365,7 +1356,7 @@ In conclusion cofounders are measured not before treatment. So treatment affecte
  &#39;level&#39;: 0.95,
  &#39;z&#39;: 1.959963984540054,
  &#39;sampling_ci&#39;: (8210.458854591107, 14290.925555605892),
- &#39;theta_bounds_confounding&#39;: (10298.960958424657, 12202.423451772342),
+ &#39;theta_bounds_cofounding&#39;: (10298.960958424657, 12202.423451772342),
  &#39;bias_aware_ci&#39;: (7258.727607917263, 15242.656802279736),
  &#39;max_bias&#39;: 951.7312466738426,
  &#39;sigma2&#39;: 3589568447.751854,
@@ -1375,7 +1366,7 @@ In conclusion cofounders are measured not before treatment. So treatment affecte
 </div>
 </div>
 </div>
-<p>Even when we have unobserved cofounder with these parameters our CI bounds &gt; 0</p>
+<p>Even when we have unobserved confounder with these parameters our CI bounds &gt; 0</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython2 notranslate"><div class="highlight"><pre><span></span><span class="n">sensitivity_benchmark</span><span class="p">(</span><span class="n">ate_result</span><span class="p">,</span> <span class="n">benchmarking_set</span> <span class="o">=</span><span class="p">[</span><span class="s1">&#39;inc&#39;</span><span class="p">])</span>
@@ -1427,12 +1418,12 @@ In conclusion cofounders are measured not before treatment. So treatment affecte
 </table>
 </div></div></div>
 </div>
-<p>And even when unobserved cofounder is strong as ‘inc’ - income our estimate has CI bounds &gt; 0</p>
+<p>And even when unobserved confounder is strong as ‘inc’ - income our estimate has CI bounds &gt; 0</p>
 </section>
 </section>
 <section id="conclution">
 <h2>Conclution<a class="headerlink" href="#conclution" title="Link to this heading">#</a></h2>
-<p>There are problems with design: cofounders are measured not before treatment. So treatment affected cofounders.
+<p>There are problems with design: confounders are measured not before treatment. So treatment affected confounders.
 However estimate is robust and in real life participation in 401k is increasing net financial assets. To keep in mind real CI bounds may differ from our estimation</p>
 </section>
 </section>
@@ -1522,7 +1513,7 @@ However estimate is robust and in real life participation in 401k is increasing 
 
   <p class="copyright">
     
-      © Copyright 2025, Causalis Team.
+      © Copyright 2026, Causalis Team.
       <br/>
     
   </p>

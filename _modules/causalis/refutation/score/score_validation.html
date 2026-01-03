@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>causalis.refutation.score.score_validation &#8212; Causalis 0.1.0 documentation</title>
+    <title>causalis.refutation.score.score_validation &#8212; Causalis 0.1.2 documentation</title>
   
   
   
@@ -38,7 +38,7 @@
 <link rel="preload" as="script" href="../../../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../../../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../../../../_static/documentation_options.js?v=2caa9db7"></script>
+    <script src="../../../../_static/documentation_options.js?v=e5353d3f"></script>
     <script src="../../../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -46,7 +46,6 @@
     <script src="../../../../_static/design-tabs.js?v=df1d7cd1"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = '_modules/causalis/refutation/score/score_validation';</script>
-    <link rel="icon" href="../../../../_static/new_logo.svg"/>
     <link rel="index" title="Index" href="../../../../genindex.html" />
     <link rel="search" title="Search" href="../../../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
@@ -122,14 +121,6 @@
   
   
   
-  
-    
-    
-      
-    
-    
-    <img src="../../../../_static/new_logo_big.svg" class="logo__image only-light" alt=""/>
-    <script>document.write(`<img src="../../../../_static/new_logo_big.svg" class="logo__image only-dark" alt=""/>`);</script>
   
   
     <p class="title logo__title">Causalis</p>
@@ -419,7 +410,7 @@ document.write(`
 
 
 <div class="viewcode-block" id="aipw_score_ate">
-<a class="viewcode-back" href="../../../../api/refutation.html#causalis.refutation.aipw_score_ate">[docs]</a>
+<a class="viewcode-back" href="../../../../api/generated/causalis.refutation.score.score_validation.html#causalis.refutation.aipw_score_ate">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">aipw_score_ate</span><span class="p">(</span><span class="n">y</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">d</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">g0</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">g1</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">m</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">theta</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">trimming_threshold</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.01</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Efficient influence function (EIF) for ATE.</span>
@@ -431,7 +422,7 @@ document.write(`
 
 
 <div class="viewcode-block" id="aipw_score_atte">
-<a class="viewcode-back" href="../../../../api/refutation.html#causalis.refutation.aipw_score_atte">[docs]</a>
+<a class="viewcode-back" href="../../../../api/generated/causalis.refutation.score.score_validation.html#causalis.refutation.aipw_score_atte">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">aipw_score_atte</span><span class="p">(</span><span class="n">y</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">d</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">g0</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">g1</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">m</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">theta</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">p_treated</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">trimming_threshold</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.01</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Efficient influence function (EIF) for ATTE under IRM/AIPW.</span>
@@ -454,7 +445,7 @@ document.write(`
 
 
 <div class="viewcode-block" id="extract_nuisances">
-<a class="viewcode-back" href="../../../../api/refutation.html#causalis.refutation.extract_nuisances">[docs]</a>
+<a class="viewcode-back" href="../../../../api/generated/causalis.refutation.score.score_validation.html#causalis.refutation.extract_nuisances">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">extract_nuisances</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">test_indices</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Extract cross-fitted nuisance predictions from an IRM-like model or a compatible dummy.</span>
@@ -515,7 +506,7 @@ document.write(`
 
 
 <div class="viewcode-block" id="oos_moment_check_with_fold_nuisances">
-<a class="viewcode-back" href="../../../../api/refutation.html#causalis.refutation.oos_moment_check_with_fold_nuisances">[docs]</a>
+<a class="viewcode-back" href="../../../../api/generated/causalis.refutation.score.score_validation.html#causalis.refutation.oos_moment_check_with_fold_nuisances">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">oos_moment_check_with_fold_nuisances</span><span class="p">(</span>
     <span class="n">fold_thetas</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">],</span>
     <span class="n">fold_indices</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">],</span>
@@ -568,7 +559,7 @@ document.write(`
 
 
 <div class="viewcode-block" id="oos_moment_check">
-<a class="viewcode-back" href="../../../../api/refutation.html#causalis.refutation.oos_moment_check">[docs]</a>
+<a class="viewcode-back" href="../../../../api/generated/causalis.refutation.score.score_validation.html#causalis.refutation.oos_moment_check">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">oos_moment_check</span><span class="p">(</span>
     <span class="n">fold_thetas</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">],</span>
     <span class="n">fold_indices</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">],</span>
@@ -617,7 +608,7 @@ document.write(`
 
 
 <div class="viewcode-block" id="orthogonality_derivatives">
-<a class="viewcode-back" href="../../../../api/refutation.html#causalis.refutation.orthogonality_derivatives">[docs]</a>
+<a class="viewcode-back" href="../../../../api/generated/causalis.refutation.score.score_validation.html#causalis.refutation.orthogonality_derivatives">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">orthogonality_derivatives</span><span class="p">(</span><span class="n">X_basis</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">d</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> 
                             <span class="n">g0</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">g1</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">m</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">trimming_threshold</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.01</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
@@ -656,7 +647,7 @@ document.write(`
 
 
 <div class="viewcode-block" id="influence_summary">
-<a class="viewcode-back" href="../../../../api/refutation.html#causalis.refutation.influence_summary">[docs]</a>
+<a class="viewcode-back" href="../../../../api/generated/causalis.refutation.score.score_validation.html#causalis.refutation.influence_summary">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">influence_summary</span><span class="p">(</span><span class="n">y</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">d</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">g0</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">g1</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> 
                      <span class="n">m</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">theta_hat</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">k</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">10</span><span class="p">,</span> <span class="n">score</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;ATE&quot;</span><span class="p">,</span> <span class="n">trimming_threshold</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.01</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
@@ -704,7 +695,7 @@ document.write(`
 
 
 <div class="viewcode-block" id="refute_irm_orthogonality">
-<a class="viewcode-back" href="../../../../api/refutation.html#causalis.refutation.refute_irm_orthogonality">[docs]</a>
+<a class="viewcode-back" href="../../../../api/generated/causalis.refutation.score.score_validation.html#causalis.refutation.refute_irm_orthogonality">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">refute_irm_orthogonality</span><span class="p">(</span>
     <span class="n">inference_fn</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]],</span>
     <span class="n">data</span><span class="p">:</span> <span class="n">CausalData</span><span class="p">,</span>
@@ -780,7 +771,7 @@ document.write(`
     <span class="n">m_propensity</span><span class="p">,</span> <span class="n">g0_outcomes</span><span class="p">,</span> <span class="n">g1_outcomes</span> <span class="o">=</span> <span class="n">extract_nuisances</span><span class="p">(</span><span class="n">dml_model</span><span class="p">)</span>
     
     <span class="c1"># Get observed data</span>
-    <span class="n">y</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">target</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">float</span><span class="p">)</span>
+    <span class="n">y</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">outcome</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">float</span><span class="p">)</span>
     <span class="n">d</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">treatment</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">float</span><span class="p">)</span>
 
     <span class="c1"># Determine score</span>
@@ -847,7 +838,7 @@ document.write(`
             <span class="n">train_data</span> <span class="o">=</span> <span class="n">CausalData</span><span class="p">(</span>
                 <span class="n">df</span><span class="o">=</span><span class="n">df_full</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">train_idx</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">(),</span>
                 <span class="n">treatment</span><span class="o">=</span><span class="n">data</span><span class="o">.</span><span class="n">treatment</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
-                <span class="n">outcome</span><span class="o">=</span><span class="n">data</span><span class="o">.</span><span class="n">target</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+                <span class="n">outcome</span><span class="o">=</span><span class="n">data</span><span class="o">.</span><span class="n">outcome</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
                 <span class="n">confounders</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">confounders</span><span class="p">)</span> <span class="k">if</span> <span class="n">data</span><span class="o">.</span><span class="n">confounders</span> <span class="k">else</span> <span class="kc">None</span>
             <span class="p">)</span>
             <span class="c1"># Fit model on training fold to get theta</span>
@@ -960,7 +951,7 @@ document.write(`
         <span class="n">data_trim_obj</span> <span class="o">=</span> <span class="n">CausalData</span><span class="p">(</span>
             <span class="n">df</span><span class="o">=</span><span class="n">df_full_local</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">trim_mask</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">(),</span>
             <span class="n">treatment</span><span class="o">=</span><span class="n">data</span><span class="o">.</span><span class="n">treatment</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
-            <span class="n">outcome</span><span class="o">=</span><span class="n">data</span><span class="o">.</span><span class="n">target</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+            <span class="n">outcome</span><span class="o">=</span><span class="n">data</span><span class="o">.</span><span class="n">outcome</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
             <span class="n">confounders</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">confounders</span><span class="p">)</span> <span class="k">if</span> <span class="n">data</span><span class="o">.</span><span class="n">confounders</span> <span class="k">else</span> <span class="kc">None</span>
         <span class="p">)</span>
         <span class="n">res_trim</span> <span class="o">=</span> <span class="n">inference_fn</span><span class="p">(</span><span class="n">data_trim_obj</span><span class="p">,</span> <span class="o">**</span><span class="n">inference_kwargs</span><span class="p">)</span>
@@ -1070,7 +1061,7 @@ document.write(`
 
 
 <div class="viewcode-block" id="orthogonality_derivatives_atte">
-<a class="viewcode-back" href="../../../../api/refutation.html#causalis.refutation.orthogonality_derivatives_atte">[docs]</a>
+<a class="viewcode-back" href="../../../../api/generated/causalis.refutation.score.score_validation.html#causalis.refutation.orthogonality_derivatives_atte">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">orthogonality_derivatives_atte</span><span class="p">(</span>
     <span class="n">X_basis</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">d</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
     <span class="n">g0</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">m</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">p_treated</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">trimming_threshold</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.01</span>
@@ -1113,7 +1104,7 @@ document.write(`
 
 
 <div class="viewcode-block" id="overlap_diagnostics_atte">
-<a class="viewcode-back" href="../../../../api/refutation.html#causalis.refutation.overlap_diagnostics_atte">[docs]</a>
+<a class="viewcode-back" href="../../../../api/generated/causalis.refutation.score.score_validation.html#causalis.refutation.overlap_diagnostics_atte">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">overlap_diagnostics_atte</span><span class="p">(</span>
     <span class="n">m</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">d</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">eps_list</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.95</span><span class="p">,</span> <span class="mf">0.97</span><span class="p">,</span> <span class="mf">0.98</span><span class="p">,</span> <span class="mf">0.99</span><span class="p">]</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
@@ -1143,7 +1134,7 @@ document.write(`
 
 
 <div class="viewcode-block" id="trim_sensitivity_curve_atte">
-<a class="viewcode-back" href="../../../../api/refutation.html#causalis.refutation.trim_sensitivity_curve_atte">[docs]</a>
+<a class="viewcode-back" href="../../../../api/generated/causalis.refutation.score.score_validation.html#causalis.refutation.trim_sensitivity_curve_atte">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">trim_sensitivity_curve_atte</span><span class="p">(</span>
     <span class="n">inference_fn</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]],</span>
     <span class="n">data</span><span class="p">:</span> <span class="n">CausalData</span><span class="p">,</span>
@@ -1164,7 +1155,7 @@ document.write(`
         <span class="n">df_trim</span> <span class="o">=</span> <span class="n">df_full</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">keep</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
         <span class="n">data_trim</span> <span class="o">=</span> <span class="n">CausalData</span><span class="p">(</span>
             <span class="n">df</span><span class="o">=</span><span class="n">df_trim</span><span class="p">,</span> <span class="n">treatment</span><span class="o">=</span><span class="n">data</span><span class="o">.</span><span class="n">treatment</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
-            <span class="n">outcome</span><span class="o">=</span><span class="n">data</span><span class="o">.</span><span class="n">target</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">confounders</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">confounders</span><span class="p">)</span> <span class="k">if</span> <span class="n">data</span><span class="o">.</span><span class="n">confounders</span> <span class="k">else</span> <span class="kc">None</span>
+            <span class="n">outcome</span><span class="o">=</span><span class="n">data</span><span class="o">.</span><span class="n">outcome</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">confounders</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">confounders</span><span class="p">)</span> <span class="k">if</span> <span class="n">data</span><span class="o">.</span><span class="n">confounders</span> <span class="k">else</span> <span class="kc">None</span>
         <span class="p">)</span>
         <span class="n">res</span> <span class="o">=</span> <span class="n">inference_fn</span><span class="p">(</span><span class="n">data_trim</span><span class="p">,</span> <span class="o">**</span><span class="n">inference_kwargs</span><span class="p">)</span>
         <span class="n">rows</span><span class="o">.</span><span class="n">append</span><span class="p">({</span>
@@ -1181,7 +1172,7 @@ document.write(`
 
 
 <div class="viewcode-block" id="trim_sensitivity_curve_ate">
-<a class="viewcode-back" href="../../../../api/refutation.html#causalis.refutation.trim_sensitivity_curve_ate">[docs]</a>
+<a class="viewcode-back" href="../../../../api/generated/causalis.refutation.score.score_validation.html#causalis.refutation.trim_sensitivity_curve_ate">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">trim_sensitivity_curve_ate</span><span class="p">(</span>
     <span class="n">m_hat</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
     <span class="n">D</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
@@ -1362,13 +1353,13 @@ document.write(`
 <span class="c1"># ------------------------------------------------------------------</span>
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_public_names</span><span class="p">(</span><span class="n">data</span><span class="p">:</span> <span class="n">CausalData</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]:</span>
-    <span class="n">tname</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="s2">&quot;treatment&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span> <span class="s2">&quot;name&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="s2">&quot;_treatment&quot;</span><span class="p">,</span> <span class="s2">&quot;D&quot;</span><span class="p">)</span>
-    <span class="n">yname</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="s2">&quot;target&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span> <span class="s2">&quot;name&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="s2">&quot;_target&quot;</span><span class="p">,</span> <span class="s2">&quot;Y&quot;</span><span class="p">)</span>
+    <span class="n">tname</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="s2">&quot;treatment&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span> <span class="s2">&quot;name&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="s2">&quot;treatment_name&quot;</span><span class="p">,</span> <span class="s2">&quot;D&quot;</span><span class="p">)</span>
+    <span class="n">yname</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="s2">&quot;outcome&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span> <span class="s2">&quot;name&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="s2">&quot;outcome_name&quot;</span><span class="p">,</span> <span class="s2">&quot;Y&quot;</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">tname</span><span class="p">,</span> <span class="n">yname</span>
 
 
 <div class="viewcode-block" id="refute_placebo_outcome">
-<a class="viewcode-back" href="../../../../api/refutation.html#causalis.refutation.refute_placebo_outcome">[docs]</a>
+<a class="viewcode-back" href="../../../../api/generated/causalis.refutation.score.score_validation.html#causalis.refutation.refute_placebo_outcome">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">refute_placebo_outcome</span><span class="p">(</span>
     <span class="n">inference_fn</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]],</span>
     <span class="n">data</span><span class="p">:</span> <span class="n">CausalData</span><span class="p">,</span>
@@ -1376,7 +1367,7 @@ document.write(`
     <span class="o">**</span><span class="n">inference_kwargs</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Generate random outcome (target) variables while keeping treatment</span>
+<span class="sd">    Generate random outcome variables while keeping treatment</span>
 <span class="sd">    and covariates intact. For binary outcomes, generates random binary</span>
 <span class="sd">    variables with the same proportion. For continuous outcomes, generates</span>
 <span class="sd">    random variables from a normal distribution fitted to the original data.</span>
@@ -1404,7 +1395,7 @@ document.write(`
 <span class="c1"># ------------------------------------------------------------------</span>
 
 <div class="viewcode-block" id="refute_placebo_treatment">
-<a class="viewcode-back" href="../../../../api/refutation.html#causalis.refutation.refute_placebo_treatment">[docs]</a>
+<a class="viewcode-back" href="../../../../api/generated/causalis.refutation.score.score_validation.html#causalis.refutation.refute_placebo_treatment">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">refute_placebo_treatment</span><span class="p">(</span>
     <span class="n">inference_fn</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]],</span>
     <span class="n">data</span><span class="p">:</span> <span class="n">CausalData</span><span class="p">,</span>
@@ -1438,7 +1429,7 @@ document.write(`
 <span class="c1"># ------------------------------------------------------------------</span>
 
 <div class="viewcode-block" id="refute_subset">
-<a class="viewcode-back" href="../../../../api/refutation.html#causalis.refutation.refute_subset">[docs]</a>
+<a class="viewcode-back" href="../../../../api/generated/causalis.refutation.score.score_validation.html#causalis.refutation.refute_subset">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">refute_subset</span><span class="p">(</span>
     <span class="n">inference_fn</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]],</span>
     <span class="n">data</span><span class="p">:</span> <span class="n">CausalData</span><span class="p">,</span>
@@ -1498,7 +1489,7 @@ document.write(`
 
 
 <div class="viewcode-block" id="oos_moment_check_from_psi">
-<a class="viewcode-back" href="../../../../api/refutation.html#causalis.refutation.oos_moment_check_from_psi">[docs]</a>
+<a class="viewcode-back" href="../../../../api/generated/causalis.refutation.score.score_validation.html#causalis.refutation.oos_moment_check_from_psi">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">oos_moment_check_from_psi</span><span class="p">(</span>
     <span class="n">psi_a</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
     <span class="n">psi_b</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
@@ -1624,13 +1615,13 @@ document.write(`
     <span class="k">if</span> <span class="n">data_obj</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">data_obj</span><span class="p">,</span> <span class="s1">&#39;get_df&#39;</span><span class="p">):</span>
         <span class="n">df</span> <span class="o">=</span> <span class="n">data_obj</span><span class="o">.</span><span class="n">get_df</span><span class="p">()</span>
         <span class="c1"># Try robust attribute names</span>
-        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">data_obj</span><span class="p">,</span> <span class="s1">&#39;treatment&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">data_obj</span><span class="p">,</span> <span class="s1">&#39;target&#39;</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">data_obj</span><span class="p">,</span> <span class="s1">&#39;treatment&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">data_obj</span><span class="p">,</span> <span class="s1">&#39;outcome&#39;</span><span class="p">):</span>
             <span class="n">tname</span> <span class="o">=</span> <span class="n">data_obj</span><span class="o">.</span><span class="n">treatment</span><span class="o">.</span><span class="n">name</span>
-            <span class="n">yname</span> <span class="o">=</span> <span class="n">data_obj</span><span class="o">.</span><span class="n">target</span><span class="o">.</span><span class="n">name</span>
+            <span class="n">yname</span> <span class="o">=</span> <span class="n">data_obj</span><span class="o">.</span><span class="n">outcome</span><span class="o">.</span><span class="n">name</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="c1"># Fallback to common attributes used in CausalData</span>
-            <span class="n">tname</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">data_obj</span><span class="p">,</span> <span class="s1">&#39;_treatment&#39;</span><span class="p">,</span> <span class="s1">&#39;D&#39;</span><span class="p">)</span>
-            <span class="n">yname</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">data_obj</span><span class="p">,</span> <span class="s1">&#39;_target&#39;</span><span class="p">,</span> <span class="s1">&#39;Y&#39;</span><span class="p">)</span>
+            <span class="n">tname</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">data_obj</span><span class="p">,</span> <span class="s1">&#39;treatment_name&#39;</span><span class="p">,</span> <span class="s1">&#39;D&#39;</span><span class="p">)</span>
+            <span class="n">yname</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">data_obj</span><span class="p">,</span> <span class="s1">&#39;outcome_name&#39;</span><span class="p">,</span> <span class="s1">&#39;Y&#39;</span><span class="p">)</span>
         <span class="n">d</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="n">tname</span><span class="p">]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
         <span class="n">y</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="n">yname</span><span class="p">]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
@@ -1663,7 +1654,7 @@ document.write(`
 
 
 <div class="viewcode-block" id="run_score_diagnostics">
-<a class="viewcode-back" href="../../../../api/refutation.html#causalis.refutation.run_score_diagnostics">[docs]</a>
+<a class="viewcode-back" href="../../../../api/generated/causalis.refutation.score.score_validation.html#causalis.refutation.run_score_diagnostics">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">run_score_diagnostics</span><span class="p">(</span>
     <span class="n">res</span><span class="p">:</span> <span class="n">ResultLike</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="o">*</span><span class="p">,</span>
@@ -1831,7 +1822,7 @@ document.write(`
 
 
 <div class="viewcode-block" id="add_score_flags">
-<a class="viewcode-back" href="../../../../api/refutation.html#causalis.refutation.add_score_flags">[docs]</a>
+<a class="viewcode-back" href="../../../../api/generated/causalis.refutation.score.score_validation.html#causalis.refutation.add_score_flags">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">add_score_flags</span><span class="p">(</span><span class="n">rep_score</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">thresholds</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">effect_size_guard</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.02</span><span class="p">,</span> <span class="n">oos_gate</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">se_rule</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">se_ref</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Augment run_score_diagnostics(...) dict with:</span>
@@ -2115,7 +2106,7 @@ document.write(`
 
   <p class="copyright">
     
-      © Copyright 2025, Causalis Team.
+      © Copyright 2026, Causalis Team.
       <br/>
     
   </p>

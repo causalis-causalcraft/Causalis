@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Introduction to Causal Inference &#8212; Causalis 0.1.0 documentation</title>
+    <title>Introduction to Causal Inference &#8212; Causalis 0.1.2 documentation</title>
   
   
   
@@ -39,7 +39,7 @@
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../_static/documentation_options.js?v=2caa9db7"></script>
+    <script src="../_static/documentation_options.js?v=e5353d3f"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -49,7 +49,6 @@
     <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
     <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'user-guide/causal_inference_fundamentals';</script>
-    <link rel="icon" href="../_static/new_logo.svg"/>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Installation" href="installation.html" />
@@ -127,14 +126,6 @@
   
   
   
-  
-    
-    
-      
-    
-    
-    <img src="../_static/new_logo_big.svg" class="logo__image only-light" alt=""/>
-    <script>document.write(`<img src="../_static/new_logo_big.svg" class="logo__image only-dark" alt=""/>`);</script>
   
   
     <p class="title logo__title">Causalis</p>
@@ -447,8 +438,8 @@ document.write(`
 <tr class="row-odd"><th class="head"><p>Unit</p></th>
 <th class="head"><p>Treatment <span class="math notranslate nohighlight">\(D\)</span></p></th>
 <th class="head"><p>Outcome <span class="math notranslate nohighlight">\(Y\)</span></p></th>
-<th class="head"><p>Confounder_1</p></th>
-<th class="head"><p>Confounder_2</p></th>
+<th class="head"><p>confounder_1</p></th>
+<th class="head"><p>confounder_2</p></th>
 </tr>
 </thead>
 <tbody>
@@ -500,6 +491,11 @@ document.write(`
 <p><strong>Conditional Average Treatment Effect (CATE):</strong>
 <span class="math notranslate nohighlight">\(\tau(x)=\mathbb{E}[Y(1)-Y(0)\mid X=x]\)</span>
 Use when you need personalization, uplift targeting, or to study heterogeneity.</p>
+<p>Note on outcome type and effect scale:
+for non-linear outcomes (e.g., binary with logit link, Poisson with log link), models often parameterize treatment
+effects on the <em>link</em> scale (log-odds / log-mean). In that case, the natural-scale effect
+<span class="math notranslate nohighlight">\(\mathbb{E}[Y(1)\mid X=x]-\mathbb{E}[Y(0)\mid X=x]\)</span> can vary with the baseline risk/mean even when the link-scale
+effect is constant. In synthetic generators, we expose both: <code class="docutils literal notranslate"><span class="pre">tau_link</span></code> (link-scale) and <code class="docutils literal notranslate"><span class="pre">cate</span></code> (natural-scale).</p>
 </section>
 <section id="att-effect-on-the-treated">
 <h3>ATT: effect on the treated<a class="headerlink" href="#att-effect-on-the-treated" title="Link to this heading">#</a></h3>
@@ -517,7 +513,7 @@ Use for headline impact or policy choices that affect the whole eligible populat
 <h2>When are these estimands credible?<a class="headerlink" href="#when-are-these-estimands-credible" title="Link to this heading">#</a></h2>
 <p>In observational data, we typically rely on two key identification conditions:</p>
 <ol class="arabic simple">
-<li><p><strong>Unconfoundedness (selection on observables):</strong> given <span class="math notranslate nohighlight">\(X\)</span>, treatment is as good as random.
+<li><p><strong>Uncofoundedness (selection on observables):</strong> given <span class="math notranslate nohighlight">\(X\)</span>, treatment is as good as random.
 Formally, <span class="math notranslate nohighlight">\((Y(0),Y(1)) \perp D \mid X\)</span>.</p></li>
 <li><p><strong>Overlap (positivity):</strong> each unit had a nonzero chance to receive either treatment: <span class="math notranslate nohighlight">\(0&lt;\Pr(T=1\mid X)&lt;1\)</span>.</p></li>
 </ol>
@@ -610,7 +606,7 @@ Formally, <span class="math notranslate nohighlight">\((Y(0),Y(1)) \perp D \mid 
 
   <p class="copyright">
     
-      © Copyright 2025, Causalis Team.
+      © Copyright 2026, Causalis Team.
       <br/>
     
   </p>
