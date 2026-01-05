@@ -6,9 +6,9 @@ from sklearn.linear_model import LogisticRegression, LinearRegression
 
 from causalis.data.causaldata import CausalData
 from causalis.data.dgps import generate_rct
-from causalis.inference.ate.dml_ate import dml_ate
-from causalis.inference.atte.dml_atte import dml_atte
-from causalis.refutation import validate_uncofoundedness_balance
+from causalis.scenarios.unconfoundedness.ate.dml_ate import dml_ate
+from causalis.scenarios.unconfoundedness.atte.dml_atte import dml_atte
+from causalis.scenarios.unconfoundedness.refutation import validate_uncofoundedness_balance
 
 
 @pytest.mark.parametrize("normalize_ipw", [False, True])

@@ -1,13 +1,12 @@
 import numpy as np
 import pandas as pd
-import pytest
 
 from sklearn.linear_model import LinearRegression, LogisticRegression
 
 from causalis.data.causaldata import CausalData
 from causalis.data.dgps import generate_rct
-from causalis.inference.ate.dml_ate import dml_ate
-from causalis.refutation.uncofoundedness.uncofoundedness_validation import validate_uncofoundedness_balance
+from causalis.scenarios.unconfoundedness.ate.dml_ate import dml_ate
+from causalis.scenarios.unconfoundedness.refutation.uncofoundedness.uncofoundedness_validation import validate_uncofoundedness_balance
 
 
 def test_uncofoundedness_balance_extras_outputs():

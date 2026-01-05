@@ -2,8 +2,8 @@ import numpy as np
 import pandas as pd
 
 from causalis.data import CausalData
-from causalis.inference.ate.dml_ate import dml_ate
-from causalis.refutation.score.score_validation import trim_sensitivity_curve_ate
+from causalis.scenarios.unconfoundedness.ate.dml_ate import dml_ate
+from causalis.scenarios.unconfoundedness.refutation.score.score_validation import trim_sensitivity_curve_ate
 
 
 def _make_data(n=300, seed=321):

@@ -1,7 +1,7 @@
 import numpy as np
 import warnings
 
-from causalis.refutation.overlap.overlap_validation import calibration_report_m
+from causalis.scenarios.unconfoundedness.refutation.overlap.overlap_validation import calibration_report_m
 
 
 def test_calibration_no_runtime_warnings_extreme_inputs():

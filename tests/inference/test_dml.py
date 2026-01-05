@@ -7,7 +7,7 @@ import numpy as np
 from sklearn.ensemble import RandomForestRegressor, RandomForestClassifier
 
 from causalis.data import CausalData
-from causalis.inference.ate import dml_ate_source
+from causalis.scenarios.unconfoundedness.ate import dml_ate_source
 
 
 def test_dml():

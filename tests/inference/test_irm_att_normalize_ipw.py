@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 
 from causalis.data.causaldata import CausalData
-from causalis.inference.estimators.irm import IRM
+from causalis.statistics.models.irm import IRM
 
 from sklearn.linear_model import LinearRegression, LogisticRegression
 

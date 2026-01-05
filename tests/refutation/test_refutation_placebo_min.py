@@ -2,7 +2,7 @@ import pytest
 import pandas as pd
 
 from causalis.data import CausalData
-from causalis.refutation.score.score_validation import (
+from causalis.scenarios.unconfoundedness.refutation.score.score_validation import (
     refute_placebo_outcome,
     refute_placebo_treatment,
     refute_subset,

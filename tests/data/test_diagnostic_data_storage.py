@@ -3,8 +3,8 @@ import pandas as pd
 from sklearn.linear_model import LinearRegression, LogisticRegression
 
 from causalis.data.causaldata import CausalData
-from causalis.inference.ate.dml_ate import dml_ate
-from causalis.inference.atte.dml_atte import dml_atte
+from causalis.scenarios.unconfoundedness.ate.dml_ate import dml_ate
+from causalis.scenarios.unconfoundedness.atte.dml_atte import dml_atte
 
 
 def _make_synth(n=200, seed=42):

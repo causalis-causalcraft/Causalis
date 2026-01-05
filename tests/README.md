@@ -37,7 +37,7 @@ python -m pytest tests/test_file_name.py
 For example:
 
 ```bash
-python -m pytest tests/test_data_generators.py
+python -m pytest tests/data/test_rct_ancillary_no_leakage.py
 ```
 
 To run a specific test function:
@@ -49,7 +49,7 @@ python -m pytest tests/test_file_name.py::test_function_name
 For example:
 
 ```bash
-python -m pytest tests/test_data_generators.py::test_generate_rct_data_default_parameters
+python -m pytest tests/data/test_rct_ancillary_no_leakage.py::test_rct_ancillary_columns_do_not_depend_on_realized_y_when_seed_fixed
 ```
 
 ### Verbose output
@@ -72,7 +72,7 @@ SKIP_DOCS_BUILD=true python -m pytest
 
 - `test_causaldata_get_df.py`: Tests for the get_df method in causaldata class
 - `test_ckit.py`: Tests for the causaldata class
-- `test_data_generators.py`: Tests for the data generator functions
+- `tests/data/test_causal_dataset_generator.py`: Tests for the data generator functions
 - `test_docs_build.py`: Tests for building documentation
 - `test_installation.py`: Tests for package installation and imports
 - `test_mde.py`: Tests for the calculate_mde function

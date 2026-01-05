@@ -1,7 +1,7 @@
 import pytest
 import pandas as pd
 import numpy as np
-from causalis.data.causaldata import CausalData
+from causalis.data import CausalData, CausalDataInstrumental
 
 def test_causaldata_with_instrument():
     df = pd.DataFrame({
@@ -11,7 +11,7 @@ def test_causaldata_with_instrument():
         "z": [1, 0, 1]
     })
     
-    cd = CausalData.from_df(df, treatment="d", outcome="y", confounders=["x"], instrument="z")
+    cd = CausalDataInstrumental.from_df(df, treatment="d", outcome="y", confounders=["x"], instrument="z")
     
     assert cd.instrument_name == "z"
     assert cd.instrument.tolist() == [1, 0, 1]
@@ -34,19 +34,18 @@ def test_instrument_validation():
     
     # Constant instrument
     with pytest.raises(ValueError, match="instrument is constant"):
-        CausalData.from_df(df, treatment="d", outcome="y", confounders=["x"], instrument="z_const")
+        CausalDataInstrumental.from_df(df, treatment="d", outcome="y", confounders=["x"], instrument="z_const")
     
     # Non-numeric instrument
     with pytest.raises(ValueError, match="instrument must contain only int, float, or bool values"):
-        CausalData.from_df(df, treatment="d", outcome="y", confounders=["x"], instrument="z_non_numeric")
+        CausalDataInstrumental.from_df(df, treatment="d", outcome="y", confounders=["x"], instrument="z_non_numeric")
         
     # Overlap with treatment
     with pytest.raises(ValueError, match="Column 'd' cannot be both treatment and instrument"):
-        CausalData.from_df(df, treatment="d", outcome="y", confounders=["x"], instrument="d")
-
-    # Overlap with confounders
+        CausalDataInstrumental.from_df(df, treatment="d", outcome="y", confounders=["x"], instrument="d")
+# Overlap with confounders
     with pytest.raises(ValueError, match="confounder columns must be disjoint from treatment/outcome/user_id/instrument"):
-        CausalData.from_df(df, treatment="d", outcome="y", confounders=["x"], instrument="x")
+        CausalDataInstrumental.from_df(df, treatment="d", outcome="y", confounders=["x"], instrument="x")
 
 def test_instrument_bool_casting():
     df = pd.DataFrame({
@@ -56,7 +55,7 @@ def test_instrument_bool_casting():
         "z": [True, False, True]
     })
     
-    cd = CausalData.from_df(df, treatment="d", outcome="y", confounders=["x"], instrument="z")
+    cd = CausalDataInstrumental.from_df(df, treatment="d", outcome="y", confounders=["x"], instrument="z")
     
     assert cd.df["z"].dtype == np.int8
     assert cd.instrument.tolist() == [1, 0, 1]
@@ -69,6 +68,6 @@ def test_instrument_repr():
         "z": [1, 0, 1]
     })
     
-    cd = CausalData.from_df(df, treatment="d", outcome="y", confounders=["x"], instrument="z")
+    cd = CausalDataInstrumental.from_df(df, treatment="d", outcome="y", confounders=["x"], instrument="z")
     repr_str = repr(cd)
     assert "instrument='z'" in repr_str

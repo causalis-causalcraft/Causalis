@@ -1,5 +1,5 @@
 def test_refutation_namespace_exports():
-    import causalis.refutation as ref
+    import causalis.scenarios.unconfoundedness.refutation as ref
 
     # Overlap exports
     assert hasattr(ref, "positivity_overlap_checks")

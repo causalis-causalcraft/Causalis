@@ -12,5 +12,5 @@ dependencies:
   - pip
   - pip:
     - doubleml
-    - -e .
+    - "-e .[docs]"
   - pydantic
