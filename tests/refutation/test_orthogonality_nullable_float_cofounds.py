@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 
 from causalis.data.causaldata import CausalData
-from causalis.refutation.score.score_validation import refute_irm_orthogonality
+from causalis.scenarios.unconfoundedness.refutation.score.score_validation import refute_irm_orthogonality
 
 
 class DummyModel:

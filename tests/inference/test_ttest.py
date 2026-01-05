@@ -6,7 +6,7 @@ import pytest
 import pandas as pd
 import numpy as np
 from causalis.data import CausalData
-from causalis.inference.atte.ttest import ttest
+from causalis.scenarios.rct import ttest
 
 
 @pytest.fixture

@@ -4,13 +4,12 @@ import pandas as pd
 from sklearn.ensemble import RandomForestRegressor, RandomForestClassifier
 
 from causalis.data import CausalData
-from causalis.inference.atte import dml_atte_source
-from causalis.refutation.score.score_validation import (
+from causalis.scenarios.unconfoundedness.atte import dml_atte_source
+from causalis.scenarios.unconfoundedness.refutation.score.score_validation import (
     refute_placebo_outcome,
     refute_placebo_treatment,
     refute_subset,
 )
-from causalis.refutation.overlap import overlap_report_from_result
 
 
 def _make_synth(n=400, seed=123):

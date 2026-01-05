@@ -88,7 +88,7 @@ Thumbs.db
 
 # CatBoost training outputs (root/examples only; keep tests fixtures tracked)
 /catboost_info/
-/docs/examples/catboost_info/
+/notebooks/examples/catboost_info/
 /.junie/
 /catboost_info/
 /site/

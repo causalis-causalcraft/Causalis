@@ -7,7 +7,7 @@ import numpy as np
 import pandas as pd
 
 from causalis.data import CausalData
-from causalis.inference.atte.bootstrap_diff_means import bootstrap_diff_means
+from causalis.scenarios.rct import bootstrap_diff_means
 
 
 @pytest.fixture

@@ -3,8 +3,8 @@ import pandas as pd
 from sklearn.linear_model import LinearRegression, LogisticRegression
 
 from causalis.data.causaldata import CausalData
-from causalis.inference.estimators.irm import IRM
-from causalis.refutation.score.score_validation import (
+from causalis.statistics.models.irm import IRM
+from causalis.scenarios.unconfoundedness.refutation.score.score_validation import (
     extract_nuisances,
     aipw_score_atte,
     refute_irm_orthogonality,

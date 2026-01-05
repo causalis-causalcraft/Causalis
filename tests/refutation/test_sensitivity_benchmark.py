@@ -3,11 +3,11 @@ import pandas as pd
 import pytest
 
 from sklearn.linear_model import LogisticRegression
-from sklearn.ensemble import RandomForestRegressor, RandomForestClassifier
+from sklearn.ensemble import RandomForestRegressor
 
 from causalis.data.causaldata import CausalData
-from causalis.inference.estimators.irm import IRM
-from causalis.refutation.uncofoundedness.sensitivity import sensitivity_benchmark
+from causalis.statistics.models.irm import IRM
+from causalis.scenarios.unconfoundedness.refutation.uncofoundedness.sensitivity import sensitivity_benchmark
 
 
 def make_synthetic(n=400, seed=42):

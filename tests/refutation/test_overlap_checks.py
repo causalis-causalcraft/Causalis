@@ -1,6 +1,6 @@
 import numpy as np
 
-from causalis.refutation.overlap import (
+from causalis.scenarios.unconfoundedness.refutation import (
     positivity_overlap_checks,
     edge_mass,
     ks_distance,

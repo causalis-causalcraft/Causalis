@@ -2,8 +2,8 @@ import numpy as np
 import pandas as pd
 
 from causalis.data import CausalData
-from causalis.inference.ate.dml_ate import dml_ate
-from causalis.refutation.score.score_validation import (
+from causalis.scenarios.unconfoundedness.ate.dml_ate import dml_ate
+from causalis.scenarios.unconfoundedness.refutation.score.score_validation import (
     refute_irm_orthogonality,
     oos_moment_check_from_psi,
 )

@@ -8,12 +8,12 @@ import pandas as pd
 from unittest.mock import Mock
 
 from causalis.data.causaldata import CausalData
-from causalis.refutation import (
+from causalis.scenarios.unconfoundedness.refutation import (
     refute_placebo_outcome,
     refute_placebo_treatment,
     refute_subset,
 )
-from causalis.refutation.score.score_validation import _is_binary, _generate_random_outcome, _generate_random_treatment
+from causalis.scenarios.unconfoundedness.refutation.score.score_validation import _is_binary, _generate_random_outcome, _generate_random_treatment
 
 
 @pytest.fixture

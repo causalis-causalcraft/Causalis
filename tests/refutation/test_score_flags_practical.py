@@ -1,7 +1,6 @@
-import numpy as np
 import pandas as pd
 
-from causalis.refutation.score.score_validation import add_score_flags
+from causalis.scenarios.unconfoundedness.refutation.score.score_validation import add_score_flags
 
 
 def _base_rep():

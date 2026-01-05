@@ -1,4 +1,3 @@
-import re
 import numpy as np
 import pandas as pd
 import pytest
@@ -7,8 +6,8 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import RandomForestRegressor
 
 from causalis.data.causaldata import CausalData
-from causalis.inference.estimators.irm import IRM
-from causalis.refutation.uncofoundedness.sensitivity import sensitivity_analysis, get_sensitivity_summary
+from causalis.statistics.models.irm import IRM
+from causalis.scenarios.unconfoundedness.refutation.uncofoundedness.sensitivity import sensitivity_analysis, get_sensitivity_summary
 
 
 def make_synth(n=400, seed=123):

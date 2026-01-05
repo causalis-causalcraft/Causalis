@@ -18,35 +18,19 @@ class CausalData(BaseModel):
     The stored DataFrame is restricted to only those columns.
     Uses Pydantic for validation and as a data contract.
 
-    Parameters
-    ----------
-    df : pd.DataFrame
-        The DataFrame containing the data.
-        Only columns specified in outcome, treatment, and confounders will be stored.
-        NaN values are not allowed in the stored/used columns.
-    treatment : str
-        Column name representing the treatment variable.
-    outcome : str
-        Column name representing the outcome variable.
-    confounders : Union[str, List[str]], optional
-        Column name(s) representing the confounders/covariates.
-    user_id : str, optional
-        Column name representing the unique identifier for each observation/user.
-
     Attributes
     ----------
     df : pd.DataFrame
-        A copy of the original data restricted to [outcome, treatment] + confounders [+ user_id].
-    treatment : pd.Series
-        The treatment column as a pandas Series.
-    outcome : pd.Series
-        The outcome column as a pandas Series.
-    confounders : list[str]
+        The DataFrame containing the data restricted to outcome, treatment, and confounder columns.
+        NaN values are not allowed in the used columns.
+    treatment_name : str
+        Column name representing the treatment variable.
+    outcome_name : str
+        Column name representing the outcome variable.
+    confounders_names : List[str]
         Names of the confounder columns (may be empty).
-    user_id : pd.Series, optional
-        The user_id column as a pandas Series (if specified).
-    X : pd.DataFrame
-        Design matrix (baseline covariates) used for modeling: df[confounders].
+    user_id_name : str, optional
+        Column name representing the unique identifier for each observation/user.
     """
     model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True)
 
@@ -55,7 +39,6 @@ class CausalData(BaseModel):
     outcome_name: str = Field(alias="outcome")
     confounders_names: List[str] = Field(alias="confounders", default_factory=list)
     user_id_name: Optional[str] = Field(alias="user_id", default=None)
-    instrument_name: Optional[str] = Field(alias="instrument", default=None)
 
     @classmethod
     def from_df(
@@ -65,7 +48,6 @@ class CausalData(BaseModel):
             outcome: str,
             confounders: Optional[Union[str, List[str]]] = None,
             user_id: Optional[str] = None,
-            instrument: Optional[str] = None,
             **kwargs: Any
     ) -> 'CausalData':
         """
@@ -83,8 +65,6 @@ class CausalData(BaseModel):
             Column name(s) representing the confounders/covariates.
         user_id : str, optional
             Column name representing the unique identifier for each observation/user.
-        instrument : str, optional
-            Column name representing the instrumental variable.
         **kwargs : Any
             Additional arguments passed to the Pydantic model constructor.
 
@@ -99,7 +79,6 @@ class CausalData(BaseModel):
             outcome=outcome,
             confounders=confounders,
             user_id=user_id,
-            instrument=instrument,
             **kwargs
         )
 
@@ -108,6 +87,21 @@ class CausalData(BaseModel):
     def _normalize_confounders(cls, v: Any) -> List[str]:
         """
         Normalize confounders to a list of unique strings.
+
+        Parameters
+        ----------
+        v : Any
+            The confounders input, which can be None, a string, or a list of strings.
+
+        Returns
+        -------
+        List[str]
+            A list of unique confounder column names.
+
+        Raises
+        -------
+        TypeError
+            If any confounder name is not a string or if the input type is invalid.
         """
         if v is None:
             return []
@@ -130,13 +124,32 @@ class CausalData(BaseModel):
     def _validate_and_normalize(self) -> 'CausalData':
         """
         Perform complex validation and normalize the stored DataFrame.
+
+        This validator:
+        1. Checks for duplicate column names in the input DataFrame.
+        2. Ensures role columns (treatment, outcome, user_id) are disjoint.
+        3. Verifies that all specified columns exist in the DataFrame.
+        4. Validates types and checks for constant variance in outcome, treatment, and confounders.
+        5. Ensures no NaN values are present in used columns.
+        6. Subsets the DataFrame to used columns and coerces booleans to int8.
+        7. Checks for duplicate column values and rows.
+        8. Verifies user_id uniqueness.
+
+        Returns
+        -------
+        CausalData
+            The validated and normalized CausalData instance.
+
+        Raises
+        ------
+        ValueError
+            If any validation step fails (e.g., missing columns, NaN values, constant roles).
         """
         df = self.df
         treatment = self.treatment_name
         outcome = self.outcome_name
         confounders = self.confounders_names
         user_id = self.user_id_name
-        instrument = self.instrument_name
 
         # 0. Guard against duplicate column names
         if df.columns.has_duplicates:
@@ -144,14 +157,7 @@ class CausalData(BaseModel):
             raise ValueError(f"DataFrame has duplicate column names: {dupes}. This is not supported.")
 
         # 1. Disjoint role validation
-        roles = {
-            "outcome": outcome,
-            "treatment": treatment,
-        }
-        if user_id:
-            roles["user_id"] = user_id
-        if instrument:
-            roles["instrument"] = instrument
+        roles = self._get_roles()
 
         # Check for overlaps between primary roles
         role_names = list(roles.keys())
@@ -163,7 +169,7 @@ class CausalData(BaseModel):
         overlap = [c for c in confounders if c in set(roles.values())]
         if overlap:
             raise ValueError(
-                "confounder columns must be disjoint from treatment/outcome/user_id/instrument; overlapping columns: "
+                "confounder columns must be disjoint from treatment/outcome/user_id" + self._get_additional_roles_error_msg() + "; overlapping columns: "
                 + ", ".join(overlap)
             )
 
@@ -177,7 +183,7 @@ class CausalData(BaseModel):
             if col not in all_columns:
                 raise ValueError(f"Column '{col}' specified as confounders does not exist in the DataFrame.")
 
-        # 3. Validate types and constant variance
+        # 4. Validate types and check for constant variance
         # Outcome
         if not (pdtypes.is_numeric_dtype(df[outcome]) or pdtypes.is_bool_dtype(df[outcome])):
             raise ValueError(f"Column '{outcome}' specified as outcome must contain only int, float, or bool values.")
@@ -196,44 +202,21 @@ class CausalData(BaseModel):
                 f"which is not allowed for causal inference."
             )
 
-        # Instrument
-        if instrument:
-            if not (pdtypes.is_numeric_dtype(df[instrument]) or pdtypes.is_bool_dtype(df[instrument])):
-                raise ValueError(f"Column '{instrument}' specified as instrument must contain only int, float, or bool values.")
-            if df[instrument].nunique(dropna=False) <= 1:
-                raise ValueError(
-                    f"Column '{instrument}' specified as instrument is constant (has zero variance / single unique value), "
-                    f"which is not allowed for causal inference."
-                )
+        self._validate_additional_roles(df)
 
         # confounders
-        kept_confounders: List[str] = []
-        dropped_constants: List[str] = []
         for col in confounders:
             if not (pdtypes.is_numeric_dtype(df[col]) or pdtypes.is_bool_dtype(df[col])):
                 raise ValueError(f"Column '{col}' specified as confounders must contain only int, float, or bool values.")
             
             if df[col].nunique(dropna=False) <= 1:
-                dropped_constants.append(col)
-            else:
-                kept_confounders.append(col)
+                raise ValueError(
+                    f"Column '{col}' specified as confounder is constant (has zero variance / single unique value), "
+                    f"which is not allowed for causal inference."
+                )
 
-        if dropped_constants:
-            warnings.warn(
-                "Dropping constant confounder columns (zero variance): " + ", ".join(dropped_constants),
-                UserWarning,
-                stacklevel=2,
-            )
-        # Update confounders names
-        self.confounders_names = kept_confounders
-        confounders = kept_confounders # Update local variable for next steps
-
-        # 4. Check for NaN values in used columns
-        cols_to_check = [outcome, treatment] + confounders
-        if user_id:
-            cols_to_check.append(user_id)
-        if instrument:
-            cols_to_check.append(instrument)
+        # 5. Check for NaN values in used columns
+        cols_to_check = list(roles.values()) + confounders
         
         # Unique columns preserving order
         cols_to_check = list(dict.fromkeys(cols_to_check))
@@ -261,18 +244,79 @@ class CausalData(BaseModel):
 
         return self
 
+    def _get_roles(self) -> dict[str, str]:
+        """
+        Get the primary roles and their column names.
+
+        Returns
+        -------
+        dict[str, str]
+            Mapping of role names to column names.
+        """
+        roles = {
+            "outcome": self.outcome_name,
+            "treatment": self.treatment_name,
+        }
+        if self.user_id_name:
+            roles["user_id"] = self.user_id_name
+        return roles
+
+    def _get_additional_roles_error_msg(self) -> str:
+        """
+        Hook for subclasses to add roles to error messages.
+
+        Returns
+        -------
+        str
+            Additional string for the error message.
+        """
+        return ""
+
+    def _validate_additional_roles(self, df: pd.DataFrame):
+        """
+        Hook for subclasses to validate additional roles.
+
+        Parameters
+        ----------
+        df : pd.DataFrame
+            The DataFrame to validate.
+        """
+        pass
+
     def _check_user_id_uniqueness(self, df: pd.DataFrame):
-        """Check if user_id column has unique values."""
+        """
+        Check if user_id column has unique values.
+
+        Parameters
+        ----------
+        df : pd.DataFrame
+            The DataFrame to check.
+
+        Raises
+        ------
+        ValueError
+            If the user_id column contains duplicate values.
+        """
         if self.user_id_name and df[self.user_id_name].duplicated().any():
             raise ValueError(f"Column '{self.user_id_name}' specified as user_id contains duplicate values.")
 
     def _check_duplicate_column_values(self, df: pd.DataFrame):
-        """Check for identical values in different columns."""
+        """
+        Check for identical values in different columns.
+
+        Parameters
+        ----------
+        df : pd.DataFrame
+            The DataFrame to check.
+
+        Raises
+        ------
+        ValueError
+            If two columns have identical values.
+        """
         cols = [self.outcome_name, self.treatment_name] + self.confounders_names
         if self.user_id_name:
             cols.append(self.user_id_name)
-        if self.instrument_name:
-            cols.append(self.instrument_name)
         
         # Unique columns preserving order
         cols = list(dict.fromkeys(cols))
@@ -289,7 +333,14 @@ class CausalData(BaseModel):
                     )
 
     def _check_duplicate_rows(self, df: pd.DataFrame):
-        """Check for duplicate rows and issue a warning."""
+        """
+        Check for duplicate rows and issue a warning.
+
+        Parameters
+        ----------
+        df : pd.DataFrame
+            The DataFrame to check.
+        """
         num_duplicates = int(df.duplicated().sum())
         if num_duplicates > 0:
             total_rows = len(df)
@@ -304,55 +355,93 @@ class CausalData(BaseModel):
             )
 
     def _get_column_type(self, column_name: str) -> str:
-        """Determine the type/role of a column."""
+        """
+        Determine the type/role of a column.
+
+        Parameters
+        ----------
+        column_name : str
+            The name of the column.
+
+        Returns
+        -------
+        str
+            The role of the column ('outcome', 'treatment', 'user_id', 'confounder', or 'unknown').
+        """
         if column_name == self.outcome_name:
             return "outcome"
         elif column_name == self.treatment_name:
             return "treatment"
         elif self.user_id_name and column_name == self.user_id_name:
             return "user_id"
-        elif self.instrument_name and column_name == self.instrument_name:
-            return "instrument"
         elif column_name in self.confounders_names:
             return "confounder"
         return "unknown"
 
     @property
     def outcome(self) -> pd.Series:
-        """Outcome column as a Series."""
+        """
+        Outcome column as a Series.
+
+        Returns
+        -------
+        pd.Series
+            The outcome column.
+        """
         if not self.outcome_name or self.outcome_name not in self.df.columns:
             return pd.Series(dtype=float)
         return self.df[self.outcome_name]
 
     @property
     def treatment(self) -> pd.Series:
-        """Treatment column as a Series."""
+        """
+        Treatment column as a Series.
+
+        Returns
+        -------
+        pd.Series
+            The treatment column.
+        """
         if not self.treatment_name or self.treatment_name not in self.df.columns:
             return pd.Series(dtype=float)
         return self.df[self.treatment_name]
 
     @property
     def confounders(self) -> List[str]:
-        """List of confounder column names."""
+        """
+        List of confounder column names.
+
+        Returns
+        -------
+        List[str]
+            Names of the confounder columns.
+        """
         return list(self.confounders_names)
 
     @property
     def user_id(self) -> pd.Series:
-        """user_id column as a Series."""
+        """
+        user_id column as a Series.
+
+        Returns
+        -------
+        pd.Series
+            The user_id column.
+        """
         if not self.user_id_name or self.user_id_name not in self.df.columns:
             return pd.Series(dtype=object)
         return self.df[self.user_id_name]
 
     @property
-    def instrument(self) -> pd.Series:
-        """instrument column as a Series."""
-        if not self.instrument_name or self.instrument_name not in self.df.columns:
-            return pd.Series(dtype=float)
-        return self.df[self.instrument_name]
-
-    @property
     def X(self) -> pd.DataFrame:
-        """Design matrix of confounders."""
+        """
+        Design matrix of confounders.
+
+        Returns
+        -------
+        pd.DataFrame
+            The DataFrame containing only confounder columns.
+        """
         if not self.confounders_names:
             return self.df.iloc[:, 0:0].copy()
         return self.df[self.confounders_names].copy()
@@ -364,14 +453,38 @@ class CausalData(BaseModel):
             include_outcome: bool = True,
             include_confounders: bool = True,
             include_user_id: bool = False,
-            include_instrument: bool = False
     ) -> pd.DataFrame:
-        """Get a DataFrame with specified columns."""
+        """
+        Get a DataFrame with specified columns.
+
+        Parameters
+        ----------
+        columns : List[str], optional
+            Specific column names to include.
+        include_treatment : bool, default True
+            Whether to include the treatment column.
+        include_outcome : bool, default True
+            Whether to include the outcome column.
+        include_confounders : bool, default True
+            Whether to include confounder columns.
+        include_user_id : bool, default False
+            Whether to include the user_id column.
+
+        Returns
+        -------
+        pd.DataFrame
+            A copy of the internal DataFrame with selected columns.
+
+        Raises
+        ------
+        ValueError
+            If any specified columns do not exist.
+        """
         cols_to_include = []
         if columns is not None:
             cols_to_include.extend(columns)
 
-        if columns is None and not any([include_outcome, include_confounders, include_treatment, include_user_id, include_instrument]):
+        if columns is None and not any([include_outcome, include_confounders, include_treatment, include_user_id]):
             return self.df.copy()
 
         if include_outcome:
@@ -382,8 +495,6 @@ class CausalData(BaseModel):
             cols_to_include.append(self.treatment_name)
         if include_user_id and self.user_id_name:
             cols_to_include.append(self.user_id_name)
-        if include_instrument and self.instrument_name:
-            cols_to_include.append(self.instrument_name)
 
         # Remove duplicates while preserving order
         seen = set()
@@ -398,14 +509,12 @@ class CausalData(BaseModel):
 
     def __repr__(self) -> str:
         res = (
-            f"CausalData(df={self.df.shape}, "
+            f"{self.__class__.__name__}(df={self.df.shape}, "
             f"treatment='{self.treatment_name}', "
             f"outcome='{self.outcome_name}', "
             f"confounders={self.confounders_names}"
         )
         if self.user_id_name:
             res += f", user_id='{self.user_id_name}'"
-        if self.instrument_name:
-            res += f", instrument='{self.instrument_name}'"
         res += ")"
         return res

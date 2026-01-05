@@ -4,7 +4,7 @@ import pytest
 from sklearn.linear_model import LinearRegression, LogisticRegression
 
 from causalis.data.dgps import CausalDatasetGenerator
-from causalis.inference.atte.dml_atte import dml_atte
+from causalis.scenarios.unconfoundedness.atte.dml_atte import dml_atte
 
 
 @pytest.mark.parametrize("normalize_ipw", [False, True])

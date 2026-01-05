@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 
-from causalis.refutation.overlap.overlap_validation import run_overlap_diagnostics
+from causalis.scenarios.unconfoundedness.refutation.overlap.overlap_validation import run_overlap_diagnostics
 
 
 def test_run_overlap_diagnostics_with_arrays_returns_summary_and_meta():

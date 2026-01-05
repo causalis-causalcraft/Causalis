@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 
-from causalis.refutation.score.score_validation import (
+from causalis.scenarios.unconfoundedness.refutation.score.score_validation import (
     aipw_score_atte,
     orthogonality_derivatives_atte,
     refute_irm_orthogonality,

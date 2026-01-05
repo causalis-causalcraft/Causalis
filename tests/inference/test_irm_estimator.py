@@ -6,14 +6,14 @@ from sklearn.ensemble import RandomForestRegressor, RandomForestClassifier
 
 from causalis.data.causaldata import CausalData
 from causalis.data.dgps import generate_rct
-from causalis.inference.estimators import IRM
+from causalis.statistics.models import IRM
 
 
 def make_causal_data(n=1000, outcome_type="normal", random_state=1):
     df = generate_rct(n=n, split=0.5, random_state=random_state, outcome_type=outcome_type, k=3, add_ancillary=False)
     # map to expected columns: outcome y, treatment t, confounders any x*
     y = "y"; d = "d"
-    xcols = [c for c in df.columns if c not in {y, d, "m", "g0", "g1", "propensity", "mu0", "mu1", "cate"}]
+    xcols = [c for c in df.columns if c.startswith("x")]
     cd = CausalData(df=df[[y, d] + xcols], treatment=d, outcome=y, confounders=xcols)
     return cd
 

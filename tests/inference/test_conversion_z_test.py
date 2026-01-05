@@ -7,7 +7,7 @@ import numpy as np
 import pandas as pd
 
 from causalis.data import CausalData
-from causalis.inference.atte.conversion_z_test import conversion_z_test
+from causalis.scenarios.rct import conversion_z_test
 
 
 @pytest.fixture
