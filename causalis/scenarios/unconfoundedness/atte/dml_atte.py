@@ -22,7 +22,7 @@ def dml_atte(
     ml_m: Optional[Any] = None,
     n_folds: int = 4,
     n_rep: int = 1,
-    confidence_level: float = 0.95,
+    alpha: float = 0.05,
     normalize_ipw: bool = False,
     trimming_rule: str = "truncate",
     trimming_threshold: float = 1e-2,
@@ -45,8 +45,8 @@ def dml_atte(
         Number of folds for cross-fitting.
     n_rep : int, default 1
         Number of repetitions (currently only 1 supported by IRM).
-    confidence_level : float, default 0.95
-        Confidence level for CI in (0,1).
+    alpha : float, default 0.05
+        Significance level for CI in (0,1).
     normalize_ipw : bool, default False
         Whether to normalize IPW terms within the score.
     trimming_rule : str, default "truncate"
@@ -74,8 +74,8 @@ def dml_atte(
     if not data.confounders:
         raise ValueError("CausalData object must have confounders variables defined")
 
-    if not 0 < confidence_level < 1:
-        raise ValueError("confidence_level must be between 0 and 1 (exclusive)")
+    if not 0 < alpha < 1:
+        raise ValueError("alpha must be between 0 and 1 (exclusive)")
 
     # Defaults for learners: lazy import CatBoost only if needed
     if ml_g is None or ml_m is None:
@@ -118,7 +118,7 @@ def dml_atte(
         irm.fit()
 
     # Confidence interval
-    ci_df = irm.confint(level=confidence_level)
+    ci_df = irm.confint(alpha=alpha)
     if isinstance(ci_df, pd.DataFrame):
         ci_lower = float(ci_df.iloc[0, 0])
         ci_upper = float(ci_df.iloc[0, 1])

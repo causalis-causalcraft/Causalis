@@ -29,7 +29,7 @@ def test_irm_atte_score_identities(normalize_ipw):
         ml_g=ml_g,
         ml_m=ml_m,
         n_folds=3,
-        confidence_level=0.95,
+        alpha=0.05,
         normalize_ipw=normalize_ipw,
         trimming_threshold=1e-3,
         random_state=3,

@@ -32,52 +32,52 @@ def binary_outcome_data():
 def test_diff_in_means_fit_effect_ttest(sample_data):
     model = DiffInMeans()
     model.fit(sample_data)
-    result = model.effect(method='ttest')
-    assert 'p_value' in result
-    assert 'absolute_difference' in result
-    assert isinstance(result['p_value'], float)
+    result = model.estimate(method='ttest')
+    assert hasattr(result, 'p_value')
+    assert hasattr(result, 'value')
+    assert isinstance(result.p_value, float)
 
 
 def test_diff_in_means_fit_effect_bootstrap(sample_data):
     model = DiffInMeans()
     model.fit(sample_data)
-    result = model.effect(method='bootstrap', n_simul=100)
-    assert 'p_value' in result
-    assert 'absolute_difference' in result
+    result = model.estimate(method='bootstrap', n_simul=100)
+    assert hasattr(result, 'p_value')
+    assert hasattr(result, 'value')
 
 
 def test_diff_in_means_fit_effect_conversion(binary_outcome_data):
     model = DiffInMeans()
     model.fit(binary_outcome_data)
-    result = model.effect(method='conversion_ztest')
-    assert 'p_value' in result
-    assert 'absolute_difference' in result
+    result = model.estimate(method='conversion_ztest')
+    assert hasattr(result, 'p_value')
+    assert hasattr(result, 'value')
 
 
 def test_diff_in_means_not_fitted():
     model = DiffInMeans()
     with pytest.raises(RuntimeError):
-        model.effect()
+        model.estimate()
 
 
 def test_diff_in_means_invalid_method(sample_data):
     model = DiffInMeans()
     model.fit(sample_data)
     with pytest.raises(ValueError):
-        model.effect(method='invalid_method')
+        model.estimate(method='invalid_method')
 
 
 def test_diff_in_means_aliases(sample_data, binary_outcome_data):
     model = DiffInMeans()
     model.fit(sample_data)
     # Test 'bootsrap' alias
-    result_bootstrap = model.effect(method='bootsrap', n_simul=10)
-    assert 'p_value' in result_bootstrap
-    
+    result_bootstrap = model.estimate(method='bootsrap', n_simul=10)
+    assert hasattr(result_bootstrap, 'p_value')
+
     # Test 'coversion_ztest' alias
     model.fit(binary_outcome_data)
-    result_conversion = model.effect(method='coversion_ztest')
-    assert 'p_value' in result_conversion
+    result_conversion = model.estimate(method='coversion_ztest')
+    assert hasattr(result_conversion, 'p_value')
 
 def test_diff_in_means_repr(sample_data):
     model = DiffInMeans()
@@ -86,9 +86,23 @@ def test_diff_in_means_repr(sample_data):
     assert "status='fitted'" in repr(model)
 
 
-def test_diff_in_means_confidence_level(sample_data):
-    model = DiffInMeans(confidence_level=0.9)
+def test_diff_in_means_alpha(sample_data):
+    model = DiffInMeans()
     model.fit(sample_data)
-    result = model.effect(method='ttest')
-    # We could check if CI matches 0.9, but here we just check if it works
-    assert 'absolute_ci' in result
+    result = model.estimate(method='ttest', alpha=0.1)
+    # We could check if CI matches 0.1, but here we just check if it works
+    assert hasattr(result, 'ci_lower_absolute')
+    assert hasattr(result, 'ci_upper_absolute')
+    assert isinstance(result.is_significant, bool)
+    assert result.alpha == 0.1
+
+
+def test_diff_in_means_summary(sample_data):
+    model = DiffInMeans()
+    model.fit(sample_data)
+    result = model.estimate(method='ttest')
+    summary = result.summary()
+    assert isinstance(summary, pd.DataFrame)
+    assert 'coefficient' in summary.columns
+    assert 'p_val' in summary.columns
+    assert summary.loc[0, 'coefficient'] == result.value

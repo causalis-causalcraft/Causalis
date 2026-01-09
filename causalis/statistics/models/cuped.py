@@ -1,9 +1,10 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, asdict
 from typing import Any, Dict, Optional, Sequence, List, Literal
 
 import numpy as np
+import pandas as pd
 
 from causalis.data.causaldata import CausalData
 
@@ -16,7 +17,7 @@ except Exception as e:  # pragma: no cover
 
 
 @dataclass(frozen=True)
-class CupedEffect:
+class CUPEDResults:
     """
     Result container for CUPED / ANCOVA (and optional Lin-interacted) ATE/ITT estimate.
 
@@ -81,6 +82,29 @@ class CupedEffect:
     covariates: List[str]
     beta_covariates: np.ndarray
     gamma_interactions: np.ndarray
+
+    def to_dict(self) -> Dict[str, Any]:
+        """Convert results to a dictionary."""
+        d = asdict(self)
+        # Add some standardized keys for compatibility with IRM/DML
+        d["coefficient"] = self.ate
+        d["stderr"] = self.se
+        d["p_val"] = self.p_value
+        d["conf_int"] = [self.ci_low, self.ci_high]
+        return d
+
+    def summary(self) -> pd.DataFrame:
+        """Return a summary DataFrame of the results."""
+        return pd.DataFrame(
+            {
+                "coefficient": [self.ate],
+                "stderr": [self.se],
+                "t_stat": [self.t_stat],
+                "p_val": [self.p_value],
+                "lower_ci": [self.ci_low],
+                "upper_ci": [self.ci_high],
+            }
+        )
 
 
 class CUPEDModel:
@@ -242,7 +266,7 @@ class CUPEDModel:
         self._is_fitted = True
         return self
 
-    def effect(self, alpha: Optional[float] = None) -> CupedEffect:
+    def estimate(self, alpha: Optional[float] = None) -> CUPEDResults:
         """
         Return the adjusted ATE/ITT estimate and inference.
 
@@ -253,7 +277,7 @@ class CUPEDModel:
 
         Returns
         -------
-        CupedEffect
+        CUPEDResults
             Effect estimate (coefficient on D), standard error, test statistic, p-value,
             confidence interval, naive comparator, and variance-reduction diagnostic.
         """
@@ -295,7 +319,7 @@ class CUPEDModel:
             else:
                 gamma_cov = np.zeros((0,), dtype=float)
 
-        return CupedEffect(
+        return CUPEDResults(
             ate=tau,
             se=se,
             t_stat=t_stat,
@@ -329,7 +353,7 @@ class CUPEDModel:
         dict
             Dictionary with estimates, inference, and diagnostics.
         """
-        eff = self.effect(alpha=alpha)
+        eff = self.estimate(alpha=alpha)
         return {
             "method": "CUPED/ANCOVA" if eff.adjustment == "ancova" else "Lin (2013) interacted adjustment",
             "adjustment": eff.adjustment,

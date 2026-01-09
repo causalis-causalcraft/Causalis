@@ -20,7 +20,7 @@ def dml_atte_source(
     ml_m: Optional[Any] = None,
     n_folds: int = 5,
     n_rep: int = 1,
-    confidence_level: float = 0.95,
+    alpha: float = 0.05,
 ) -> Dict[str, Any]:
     """
     Estimate average treatment effects on the treated using DoubleML's interactive regression model (IRM).
@@ -39,8 +39,8 @@ def dml_atte_source(
         Number of folds for cross-fitting.
     n_rep : int, default 1
         Number of repetitions for the sample splitting.
-    confidence_level : float, default 0.95
-        The confidence level for calculating confidence intervals (between 0 and 1).
+    alpha : float, default 0.05
+        Significance level for CI in (0,1).
         
     Returns
     -------
@@ -90,9 +90,9 @@ def dml_atte_source(
     if not data.confounders:
         raise ValueError("CausalData object must have confounders variables defined")
     
-    # Check confidence level
-    if not 0 < confidence_level < 1:
-        raise ValueError("confidence_level must be between 0 and 1 (exclusive)")
+    # Check significance level
+    if not 0 < alpha < 1:
+        raise ValueError("alpha must be between 0 and 1 (exclusive)")
     
     # Set default ML models if not provided
     if ml_g is None or ml_m is None:
@@ -151,7 +151,7 @@ def dml_atte_source(
         dml_irm_obj.fit()
     
     # Calculate confidence interval
-    ci = dml_irm_obj.confint(level=confidence_level)
+    ci = dml_irm_obj.confint(level=1 - alpha)
     
     # Extract confidence interval values robustly
     if isinstance(ci, pd.DataFrame):

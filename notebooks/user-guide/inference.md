@@ -23,7 +23,7 @@ from causalis.scenarios.unconfoundedness.ate import dml_ate
 # Assume you already constructed a CausalData object: `causal_data`
 # (see the User Guide pages for data preparation and EDA)
 
-results = dml_ate(causal_data, n_folds=5, confidence_level=0.95)
+results = dml_ate(causal_data, n_folds=5, alpha=0.05)
 
 print("ATE (coefficient):", results["coefficient"])      # float
 print("Std. error:", results["std_error"])               # float
@@ -60,7 +60,7 @@ results = dml_ate(
     ml_g=RandomForestRegressor(n_estimators=100, max_depth=5),
     ml_m=RandomForestClassifier(n_estimators=100, max_depth=5),
     n_folds=5,
-    confidence_level=0.95
+    alpha=0.05
 )
 ```
 
@@ -76,7 +76,7 @@ results = dml_ate(
     n_folds=5,                      # number of cross-fitting folds
     n_rep=1,                        # number of repetitions (currently 1 supported)
     score="ATE",                    # "ATE" or "ATTE"
-    confidence_level=0.95,          # confidence level for CI
+    alpha=0.05,                     # significance level for CI
     normalize_ipw=False,            # whether to normalize IPW terms
     trimming_rule="truncate",       # trimming approach for propensity
     trimming_threshold=1e-2,        # trimming threshold

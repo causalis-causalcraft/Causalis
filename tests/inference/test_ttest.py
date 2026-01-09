@@ -115,19 +115,19 @@ def test_ttest_relative_difference(causal_data, test_data):
     assert rel_diff_error < 5
 
 
-def test_ttest_confidence_levels(causal_data):
-    """Test different confidence levels."""
-    result_90 = ttest(causal_data, confidence_level=0.90)
-    result_95 = ttest(causal_data)  # Default is 0.95
-    result_99 = ttest(causal_data, confidence_level=0.99)
+def test_ttest_alphas(causal_data):
+    """Test different significance levels."""
+    result_10 = ttest(causal_data, alpha=0.10)
+    result_05 = ttest(causal_data)  # Default is 0.05
+    result_01 = ttest(causal_data, alpha=0.01)
     
     # Calculate CI widths
-    ci_width_90 = result_90['absolute_ci'][1] - result_90['absolute_ci'][0]
-    ci_width_95 = result_95['absolute_ci'][1] - result_95['absolute_ci'][0]
-    ci_width_99 = result_99['absolute_ci'][1] - result_99['absolute_ci'][0]
+    ci_width_10 = result_10['absolute_ci'][1] - result_10['absolute_ci'][0]
+    ci_width_05 = result_05['absolute_ci'][1] - result_05['absolute_ci'][0]
+    ci_width_01 = result_01['absolute_ci'][1] - result_01['absolute_ci'][0]
     
-    # 90% CI should be narrower than 95% CI, which should be narrower than 99% CI
-    assert ci_width_90 < ci_width_95 < ci_width_99
+    # 10% alpha should be narrower than 5% alpha, which should be narrower than 1% alpha
+    assert ci_width_10 < ci_width_05 < ci_width_01
 
 
 def test_ttest_error_no_treatment(test_data):

@@ -24,7 +24,7 @@ def dml_ate(
     n_folds: int = 5,
     n_rep: int = 1,
     score: str = "ATE",
-    confidence_level: float = 0.95,
+    alpha: float = 0.05,
     normalize_ipw: bool = False,
     trimming_rule: str = "truncate",
     trimming_threshold: float = 1e-2,
@@ -49,8 +49,8 @@ def dml_ate(
         Number of repetitions (currently only 1 supported by IRM).
     score : {"ATE","ATTE"}, default "ATE"
         Target estimand.
-    confidence_level : float, default 0.95
-        Confidence level for CI in (0,1).
+    alpha : float, default 0.05
+        Significance level for CI in (0,1).
     normalize_ipw : bool, default False
         Whether to normalize IPW terms within the score.
     trimming_rule : str, default "truncate"
@@ -78,9 +78,9 @@ def dml_ate(
     if not data.confounders:
         raise ValueError("CausalData object must have confounders variables defined")
 
-    # Check confidence level
-    if not 0 < confidence_level < 1:
-        raise ValueError("confidence_level must be between 0 and 1 (exclusive)")
+    # Check significance level
+    if not 0 < alpha < 1:
+        raise ValueError("alpha must be between 0 and 1 (exclusive)")
 
     # Defaults for learners
     if ml_g is None:
@@ -119,7 +119,7 @@ def dml_ate(
         irm.fit()
 
     # Confidence interval
-    ci_df = irm.confint(level=confidence_level)
+    ci_df = irm.confint(alpha=alpha)
     # Robust extraction of CI values
     if isinstance(ci_df, pd.DataFrame):
         # Expect exactly two columns

@@ -29,7 +29,7 @@ def test_irm_ate_runs_and_shapes():
     assert est.coef.shape == (1,)
     assert est.se.shape == (1,)
     assert np.isfinite(est.se[0])
-    ci = est.confint(level=0.95)
+    ci = est.confint()
     assert isinstance(ci, pd.DataFrame)
     assert ci.shape == (1, 2)
 

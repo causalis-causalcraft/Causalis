@@ -63,7 +63,7 @@ def test_dml_att():
         ml_m=ml_m,
         n_folds=5,
         n_rep=1,
-        confidence_level=0.95
+        alpha=0.05
     )
     
     # Print results

@@ -9,13 +9,13 @@ def test_poisson_overflow_guard_clips_link_scale():
     gen = CausalDatasetGenerator(outcome_type="poisson", alpha_y=1000.0, k=0, seed=0)
     df = gen.generate(256)
 
-    # y, mu0, mu1 should be finite and mu0/mu1 bounded by exp(20)
+    # y, g0, g1 should be finite and g0/g1 bounded by exp(20)
     assert np.isfinite(df["y"]).all()
-    assert np.isfinite(df["mu0"]).all()
-    assert np.isfinite(df["mu1"]).all()
+    assert np.isfinite(df["g0"]).all()
+    assert np.isfinite(df["g1"]).all()
     max_allowed = np.exp(20.0) + 1e-6
-    assert float(df["mu0"].max()) <= max_allowed
-    assert float(df["mu1"].max()) <= max_allowed
+    assert float(df["g0"].max()) <= max_allowed
+    assert float(df["g1"].max()) <= max_allowed
 
 
 def test_calibrator_bracket_fallback_clamps_to_endpoint():

@@ -10,7 +10,7 @@ from typing import Dict, Any
 from causalis.data.causaldata import CausalData
 
 
-def ttest(data: CausalData, confidence_level: float = 0.95) -> Dict[str, Any]:
+def ttest(data: CausalData, alpha: float = 0.05) -> Dict[str, Any]:
     """
     Perform a t-test on a CausalData object to compare the outcome variable between
     treated (T=1) and control (T=0) groups. Returns differences and confidence intervals.
@@ -19,8 +19,8 @@ def ttest(data: CausalData, confidence_level: float = 0.95) -> Dict[str, Any]:
     ----------
     data : CausalData
         The CausalData object containing treatment and outcome variables.
-    confidence_level : float, default 0.95
-        The confidence level for calculating confidence intervals (between 0 and 1).
+    alpha : float, default 0.05
+        The significance level for calculating confidence intervals (between 0 and 1).
         
     Returns
     -------
@@ -80,9 +80,8 @@ def ttest(data: CausalData, confidence_level: float = 0.95) -> Dict[str, Any]:
     se_diff = float(np.sqrt(pooled_var * (1 / n1 + 1 / n2)))
 
     # Confidence interval
-    if not 0 < confidence_level < 1:
-        raise ValueError("confidence_level must be between 0 and 1 (exclusive)")
-    alpha = 1 - confidence_level
+    if not 0 < alpha < 1:
+        raise ValueError("alpha must be between 0 and 1 (exclusive)")
     df = n1 + n2 - 2
     t_critical = float(stats.t.ppf(1 - alpha / 2, df))
 

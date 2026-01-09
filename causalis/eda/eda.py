@@ -7,8 +7,6 @@ covariate balance before/after weighting, and basic data health.
 
 What the main outputs mean
 
-- outcome_stats(): DataFrame with comprehensive statistics (count, mean, std, 
-  percentiles, min/max) for outcome grouped by treatment.
 - fit_propensity(): Numpy array of cross-validated propensity scores P(T=1|X).
 - confounders_roc_auc(): Float ROC AUC of treatment vs. propensity score.
   Higher AUC implies treatment is predictable from confounders (more cofounding risk).
@@ -850,75 +848,6 @@ class CausalEDA:
         return {"n_rows": n_rows, "n_columns": n_columns}
 
 
-    def outcome_stats(self) -> pd.DataFrame:
-        """Comprehensive outcome statistics grouped by treatment.
-
-        Returns a DataFrame with detailed outcome statistics for each treatment group,
-        including count, mean, std, min, various percentiles, and max.
-        This method provides comprehensive outcome analysis and returns
-        data in a clean DataFrame format suitable for reporting.
-
-        Returns
-        -------
-        pd.DataFrame
-            DataFrame with treatment groups as index and the following columns:
-            - count: number of observations in each group
-            - mean: average outcome value
-            - std: standard deviation of outcome
-            - min: minimum outcome value
-            - p10: 10th percentile
-            - p25: 25th percentile (Q1)
-            - median: 50th percentile (median)
-            - p75: 75th percentile (Q3)
-            - p90: 90th percentile
-            - max: maximum outcome value
-
-        Examples
-        --------
-        >>> eda = CausalEDA(causal_data)
-        >>> stats = eda.outcome_stats()
-        >>> print(stats)
-                count      mean       std       min       p10       p25    median       p75       p90       max
-        treatment                                                                                                
-        0        3000  5.123456  2.345678  0.123456  2.345678  3.456789  5.123456  6.789012  7.890123  9.876543
-        1        2000  6.789012  2.456789  0.234567  3.456789  4.567890  6.789012  8.901234  9.012345  10.987654
-        """
-        df, t, y = self.d.df, self.d.treatment, self.d.outcome
-        
-        # Ensure treatment is numeric for grouping
-        if not pd.api.types.is_numeric_dtype(df[t]):
-            raise ValueError("Treatment must be numeric 0/1 for outcome_stats().")
-        
-        # Create grouped object for multiple operations
-        grouped = df.groupby(t)[y]
-        
-        # Calculate basic statistics using built-in methods
-        basic_stats = grouped.agg(['count', 'mean', 'std', 'min', 'median', 'max'])
-        
-        # Calculate percentiles separately to avoid pandas aggregation mixing issues
-        p10 = grouped.quantile(0.10)
-        p25 = grouped.quantile(0.25) 
-        p75 = grouped.quantile(0.75)
-        p90 = grouped.quantile(0.90)
-        
-        # Combine all statistics into a single DataFrame
-        stats_df = pd.DataFrame({
-            'count': basic_stats['count'],
-            'mean': basic_stats['mean'],
-            'std': basic_stats['std'],
-            'min': basic_stats['min'],
-            'p10': p10,
-            'p25': p25,
-            'median': basic_stats['median'],
-            'p75': p75,
-            'p90': p90,
-            'max': basic_stats['max']
-        })
-        
-        # Ensure the index is named appropriately
-        stats_df.index.name = 'treatment'
-        
-        return stats_df
 
     # ---------- propensity & overlap ----------
     def fit_m(self) -> 'PropensityModel':
@@ -1194,7 +1123,7 @@ class CausalEDA:
         - Mean values of each confounder for treated group (treatment=1)
         - Absolute difference between treatment groups
         - Standardized Mean Difference (SMD) for formal balance assessment
-        - Kolmogorov–Smirnov statistic (ks) and p-value (ks_pvalue) for distributional differences
+        - Kolmogorov–Smirnov test p-value (ks_pvalue) for distributional differences
         
         This method provides a comprehensive view of confounder balance by showing
         the actual mean values alongside the standardized differences, making it easier
@@ -1204,11 +1133,10 @@ class CausalEDA:
         -------
         pd.DataFrame
             DataFrame with confounders as index and the following columns:
-            - mean_t_0: mean value for control group (treatment=0)
-            - mean_t_1: mean value for treated group (treatment=1)  
-            - abs_diff: absolute difference abs(mean_t_1 - mean_t_0)
+            - mean_d_0: mean value for control group (treatment=0)
+            - mean_d_1: mean value for treated group (treatment=1)  
+            - abs_diff: absolute difference abs(mean_d_1 - mean_d_0)
             - smd: standardized mean difference (Cohen's d)
-            - ks: Kolmogorov–Smirnov statistic
             - ks_pvalue: p-value of the KS test
             
         Notes
@@ -1221,19 +1149,15 @@ class CausalEDA:
         >>> eda = CausalEDA(causal_data)
         >>> balance = eda.confounders_means()
         >>> print(balance.head())
-                     mean_t_0  mean_t_1  abs_diff       smd
+                     mean_d_0  mean_d_1  abs_diff       smd
         confounders                                       
         age              29.5      31.2      1.7     0.085
         income        45000.0   47500.0   2500.0     0.125
         education         0.25      0.35      0.1     0.215
         """
         # Delegate implementation to dedicated balance module for reuse and testing
-        from .confounders_balance import confounders_balance
-        return confounders_balance(
-            df=self.d.df,
-            treatment=self.d.treatment,
-            confounders=self.d.confounders,
-        )
+        from causalis.statistics.functions import confounders_balance
+        return confounders_balance(self.d)
 
     from typing import Optional, Tuple
 
@@ -1501,7 +1425,6 @@ class CausalEDA:
         - Optional outliers, gentle transparency
         - Optional save to PNG/SVG/PDF
         """
-        import numpy as np
         import pandas as pd
         import matplotlib as mpl
         import matplotlib.pyplot as plt

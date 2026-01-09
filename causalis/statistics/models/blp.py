@@ -164,7 +164,7 @@ class BLP:
 
         return self
 
-    def confint(self, basis=None, joint=False, level=0.95, n_rep_boot=500):
+    def confint(self, basis=None, joint=False, alpha=0.05, n_rep_boot=500):
         """
         Confidence intervals for the BLP model.
 
@@ -180,9 +180,9 @@ class BLP:
             Indicates whether joint confidence intervals are computed.
             Default is ``False``.
 
-        level : float
-            The confidence level.
-            Default is ``0.95``.
+        alpha : float
+            The significance level.
+            Default is ``0.05``.
 
         n_rep_boot : int
             The number of bootstrap repetitions (only relevant for joint confidence intervals).
@@ -196,10 +196,10 @@ class BLP:
         if not isinstance(joint, bool):
             raise TypeError(f"joint must be True or False. Got {str(joint)}.")
 
-        if not isinstance(level, float):
-            raise TypeError(f"The confidence level must be of float type. {str(level)} of type {str(type(level))} was passed.")
-        if (level <= 0) | (level >= 1):
-            raise ValueError(f"The confidence level must be in (0,1). {str(level)} was passed.")
+        if not isinstance(alpha, float):
+            raise TypeError(f"The significance level must be of float type. {str(alpha)} of type {str(type(alpha))} was passed.")
+        if (alpha <= 0) | (alpha >= 1):
+            raise ValueError(f"The significance level must be in (0,1). {str(alpha)} was passed.")
 
         if not isinstance(n_rep_boot, int):
             raise TypeError(
@@ -212,7 +212,6 @@ class BLP:
         if self._blp_model is None:
             raise ValueError("Apply fit() before confint().")
 
-        alpha = 1 - level
         gate_names = None
         # define basis if none is supplied
         if basis is None:
@@ -255,7 +254,7 @@ class BLP:
             normal_samples = np.random.normal(size=[basis.shape[1], n_rep_boot])
             bootstrap_samples = np.multiply(np.dot(np_basis, np.dot(sqrtm(self._blp_omega), normal_samples)).T, (1.0 / blp_se))
 
-            max_t_stat = np.quantile(np.max(np.abs(bootstrap_samples), axis=0), q=level)
+            max_t_stat = np.quantile(np.max(np.abs(bootstrap_samples), axis=0), q=1 - alpha)
 
             # Lower simultaneous CI
             g_hat_lower = g_hat - max_t_stat * blp_se

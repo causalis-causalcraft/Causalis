@@ -108,7 +108,7 @@ def _compute_sensitivity_bias_local(
     return _compute_sensitivity_bias_unified(sigma2, nu2, psi_sigma2, psi_nu2)
 
 
-def _pull_theta_se_ci(effect_estimation: Dict[str, Any], level: float) -> tuple[float, float, tuple[float, float]]:
+def _pull_theta_se_ci(effect_estimation: Dict[str, Any], alpha: float) -> tuple[float, float, tuple[float, float]]:
     """Robustly extract θ, se, and sampling CI."""
     from scipy.stats import norm as _norm
     model = effect_estimation['model']
@@ -126,13 +126,13 @@ def _pull_theta_se_ci(effect_estimation: Dict[str, Any], level: float) -> tuple[
     ci = effect_estimation.get('confidence_interval', None)
     if ci is None and hasattr(model, 'confint'):
         try:
-            ci_df = model.confint(level=level)
+            ci_df = model.confint(alpha=alpha)
             if isinstance(ci_df, pd.DataFrame):
                 lower = None; upper = None
-                for col in ['ci_lower', f"{(1-level)/2*100:.1f} %", '2.5 %', '2.5%']:
+                for col in ['ci_lower', f"{alpha/2*100:.1f} %", '2.5 %', '2.5%']:
                     if col in ci_df.columns:
                         lower = float(ci_df[col].iloc[0]); break
-                for col in ['ci_upper', f"{(0.5+level/2)*100:.1f} %", '97.5 %', '97.5%']:
+                for col in ['ci_upper', f"{(1-alpha/2)*100:.1f} %", '97.5 %', '97.5%']:
                     if col in ci_df.columns:
                         upper = float(ci_df[col].iloc[0]); break
                 if lower is None or upper is None:
@@ -141,7 +141,7 @@ def _pull_theta_se_ci(effect_estimation: Dict[str, Any], level: float) -> tuple[
         except Exception:
             pass
     if ci is None:
-        z = _norm.ppf(0.5 + level/2.0)
+        z = _norm.ppf(1 - alpha / 2.0)
         ci = (theta - z*se, theta + z*se)
     return float(theta), float(se), (float(ci[0]), float(ci[1]))
 
@@ -154,12 +154,12 @@ def compute_bias_aware_ci(
     cf_y: float,
     cf_d: float,
     rho: float = 1.0,
-    level: float = 0.95,
+    alpha: float = 0.05,
     use_signed_rr: bool = False
 ) -> Dict[str, Any]:
     """
     Returns a dict with:
-      - theta, se, level, z
+      - theta, se, alpha, z
       - sampling_ci
       - theta_bounds_cofounding = [theta_lower, theta_upper] = theta ± max_bias
       - bias_aware_ci = [theta - (max_bias + z*se), theta + (max_bias + z*se)]
@@ -168,8 +168,8 @@ def compute_bias_aware_ci(
     from scipy.stats import norm as _norm
     if not isinstance(effect_estimation, dict) or 'model' not in effect_estimation:
         raise TypeError("Pass the usual result dict with a fitted model under key 'model'.")
-    theta, se, sampling_ci = _pull_theta_se_ci(effect_estimation, level)
-    z = float(_norm.ppf(0.5 + level/2.0))
+    theta, se, sampling_ci = _pull_theta_se_ci(effect_estimation, alpha)
+    z = float(_norm.ppf(1 - alpha / 2.0))
 
     model = effect_estimation['model']
     # Default: no cofounding info → bias_aware = sampling CI
@@ -200,7 +200,7 @@ def compute_bias_aware_ci(
     return dict(
         theta=float(theta),
         se=float(se),
-        level=float(level),
+        alpha=float(alpha),
         z=z,
         sampling_ci=tuple(map(float, sampling_ci)),
         theta_bounds_cofounding=(float(theta_lower), float(theta_upper)),
@@ -219,14 +219,14 @@ def format_bias_aware_summary(res: Dict[str, Any], label: str | None = None) -> 
     th_l, th_u = res['theta_bounds_cofounding']
     bci_l, bci_u = res['bias_aware_ci']
     theta = res['theta']; se = res['se']
-    level = res['level']; z = res['z']
+    alpha = res['alpha']; z = res['z']
     cf = res['params']
 
     lines = []
     lines.append("================== Bias-aware Interval ==================")
     lines.append("")
     lines.append("------------------ Scenario          ------------------")
-    lines.append(f"Significance Level: level={level}")
+    lines.append(f"Significance Level: alpha={alpha}")
     lines.append(f"Sensitivity parameters: cf_y={cf['cf_y']}; cf_d={cf['cf_d']}, rho={cf['rho']}, use_signed_rr={cf['use_signed_rr']}")
     lines.append("")
     lines.append("------------------ Components        ------------------")
@@ -246,7 +246,7 @@ def _format_sensitivity_summary(
     cf_y: float,
     cf_d: float,
     rho: float,
-    level: float
+    alpha: float
 ) -> str:
     """
     Format the sensitivity analysis summary into the expected output format.
@@ -261,8 +261,8 @@ def _format_sensitivity_summary(
         Sensitivity parameter for the treatment equation
     rho : float
         Correlation parameter
-    level : float
-        Confidence level
+    alpha : float
+        Significance level
 
     Returns
     -------
@@ -274,7 +274,7 @@ def _format_sensitivity_summary(
     output_lines.append("================== Sensitivity Analysis ==================")
     output_lines.append("")
     output_lines.append("------------------ Scenario          ------------------")
-    output_lines.append(f"Significance Level: level={level}")
+    output_lines.append(f"Significance Level: alpha={alpha}")
     output_lines.append(f"Sensitivity parameters: cf_y={cf_y}; cf_d={cf_d}, rho={rho}")
     output_lines.append("")
 
@@ -287,8 +287,8 @@ def _format_sensitivity_summary(
 
     # Extract values from summary DataFrame
     # The summary should contain bounds and confidence intervals
-    lower_lbl = f"{(1 - level) / 2 * 100:.1f} %"
-    upper_lbl = f"{(0.5 + level / 2) * 100:.1f} %"
+    lower_lbl = f"{alpha / 2 * 100:.1f} %"
+    upper_lbl = f"{(1 - alpha / 2) * 100:.1f} %"
     for idx, row in summary.iterrows():
         # Format the row data - adjust column names based on actual DoubleML output
         row_name = str(idx) if not isinstance(idx, str) else idx
@@ -352,15 +352,15 @@ def get_sensitivity_summary(
 
     res = effect_estimation.get('bias_aware')
 
-    # Build a sampling-only placeholder if needed (level fixed at 0.95 here)
+    # Build a sampling-only placeholder if needed (alpha fixed at 0.05 here)
     if not isinstance(res, dict):
-        theta, se, ci = _pull_theta_se_ci(effect_estimation, level=0.95)
+        theta, se, ci = _pull_theta_se_ci(effect_estimation, alpha=0.05)
         from scipy.stats import norm
-        z = float(norm.ppf(0.5 + 0.95 / 2.0))
+        z = float(norm.ppf(1 - 0.05 / 2.0))
         res = dict(
             theta=float(theta),
             se=float(se),
-            level=0.95,
+            alpha=0.05,
             z=z,
             sampling_ci=(float(ci[0]), float(ci[1])),
             theta_bounds_cofounding=(float(theta), float(theta)),  # max_bias = 0
@@ -625,14 +625,14 @@ def sensitivity_analysis(
     cf_y: float,
     cf_d: float,
     rho: float = 1.0,
-    level: float = 0.95,
+    alpha: float = 0.05,
     use_signed_rr: bool = False,
 ) -> Dict[str, Any]:
     """
     Compute bias-aware components and cache them on `effect_estimation["bias_aware"]`.
 
     Returns a dict with:
-      - theta, se, level, z
+      - theta, se, alpha, z
       - sampling_ci
       - theta_bounds_cofounding = (theta - max_bias, theta + max_bias)
       - bias_aware_ci = [theta - (max_bias + z*se), theta + (max_bias + z*se)]
@@ -641,15 +641,15 @@ def sensitivity_analysis(
     """
     if not isinstance(effect_estimation, dict) or 'model' not in effect_estimation:
         raise TypeError("Pass a result dict with a fitted model under key 'model'.")
-    if not (0.0 < float(level) < 1.0):
-        raise ValueError("level must be in (0,1).")
+    if not (0.0 < float(alpha) < 1.0):
+        raise ValueError("alpha must be in (0,1).")
     if cf_y < 0 or cf_d < 0:
         raise ValueError("cf_y and cf_d must be >= 0.")
 
     from scipy.stats import norm as _norm
 
-    theta, se, sampling_ci = _pull_theta_se_ci(effect_estimation, level)
-    z = float(_norm.ppf(0.5 + level / 2.0))
+    theta, se, sampling_ci = _pull_theta_se_ci(effect_estimation, alpha)
+    z = float(_norm.ppf(1 - alpha / 2.0))
 
     model = effect_estimation['model']
     max_bias = 0.0
@@ -682,7 +682,7 @@ def sensitivity_analysis(
     res = dict(
         theta=float(theta),
         se=float(se),
-        level=float(level),
+        alpha=float(alpha),
         z=z,
         sampling_ci=tuple(map(float, sampling_ci)),
         theta_bounds_cofounding=(float(theta_lower), float(theta_upper)),
