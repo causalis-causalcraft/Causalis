@@ -46,7 +46,7 @@ def test_refutation_after_dml_att_source_runs_and_reports_overlap():
     ml_g, ml_m = _light_models()
 
     # 1) Run ATT inference via DoubleML-based source function
-    att_result = dml_atte_source(data, ml_g=ml_g, ml_m=ml_m, n_folds=2, n_rep=1, confidence_level=0.9)
+    att_result = dml_atte_source(data, ml_g=ml_g, ml_m=ml_m, n_folds=2, n_rep=1, alpha=0.1)
     # Basic sanity on inference
     assert isinstance(att_result, dict)
     for key in ["coefficient", "std_error", "p_value", "confidence_interval", "model"]:

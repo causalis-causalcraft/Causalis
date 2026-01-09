@@ -20,7 +20,7 @@ def gate_esimand(
     ml_m: Optional[Any] = None,
     n_folds: int = 5,
     n_rep: int = 1,
-    confidence_level: float = 0.95,
+    alpha: float = 0.05,
 ) -> pd.DataFrame:
     """
     Estimate Group Average Treatment Effects (GATEs).
@@ -71,12 +71,12 @@ def gate_esimand(
 
     # 4. Run GATE via BLP
     # This returns a fitted BLP object
-    gate_model = irm.gate(groups_df, level=confidence_level)
+    gate_model = irm.gate(groups_df, alpha=alpha)
 
     # 5. Format results
     # Retrieve summary stats and confidence intervals
     summary = gate_model.summary
-    ci_df = gate_model.confint(level=confidence_level)
+    ci_df = gate_model.confint(alpha=alpha)
     
     # Calculate group sizes (n) from the basis used in BLP
     # basis columns correspond to the groups

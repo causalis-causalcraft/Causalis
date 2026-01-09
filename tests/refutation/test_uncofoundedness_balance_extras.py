@@ -22,7 +22,7 @@ def test_uncofoundedness_balance_extras_outputs():
         ml_g=ml_g,
         ml_m=ml_m,
         n_folds=3,
-        confidence_level=0.90,
+        alpha=0.10,
         normalize_ipw=True,
         trimming_threshold=1e-3,
         random_state=11,

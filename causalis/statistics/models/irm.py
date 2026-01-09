@@ -25,6 +25,11 @@ from sklearn.base import is_classifier, clone, BaseEstimator
 from sklearn.model_selection import StratifiedKFold
 from sklearn.utils.validation import check_is_fitted
 from scipy.stats import norm
+try:
+    from catboost import CatBoostClassifier, CatBoostRegressor
+    HAS_CATBOOST = True
+except ImportError:
+    HAS_CATBOOST = False
 
 from causalis.data.causaldata import CausalData
 from .blp import BLP
@@ -124,7 +129,7 @@ class IRMResults:
     t_stat: np.ndarray
     pval: np.ndarray
     confint: np.ndarray
-    summary: pd.DataFrame
+    summary_table: pd.DataFrame
 
     def to_dict(self) -> Dict[str, Any]:
         """Convert results to a dictionary."""
@@ -134,8 +139,12 @@ class IRMResults:
             "t_stat": float(self.t_stat[0]) if self.t_stat.size > 0 else None,
             "p_val": float(self.pval[0]) if self.pval.size > 0 else None,
             "conf_int": self.confint[0].tolist() if self.confint.size > 0 else None,
-            "summary": self.summary.to_dict() if self.summary is not None else None,
+            "summary": self.summary_table.to_dict() if self.summary_table is not None else None,
         }
+
+    def summary(self) -> pd.DataFrame:
+        """Return the summary DataFrame."""
+        return self.summary_table
 
 
 class IRM(BaseEstimator):
@@ -169,9 +178,9 @@ class IRM(BaseEstimator):
 
     def __init__(
         self,
-        data: CausalData,
-        ml_g: Any,
-        ml_m: Any,
+        data: Optional[CausalData] = None,
+        ml_g: Any = None,
+        ml_m: Any = None,
         *,
         n_folds: int = 5,
         n_rep: int = 1,
@@ -193,6 +202,22 @@ class IRM(BaseEstimator):
         self.trimming_threshold = float(trimming_threshold)
         self.weights = weights
         self.random_state = random_state
+
+        # Initialize default learners if not provided
+        if self.ml_g is None and HAS_CATBOOST:
+            self.ml_g = CatBoostRegressor(
+                thread_count=-1,
+                verbose=False,
+                allow_writing_files=False,
+                random_seed=self.random_state,
+            )
+        if self.ml_m is None and HAS_CATBOOST:
+            self.ml_m = CatBoostClassifier(
+                thread_count=-1,
+                verbose=False,
+                allow_writing_files=False,
+                random_seed=self.random_state,
+            )
 
         # Placeholders after fit
         self.g0_hat_: Optional[np.ndarray] = None
@@ -284,8 +309,15 @@ class IRM(BaseEstimator):
         return h1, h0
 
     # --------- API ---------
-    def fit(self) -> "IRM":
+    def fit(self, data: Optional[CausalData] = None) -> "IRM":
         """Fit nuisance models via cross-fitting."""
+        if data is not None:
+            self.data = data
+        if self.data is None:
+            raise ValueError("Model must be provided with CausalData either in __init__ or in .fit(data).")
+        if self.ml_g is None or self.ml_m is None:
+            raise ValueError("ml_g and ml_m must be provided (either as defaults or in __init__).")
+
         X, y, d, y_is_binary = self._check_data()
         # Cache for sensitivity analysis and effect calculation
         self._y = y.copy()
@@ -373,20 +405,20 @@ class IRM(BaseEstimator):
         self.g1_hat_ = g1_hat
         self.m_hat_ = m_hat
 
-        # Calculate default effect for backward compatibility and to populate results attributes
-        self.effect(self.score)
+        # Calculate default estimate to populate results attributes
+        self.estimate(self.score)
 
         return self
 
-    def effect(self, score: Optional[str] = None, confidence_level: float = 0.95) -> IRMResults | np.ndarray:
+    def estimate(self, score: Optional[str] = None, alpha: float = 0.05) -> IRMResults | np.ndarray:
         """Compute treatment effects using stored nuisance predictions.
 
         Parameters
         ----------
         score : {"ATE", "ATTE", "CATE"}, optional
             Target estimand. Defaults to self.score.
-        confidence_level : float, default 0.95
-            Confidence level for intervals.
+        alpha : float, default 0.05
+            Significance level for intervals.
 
         Returns
         -------
@@ -435,7 +467,7 @@ class IRM(BaseEstimator):
 
         t_stat = theta_hat / se if se > 0 else np.nan
         pval = 2 * (1 - norm.cdf(abs(t_stat))) if np.isfinite(t_stat) else np.nan
-        z = norm.ppf(0.5 + confidence_level / 2.0)
+        z = norm.ppf(1 - alpha / 2.0)
         ci_low, ci_high = theta_hat - z * se, theta_hat + z * se
 
         results = IRMResults(
@@ -444,14 +476,14 @@ class IRM(BaseEstimator):
             t_stat=np.array([t_stat]),
             pval=np.array([pval]),
             confint=np.array([[ci_low, ci_high]]),
-            summary=pd.DataFrame(
+            summary_table=pd.DataFrame(
                 {
                     "coef": [theta_hat],
                     "std err": [se],
                     "t": [t_stat],
                     "P>|t|": [pval],
-                    f"{(1 - confidence_level) / 2 * 100:.1f} %": [ci_low],
-                    f"{(0.5 + confidence_level / 2) * 100:.1f} %": [ci_high],
+                    f"{alpha / 2 * 100:.1f} %": [ci_low],
+                    f"{(1 - alpha / 2) * 100:.1f} %": [ci_high],
                 },
                 index=[self.data.treatment.name],
             ),
@@ -467,7 +499,7 @@ class IRM(BaseEstimator):
             self.t_stat_ = results.t_stat
             self.pval_ = results.pval
             self.confint_ = results.confint
-            self.summary_ = results.summary
+            self.summary_ = results.summary_table
 
         return results
 
@@ -511,7 +543,7 @@ class IRM(BaseEstimator):
         check_is_fitted(self, attributes=["psi_b_"])
         return self.psi_b_
 
-    def gate(self, groups: pd.DataFrame | pd.Series, level: float = 0.95) -> BLP:
+    def gate(self, groups: pd.DataFrame | pd.Series, alpha: float = 0.05) -> BLP:
         """
         Estimate Group Average Treatment Effects via BLP on orthogonal signal.
 
@@ -522,8 +554,8 @@ class IRM(BaseEstimator):
             - If a single column (Series or 1-col DataFrame) with non-boolean values,
               it is treated as categorical labels and one-hot encoded.
             - If multiple columns or boolean/int indicators, it is used as the basis directly.
-        level : float
-            Confidence level for intervals (passed to BLP).
+        alpha : float
+            Significance level for intervals (passed to BLP).
 
         Returns
         -------
@@ -607,7 +639,7 @@ class IRM(BaseEstimator):
             "m_alpha": m_alpha,
         }
 
-    def sensitivity_analysis(self, cf_y: float, cf_d: float, rho: float = 1.0, level: float = 0.95) -> "IRM":
+    def sensitivity_analysis(self, cf_y: float, cf_d: float, rho: float = 1.0, alpha: float = 0.05) -> "IRM":
         """Compute a simple sensitivity summary and store it as `sensitivity_summary`.
         
         Parameters
@@ -618,12 +650,12 @@ class IRM(BaseEstimator):
             Sensitivity parameter for treatment equation.
         rho : float, default 1.0
             Correlation between unobserved components (display only here).
-        level : float, default 0.95
-            Confidence level for CI bounds display.
+        alpha : float, default 0.05
+            Significance level for CI bounds display.
         """
         # Validate inputs
-        if not (0.0 < float(level) < 1.0):
-            raise ValueError("level must be in (0,1).")
+        if not (0.0 < float(alpha) < 1.0):
+            raise ValueError("alpha must be in (0,1).")
         if cf_y < 0 or cf_d < 0:
             raise ValueError("cf_y and cf_d must be >= 0.")
         rho = float(np.clip(rho, -1.0, 1.0))
@@ -642,7 +674,7 @@ class IRM(BaseEstimator):
 
         theta_hat = float(self.coef_[0])
         se = float(self.se_[0])
-        z = norm.ppf(0.5 + level / 2.0)
+        z = norm.ppf(1 - alpha / 2.0)
         ci_low = theta_hat - z * se
         ci_high = theta_hat + z * se
 
@@ -654,7 +686,7 @@ class IRM(BaseEstimator):
         lines.append("================== Sensitivity Analysis ==================")
         lines.append("")
         lines.append("------------------ Scenario          ------------------")
-        lines.append(f"Significance Level: level={level}")
+        lines.append(f"Significance Level: alpha={alpha}")
         lines.append(f"Sensitivity parameters: cf_y={cf_y}; cf_d={cf_d}, rho={rho}")
         lines.append("")
         lines.append("------------------ Bounds with CI    ------------------")
@@ -674,15 +706,15 @@ class IRM(BaseEstimator):
         self.sensitivity_summary = "\n".join(lines)
         return self
 
-    def confint(self, level: float = 0.95) -> pd.DataFrame:
+    def confint(self, alpha: float = 0.05) -> pd.DataFrame:
         check_is_fitted(self, attributes=["coef_", "se_"])
-        if not (0.0 < level < 1.0):
-            raise ValueError("level must be in (0,1)")
-        z = norm.ppf(0.5 + level / 2.0)
+        if not (0.0 < alpha < 1.0):
+            raise ValueError("alpha must be in (0,1)")
+        z = norm.ppf(1 - alpha / 2.0)
         ci_low = self.coef_[0] - z * self.se_[0]
         ci_high = self.coef_[0] + z * self.se_[0]
         return pd.DataFrame(
-            {f"{(1-level)/2*100:.1f} %": [ci_low], f"{(0.5+level/2)*100:.1f} %": [ci_high]},
+            {f"{alpha/2*100:.1f} %": [ci_low], f"{(1-alpha/2)*100:.1f} %": [ci_high]},
             index=[self.data.treatment.name],
         )
 
@@ -703,7 +735,7 @@ def irm_dml(data: CausalData, **kwargs) -> Dict[str, Any]:
         Dictionary containing 'inference' (results as dict) and 'diagnostics'.
     """
     est = IRM(data=data, **kwargs).fit()
-    res = est.effect()
+    res = est.estimate()
     
     if isinstance(res, IRMResults):
         inference = res.to_dict()

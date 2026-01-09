@@ -6,7 +6,6 @@ from __future__ import annotations
 import pandas as pd
 import pandas.api.types as pdtypes
 from typing import Union, List, Optional, Any
-import warnings
 from pydantic import BaseModel, ConfigDict, Field, model_validator, field_validator
 
 
@@ -132,7 +131,7 @@ class CausalData(BaseModel):
         4. Validates types and checks for constant variance in outcome, treatment, and confounders.
         5. Ensures no NaN values are present in used columns.
         6. Subsets the DataFrame to used columns and coerces booleans to int8.
-        7. Checks for duplicate column values and rows.
+        7. Checks for duplicate column values.
         8. Verifies user_id uniqueness.
 
         Returns
@@ -237,9 +236,8 @@ class CausalData(BaseModel):
                         f"All columns in stored DataFrame must be numeric; column '{col}' has dtype {self.df[col].dtype}."
                     )
 
-        # 6. Check for duplicate column values and duplicate rows on the normalized subset
+        # 6. Check for duplicate column values on the normalized subset
         self._check_duplicate_column_values(self.df)
-        self._check_duplicate_rows(self.df)
         self._check_user_id_uniqueness(self.df)
 
         return self
@@ -253,12 +251,11 @@ class CausalData(BaseModel):
         dict[str, str]
             Mapping of role names to column names.
         """
-        roles = {
-            "outcome": self.outcome_name,
-            "treatment": self.treatment_name,
-        }
+        roles = {}
         if self.user_id_name:
             roles["user_id"] = self.user_id_name
+        roles["outcome"] = self.outcome_name
+        roles["treatment"] = self.treatment_name
         return roles
 
     def _get_additional_roles_error_msg(self) -> str:
@@ -332,27 +329,6 @@ class CausalData(BaseModel):
                         f"which is not allowed for causal inference. Only column names differ."
                     )
 
-    def _check_duplicate_rows(self, df: pd.DataFrame):
-        """
-        Check for duplicate rows and issue a warning.
-
-        Parameters
-        ----------
-        df : pd.DataFrame
-            The DataFrame to check.
-        """
-        num_duplicates = int(df.duplicated().sum())
-        if num_duplicates > 0:
-            total_rows = len(df)
-            unique_rows = total_rows - num_duplicates
-            warnings.warn(
-                f"Found {num_duplicates} duplicate rows out of {total_rows} total rows in the DataFrame. "
-                f"This leaves {unique_rows} unique rows for analysis. "
-                f"Duplicate rows may affect the quality of causal inference results. "
-                f"Consider removing duplicates if they are not intentional.",
-                UserWarning,
-                stacklevel=2
-            )
 
     def _get_column_type(self, column_name: str) -> str:
         """

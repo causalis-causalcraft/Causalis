@@ -122,6 +122,7 @@ class CausalDatasetGenerator:
     u_strength_d: float = 0.0                     # unobserved confounder effect on treatment
     u_strength_y: float = 0.0                     # unobserved confounder effect on outcome
     propensity_sharpness: float = 1.0             # scales the X-driven treatment score to adjust positivity difficulty
+    include_oracle: bool = True                   # whether to include oracle ground-truth columns in generate()
     seed: Optional[int] = None
 
     # Internals (filled post-init)
@@ -432,18 +433,16 @@ class CausalDatasetGenerator:
         df = pd.DataFrame({"y": Y, "d": D})
         for j, name in enumerate(names):
             df[name] = X[:, j]
-        # Useful ground-truth columns for evaluation (IRM naming)
-        df["m"] = m              # marginal E[D|X]
-        df["m_obs"] = m_obs      # realized sigmoid(alpha_d + score + u*U)
-        df["tau_link"] = tau_x   # structural effect on the link scale
-        df["g0"] = g0
-        df["g1"] = g1
-        df["cate"] = df["g1"] - df["g0"]
-        # Legacy aliases retained for compatibility (no warnings)
-        df["propensity"] = df["m"]
-        df["propensity_obs"] = df["m_obs"]
-        df["mu0"] = df["g0"]
-        df["mu1"] = df["g1"]
+
+        if self.include_oracle:
+            # Useful ground-truth columns for evaluation (IRM naming)
+            df["m"] = m              # marginal E[D|X]
+            df["m_obs"] = m_obs      # realized sigmoid(alpha_d + score + u*U)
+            df["tau_link"] = tau_x   # structural effect on the link scale
+            df["g0"] = g0
+            df["g1"] = g1
+            df["cate"] = df["g1"] - df["g0"]
+
         return df
 
     def to_causal_data(self, n: int, confounders: Optional[Union[str, List[str]]] = None) -> CausalData:
@@ -465,7 +464,7 @@ class CausalDatasetGenerator:
         df = self.generate(n)
 
         # Determine confounders to use
-        exclude = {'y', 'd', 'm', 'm_obs', 'tau_link', 'g0', 'g1', 'cate', 'propensity', 'propensity_obs', 'mu0', 'mu1', 'user_id'}
+        exclude = {'y', 'd', 'm', 'm_obs', 'tau_link', 'g0', 'g1', 'cate', 'user_id'}
         if confounders is None:
             # Keep original column order; exclude outcome/treatment/ground-truth columns and non-numeric
             confounder_cols = [

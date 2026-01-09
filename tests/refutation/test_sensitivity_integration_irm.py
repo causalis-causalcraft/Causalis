@@ -10,7 +10,7 @@ from causalis.scenarios.unconfoundedness.refutation.uncofoundedness.sensitivity 
 def _make_cd(n=600, random_state=3, outcome_type="normal"):
     df = generate_rct(n=n, split=0.5, random_state=random_state, outcome_type=outcome_type, k=3, add_ancillary=False)
     y = "y"; d = "d"
-    xcols = [c for c in df.columns if c not in {y, d, "m", "m_obs", "tau_link", "g0", "g1", "propensity", "propensity_obs", "mu0", "mu1", "cate"}]
+    xcols = [c for c in df.columns if c not in {y, d, "m", "m_obs", "tau_link", "g0", "g1", "cate"}]
     return CausalData(df=df[[y, d] + xcols], treatment=d, outcome=y, confounders=xcols)
 
 

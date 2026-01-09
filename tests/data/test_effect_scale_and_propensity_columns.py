@@ -48,8 +48,8 @@ def test_tau_link_constant_can_imply_heterogeneous_cate_for_binary_and_poisson(o
     assert float(np.std(cate)) > 1e-4
 
 
-def test_propensity_column_means_p_d_eq_1_given_x_not_including_u():
-    """propensity should follow the common convention e(X)=P(D=1|X).
+def test_m_column_means_p_d_eq_1_given_x_not_including_u():
+    """m should follow the common convention e(X)=P(D=1|X).
 
     When u_strength_d != 0, m_obs depends on U while m is marginalized over U. They should differ.
     """
@@ -69,9 +69,7 @@ def test_propensity_column_means_p_d_eq_1_given_x_not_including_u():
     )
 
     df = gen.generate(3000)
-    propensity = df["propensity"].to_numpy(dtype=float)
     m = df["m"].to_numpy(dtype=float)
     m_obs = df["m_obs"].to_numpy(dtype=float)
 
-    assert np.allclose(propensity, m)
-    assert float(np.mean(np.abs(propensity - m_obs))) > 1e-3
+    assert float(np.mean(np.abs(m - m_obs))) > 1e-3

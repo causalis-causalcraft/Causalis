@@ -60,7 +60,7 @@ def test_dml():
         n_folds=5,
         n_rep=1,
         score="ATE",
-        confidence_level=0.95
+        alpha=0.05
     )
     
     # Print results

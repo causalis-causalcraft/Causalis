@@ -8,7 +8,7 @@ Computes the ATT-style difference in means (treated - control) and provides:
 
 Input:
 - data: CausalData
-- confidence_level: float in (0, 1), default 0.95
+- alpha: float in (0, 1), default 0.05
 - n_simul: number of bootstrap simulations (int > 0), default 10000
 
 Output: dict with the same keys as ttest:
@@ -30,7 +30,7 @@ from causalis.data.causaldata import CausalData
 
 def bootstrap_diff_means(
     data: CausalData,
-    confidence_level: float = 0.95,
+    alpha: float = 0.05,
     n_simul: int = 10000,
 ) -> Dict[str, Any]:
     """
@@ -40,8 +40,8 @@ def bootstrap_diff_means(
     ----------
     data : CausalData
         The CausalData object containing treatment and outcome variables.
-    confidence_level : float, default 0.95
-        Confidence level for the percentile confidence interval (0 < level < 1).
+    alpha : float, default 0.05
+        The significance level for calculating confidence intervals (between 0 and 1).
     n_simul : int, default 10000
         Number of bootstrap resamples.
 
@@ -57,8 +57,8 @@ def bootstrap_diff_means(
         If inputs are invalid, treatment is not binary, or groups are empty.
     """
     # Validate inputs
-    if not 0 < confidence_level < 1:
-        raise ValueError("confidence_level must be between 0 and 1 (exclusive)")
+    if not 0 < alpha < 1:
+        raise ValueError("alpha must be between 0 and 1 (exclusive)")
     if not isinstance(n_simul, int) or n_simul <= 0:
         raise ValueError("n_simul must be a positive integer")
 
@@ -100,7 +100,6 @@ def bootstrap_diff_means(
     boot_diffs = trt_boot_means - ctrl_boot_means
 
     # Percentile CI for absolute difference
-    alpha = 1 - confidence_level
     lower = float(np.quantile(boot_diffs, alpha / 2))
     upper = float(np.quantile(boot_diffs, 1 - alpha / 2))
     absolute_ci = (lower, upper)

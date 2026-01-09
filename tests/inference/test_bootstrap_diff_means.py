@@ -74,16 +74,16 @@ def test_effect_size_and_ci(causal_data, cont_test_data):
     assert lo <= expected <= hi
 
 
-def test_confidence_levels_change_width(causal_data):
-    r90 = bootstrap_diff_means(causal_data, confidence_level=0.90, n_simul=2500)
-    r95 = bootstrap_diff_means(causal_data, confidence_level=0.95, n_simul=2500)
-    r99 = bootstrap_diff_means(causal_data, confidence_level=0.99, n_simul=2500)
+def test_alphas_change_width(causal_data):
+    r10 = bootstrap_diff_means(causal_data, alpha=0.10, n_simul=2500)
+    r05 = bootstrap_diff_means(causal_data, alpha=0.05, n_simul=2500)
+    r01 = bootstrap_diff_means(causal_data, alpha=0.01, n_simul=2500)
 
-    w90 = r90['absolute_ci'][1] - r90['absolute_ci'][0]
-    w95 = r95['absolute_ci'][1] - r95['absolute_ci'][0]
-    w99 = r99['absolute_ci'][1] - r99['absolute_ci'][0]
+    w10 = r10['absolute_ci'][1] - r10['absolute_ci'][0]
+    w05 = r05['absolute_ci'][1] - r05['absolute_ci'][0]
+    w01 = r01['absolute_ci'][1] - r01['absolute_ci'][0]
 
-    assert w90 < w95 < w99
+    assert w10 < w05 < w01
 
 
 def test_errors_non_binary_treatment(cont_test_data):
@@ -96,9 +96,9 @@ def test_errors_non_binary_treatment(cont_test_data):
 
 def test_invalid_params(causal_data):
     with pytest.raises(ValueError):
-        bootstrap_diff_means(causal_data, confidence_level=1.2)
+        bootstrap_diff_means(causal_data, alpha=1.2)
     with pytest.raises(ValueError):
-        bootstrap_diff_means(causal_data, confidence_level=-0.1)
+        bootstrap_diff_means(causal_data, alpha=-0.1)
     with pytest.raises(ValueError):
         bootstrap_diff_means(causal_data, n_simul=0)
     with pytest.raises(ValueError):

@@ -5,12 +5,14 @@ This module implements a chi-square goodness-of-fit SRM check mirroring the
 reference implementation demonstrated in docs/examples/rct_design.ipynb.
 """
 from __future__ import annotations
-
 from dataclasses import dataclass
-from typing import Dict, Hashable, Iterable, Union
+from typing import Dict, Hashable, Iterable, Union, TYPE_CHECKING
 
 import numpy as np
 import pandas as pd
+
+if TYPE_CHECKING:
+    from causalis.data.causaldata import CausalData
 
 try:  # Optional SciPy dependency: only required at runtime for p-value
     from scipy.stats import chi2  # type: ignore
@@ -28,6 +30,25 @@ Number = Union[int, float]
 class SRMResult:
     """
     Result of a Sample Ratio Mismatch (SRM) check.
+
+    Attributes
+    ----------
+    chi2 : float
+        The calculated chi-square statistic.
+    df : int
+        Degrees of freedom used in the test.
+    p_value : float
+        The p-value of the test.
+    expected : Dict[Hashable, float]
+        Expected counts for each variant.
+    observed : Dict[Hashable, int]
+        Observed counts for each variant.
+    alpha : float
+        Significance level used for the check.
+    is_srm : bool
+        True if an SRM was detected (p_value < alpha), False otherwise.
+    warning : str, optional
+        Warning message if the test assumptions might be violated (e.g., small expected counts).
     """
     chi2: float
     df: int
@@ -41,13 +62,13 @@ class SRMResult:
     def __repr__(self) -> str:  # pragma: no cover - repr formatting
         status = "SRM DETECTED" if self.is_srm else "no SRM"
         return (
-            f"SRMResult(status={status}, p_value={self.p_value:.3e}, "
+            f"SRMResult(status={status}, p_value={self.p_value:.5f}, "
             f"chi2={self.chi2:.4f}, df={self.df})"
         )
 
 
 def check_srm(
-    assignments: Union[Iterable[Hashable], pd.Series],
+    assignments: Union[Iterable[Hashable], pd.Series, CausalData],
     target_allocation: Dict[Hashable, Number],
     alpha: float = 1e-3,
     min_expected: float = 5.0,
@@ -58,11 +79,11 @@ def check_srm(
 
     Parameters
     ----------
-    assignments:
+    assignments : Iterable[Hashable] or pd.Series or CausalData
         Iterable of assigned variant labels for each unit (user_id, session_id, etc.).
         E.g. Series of ["control", "treatment", ...].
-
-    target_allocation:
+        If CausalData is provided, the treatment column is used.
+    target_allocation : Dict[Hashable, Number]
         Mapping {variant: p} describing intended allocation as PROBABILITIES.
         - Each p must be > 0.
         - Sum of all p must be 1.0 (within numerical tolerance).
@@ -71,22 +92,34 @@ def check_srm(
             {"control": 0.5, "treatment": 0.5}
             {"A": 0.2, "B": 0.3, "C": 0.5}
 
-    alpha:
+    alpha : float, default 1e-3
         Significance level. Use strict values like 1e-3 or 1e-4 in production.
-
-    min_expected:
+    min_expected : float, default 5.0
         If any expected count < min_expected, a warning is attached.
-
-    strict_variants:
+    strict_variants : bool, default True
         - True: fail if observed variants differ from target keys.
         - False: drop unknown variants and test only on declared ones.
 
     Returns
     -------
     SRMResult
+        The result of the SRM check.
+
+    Raises
+    ------
+    ValueError
+        If inputs are invalid or empty.
+    ImportError
+        If scipy is required but not installed.
     """
     # --- Prepare data
-    s = pd.Series(list(assignments)).dropna()
+    if hasattr(assignments, "treatment"):
+        s = assignments.treatment.dropna()
+    elif isinstance(assignments, pd.Series):
+        s = assignments.dropna()
+    else:
+        s = pd.Series(list(assignments)).dropna()
+
     if s.empty:
         raise ValueError("No assignments provided for SRM check.")
 
@@ -150,7 +183,7 @@ def check_srm(
             f"Original error: {_scipy_import_error}"
         )
 
-    p_value = float(chi2.sf(chi2_stat, df))
+    p_value = round(float(chi2.sf(chi2_stat, df)), 5)
 
     warning = None
     if (expected_counts < min_expected).any():

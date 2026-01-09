@@ -57,7 +57,7 @@ def _add_ancillary_info(
     # Build a stable feature matrix from pre-outcome columns only.
     # (This wrapper adds ancillary after gen.generate, so we must be careful to
     # not use y or other post-outcome quantities to avoid outcome leakage.)
-    exclude = {"y", "d", "m", "m_obs", "tau_link", "g0", "g1", "cate", "propensity", "propensity_obs", "mu0", "mu1"}
+    exclude = {"y", "d", "m", "m_obs", "tau_link", "g0", "g1", "cate"}
     x_cols = [
         c for c in df.columns
         if c not in exclude and pd.api.types.is_numeric_dtype(df[c])

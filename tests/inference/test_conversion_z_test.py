@@ -78,16 +78,16 @@ def test_relative_difference(causal_data, conv_test_data):
     assert abs(res['relative_difference'] - expected_rel) < 5
 
 
-def test_confidence_levels_change_width(causal_data):
-    res90 = conversion_z_test(causal_data, confidence_level=0.90)
-    res95 = conversion_z_test(causal_data, confidence_level=0.95)
-    res99 = conversion_z_test(causal_data, confidence_level=0.99)
+def test_alphas_change_width(causal_data):
+    res10 = conversion_z_test(causal_data, alpha=0.10)
+    res05 = conversion_z_test(causal_data, alpha=0.05)
+    res01 = conversion_z_test(causal_data, alpha=0.01)
 
-    w90 = res90['absolute_ci'][1] - res90['absolute_ci'][0]
-    w95 = res95['absolute_ci'][1] - res95['absolute_ci'][0]
-    w99 = res99['absolute_ci'][1] - res99['absolute_ci'][0]
+    w10 = res10['absolute_ci'][1] - res10['absolute_ci'][0]
+    w05 = res05['absolute_ci'][1] - res05['absolute_ci'][0]
+    w01 = res01['absolute_ci'][1] - res01['absolute_ci'][0]
 
-    assert w90 < w95 < w99
+    assert w10 < w05 < w01
 
 
 def test_errors_non_binary_treatment(conv_test_data):
@@ -99,9 +99,67 @@ def test_errors_non_binary_treatment(conv_test_data):
 
 
 def test_errors_non_binary_outcome(conv_test_data):
-    df = conv_test_data['df'].copy()
+    df = conv_test_data["df"].copy()
     # make the outcome non-binary
-    df['outcome'] = np.random.normal(size=conv_test_data['n'])
-    ck = CausalData(df=df, outcome='outcome', treatment='treatment', confounders=['age'])
+    df["outcome"] = np.random.normal(size=conv_test_data["n"])
+    ck = CausalData(
+        df=df, outcome="outcome", treatment="treatment", confounders=["age"]
+    )
     with pytest.raises(ValueError):
         conversion_z_test(ck)
+
+
+def test_conversion_z_test_methods():
+    # Create a small dataset where methods should differ more
+    np.random.seed(42)
+    n = 100
+    treatment = np.array([0] * n + [1] * n)
+    # Control: 5/100, Treatment: 15/100
+    outcome = np.array([0] * 95 + [1] * 5 + [0] * 85 + [1] * 15)
+
+    df = pd.DataFrame({"treatment": treatment, "outcome": outcome})
+    data = CausalData(df=df, outcome="outcome", treatment="treatment")
+
+    # 1. Default (Newcombe + Pooled)
+    res_default = conversion_z_test(data)
+
+    # 2. Wald Unpooled (previously default)
+    res_wald = conversion_z_test(
+        data, ci_method="wald_unpooled", se_for_test="unpooled"
+    )
+
+    # Check that they differ
+    assert res_default["absolute_ci"] != res_wald["absolute_ci"]
+    assert res_default["p_value"] != res_wald["p_value"]
+
+    # Newcombe should be asymmetric usually, Wald is symmetric
+    diff = res_default["absolute_difference"]
+    lower, upper = res_default["absolute_ci"]
+    # Wald symmetry check
+    w_lower, w_upper = res_wald["absolute_ci"]
+    assert pytest.approx(diff - w_lower) == (w_upper - diff)
+
+    # Newcombe asymmetry check (for this specific data)
+    assert abs((upper - diff) - (diff - lower)) > 1e-5
+
+
+def test_diff_in_means_passes_kwargs():
+    from causalis.statistics.models.diff_in_means import DiffInMeans
+
+    np.random.seed(42)
+    n = 100
+    treatment = np.array([0] * n + [1] * n)
+    outcome = np.array([0] * 95 + [1] * 5 + [0] * 85 + [1] * 15)
+    df = pd.DataFrame({"treatment": treatment, "outcome": outcome})
+    data = CausalData(df=df, outcome="outcome", treatment="treatment")
+
+    model = DiffInMeans().fit(data)
+
+    # Estimate with explicit wald_unpooled to see if it's passed
+    res_wald = model.estimate(method="conversion_ztest", ci_method="wald_unpooled")
+
+    # Compare with direct call
+    res_direct_wald = conversion_z_test(data, ci_method="wald_unpooled")
+
+    assert res_wald.ci_lower_absolute == res_direct_wald["absolute_ci"][0]
+    assert res_wald.ci_upper_absolute == res_direct_wald["absolute_ci"][1]

@@ -69,7 +69,7 @@ def test_generate_continuous_outcome(basic_generator):
     
     # Check DataFrame shape and columns
     assert df.shape[0] == 100
-    assert set(df.columns) >= {"y", "d", "age", "smoker", "bmi", "propensity", "mu0", "mu1", "cate"}
+    assert set(df.columns) >= {"y", "d", "age", "smoker", "bmi", "m", "g0", "g1", "cate"}
     
     # Check data types
     assert df["y"].dtype == np.float64
@@ -79,7 +79,7 @@ def test_generate_continuous_outcome(basic_generator):
     assert abs(df["d"].mean() - 0.35) < 0.1
     
     # Check CATE calculation
-    assert np.allclose(df["cate"], df["mu1"] - df["mu0"])
+    assert np.allclose(df["cate"], df["g1"] - df["g0"])
 
 
 def test_generate_binary_outcome(random_seed):
@@ -97,15 +97,15 @@ def test_generate_binary_outcome(random_seed):
     
     # Check DataFrame shape and columns
     assert df.shape[0] == 100
-    assert set(df.columns) >= {"y", "d", "x1", "propensity", "mu0", "mu1", "cate"}
+    assert set(df.columns) >= {"y", "d", "x1", "m", "g0", "g1", "cate"}
     
     # Check data types
     assert df["y"].isin([0.0, 1.0]).all()
     assert df["d"].isin([0.0, 1.0]).all()
     
-    # Check mu0 and mu1 are probabilities (between 0 and 1)
-    assert (df["mu0"] >= 0).all() and (df["mu0"] <= 1).all()
-    assert (df["mu1"] >= 0).all() and (df["mu1"] <= 1).all()
+    # Check g0 and g1 are probabilities (between 0 and 1)
+    assert (df["g0"] >= 0).all() and (df["g0"] <= 1).all()
+    assert (df["g1"] >= 0).all() and (df["g1"] <= 1).all()
 
 
 def test_generate_poisson_outcome(random_seed):
@@ -123,16 +123,16 @@ def test_generate_poisson_outcome(random_seed):
     
     # Check DataFrame shape and columns
     assert df.shape[0] == 100
-    assert set(df.columns) >= {"y", "d", "x1", "propensity", "mu0", "mu1", "cate"}
+    assert set(df.columns) >= {"y", "d", "x1", "m", "g0", "g1", "cate"}
     
     # Check data types
     assert df["y"].dtype == np.float64
     assert (df["y"] >= 0).all()  # Poisson values are non-negative
     assert df["d"].isin([0.0, 1.0]).all()
     
-    # Check mu0 and mu1 are non-negative (Poisson means)
-    assert (df["mu0"] >= 0).all()
-    assert (df["mu1"] >= 0).all()
+    # Check g0 and g1 are non-negative (Poisson means)
+    assert (df["g0"] >= 0).all()
+    assert (df["g1"] >= 0).all()
 
 
 def test_heterogeneous_treatment_effect(random_seed):
