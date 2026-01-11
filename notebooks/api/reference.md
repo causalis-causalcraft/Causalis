@@ -1,12 +1,12 @@
 ## `causalis`
 
-CausalKit: A Python package for causal inference.
+Causalis: A Python package for causal inference.
 
 **Modules:**
 
 - [**data**](#causalis.data) – Data generation utilities for causal inference tasks.
 - [**eda**](#causalis.eda) –
-- [**refutation**](#causalis.refutation) – Refutation and robustness utilities for CausalKit.
+- [**refutation**](#causalis.refutation) – Refutation and robustness utilities for Causalis.
 - [**scenarios**](#causalis.scenarios) –
 - [**statistics**](#causalis.statistics) –
 
@@ -5420,7 +5420,7 @@ Examples:
 
 ### `causalis.refutation`
 
-Refutation and robustness utilities for CausalKit.
+Refutation and robustness utilities for Causalis.
 
 Importing this package exposes the public functions from all refutation
 submodules (overlap, score, uncofoundedness, sutva) so you can access
@@ -7710,7 +7710,7 @@ treated (T=1) and control (T=0) groups. Returns differences and confidence inter
 - [**atte**](#causalis.scenarios.unconfoundedness.atte) – Average Treatment Effect on the Treated (ATT) inference methods for causalis.
 - [**cate**](#causalis.scenarios.unconfoundedness.cate) – Conditional Average Treatment Effect (CATE) inference methods for causalis.
 - [**gate**](#causalis.scenarios.unconfoundedness.gate) – Group Average Treatment Effect (GATE) inference methods for causalis.
-- [**refutation**](#causalis.scenarios.unconfoundedness.refutation) – Refutation and robustness utilities for CausalKit.
+- [**refutation**](#causalis.scenarios.unconfoundedness.refutation) – Refutation and robustness utilities for Causalis.
 
 ##### `causalis.scenarios.unconfoundedness.ate`
 
@@ -8136,7 +8136,7 @@ plugin CATE proxy (g1_hat - g0_hat).
 
 ##### `causalis.scenarios.unconfoundedness.refutation`
 
-Refutation and robustness utilities for CausalKit.
+Refutation and robustness utilities for Causalis.
 
 Importing this package exposes the public functions from all refutation
 submodules (overlap, score, uncofoundedness, sutva) so you can access

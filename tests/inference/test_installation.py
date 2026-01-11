@@ -5,7 +5,7 @@ Tests to verify that the causalis package can be installed and imported correctl
 import pytest
 
 
-def test_import_causalkit():
+def test_import_causalis():
     """Test that the causalis package can be imported."""
     try:
         import causalis

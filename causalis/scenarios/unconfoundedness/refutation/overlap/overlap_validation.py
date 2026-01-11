@@ -808,7 +808,7 @@ def positivity_overlap_checks(
     )
 
 
-# --------- Convenience wrappers for CausalKit outputs ---------
+# --------- Convenience wrappers for Causalis outputs ---------
 
 ResultLike = Union[Dict[str, Any], Any]
 

@@ -1,6 +1,6 @@
-# Math notation for EDA, IRM, and refutation diagnostics (CausalKit)
+# Math notation for EDA, IRM, and refutation diagnostics (Causalis)
 
-This note summarizes the core notation and formulas used by CausalKit’s EDA helpers, the IRM estimator, and refutation diagnostics. The estimator and scores follow the **Double/Debiased Machine Learning (DoubleML)** formulation; we implement them on top of `CausalData`. Throughout, $\mathbb E_n[\cdot]$ denotes the sample mean.
+This note summarizes the core notation and formulas used by Causalis’s EDA helpers, the IRM estimator, and refutation diagnostics. The estimator and scores follow the **Double/Debiased Machine Learning (DoubleML)** formulation; we implement them on top of `CausalData`. Throughout, $\mathbb E_n[\cdot]$ denotes the sample mean.
 
 ## 1. Variables and parameters
 
@@ -27,7 +27,7 @@ Uncofoundedness $(Y(1),Y(0))\perp D\mid X$; positivity $0<\Pr(D=1\mid X)<1$ a.s.
 * Cross-fitted predictions are denoted $\hat m,\hat g_1,\hat g_0$ (length $n$).
 * **Clipping:** $\hat m\gets \mathrm{clip}(\hat m,\varepsilon,1-\varepsilon)$ with user trimming threshold $\varepsilon>0$.
 
-**Binary outcomes.** If $Y$ is binary and the outcome learner is a classifier with `predict_proba`, CausalKit uses the class-1 probability as $\hat g_d(x)$. For numerical stability you may also clip $\hat g_d$ into $[\delta,1-\delta]$ with a tiny $\delta$ (e.g., $10^{-6}$).
+**Binary outcomes.** If $Y$ is binary and the outcome learner is a classifier with `predict_proba`, Causalis uses the class-1 probability as $\hat g_d(x)$. For numerical stability you may also clip $\hat g_d$ into $[\delta,1-\delta]$ with a tiny $\delta$ (e.g., $10^{-6}$).
 
 ## 3. Scores, EIFs, and estimators
 
@@ -37,7 +37,7 @@ $$
 h_1=\frac{D}{\hat m},\qquad h_0=\frac{1-D}{1-\hat m}.
 $$
 
-(Optionally, CausalKit can **normalize** $h_1,h_0$ to have sample mean 1; this is a Hájek-style, second-order variance tweak. If you normalize in estimation, also use the normalized influence values in the variance formula.)
+(Optionally, Causalis can **normalize** $h_1,h_0$ to have sample mean 1; this is a Hájek-style, second-order variance tweak. If you normalize in estimation, also use the normalized influence values in the variance formula.)
 
 ### 3.1 ATE (AIPW/DR)
 
@@ -128,7 +128,7 @@ $$
 \frac{\partial}{\partial t}\,\mathbb E\big[\psi(W;\theta_0,\eta_0+t\,h)\big]\Big|_{t=0}=0
 $$
 
-for rich directions $h$. CausalKit provides OOS moment checks and numerical derivative diagnostics to assess this.
+for rich directions $h$. Causalis provides OOS moment checks and numerical derivative diagnostics to assess this.
 
 **Useful partial derivatives (ATE):**
 
@@ -186,7 +186,7 @@ APIs: `orthogonality_derivatives` (ATE) and ATT variants. (Derivatives summarize
 
 ### 6.3 Sensitivity (heuristic bias bounds)
 
-Following the DoubleML structure, CausalKit exposes a **Cauchy–Schwarz–style** worst-case bias bound aligned with the score:
+Following the DoubleML structure, Causalis exposes a **Cauchy–Schwarz–style** worst-case bias bound aligned with the score:
 
 * Outcome noise scale (pooled):
 

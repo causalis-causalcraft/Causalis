@@ -1,6 +1,6 @@
-# CausalKit Tests
+# Causalis Tests
 
-This directory contains tests for the CausalKit package. The tests are written using pytest and can be run individually or as a suite.
+This directory contains tests for the Causalis package. The tests are written using pytest and can be run individually or as a suite.
 
 ## Prerequisites
 

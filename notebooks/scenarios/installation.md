@@ -22,7 +22,7 @@ pip install causalis
 ## Install from GitHub
 ```bash
 pip install --upgrade pip
-pip install "git+https://github.com/ioannmartynov/causalis.git"
+pip install "git+https://github.com/causalis-causalcraft/Causalis.git"
 ```
 
 ### Verify the installation
