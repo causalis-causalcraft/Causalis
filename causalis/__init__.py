@@ -1,5 +1,5 @@
 """
-CausalKit: A Python package for causal inference.
+Causalis: A Python package for causal inference.
 """
 
 import warnings

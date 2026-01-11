@@ -1,5 +1,5 @@
 """
-Refutation and robustness utilities for CausalKit.
+Refutation and robustness utilities for Causalis.
 
 Importing this package exposes the public functions from all refutation
 submodules (overlap, score, uncofoundedness, sutva) so you can access
