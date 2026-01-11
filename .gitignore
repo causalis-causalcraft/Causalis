@@ -86,9 +86,9 @@ Thumbs.db
 *.pickle
 *.pkl
 
-# CatBoost training outputs (root/examples only; keep tests fixtures tracked)
+# CatBoost training outputs (root/cases only; keep tests fixtures tracked)
 /catboost_info/
-/notebooks/examples/catboost_info/
+/notebooks/cases/catboost_info/
 /.junie/
 /catboost_info/
 /site/
