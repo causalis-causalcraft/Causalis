@@ -2,7 +2,7 @@
 Sample Ratio Mismatch (SRM) utilities for randomized experiments.
 
 This module implements a chi-square goodness-of-fit SRM check mirroring the
-reference implementation demonstrated in docs/examples/rct_design.ipynb.
+reference implementation demonstrated in docs/cases/rct_design.ipynb.
 """
 from __future__ import annotations
 from dataclasses import dataclass

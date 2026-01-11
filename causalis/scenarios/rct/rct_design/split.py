@@ -5,7 +5,7 @@ This module provides deterministic assignment of variants to entities based
 on hashing a composite key (salt | layer_id | experiment_id | entity_id)
 into the unit interval and mapping it to cumulative variant weights.
 
-The implementation mirrors the reference notebook in docs/examples/rct_design.ipynb.
+The implementation mirrors the reference notebook in docs/cases/rct_design.ipynb.
 """
 from __future__ import annotations
 

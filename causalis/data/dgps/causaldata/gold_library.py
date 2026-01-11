@@ -40,7 +40,7 @@ def make_gold_linear(n: int = 10000, seed: int = 42):
 def obs_linear_26_dataset(n: int = 10000, seed: int = 42, include_oracle: bool = True, return_causal_data: bool = True):
     """
     A pre-configured observational linear dataset with 5 standard confounders.
-    Based on the scenario in docs/examples/dml_ate.ipynb.
+    Based on the scenario in docs/cases/dml_ate.ipynb.
 
     Parameters
     ----------
