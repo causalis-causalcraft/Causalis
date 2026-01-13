@@ -24,8 +24,8 @@ def test_confounders_balance_basic():
     assert "ks" not in result.columns
     assert "ks_pvalue" in result.columns
     
-    # Check if x1 is in index
-    assert "x1" in result.index
+    # Check if x1 is in confounders column
+    assert "x1" in result["confounders"].values
 
 def test_ks_pvalue_rounding():
     # Construct a case with very small p-value to check scientific notation/rounding
@@ -38,7 +38,7 @@ def test_ks_pvalue_rounding():
     
     result = confounders_balance(cd)
     
-    p_val_str = result.loc["x1", "ks_pvalue"]
+    p_val_str = result[result["confounders"] == "x1"]["ks_pvalue"].iloc[0]
     assert isinstance(p_val_str, str)
     
     # Check if it has 5 digits after the decimal point

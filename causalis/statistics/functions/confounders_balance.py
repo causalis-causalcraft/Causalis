@@ -14,8 +14,9 @@ def confounders_balance(data: CausalData) -> pd.DataFrame:
     """
     Compute balance diagnostics for confounders between treatment groups.
 
-    Produces a DataFrame indexed by expanded confounder columns (after one-hot
+    Produces a DataFrame containing expanded confounder columns (after one-hot
     encoding categorical variables if present) with:
+      - confounders: name of the confounder
       - mean_d_0: mean value for control group (t=0)
       - mean_d_1: mean value for treated group (t=1)
       - abs_diff: abs(mean_d_1 - mean_d_0)
@@ -32,7 +33,7 @@ def confounders_balance(data: CausalData) -> pd.DataFrame:
     Returns
     -------
     pd.DataFrame
-        Balance table sorted by |smd| (descending), index named 'confounders'.
+        Balance table sorted by |smd| (descending).
     """
     # Extract components from data object
     df = getattr(data, "df")
@@ -89,7 +90,7 @@ def confounders_balance(data: CausalData) -> pd.DataFrame:
             }
         )
 
-    balance_df = pd.DataFrame(rows).set_index("confounders")
+    balance_df = pd.DataFrame(rows).set_index("confounders").reset_index()
 
     # Round ks_pvalue and format to avoid scientific notation
     if "ks_pvalue" in balance_df.columns:

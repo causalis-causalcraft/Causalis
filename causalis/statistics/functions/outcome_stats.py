@@ -39,10 +39,9 @@ def outcome_stats(data: CausalData) -> pd.DataFrame:
     --------
     >>> stats = outcome_stats(causal_data)
     >>> print(stats)
-            count      mean       std       min       p10       p25    median       p75       p90       max
-    treatment                                                                                                
-    0        3000  5.123456  2.345678  0.123456  2.345678  3.456789  5.123456  6.789012  7.890123  9.876543
-    1        2000  6.789012  2.456789  0.234567  3.456789  4.567890  6.789012  8.901234  9.012345  10.987654
+       treatment  count      mean       std       min       p10       p25    median       p75       p90       max
+    0          0   3000  5.123456  2.345678  0.123456  2.345678  3.456789  5.123456  6.789012  7.890123  9.876543
+    1          1   2000  6.789012  2.456789  0.234567  3.456789  4.567890  6.789012  8.901234  9.012345  10.987654
     """
     df, t, y = data.df, data.treatment_name, data.outcome_name
 
@@ -76,7 +75,8 @@ def outcome_stats(data: CausalData) -> pd.DataFrame:
         'max': basic_stats['max']
     })
 
-    # Ensure the index is named appropriately
+    # Ensure the index is named appropriately and reset it to have 'treatment' as a column
     stats_df.index.name = 'treatment'
+    stats_df = stats_df.reset_index()
 
     return stats_df
