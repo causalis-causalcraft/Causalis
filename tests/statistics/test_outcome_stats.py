@@ -15,9 +15,10 @@ def test_outcome_stats():
     stats = outcome_stats(data)
     
     assert isinstance(stats, pd.DataFrame)
-    assert stats.index.name == "treatment"
+    assert "treatment" in stats.columns
+    assert stats.index.name is None
     assert len(stats) == 2
-    assert list(stats.columns) == ['count', 'mean', 'std', 'min', 'p10', 'p25', 'median', 'p75', 'p90', 'max']
+    assert list(stats.columns) == ['treatment', 'count', 'mean', 'std', 'min', 'p10', 'p25', 'median', 'p75', 'p90', 'max']
     
     # Check values for treatment 0
     assert stats.loc[0, 'count'] == 3

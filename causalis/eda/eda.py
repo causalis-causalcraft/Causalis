@@ -1132,7 +1132,8 @@ class CausalEDA:
         Returns
         -------
         pd.DataFrame
-            DataFrame with confounders as index and the following columns:
+            DataFrame with the following columns:
+            - confounders: name of the confounder
             - mean_d_0: mean value for control group (treatment=0)
             - mean_d_1: mean value for treated group (treatment=1)  
             - abs_diff: absolute difference abs(mean_d_1 - mean_d_0)
@@ -1149,11 +1150,10 @@ class CausalEDA:
         >>> eda = CausalEDA(causal_data)
         >>> balance = eda.confounders_means()
         >>> print(balance.head())
-                     mean_d_0  mean_d_1  abs_diff       smd
-        confounders                                       
-        age              29.5      31.2      1.7     0.085
-        income        45000.0   47500.0   2500.0     0.125
-        education         0.25      0.35      0.1     0.215
+           confounders  mean_d_0  mean_d_1  abs_diff       smd
+        0          age      29.5      31.2       1.7     0.085
+        1       income   45000.0   47500.0    2500.0     0.125
+        2    education      0.25      0.35       0.1     0.215
         """
         # Delegate implementation to dedicated balance module for reuse and testing
         from causalis.statistics.functions import confounders_balance
