@@ -90,17 +90,18 @@ def confounders_balance(data: CausalData) -> pd.DataFrame:
             }
         )
 
-    balance_df = pd.DataFrame(rows).set_index("confounders").reset_index()
+    balance_df = pd.DataFrame(rows)
+
+    # Sort by absolute SMD value (most imbalanced first)
+    if "smd" in balance_df.columns:
+        balance_df["abs_smd"] = balance_df["smd"].abs()
+        balance_df = balance_df.sort_values("abs_smd", ascending=False).drop(columns=["abs_smd"])
 
     # Round ks_pvalue and format to avoid scientific notation
     if "ks_pvalue" in balance_df.columns:
         balance_df["ks_pvalue"] = (
             balance_df["ks_pvalue"]
-            .apply(lambda x: f"{round(x, 5):.5f}" if pd.notnull(x) else x)
+            .apply(lambda x: f"{round(float(x), 5):.5f}" if pd.notnull(x) else x)
         )
 
-    # Sort by absolute SMD value (most imbalanced first)
-    if "smd" in balance_df.columns:
-        balance_df = balance_df.reindex(balance_df["smd"].abs().sort_values(ascending=False).index)
-
-    return balance_df
+    return balance_df.reset_index(drop=True)
