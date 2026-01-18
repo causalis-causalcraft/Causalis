@@ -23,7 +23,7 @@ except Exception:
     # If tqdm is not installed or any issue arises, do not fail import
     pass
 
-from causalis import data
+from causalis import data_contracts, dgp
 # 'design' is optional; keep import non-fatal if missing in editable installs
 try:
     from causalis import design  # type: ignore
@@ -31,23 +31,27 @@ except Exception:
     design = None  # type: ignore
 
 __version__ = "0.1.2"
-__all__ = ["data", "scenarios", "statistics", "eda", "refutation"]
+__all__ = ["data_contracts", "dgp", "scenarios", "shared", "design"]
 
 # Lazily import heavy optional subpackages
 from typing import TYPE_CHECKING
 import importlib
 
 def __getattr__(name):  # pragma: no cover - behavior tested via subprocess
-    if name in ["scenarios", "statistics", "eda", "refutation"]:
+    if name in ["scenarios", "shared"]:
         module = importlib.import_module("." + name, __name__)
         globals()[name] = module
         return module
     
-    # Compatibility mapping if needed, or just let it fail
+    # Compatibility mapping
+    if name == "data":
+        warnings.warn("causalis.data is deprecated, use causalis.data_contracts instead", DeprecationWarning, stacklevel=2)
+        return data_contracts
+
     raise AttributeError(f"module '{__name__}' has no attribute '{name}'")
 
 if TYPE_CHECKING:  # Hint for static type checkers without importing at runtime
     from . import scenarios as scenarios  # noqa: F401
-    from . import statistics as statistics  # noqa: F401
-    from . import eda as eda  # noqa: F401
-    from .scenarios.unconfoundedness import refutation as refutation
+    from . import shared as shared  # noqa: F401
+    from . import dgp as dgp  # noqa: F401
+    from . import data_contracts as data_contracts  # noqa: F401

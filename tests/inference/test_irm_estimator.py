@@ -4,9 +4,9 @@ import pytest
 
 from sklearn.ensemble import RandomForestRegressor, RandomForestClassifier
 
-from causalis.data.causaldata import CausalData
-from causalis.data.dgps import generate_rct
-from causalis.statistics.models import IRM
+from causalis.dgp.causaldata import CausalData
+from causalis.dgp import generate_rct
+from causalis.scenarios.unconfoundedness.irm import IRM
 
 
 def make_causal_data(n=1000, outcome_type="normal", random_state=1):
@@ -23,8 +23,8 @@ def test_irm_ate_runs_and_shapes():
     ml_g = RandomForestRegressor(n_estimators=50, random_state=42)
     ml_m = RandomForestClassifier(n_estimators=50, random_state=42)
 
-    est = IRM(cd, ml_g=ml_g, ml_m=ml_m, n_folds=3, score="ATE", random_state=123)
-    est.fit()
+    est = IRM(cd, ml_g=ml_g, ml_m=ml_m, n_folds=3, random_state=123)
+    est.fit().estimate(score="ATE")
 
     assert est.coef.shape == (1,)
     assert est.se.shape == (1,)
@@ -39,8 +39,8 @@ def test_irm_atte_runs():
     ml_g = RandomForestRegressor(n_estimators=40, random_state=0)
     ml_m = RandomForestClassifier(n_estimators=40, random_state=0)
 
-    est = IRM(cd, ml_g=ml_g, ml_m=ml_m, n_folds=3, score="ATTE", random_state=1)
-    est.fit()
+    est = IRM(cd, ml_g=ml_g, ml_m=ml_m, n_folds=3, random_state=1)
+    est.fit().estimate(score="ATTE")
     assert np.isfinite(est.coef[0])
 
 
@@ -49,8 +49,8 @@ def test_irm_binary_outcome_with_classifier():
     ml_g = RandomForestClassifier(n_estimators=60, random_state=21)
     ml_m = RandomForestClassifier(n_estimators=60, random_state=21)
 
-    est = IRM(cd, ml_g=ml_g, ml_m=ml_m, n_folds=3, score="ATE", random_state=21)
-    est.fit()
+    est = IRM(cd, ml_g=ml_g, ml_m=ml_m, n_folds=3, random_state=21)
+    est.fit().estimate(score="ATE")
     assert np.isfinite(est.se[0])
 
 

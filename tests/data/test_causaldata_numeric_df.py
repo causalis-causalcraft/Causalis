@@ -3,11 +3,11 @@ import pandas.api.types as pdtypes
 import numpy as np
 import pytest
 
-from causalis.data.causaldata import CausalData
+from causalis.dgp.causaldata import CausalData
 
 
 def test_causaldata_accepts_bool_and_stores_numeric():
-    # Create data with boolean outcome, treatment, and one boolean confounder
+    # Create data_contracts with boolean outcome, treatment, and one boolean confounder
     n = 20
     rng = np.random.default_rng(123)
     y_bool = rng.integers(0, 2, size=n).astype(bool)

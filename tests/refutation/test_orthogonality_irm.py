@@ -1,12 +1,12 @@
-from causalis.data.dgps import CausalDatasetGenerator
+from causalis.dgp import CausalDatasetGenerator
 from causalis.scenarios.unconfoundedness.refutation.score.score_validation import refute_irm_orthogonality
-from causalis.scenarios.unconfoundedness.atte.dml_atte import dml_atte
+from causalis.scenarios.unconfoundedness.irm import IRM
 
 from sklearn.ensemble import RandomForestRegressor, RandomForestClassifier
 
 
 def test_refute_irm_orthogonality_att_runs_and_returns_keys():
-    # Generate synthetic data and convert to CausalData
+    # Generate synthetic data_contracts and convert to CausalData
     gen = CausalDatasetGenerator(seed=123)
     # Avoid constant columns like 'm_obs' by specifying explicit confounders
     cd = gen.to_causal_data(n=300, confounders=['x1','x2','x3','x4','x5'])
@@ -15,12 +15,22 @@ def test_refute_irm_orthogonality_att_runs_and_returns_keys():
     ml_g = RandomForestRegressor(n_estimators=30, random_state=1)
     ml_m = RandomForestClassifier(n_estimators=30, random_state=2)
 
+    def dml_atte_wrapper(data, **kwargs):
+        kwargs.pop("score", None) # in case it's passed twice
+        est = IRM(data, **kwargs).fit()
+        res = est.estimate(score="ATTE")
+        return {
+            "coefficient": float(est.coef[0]),
+            "std_error": float(est.se[0]),
+            "model": est,
+            "diagnostic_data": res.diagnostic_data
+        }
+
     # Run orthogonality diagnostics with ATT estimator
     res = refute_irm_orthogonality(
-        dml_atte,
+        dml_atte_wrapper,
         cd,
         n_folds_oos=3,
-        score="ATTE",  # explicit modern API
         ml_g=ml_g,
         ml_m=ml_m,
     )

@@ -1,7 +1,6 @@
 import numpy as np
-import pandas as pd
 
-from causalis.data.dgps import CausalDatasetGenerator
+from causalis.dgp import CausalDatasetGenerator
 
 
 def test_continuous_g_excludes_U_when_u_strength_y_nonzero():

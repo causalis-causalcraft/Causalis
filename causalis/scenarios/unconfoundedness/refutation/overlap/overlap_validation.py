@@ -814,15 +814,15 @@ ResultLike = Union[Dict[str, Any], Any]
 
 
 def extract_diag_from_result(res: ResultLike) -> Tuple[np.ndarray, np.ndarray, Optional[float]]:
-    """Extract m_hat, D, and trimming epsilon from dml_ate/dml_att result dict or model.
+    """Extract m_hat, D, and trimming epsilon from IRM result or model.
     Accepts:
-    - dict returned by dml_ate/dml_att (prefers key 'diagnostic_data'; otherwise uses 'model'), or
-    - a fitted IRM/DoubleMLIRM-like model instance with a .data attribute.
+    - dict returned by legacy dml_ate/dml_att (prefers key 'diagnostic_data'; otherwise uses 'model'), or
+    - a fitted IRM/DoubleMLIRM-like model instance with a .data or .data_contracts attribute.
     Returns (m_hat, D, trimming_threshold_if_any).
     """
 
     def _try_irm_like(model: Any) -> Optional[Tuple[np.ndarray, np.ndarray, Optional[float]]]:
-        """Attempt to extract from our internal IRM (has m_hat_ and data.get_df())."""
+        """Attempt to extract from our internal IRM (has m_hat_ and data_contracts.get_df())."""
         try:
             m_hat = np.asarray(model.m_hat_, dtype=float)
             df = model.data.get_df()
@@ -834,13 +834,13 @@ def extract_diag_from_result(res: ResultLike) -> Tuple[np.ndarray, np.ndarray, O
             return None
 
     def _try_doubleml_like(model: Any) -> Optional[Tuple[np.ndarray, np.ndarray, Optional[float]]]:
-        """Attempt to extract from a DoubleMLIRM-like object (model.data is DoubleMLData)."""
+        """Attempt to extract from a DoubleMLIRM-like object (model.data_contracts is DoubleMLData)."""
         try:
-            data_obj = getattr(model, "data", None)
+            data_obj = getattr(model, "data_contracts", None)
             if data_obj is None:
                 return None
-            # DoubleMLData exposes .data (DataFrame) and lists of columns
-            df = getattr(data_obj, "data", None)
+            # DoubleMLData exposes .data_contracts (DataFrame) and lists of columns
+            df = getattr(data_obj, "data_contracts", None)
             d_cols = getattr(data_obj, "d_cols", None)
             x_cols = getattr(data_obj, "x_cols", None)
             if df is None or d_cols is None or x_cols is None:
@@ -867,7 +867,18 @@ def extract_diag_from_result(res: ResultLike) -> Tuple[np.ndarray, np.ndarray, O
         except Exception:
             return None
 
-    # Dict result path
+    # 1) CausalEstimate / Pydantic model path
+    if hasattr(res, "diagnostic_data") and res.diagnostic_data is not None:
+        dd = res.diagnostic_data
+        m = getattr(dd, "m_hat", None)
+        d = getattr(dd, "d", None)
+        if m is not None and d is not None:
+            m_hat = np.asarray(m, dtype=float)
+            d = np.asarray(d, dtype=int)
+            thr = getattr(dd, "trimming_threshold", None)
+            return m_hat, d, (float(thr) if thr is not None else None)
+
+    # 2) Dict result path
     if isinstance(res, dict):
         if "diagnostic_data" in res and isinstance(res["diagnostic_data"], dict):
             dd = res["diagnostic_data"]
@@ -900,7 +911,7 @@ def extract_diag_from_result(res: ResultLike) -> Tuple[np.ndarray, np.ndarray, O
     out = _try_doubleml_like(model)
     if out is not None:
         return out
-    raise ValueError("Unsupported result type; pass dml_ate/dml_att result dict or IRM/DoubleMLIRM instance.")
+    raise ValueError("Unsupported result type; pass IRM result or IRM/DoubleMLIRM instance.")
 
 
 def overlap_report_from_result(
@@ -912,16 +923,19 @@ def overlap_report_from_result(
     cal_thresholds: Optional[Dict[str, float]] = None,
     auc_flip_margin: float = 0.05,
 ) -> Dict[str, Any]:
-    """High-level helper that takes dml_ate/dml_att output (or IRM model) and returns a positivity/overlap report as a dict.
+    """High-level helper that takes `IRM` result or model and returns a positivity/overlap report as a dict.
 
     If the input result contains a flag indicating normalized IPW (Hájek), this function will
     auto-detect it and pass use_hajek=True to the underlying diagnostics, so users of
-    dml_ate(normalize_ipw=True) get meaningful ipw_sum_* checks without extra arguments.
+    `IRM(normalize_ipw=True)` get meaningful ipw_sum_* checks without extra arguments.
     """
     # Auto-detect Hájek/normalized IPW from result where possible
     detected_hajek = bool(use_hajek)
     try:
-        if isinstance(res, dict):
+        if hasattr(res, "model_options") and isinstance(res.model_options, dict):
+            # CausalEstimate path
+            detected_hajek = bool(res.model_options.get("normalize_ipw")) or detected_hajek
+        elif isinstance(res, dict):
             if "diagnostic_data" in res and isinstance(res["diagnostic_data"], dict):
                 dd = res["diagnostic_data"]
                 if "normalize_ipw" in dd:

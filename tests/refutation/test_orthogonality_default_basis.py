@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 
-from causalis.data.causaldata import CausalData
+from causalis.dgp.causaldata import CausalData
 from causalis.scenarios.unconfoundedness.refutation.score.score_validation import refute_irm_orthogonality
 
 

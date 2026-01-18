@@ -1,8 +1,8 @@
 import numpy as np
 import pandas as pd
 
-from causalis.data import CausalData
-from causalis.scenarios.unconfoundedness.ate.dml_ate import dml_ate
+from causalis.data_contracts import CausalData
+from causalis.scenarios.unconfoundedness.irm import IRM
 from causalis.scenarios.unconfoundedness.refutation.score.score_validation import (
     refute_irm_orthogonality,
     oos_moment_check_from_psi,
@@ -24,7 +24,18 @@ def _make_data(n=300, seed=123):
 def test_fastpath_oos_equals_helper():
     # Fit IRM once to get psi components and folds
     data = _make_data(n=240, seed=777)
-    res = dml_ate(data, n_folds=3, random_state=777)
+
+    def dml_ate_wrapper(data, **kwargs):
+        est = IRM(data, **kwargs).fit()
+        res = est.estimate()
+        return {
+            "coefficient": float(est.coef[0]),
+            "std_error": float(est.se[0]),
+            "model": est,
+            "diagnostic_data": res.diagnostic_data
+        }
+
+    res = dml_ate_wrapper(data, n_folds=3, random_state=777)
     model = res["model"]
 
     # Build fold indices from cross-fitting folds
@@ -38,7 +49,7 @@ def test_fastpath_oos_equals_helper():
     )
 
     # Function output should match helper (fast path is used under the hood)
-    out = refute_irm_orthogonality(dml_ate, data, n_folds_oos=3, strict_oos=True)
+    out = refute_irm_orthogonality(dml_ate_wrapper, data, n_folds_oos=3, strict_oos=True)
     t_fold_fn = out["oos_moment_test"]["tstat_fold_agg"]
     t_strict_fn = out["oos_moment_test"]["tstat_strict"]
 

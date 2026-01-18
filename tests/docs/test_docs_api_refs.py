@@ -2,30 +2,28 @@ import importlib
 
 
 def test_scenarios_rct_exports():
-    # These are referenced in docs autosummary under causalis.scenarios.rct
-    mod = importlib.import_module('causalis.scenarios.rct')
+    # These are referenced in docs autosummary under causalis.scenarios.classic_rct
+    mod = importlib.import_module('causalis.scenarios.classic_rct')
     for name in ['ttest', 'conversion_z_test', 'bootstrap_diff_means']:
-        assert hasattr(mod, name), f"causalis.scenarios.rct missing expected export: {name}"
+        assert hasattr(mod, name), f"causalis.scenarios.classic_rct missing expected export: {name}"
 
 
-def test_scenarios_unconfoundedness_atte_exports():
-    mod = importlib.import_module('causalis.scenarios.unconfoundedness.atte')
+def test_scenarios_unconfoundedness_exports():
+    mod = importlib.import_module('causalis.scenarios.unconfoundedness')
     assert hasattr(mod, 'dml_atte_source')
-    assert hasattr(mod, 'dml_atte')
+    assert hasattr(mod, 'dml_ate_source')
+    assert hasattr(mod, 'IRM')
 
 
 def test_inference_subpackages_functions():
     # ATT/ATE/CATE/GATE functions referenced in docs by fully qualified names
-    atte = importlib.import_module('causalis.scenarios.unconfoundedness.atte')
-    assert hasattr(atte, 'dml_atte')
+    unconf = importlib.import_module('causalis.scenarios.unconfoundedness')
+    assert hasattr(unconf, 'IRM')
 
-    ate = importlib.import_module('causalis.scenarios.unconfoundedness.ate')
-    assert hasattr(ate, 'dml_ate')
-
-    cate = importlib.import_module('causalis.scenarios.unconfoundedness.cate')
+    cate = importlib.import_module('causalis.scenarios.cate.cate')
     assert hasattr(cate, 'cate_esimand')
 
-    gate = importlib.import_module('causalis.scenarios.unconfoundedness.gate')
+    gate = importlib.import_module('causalis.scenarios.cate.gate')
     assert hasattr(gate, 'gate_esimand')
 
 

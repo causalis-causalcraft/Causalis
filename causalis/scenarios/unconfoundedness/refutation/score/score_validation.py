@@ -19,7 +19,7 @@ from typing import Callable, Any, Dict, List, Tuple, Optional
 from scipy import stats
 from sklearn.model_selection import KFold
 
-from causalis.data.causaldata import CausalData
+from causalis.dgp.causaldata import CausalData
 from copy import deepcopy
 
 
@@ -64,7 +64,7 @@ def extract_nuisances(model, test_indices: Optional[np.ndarray] = None) -> Tuple
     Parameters
     ----------
     model : object
-        Fitted internal IRM estimator (causalis.statistics.models.IRM) or a compatible dummy model
+        Fitted internal IRM estimator (causalis.shared.models.IRM) or a compatible dummy model
     test_indices : np.ndarray, optional
         If provided, extract predictions only for these indices
 
@@ -78,8 +78,21 @@ def extract_nuisances(model, test_indices: Optional[np.ndarray] = None) -> Tuple
     """
     m = g0 = g1 = None
 
+    # 0) CausalEstimate / DiagnosticData backend
+    if hasattr(model, "diagnostic_data") and model.diagnostic_data is not None:
+        dd = model.diagnostic_data
+        m = getattr(dd, "m_hat", None)
+        g0 = getattr(dd, "g0_hat", None)
+        g1 = getattr(dd, "g1_hat", None)
+        if m is not None and g0 is not None and g1 is not None:
+            m = np.asarray(m, dtype=float).ravel()
+            g0 = np.asarray(g0, dtype=float).ravel()
+            g1 = np.asarray(g1, dtype=float).ravel()
+        else:
+            m = g0 = g1 = None  # reset if incomplete
+
     # 1) Preferred IRM attributes
-    if hasattr(model, "m_hat_") and getattr(model, "m_hat_", None) is not None:
+    if m is None and hasattr(model, "m_hat_") and getattr(model, "m_hat_", None) is not None:
         m = np.asarray(getattr(model, "m_hat_"), dtype=float).ravel()
         g0 = np.asarray(getattr(model, "g0_hat_"), dtype=float).ravel()
         g1 = np.asarray(getattr(model, "g1_hat_"), dtype=float).ravel()
@@ -311,12 +324,12 @@ def refute_irm_orthogonality(
     inference_fn : Callable
         The inference function (dml_ate or dml_att)
     data : CausalData
-        The causal data object
+        The causal data_contracts object
     trim_propensity : Tuple[float, float], default (0.02, 0.98)
         Propensity score trimming bounds (min, max) to avoid extreme weights
     n_basis_funcs : Optional[int], default None (len(confounders)+1)
         Number of basis functions for orthogonality derivative tests (constant + covariates).
-        If None, defaults to the number of confounders in `data` plus 1 for the constant term.
+        If None, defaults to the number of confounders in `data_contracts` plus 1 for the constant term.
     n_folds_oos : int, default 5
         Number of folds for out-of-sample moment check
     **inference_kwargs : dict
@@ -336,10 +349,14 @@ def refute_irm_orthogonality(
     Examples
     --------
     >>> from causalis.refutation.orthogonality import refute_irm_orthogonality
-    >>> from causalis.scenarios.unconfoundedness.ate.dml_ate import dml_ate
+    >>> from causalis.scenarios.unconfoundedness.irm import IRM
+    >>> 
+    >>> # Define a wrapper for refutation utilities that expect an inference function
+    >>> def irm_ate_inference(data, **kwargs):
+    >>>     return IRM(data, **kwargs).fit().estimate().model_dump()
     >>> 
     >>> # Comprehensive orthogonality check
-    >>> ortho_results = refute_irm_orthogonality(dml_ate, causal_data)
+    >>> ortho_results = refute_irm_orthogonality(irm_ate_inference, causal_data)
     >>> 
     >>> # Check key diagnostics
     >>> print(f"OOS moment t-stat: {ortho_results['oos_moment_test']['tstat']:.3f}")
@@ -361,7 +378,7 @@ def refute_irm_orthogonality(
     # Extract cross-fitted predictions from IRM model using robust function
     m_propensity, g0_outcomes, g1_outcomes = extract_nuisances(dml_model)
     
-    # Get observed data
+    # Get observed data_contracts
     y = data.outcome.values.astype(float)
     d = data.treatment.values.astype(float)
 
@@ -425,7 +442,7 @@ def refute_irm_orthogonality(
 
         df_full = data.get_df()
         for train_idx, test_idx in kf.split(df_full):
-            # Create fold-specific data using public APIs
+            # Create fold-specific data_contracts using public APIs
             train_data = CausalData(
                 df=df_full.iloc[train_idx].copy(),
                 treatment=data.treatment.name,
@@ -434,7 +451,8 @@ def refute_irm_orthogonality(
             )
             # Fit model on training fold to get theta
             fold_result = inference_fn(train_data, **inference_kwargs)
-            fold_thetas.append(float(fold_result['coefficient']))
+            theta_fold = float(fold_result.value) if hasattr(fold_result, "value") else float(fold_result['coefficient'])
+            fold_thetas.append(theta_fold)
             fold_indices.append(test_idx)
 
             # Use full-model cross-fitted nuisances indexed by test fold (fast OOS)
@@ -815,7 +833,7 @@ def trim_sensitivity_curve_ate(
 
 def _is_binary(series: pd.Series) -> bool:
     """
-    Determine if a pandas Series contains binary data (0/1 or True/False).
+    Determine if a pandas Series contains binary data_contracts (0/1 or True/False).
     
     Parameters
     ----------
@@ -850,7 +868,7 @@ def _generate_random_outcome(original_outcome: pd.Series, rng: np.random.Generat
     
     For binary outcomes: generates random binary variables with same proportion as original
     For continuous outcomes: generates random continuous variables from normal distribution
-    fitted to the original data
+    fitted to the original data_contracts
     
     Parameters
     ----------
@@ -871,7 +889,7 @@ def _generate_random_outcome(original_outcome: pd.Series, rng: np.random.Generat
         original_rate = float(original_outcome.mean())
         return rng.binomial(1, original_rate, size=n).astype(original_outcome.dtype)
     else:
-        # For continuous outcome, generate from normal distribution fitted to original data
+        # For continuous outcome, generate from normal distribution fitted to original data_contracts
         mean = float(original_outcome.mean())
         std = float(original_outcome.std())
         if std == 0:
@@ -902,7 +920,7 @@ def _generate_random_treatment(original_treatment: pd.Series, rng: np.random.Gen
 
 
 def _run_inference(
-    inference_fn: Callable[..., Dict[str, Any]],
+    inference_fn: Callable[..., Dict[str, Any] | Any],
     data: CausalData,
     **kwargs,
 ) -> Dict[str, float]:
@@ -912,16 +930,28 @@ def _run_inference(
     based on coefficient and std_error.
     """
     res = inference_fn(data, **kwargs)
-    out = {"theta": float(res["coefficient"])}
-    p = res.get("p_value")
-    if p is None and "std_error" in res:
+
+    # Support CausalEstimate / Pydantic
+    if hasattr(res, "value"):
+        theta = float(res.value)
+        p = getattr(res, "p_value", None)
+        se = getattr(res, "std_error", None)
+        if se is None and hasattr(res, "model_options") and isinstance(res.model_options, dict):
+            se = res.model_options.get("std_error")
+    else:
+        theta = float(res["coefficient"])
+        p = res.get("p_value")
+        se = res.get("std_error")
+
+    out = {"theta": theta}
+    if p is None and se is not None:
         try:
-            se = float(res["std_error"])
-            th = float(res["coefficient"])
-            z = 0.0 if se == 0.0 else th / se
+            se_f = float(se)
+            z = 0.0 if se_f == 0.0 else theta / se_f
             p = 2.0 * (1 - stats.norm.cdf(abs(z)))
         except Exception:
             p = None
+
     out["p_value"] = float(p) if p is not None else float("nan")
     return out
 
@@ -946,7 +976,7 @@ def refute_placebo_outcome(
     Generate random outcome variables while keeping treatment
     and covariates intact. For binary outcomes, generates random binary
     variables with the same proportion. For continuous outcomes, generates
-    random variables from a normal distribution fitted to the original data.
+    random variables from a normal distribution fitted to the original data_contracts.
     A valid causal design should now yield θ ≈ 0 and a large p-value.
     """
     rng = np.random.default_rng(random_state)
@@ -1117,15 +1147,50 @@ ResultLike = Dict[str, Any] | Any
 def _extract_score_inputs_from_result(res: ResultLike) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray, float, str, Optional[np.ndarray], Optional[np.ndarray], Optional[List[np.ndarray]]]:
     """
     Extract (y, d, g0, g1, m, theta, score, psi_a, psi_b, fold_indices) from a
-    dml_ate/dml_att-like result dict or an IRM-like model instance.
+    IRM result or an IRM-like model instance.
 
-    Supports two paths:
+    Supports three paths:
+      - CausalEstimate object with .diagnostic_data.
       - Dict with keys {'model', 'coefficient'} and optional 'diagnostic_data'.
-      - IRM/DoubleML-like model object with .data, cross-fitted nuisances, and optionally psi caches.
+      - IRM/DoubleML-like model object with .data_contracts, cross-fitted nuisances, and optionally psi caches.
     """
     model = None
     theta = float('nan')
     score_str = 'ATE'
+
+    # 0) CausalEstimate
+    if hasattr(res, "diagnostic_data") and res.diagnostic_data is not None:
+        dd = res.diagnostic_data
+        y = getattr(dd, "y", None)
+        d = getattr(dd, "d", None)
+        g0 = getattr(dd, "g0_hat", None)
+        g1 = getattr(dd, "g1_hat", None)
+        m = getattr(dd, "m_hat", None)
+        theta = getattr(res, "value", float('nan'))
+        score_str = getattr(res, "estimand", "ATE").upper()
+
+        psi_b = getattr(dd, "psi_b", None)
+        folds = getattr(dd, "folds", None)
+
+        if all(v is not None for v in (y, d, g0, g1, m)):
+            y = np.asarray(y, dtype=float).ravel()
+            d = np.asarray(d, dtype=float).ravel()
+            g0 = np.asarray(g0, dtype=float).ravel()
+            g1 = np.asarray(g1, dtype=float).ravel()
+            m = np.asarray(m, dtype=float).ravel()
+
+            fold_indices = None
+            if folds is not None:
+                folds_arr = np.asarray(folds, dtype=int)
+                K = int(folds_arr.max() + 1) if folds_arr.size > 0 else 0
+                fold_indices = [np.where(folds_arr == k)[0] for k in range(K)]
+
+            pb = np.asarray(psi_b, dtype=float) if psi_b is not None else None
+            return y, d, g0, g1, m, float(theta), score_str, None, pb, fold_indices
+        # If incomplete, we might still have the model inside? 
+        # But usually CausalEstimate.diagnostic_data is complete.
+        # If not, let's try to find model in model_options or elsewhere?
+        # For now, let's assume if it has diagnostic_data, it's the primary source.
 
     # 1) Result dict
     if isinstance(res, dict):
@@ -1175,9 +1240,9 @@ def _extract_score_inputs_from_result(res: ResultLike) -> Tuple[np.ndarray, np.n
     # Cross-fitted nuisances
     m, g0, g1 = extract_nuisances(model)
 
-    # Observed y,d from model.data
+    # Observed y,d from model.data_contracts
     df = None
-    data_obj = getattr(model, 'data', None)
+    data_obj = getattr(model, 'data_contracts', None)
     if data_obj is not None and hasattr(data_obj, 'get_df'):
         df = data_obj.get_df()
         # Try robust attribute names
@@ -1191,7 +1256,7 @@ def _extract_score_inputs_from_result(res: ResultLike) -> Tuple[np.ndarray, np.n
         d = df[tname].to_numpy(dtype=float)
         y = df[yname].to_numpy(dtype=float)
     else:
-        raise ValueError("Model.data with get_df() is required to extract y and d.")
+        raise ValueError("Model.data_contracts with get_df() is required to extract y and d.")
 
     # Theta from wrapper or model
     if np.isnan(theta):
@@ -1240,7 +1305,7 @@ def run_score_diagnostics(
       A) With raw arrays:
          run_score_diagnostics(y=..., d=..., g0=..., g1=..., m=..., theta=...)
       B) With a model/result:
-         run_score_diagnostics(res=<dml_ate/dml_att result dict or IRM-like model>)
+         run_score_diagnostics(res=<IRM result or IRM-like model>)
 
     Returns a dictionary with:
       - params (score, trimming_threshold)
@@ -1280,12 +1345,12 @@ def run_score_diagnostics(
     infl = influence_summary(y, d, g0, g1, m, float(theta if theta is not None else 0.0), score=score_u, trimming_threshold=trimming_threshold)
 
     # Build basis for orthogonality derivatives
-    # If we can access confounders via res.model.data, use them; else constant-only basis
+    # If we can access confounders via res.model.data_contracts, use them; else constant-only basis
     X_basis = None
     use_data_basis = False
     if res is not None:
         model = res.get('model') if isinstance(res, dict) else res
-        data_obj = getattr(model, 'data', None) if model is not None else None
+        data_obj = getattr(model, 'data_contracts', None) if model is not None else None
         if data_obj is not None and hasattr(data_obj, 'get_df') and getattr(data_obj, 'confounders', None) is not None:
             df_conf = data_obj.get_df()[list(data_obj.confounders)]
             X = df_conf.to_numpy(dtype=float)

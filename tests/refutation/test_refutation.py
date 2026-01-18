@@ -7,7 +7,7 @@ import numpy as np
 import pandas as pd
 from unittest.mock import Mock
 
-from causalis.data.causaldata import CausalData
+from causalis.dgp.causaldata import CausalData
 from causalis.scenarios.unconfoundedness.refutation import (
     refute_placebo_outcome,
     refute_placebo_treatment,
@@ -18,7 +18,7 @@ from causalis.scenarios.unconfoundedness.refutation.score.score_validation impor
 
 @pytest.fixture
 def sample_data():
-    """Create sample data for testing."""
+    """Create sample data_contracts for testing."""
     np.random.seed(42)
     n = 1000
     
@@ -189,7 +189,7 @@ def test_placebo_treatment_generates_random_treatment(sample_data):
 
 
 def test_subset_reduces_sample_size(sample_data):
-    """Test that refute_subset uses the correct fraction of data."""
+    """Test that refute_subset uses the correct fraction of data_contracts."""
     # Create a mock inference function that returns the sample size
     def sample_size_fn(data, **kwargs):
         df = data.get_df()
@@ -221,7 +221,7 @@ def test_kwargs_passed_through(sample_data):
 
 
 def test_original_data_unchanged(sample_data, mock_inference_fn):
-    """Test that original data is not modified by refutation functions."""
+    """Test that original data_contracts is not modified by refutation functions."""
     original_df = sample_data.get_df().copy()
     
     # Run all refutation functions
@@ -229,7 +229,7 @@ def test_original_data_unchanged(sample_data, mock_inference_fn):
     refute_placebo_treatment(mock_inference_fn, sample_data, random_state=42)
     refute_subset(mock_inference_fn, sample_data, random_state=42)
     
-    # Check that original data is unchanged
+    # Check that original data_contracts is unchanged
     pd.testing.assert_frame_equal(sample_data.get_df(), original_df)
 
 
@@ -237,27 +237,27 @@ def test_original_data_unchanged(sample_data, mock_inference_fn):
 # Tests for helper functions
 # ------------------------------------------------------------------
 def test_is_binary_function():
-    """Test the _is_binary helper function with various data types."""
-    # Test binary 0/1 data
+    """Test the _is_binary helper function with various data_contracts types."""
+    # Test binary 0/1 data_contracts
     binary_01 = pd.Series([0, 1, 0, 1, 1])
     assert _is_binary(binary_01) == True
     
-    # Test single value binary data
+    # Test single value binary data_contracts
     binary_single_0 = pd.Series([0, 0, 0])
     assert _is_binary(binary_single_0) == True
     
     binary_single_1 = pd.Series([1, 1, 1])
     assert _is_binary(binary_single_1) == True
     
-    # Test True/False binary data
+    # Test True/False binary data_contracts
     binary_bool = pd.Series([True, False, True, False])
     assert _is_binary(binary_bool) == True
     
-    # Test continuous data
+    # Test continuous data_contracts
     continuous = pd.Series([1.2, 3.4, 5.6, 7.8])
     assert _is_binary(continuous) == False
     
-    # Test integer data with more than 2 values
+    # Test integer data_contracts with more than 2 values
     multi_int = pd.Series([1, 2, 3, 4, 5])
     assert _is_binary(multi_int) == False
     
@@ -271,8 +271,8 @@ def test_is_binary_function():
 
 
 def test_generate_random_outcome_binary():
-    """Test random outcome generation for binary data."""
-    # Create binary outcome data
+    """Test random outcome generation for binary data_contracts."""
+    # Create binary outcome data_contracts
     binary_outcome = pd.Series([0, 1, 1, 0, 1, 0, 0, 1])
     rng = np.random.default_rng(42)
     
@@ -292,8 +292,8 @@ def test_generate_random_outcome_binary():
 
 
 def test_generate_random_outcome_continuous():
-    """Test random outcome generation for continuous data."""
-    # Create continuous outcome data
+    """Test random outcome generation for continuous data_contracts."""
+    # Create continuous outcome data_contracts
     continuous_outcome = pd.Series([1.2, 3.4, 5.6, 7.8, 2.1, 4.3, 6.5, 8.7])
     rng = np.random.default_rng(42)
     
@@ -317,7 +317,7 @@ def test_generate_random_outcome_continuous():
 
 def test_generate_random_treatment():
     """Test random treatment generation."""
-    # Create treatment data with specific proportion
+    # Create treatment data_contracts with specific proportion
     treatment = pd.Series([0, 1, 0, 0, 1, 1, 0, 1])  # 50% treatment rate
     rng = np.random.default_rng(42)
     
@@ -337,8 +337,8 @@ def test_generate_random_treatment():
 
 
 def test_binary_outcome_placebo_test():
-    """Test refute_placebo_outcome with binary outcome data."""
-    # Create data with binary outcome
+    """Test refute_placebo_outcome with binary outcome data_contracts."""
+    # Create data_contracts with binary outcome
     np.random.seed(123)
     n = 500
     

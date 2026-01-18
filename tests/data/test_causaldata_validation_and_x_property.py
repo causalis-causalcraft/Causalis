@@ -3,7 +3,7 @@ import pandas as pd
 import pytest
 
 
-from causalis.data.causaldata import CausalData
+from causalis.dgp.causaldata import CausalData
 
 
 def test_causaldata_rejects_overlapping_roles():

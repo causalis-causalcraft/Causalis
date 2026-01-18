@@ -5,8 +5,8 @@ import pytest
 from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import RandomForestRegressor
 
-from causalis.data.causaldata import CausalData
-from causalis.statistics.models.irm import IRM
+from causalis.dgp.causaldata import CausalData
+from causalis.scenarios.unconfoundedness.irm import IRM
 from causalis.scenarios.unconfoundedness.refutation.uncofoundedness.sensitivity import sensitivity_benchmark
 
 
@@ -29,7 +29,7 @@ def fit_irm(df):
     ml_g = RandomForestRegressor(n_estimators=50, random_state=1)
     ml_m = LogisticRegression(max_iter=1000)
     irm = IRM(data=data, ml_g=ml_g, ml_m=ml_m, n_folds=3, random_state=1)
-    irm.fit()
+    irm.fit().estimate(score="ATE")
     return irm
 
 
@@ -44,7 +44,7 @@ def test_sensitivity_benchmark_basic():
     assert hasattr(res, "loc")  # is DataFrame-like
     assert res.shape[0] == 1
     # expected columns
-    for col in ["cf_y", "cf_d", "rho", "theta_long", "theta_short", "delta"]:
+    for col in ["cf_y", "r2_d", "rho", "theta_long", "theta_short", "delta"]:
         assert col in res.columns
 
     # Delta should be non-zero when removing strong confounder

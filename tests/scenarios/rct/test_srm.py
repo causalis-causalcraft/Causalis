@@ -1,7 +1,6 @@
 import pandas as pd
-import pytest
-from causalis.scenarios.rct import check_srm
-from causalis.data.causaldata import CausalData
+from causalis.scenarios.classic_rct import check_srm
+from causalis.dgp.causaldata import CausalData
 
 def test_check_srm_basic():
     assignments = ["control"] * 50 + ["treatment"] * 50

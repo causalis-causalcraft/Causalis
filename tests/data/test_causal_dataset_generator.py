@@ -5,7 +5,8 @@ Tests for the CausalDatasetGenerator class.
 import pytest
 import pandas as pd
 import numpy as np
-from causalis.data import CausalDatasetGenerator, CausalData
+from causalis.data_contracts import CausalData
+from causalis.dgp import CausalDatasetGenerator
 
 
 @pytest.fixture
@@ -64,14 +65,14 @@ def test_generator_initialization(random_seed):
 
 
 def test_generate_continuous_outcome(basic_generator):
-    """Test generating data with continuous outcome."""
+    """Test generating data_contracts with continuous outcome."""
     df = basic_generator.generate(100)
     
     # Check DataFrame shape and columns
     assert df.shape[0] == 100
     assert set(df.columns) >= {"y", "d", "age", "smoker", "bmi", "m", "g0", "g1", "cate"}
     
-    # Check data types
+    # Check data_contracts types
     assert df["y"].dtype == np.float64
     assert df["d"].isin([0.0, 1.0]).all()
     
@@ -83,7 +84,7 @@ def test_generate_continuous_outcome(basic_generator):
 
 
 def test_generate_binary_outcome(random_seed):
-    """Test generating data with binary outcome."""
+    """Test generating data_contracts with binary outcome."""
     gen = CausalDatasetGenerator(
         theta=1.0,
         outcome_type="binary",
@@ -99,7 +100,7 @@ def test_generate_binary_outcome(random_seed):
     assert df.shape[0] == 100
     assert set(df.columns) >= {"y", "d", "x1", "m", "g0", "g1", "cate"}
     
-    # Check data types
+    # Check data_contracts types
     assert df["y"].isin([0.0, 1.0]).all()
     assert df["d"].isin([0.0, 1.0]).all()
     
@@ -109,7 +110,7 @@ def test_generate_binary_outcome(random_seed):
 
 
 def test_generate_poisson_outcome(random_seed):
-    """Test generating data with Poisson outcome."""
+    """Test generating data_contracts with Poisson outcome."""
     gen = CausalDatasetGenerator(
         theta=0.5,
         outcome_type="poisson",
@@ -125,7 +126,7 @@ def test_generate_poisson_outcome(random_seed):
     assert df.shape[0] == 100
     assert set(df.columns) >= {"y", "d", "x1", "m", "g0", "g1", "cate"}
     
-    # Check data types
+    # Check data_contracts types
     assert df["y"].dtype == np.float64
     assert (df["y"] >= 0).all()  # Poisson values are non-negative
     assert df["d"].isin([0.0, 1.0]).all()
@@ -136,7 +137,7 @@ def test_generate_poisson_outcome(random_seed):
 
 
 def test_heterogeneous_treatment_effect(random_seed):
-    """Test generating data with heterogeneous treatment effect."""
+    """Test generating data_contracts with heterogeneous treatment effect."""
     # Define a heterogeneous treatment effect function
     def tau_func(X):
         return 1.0 + 0.5 * X[:, 0]  # Effect depends on first covariate
@@ -197,7 +198,7 @@ def test_confounder_distributions(random_seed):
 
 def test_to_causal_data(basic_generator):
     """Test conversion to CausalData object."""
-    # Generate data and convert to CausalData
+    # Generate data_contracts and convert to CausalData
     causal_data = basic_generator.to_causal_data(100)
     
     # Check that it's a CausalData object
@@ -208,7 +209,7 @@ def test_to_causal_data(basic_generator):
     assert causal_data.treatment.name == "d"
     assert set(causal_data.confounders) == {"age", "smoker", "bmi"}
     
-    # Check that the data is accessible
+    # Check that the data_contracts is accessible
     assert causal_data.df.shape[0] == 100
     assert set(causal_data.df.columns) == {"y", "d", "age", "smoker", "bmi"}
     
@@ -227,8 +228,8 @@ def test_invalid_outcome_type(random_seed):
     
     with pytest.raises(ValueError) as excinfo:
         gen.generate(100)
-    
-    assert "outcome_type must be 'continuous', 'binary', or 'poisson'" in str(excinfo.value)
+
+    assert "outcome_type must be 'continuous', 'binary', 'poisson' or 'tweedie'" in str(excinfo.value)
 
 
 def test_invalid_confounder_spec(random_seed):
@@ -244,3 +245,47 @@ def test_invalid_confounder_spec(random_seed):
         gen.generate(100)
     
     assert "Unknown dist: unknown_distribution" in str(excinfo.value)
+
+
+def test_score_bounding(random_seed):
+    """Test that score_bounding limits the range of propensity scores."""
+    # Without bounding, with very large coefficients, propensity scores will be near 0 or 1
+    gen_no_bound = CausalDatasetGenerator(
+        beta_d=np.array([100.0]),
+        confounder_specs=[{"name": "x1", "dist": "normal"}],
+        seed=random_seed,
+        include_oracle=True
+    )
+    df_no_bound = gen_no_bound.generate(1000)
+    # Check that some propensities are near 0 or 1
+    assert (df_no_bound["m"] < 0.01).any() or (df_no_bound["m"] > 0.99).any()
+
+    # With bounding, propensities should be more balanced
+    gen_bound = CausalDatasetGenerator(
+        beta_d=np.array([100.0]),
+        confounder_specs=[{"name": "x1", "dist": "normal"}],
+        seed=random_seed,
+        score_bounding=1.0,  # Bound scores to tanh
+        include_oracle=True
+    )
+    df_bound = gen_bound.generate(1000)
+    # With bounding c=1.0, max logit is ~1.0, so max propensity is sigmoid(1.0) ~ 0.73
+    # min propensity is sigmoid(-1.0) ~ 0.27
+    # Note: alpha_d calibration might shift this, but it should still be bounded.
+    assert (df_bound["m"] > 0.05).all()
+    assert (df_bound["m"] < 0.95).all()
+
+
+def test_confounder_clipping(random_seed):
+    """Test that confounder clipping works correctly."""
+    gen = CausalDatasetGenerator(
+        seed=random_seed,
+        confounder_specs=[
+            {"name": "x1", "dist": "normal", "mu": 0, "sd": 10, "clip_min": -5, "clip_max": 5},
+        ],
+    )
+    df = gen.generate(1000)
+    assert (df["x1"] >= -5).all()
+    assert (df["x1"] <= 5).all()
+    # Check that it's not just all zeros (i.e. clipping is happening on a real distribution)
+    assert df["x1"].std() > 0

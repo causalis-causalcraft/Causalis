@@ -1,6 +1,6 @@
 import numpy as np
 
-from causalis.data.dgps import CausalDatasetGenerator, _sigmoid
+from causalis.dgp import CausalDatasetGenerator, _sigmoid
 
 
 def test_oracle_gating_raises_when_U_affects_both():

@@ -5,7 +5,7 @@ from causalis.scenarios.unconfoundedness.refutation.overlap.overlap_validation i
 
 
 def test_calibration_no_runtime_warnings_extreme_inputs():
-    # Construct nearly separable data with extreme probabilities
+    # Construct nearly separable data_contracts with extreme probabilities
     n = 1000
     p = np.zeros(n, dtype=float)
     p[n//2:] = 1.0

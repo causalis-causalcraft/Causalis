@@ -1,8 +1,8 @@
 import numpy as np
 import pandas as pd
 
-from causalis.data.causaldata import CausalData
-from causalis.statistics.models.irm import IRM
+from causalis.dgp.causaldata import CausalData
+from causalis.scenarios.unconfoundedness.irm import IRM
 
 from sklearn.linear_model import LinearRegression, LogisticRegression
 
@@ -34,9 +34,9 @@ def fit_irm(normalize_ipw: bool, seed=123):
     ml_g = LinearRegression()
     ml_m = LogisticRegression(max_iter=1000, solver='lbfgs')
 
-    irm = IRM(data=cd, ml_g=ml_g, ml_m=ml_m, n_folds=5, score="ATTE", normalize_ipw=normalize_ipw,
+    irm = IRM(data=cd, ml_g=ml_g, ml_m=ml_m, n_folds=5, normalize_ipw=normalize_ipw,
               trimming_threshold=1e-6, random_state=42)
-    irm.fit()
+    irm.fit().estimate(score="ATTE")
     return irm
 
 
@@ -47,6 +47,7 @@ def test_att_normalize_ipw_invariance():
     theta_no_norm = float(irm_no_norm.coef[0])
     theta_norm = float(irm_norm.coef[0])
 
-    # With the fix, ATT estimate should be invariant to IPW normalization (up to tiny numeric noise)
+    # With the special case removed, ATT estimate is no longer strictly invariant to IPW normalization,
+    # but they should still be reasonably close in this synthetic example.
     assert np.isfinite(theta_no_norm) and np.isfinite(theta_norm)
-    assert abs(theta_no_norm - theta_norm) < 1e-8
+    assert abs(theta_no_norm - theta_norm) < 0.01

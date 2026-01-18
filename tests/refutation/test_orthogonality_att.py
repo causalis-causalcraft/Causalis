@@ -6,7 +6,7 @@ from causalis.scenarios.unconfoundedness.refutation.score.score_validation impor
     orthogonality_derivatives_atte,
     refute_irm_orthogonality,
 )
-from causalis.data.causaldata import CausalData
+from causalis.dgp.causaldata import CausalData
 
 
 class DummyModel:
