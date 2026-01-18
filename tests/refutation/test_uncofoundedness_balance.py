@@ -4,16 +4,15 @@ import pytest
 
 from sklearn.linear_model import LogisticRegression, LinearRegression
 
-from causalis.data.causaldata import CausalData
-from causalis.data.dgps import generate_rct
-from causalis.scenarios.unconfoundedness.ate.dml_ate import dml_ate
-from causalis.scenarios.unconfoundedness.atte.dml_atte import dml_atte
+from causalis.dgp.causaldata import CausalData
+from causalis.dgp import generate_rct
+from causalis.scenarios.unconfoundedness.irm import IRM
 from causalis.scenarios.unconfoundedness.refutation import validate_uncofoundedness_balance
 
 
 @pytest.mark.parametrize("normalize_ipw", [False, True])
 def test_uncofoundedness_balance_ate(normalize_ipw):
-    # Generate simple RCT-like data with confounders
+    # Generate simple RCT-like data_contracts with confounders
     df = generate_rct(n=2000, k=3, random_state=123, outcome_type="binary")
     confs = [c for c in df.columns if c.startswith("x")]  # ['x1','x2','x3']
     data = CausalData(df=df, treatment='d', outcome='y', confounders=confs)
@@ -23,17 +22,15 @@ def test_uncofoundedness_balance_ate(normalize_ipw):
     ml_g = LinearRegression()
     ml_m = LogisticRegression(max_iter=500)
 
-    res = dml_ate(
+    res = IRM(
         data,
         ml_g=ml_g,
         ml_m=ml_m,
         n_folds=3,
-        alpha=0.10,
         normalize_ipw=normalize_ipw,
         trimming_threshold=1e-3,
         random_state=7,
-        store_diagnostic_data=True,
-    )
+    ).fit().estimate(alpha=0.10, diagnostic_data=True)
 
     out = validate_uncofoundedness_balance(res)
 
@@ -67,7 +64,7 @@ def test_uncofoundedness_balance_ate(normalize_ipw):
 
 @pytest.mark.parametrize("normalize_ipw", [False, True])
 def test_uncofoundedness_balance_att(normalize_ipw):
-    # Generate simple data with confounders
+    # Generate simple data_contracts with confounders
     df = generate_rct(n=2000, k=4, random_state=321, outcome_type="normal")
     confs = [c for c in df.columns if c.startswith("x")]  # ['x1',...]
     data = CausalData(df=df, treatment='d', outcome='y', confounders=confs)
@@ -75,17 +72,15 @@ def test_uncofoundedness_balance_att(normalize_ipw):
     ml_g = LinearRegression()
     ml_m = LogisticRegression(max_iter=500)
 
-    res = dml_atte(
+    res = IRM(
         data,
         ml_g=ml_g,
         ml_m=ml_m,
         n_folds=3,
-        alpha=0.10,
         normalize_ipw=normalize_ipw,
         trimming_threshold=1e-3,
         random_state=13,
-        store_diagnostic_data=True,
-    )
+    ).fit().estimate(score="ATTE", alpha=0.10, diagnostic_data=True)
 
     out = validate_uncofoundedness_balance(res)
 

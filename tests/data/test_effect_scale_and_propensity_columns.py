@@ -2,7 +2,7 @@ import numpy as np
 import pytest
 
 
-from causalis.data.dgps import CausalDatasetGenerator
+from causalis.dgp import CausalDatasetGenerator
 
 
 @pytest.mark.parametrize(

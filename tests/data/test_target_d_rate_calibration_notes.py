@@ -1,7 +1,7 @@
 import numpy as np
 
 
-from causalis.data.dgps import CausalDatasetGenerator
+from causalis.dgp import CausalDatasetGenerator
 
 
 def test_target_d_rate_calibration_is_conditional_on_u_draw_when_u_strength_d_nonzero():

@@ -6,8 +6,8 @@ import pytest
 import numpy as np
 import pandas as pd
 
-from causalis.data import CausalData
-from causalis.scenarios.rct import conversion_z_test
+from causalis.data_contracts import CausalData
+from causalis.scenarios.classic_rct import conversion_z_test
 
 
 @pytest.fixture
@@ -139,12 +139,12 @@ def test_conversion_z_test_methods():
     w_lower, w_upper = res_wald["absolute_ci"]
     assert pytest.approx(diff - w_lower) == (w_upper - diff)
 
-    # Newcombe asymmetry check (for this specific data)
+    # Newcombe asymmetry check (for this specific data_contracts)
     assert abs((upper - diff) - (diff - lower)) > 1e-5
 
 
 def test_diff_in_means_passes_kwargs():
-    from causalis.statistics.models.diff_in_means import DiffInMeans
+    from causalis.scenarios.classic_rct.diff_in_means import DiffInMeans
 
     np.random.seed(42)
     n = 100

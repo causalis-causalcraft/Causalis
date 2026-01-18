@@ -6,8 +6,8 @@ import pytest
 import numpy as np
 import pandas as pd
 
-from causalis.data import CausalData
-from causalis.scenarios.rct import bootstrap_diff_means
+from causalis.data_contracts import CausalData
+from causalis.scenarios.classic_rct import bootstrap_diff_means
 
 
 @pytest.fixture

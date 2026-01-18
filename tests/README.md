@@ -37,7 +37,7 @@ python -m pytest tests/test_file_name.py
 For example:
 
 ```bash
-python -m pytest tests/data/test_rct_ancillary_no_leakage.py
+python -m pytest tests/data_contracts/test_rct_ancillary_no_leakage.py
 ```
 
 To run a specific test function:
@@ -49,7 +49,7 @@ python -m pytest tests/test_file_name.py::test_function_name
 For example:
 
 ```bash
-python -m pytest tests/data/test_rct_ancillary_no_leakage.py::test_rct_ancillary_columns_do_not_depend_on_realized_y_when_seed_fixed
+python -m pytest tests/data_contracts/test_rct_ancillary_no_leakage.py::test_rct_ancillary_columns_do_not_depend_on_realized_y_when_seed_fixed
 ```
 
 ### Verbose output

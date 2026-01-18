@@ -17,6 +17,7 @@ from .overlap_validation import (
     calibration_report_m,
     ece_binary,
 )
+from .overlap_plot import plot_m_overlap
 
 __all__ = [
     "DEFAULT_THRESHOLDS",
@@ -31,4 +32,5 @@ __all__ = [
     "att_weight_sum_identity",
     "calibration_report_m",
     "ece_binary",
+    "plot_m_overlap",
 ]

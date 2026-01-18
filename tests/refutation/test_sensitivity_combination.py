@@ -5,8 +5,8 @@ import pytest
 from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import RandomForestRegressor
 
-from causalis.data.causaldata import CausalData
-from causalis.statistics.models.irm import IRM
+from causalis.dgp.causaldata import CausalData
+from causalis.scenarios.unconfoundedness.irm import IRM
 from causalis.scenarios.unconfoundedness.refutation.uncofoundedness.sensitivity import sensitivity_analysis, get_sensitivity_summary
 
 
@@ -27,7 +27,7 @@ def fit_irm(df):
     ml_g = RandomForestRegressor(n_estimators=60, random_state=1)
     ml_m = LogisticRegression(max_iter=1000)
     irm = IRM(data=data, ml_g=ml_g, ml_m=ml_m, n_folds=3, random_state=1)
-    irm.fit()
+    irm.fit().estimate(score="ATE")
     return irm
 
 
@@ -37,12 +37,12 @@ def test_zero_cofounding_collapses_bounds():
     df = make_synth()
     irm = fit_irm(df)
     effect = {"model": irm}
-    out = sensitivity_analysis(effect, cf_y=0.0, cf_d=0.0, rho=0.5, alpha=0.95)
+    out = sensitivity_analysis(effect, cf_y=0.0, r2_d=0.0, rho=0.5, alpha=0.95)
     assert isinstance(out, dict)
     # summary should be obtainable
     s = get_sensitivity_summary(effect)
     assert isinstance(s, str)
-    # Cofounding bounds collapse to theta when cf_y=cf_d=0
+    # Cofounding bounds collapse to theta when cf_y=r2_d=0
     tl, tu = out['theta_bounds_cofounding']
     th = out['theta']
     assert pytest.approx(tl, 1e-10) == th
@@ -53,8 +53,8 @@ def test_rho_sign_affects_bounds():
     df = make_synth()
     irm = fit_irm(df)
     effect = {"model": irm}
-    out_pos = sensitivity_analysis(effect, cf_y=0.2, cf_d=0.2, rho=+1.0, alpha=0.95)
-    out_neg = sensitivity_analysis(effect, cf_y=0.2, cf_d=0.2, rho=-1.0, alpha=0.95)
+    out_pos = sensitivity_analysis(effect, cf_y=0.2, r2_d=0.2, rho=+1.0, alpha=0.95)
+    out_neg = sensitivity_analysis(effect, cf_y=0.2, r2_d=0.2, rho=-1.0, alpha=0.95)
     # Widths of cofounding bounds
     w_pos = out_pos['theta_bounds_cofounding'][1] - out_pos['theta_bounds_cofounding'][0]
     w_neg = out_neg['theta_bounds_cofounding'][1] - out_neg['theta_bounds_cofounding'][0]
@@ -70,15 +70,15 @@ def test_input_validation_and_header_label():
 
     # Invalid level -> ValueError at top-level (validated before delegation)
     with pytest.raises(ValueError):
-        sensitivity_analysis(effect, cf_y=0.1, cf_d=0.1, rho=0.0, alpha=1.0)
+        sensitivity_analysis(effect, cf_y=0.1, r2_d=0.1, rho=0.0, alpha=1.0)
     with pytest.raises(ValueError):
-        sensitivity_analysis(effect, cf_y=0.1, cf_d=0.1, rho=0.0, alpha=0.0)
+        sensitivity_analysis(effect, cf_y=0.1, r2_d=0.1, rho=0.0, alpha=0.0)
 
     # Negative cf_y -> ValueError
     with pytest.raises(ValueError):
-        sensitivity_analysis(effect, cf_y=-0.1, cf_d=0.1, rho=0.0, alpha=0.95)
+        sensitivity_analysis(effect, cf_y=-0.1, r2_d=0.1, rho=0.0, alpha=0.95)
 
     # Return dict and ensure summary via getter
-    out = sensitivity_analysis(effect, cf_y=0.05, cf_d=0.05, rho=0.0, alpha=0.95)
+    out = sensitivity_analysis(effect, cf_y=0.05, r2_d=0.05, rho=0.0, alpha=0.95)
     assert isinstance(out, dict)
     assert isinstance(get_sensitivity_summary(effect), str)

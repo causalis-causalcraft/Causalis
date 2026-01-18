@@ -1,7 +1,6 @@
 import pandas as pd
 import pytest
-import warnings
-from causalis.data.causaldata import CausalData
+from causalis.dgp.causaldata import CausalData
 
 def test_causaldata_raises_error_on_constant_confounders():
     df = pd.DataFrame({

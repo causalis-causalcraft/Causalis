@@ -73,7 +73,7 @@ def test_att_identity_unified_relerr_and_flag():
 
 
 def test_ipw_sum_flags_only_under_hajek():
-    # Some simple data
+    # Some simple data_contracts
     m_hat = np.array([0.2, 0.8, 0.6, 0.4])
     D = np.array([1, 0, 1, 0])
 

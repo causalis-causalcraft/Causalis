@@ -3,8 +3,8 @@ import pandas as pd
 
 from sklearn.ensemble import RandomForestRegressor, RandomForestClassifier
 
-from causalis.data import CausalData
-from causalis.scenarios.unconfoundedness.atte import dml_atte_source
+from causalis.data_contracts import CausalData
+from causalis.scenarios.unconfoundedness import dml_atte_source
 from causalis.scenarios.unconfoundedness.refutation.score.score_validation import (
     refute_placebo_outcome,
     refute_placebo_treatment,

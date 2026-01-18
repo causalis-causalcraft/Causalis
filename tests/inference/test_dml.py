@@ -6,8 +6,8 @@ import pandas as pd
 import numpy as np
 from sklearn.ensemble import RandomForestRegressor, RandomForestClassifier
 
-from causalis.data import CausalData
-from causalis.scenarios.unconfoundedness.ate import dml_ate_source
+from causalis.data_contracts import CausalData
+from causalis.scenarios.unconfoundedness.dml_source import dml_ate_source
 
 
 def test_dml():

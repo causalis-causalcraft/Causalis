@@ -1,8 +1,8 @@
 import numpy as np
 import pandas as pd
 
-from causalis.data import CausalData
-from causalis.scenarios.unconfoundedness.ate.dml_ate import dml_ate
+from causalis.data_contracts import CausalData
+from causalis.scenarios.unconfoundedness.irm import IRM
 from causalis.scenarios.unconfoundedness.refutation.score.score_validation import trim_sensitivity_curve_ate
 
 
@@ -21,16 +21,16 @@ def _make_data(n=300, seed=321):
 def test_trim_sensitivity_curve_ate_basic_and_matches_model_at_default_eps():
     data = _make_data(n=240, seed=777)
     # Fit with default settings (ATE, normalize_ipw=False, trimming_threshold=1e-2)
-    res = dml_ate(data, n_folds=3, random_state=777)
-    model = res["model"]
-    dd = res["diagnostic_data"]
+    model = IRM(data, n_folds=3, random_state=777).fit()
+    res = model.estimate()
+    dd = res.diagnostic_data
 
-    m = dd["m_hat"]
-    d = dd["d"]
-    y = dd["y"]
-    g0 = dd["g0_hat"]
-    g1 = dd["g1_hat"]
-    eps0 = float(dd.get("trimming_threshold", 0.01))
+    m = dd.m_hat
+    d = dd.d
+    y = dd.y
+    g0 = dd.g0_hat
+    g1 = dd.g1_hat
+    eps0 = float(dd.trimming_threshold)
 
     grid = (0.0, eps0, 0.02)
     df = trim_sensitivity_curve_ate(m, d, y, g0, g1, eps_grid=grid)
@@ -47,4 +47,4 @@ def test_trim_sensitivity_curve_ate_basic_and_matches_model_at_default_eps():
 
     # At eps equal to the model's trimming threshold, theta should match the model's coefficient
     theta_at_eps0 = float(df.loc[np.isclose(df["trim_eps"], eps0), "theta"].iloc[0])
-    assert abs(theta_at_eps0 - float(res["coefficient"])) < 1e-8
+    assert abs(theta_at_eps0 - float(res.value)) < 1e-8

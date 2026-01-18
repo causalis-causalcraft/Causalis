@@ -3,8 +3,8 @@ import pytest
 
 from sklearn.linear_model import LinearRegression, LogisticRegression
 
-from causalis.data.dgps import CausalDatasetGenerator
-from causalis.scenarios.unconfoundedness.atte.dml_atte import dml_atte
+from causalis.dgp import CausalDatasetGenerator
+from causalis.scenarios.unconfoundedness.irm import IRM
 
 
 @pytest.mark.parametrize("normalize_ipw", [False, True])
@@ -24,19 +24,17 @@ def test_irm_atte_score_identities(normalize_ipw):
     ml_g = LinearRegression()
     ml_m = LogisticRegression(max_iter=500)
 
-    res = dml_atte(
+    irm = IRM(
         cd,
         ml_g=ml_g,
         ml_m=ml_m,
         n_folds=3,
-        alpha=0.05,
         normalize_ipw=normalize_ipw,
         trimming_threshold=1e-3,
         random_state=3,
-        store_diagnostic_data=True,
-    )
+    ).fit()
+    res = irm.estimate(score="ATTE", alpha=0.05, diagnostic_data=True)
 
-    irm = res["model"]
     psi_a = irm.psi_a_
     psi = irm.psi_
 

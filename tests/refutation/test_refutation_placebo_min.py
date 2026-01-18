@@ -1,7 +1,7 @@
 import pytest
 import pandas as pd
 
-from causalis.data import CausalData
+from causalis.data_contracts import CausalData
 from causalis.scenarios.unconfoundedness.refutation.score.score_validation import (
     refute_placebo_outcome,
     refute_placebo_treatment,
@@ -38,7 +38,7 @@ def test_placebo_helpers_run_without_errors(fn_name):
     elif fn_name == "treatment":
         res = refute_placebo_treatment(_dummy_inference_fn, data, random_state=123)
     else:
-        # Use full-sample subset to avoid degenerate constant-treatment cases in tiny data
+        # Use full-sample subset to avoid degenerate constant-treatment cases in tiny data_contracts
         res = refute_subset(_dummy_inference_fn, data, fraction=1.0, random_state=123)
 
     assert isinstance(res, dict)

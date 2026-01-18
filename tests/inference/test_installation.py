@@ -20,8 +20,8 @@ def test_import_causalis():
 def test_import_specific_functions():
     """Test that specific functions from causalis can be imported."""
     try:
-        from causalis.data import generate_rct
-        from causalis.scenarios.rct import ttest
+        from causalis.data_contracts import generate_rct
+        from causalis.scenarios.classic_rct import ttest
         
         # Check that the imported objects are callable
         assert callable(generate_rct)

@@ -1,8 +1,7 @@
 import pandas as pd
-import numpy as np
 import pytest
-from causalis.data.causaldata import CausalData
-from causalis.statistics.functions import outcome_stats
+from causalis.dgp.causaldata import CausalData
+from causalis.shared import outcome_stats
 
 def test_outcome_stats():
     df = pd.DataFrame({

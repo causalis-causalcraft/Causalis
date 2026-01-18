@@ -1,8 +1,8 @@
 import pytest
 import pandas as pd
 import numpy as np
-from causalis.data import CausalData
-from causalis.statistics.models.diff_in_means import DiffInMeans
+from causalis.data_contracts import CausalData
+from causalis.scenarios.classic_rct.diff_in_means import DiffInMeans
 
 
 @pytest.fixture

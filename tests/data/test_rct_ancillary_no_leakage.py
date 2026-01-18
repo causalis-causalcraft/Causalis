@@ -1,7 +1,7 @@
 import numpy as np
 
 
-from causalis.data.dgps import generate_rct
+from causalis.dgp import generate_rct
 
 
 def test_rct_ancillary_columns_do_not_depend_on_realized_y_when_seed_fixed():

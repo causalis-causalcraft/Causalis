@@ -2,8 +2,8 @@ import numpy as np
 import pytest
 from pydantic import ValidationError
 
-from causalis.data.causal_diagnostic_data import DiagnosticData, UnconfoundednessDiagnosticData
-from causalis.data.causal_estimate import CausalEstimate
+from causalis.data_contracts.causal_diagnostic_data import DiagnosticData, UnconfoundednessDiagnosticData
+from causalis.data_contracts.causal_estimate import CausalEstimate
 
 
 def test_diagnostic_data_instantiation():

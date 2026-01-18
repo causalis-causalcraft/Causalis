@@ -37,7 +37,7 @@ def test_split_functions_basic():
 
 
 def test_positivity_overlap_checks_returns_dict_and_flags():
-    # Make nearly separable data to trigger strong flags
+    # Make nearly separable data_contracts to trigger strong flags
     rng = np.random.default_rng(1)
     n = 400
     x = rng.standard_normal(n)

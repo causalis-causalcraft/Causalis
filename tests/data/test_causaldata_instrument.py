@@ -1,7 +1,7 @@
 import pytest
 import pandas as pd
 import numpy as np
-from causalis.data import CausalData, CausalDataInstrumental
+from causalis.data_contracts import CausalData, CausalDataInstrumental
 
 def test_causaldata_with_instrument():
     df = pd.DataFrame({

@@ -1,7 +1,7 @@
 import pytest
 import pandas as pd
 import numpy as np
-from causalis.data.causaldata import CausalData
+from causalis.dgp.causaldata import CausalData
 
 def test_duplicate_column_names():
     df = pd.DataFrame({

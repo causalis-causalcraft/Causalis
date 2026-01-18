@@ -17,7 +17,7 @@ import warnings
 
 
 def validate_uncofoundedness_balance(
-    effect_estimation: Dict[str, Any],
+    effect_estimation: Dict[str, Any] | Any,
     *,
     threshold: float = 0.1,
     normalize: Optional[bool] = None,
@@ -27,7 +27,7 @@ def validate_uncofoundedness_balance(
     standardized mean differences (SMD) both before weighting (raw groups) and
     after weighting using the IPW / ATT weights implied by the DML/IRM estimation.
 
-    This function expects the result dictionary returned by dml_ate() or dml_att(),
+    This function expects the result dictionary or CausalEstimate returned by dml_ate() or dml_att(),
     which includes a fitted IRM model and a 'diagnostic_data' entry with the
     necessary arrays.
 
@@ -43,12 +43,12 @@ def validate_uncofoundedness_balance(
 
     Parameters
     ----------
-    effect_estimation : Dict[str, Any]
-        Output dict from dml_ate() or dml_att(). Must contain 'model' and 'diagnostic_data'.
+    effect_estimation : Dict[str, Any] | Any
+        Output from dml_ate() or dml_att(). Must contain 'diagnostic_data'.
     threshold : float, default 0.1
         Threshold for SMD; values below indicate acceptable balance for most use cases.
     normalize : Optional[bool]
-        Whether to use normalized weights. If None, inferred from effect_estimation['diagnostic_data']['normalize_ipw'].
+        Whether to use normalized weights. If None, inferred from diagnostic_data.
 
     Returns
     -------
@@ -61,27 +61,50 @@ def validate_uncofoundedness_balance(
         - 'threshold': float
         - 'pass': bool indicating whether all weighted SMDs are below threshold
     """
-    if not isinstance(effect_estimation, dict):
-        raise TypeError("effect_estimation must be a dictionary produced by dml_ate() or dml_att()")
-    if 'model' not in effect_estimation or 'diagnostic_data' not in effect_estimation:
-        raise ValueError("Input must contain 'model' and 'diagnostic_data' (from dml_ate/dml_att)")
+    # 1) Handle CausalEstimate / Pydantic
+    if hasattr(effect_estimation, "diagnostic_data") and effect_estimation.diagnostic_data is not None:
+        diag = effect_estimation.diagnostic_data
+    # 2) Handle dict
+    elif isinstance(effect_estimation, dict):
+        if 'diagnostic_data' not in effect_estimation:
+            raise ValueError("Input must contain 'diagnostic_data' (from IRM.estimate())")
+        diag = effect_estimation['diagnostic_data']
+    else:
+        raise TypeError("effect_estimation must be a dictionary or CausalEstimate produced by IRM.estimate()")
 
-    diag = effect_estimation['diagnostic_data']
-    if not isinstance(diag, dict):
-        raise ValueError("'diagnostic_data' must be a dict")
+    # Helper to get values from dict or object
+    def _get(obj, key, default=None):
+        if isinstance(obj, dict):
+            return obj.get(key, default)
+        return getattr(obj, key, default)
 
     # Required arrays
     try:
-        m_hat = np.asarray(diag['m_hat'], dtype=float)
-        d = np.asarray(diag['d'], dtype=float)
-        X = np.asarray(diag['x'], dtype=float)
-        score = str(diag.get('score', '')).upper()
-        used_norm = bool(diag.get('normalize_ipw', False)) if normalize is None else bool(normalize)
-    except Exception as e:
-        raise ValueError(f"diagnostic_data missing required fields: {e}")
+        m_hat = np.asarray(_get(diag, 'm_hat'), dtype=float)
+        d = np.asarray(_get(diag, 'd'), dtype=float)
+        X = np.asarray(_get(diag, 'x'), dtype=float)
+        
+        # Infer score
+        score = _get(diag, 'score', None)
+        if score is None:
+             score = _get(effect_estimation, 'estimand', 'ATE')
+        score = str(score).upper()
 
-    if score not in {"ATE", "ATTE"}:
-        raise ValueError("diagnostic_data['score'] must be 'ATE' or 'ATTE'")
+        # Infer normalization
+        used_norm = _get(diag, 'normalize_ipw', None)
+        if used_norm is None:
+            opts = _get(effect_estimation, 'model_options', {})
+            used_norm = _get(opts, 'normalize_ipw', False)
+        used_norm = bool(used_norm) if normalize is None else bool(normalize)
+        
+    except Exception as e:
+        raise ValueError(f"diagnostic_data missing or incompatible: {e}")
+
+    if score not in {"ATE", "ATTE", "ATT"}:
+        raise ValueError(f"Score {score} not supported for balance.")
+    if "ATT" in score:
+        score = "ATTE"
+        
     if X.ndim != 2:
         raise ValueError("diagnostic_data['x'] must be a 2D array of shape (n, p)")
     n, p = X.shape
@@ -89,12 +112,19 @@ def validate_uncofoundedness_balance(
         raise ValueError("Length of m_hat and d must match number of rows in x")
 
     # Obtain confounder names if available
+    names = None
     try:
-        model = effect_estimation['model']
-        names = list(getattr(model.data, 'confounders', []))
-        if not names or len(names) != p:
-            names = [f"x{j+1}" for j in range(p)]
+        # Try to find model and its data_contracts
+        model = _get(effect_estimation, 'model', None)
+        if model is not None:
+            names = list(getattr(model.data, 'confounders', []))
+        if not names:
+            # Maybe it's in diagnostic_data (not common but possible)
+            names = _get(diag, 'x_names', None)
     except Exception:
+        pass
+        
+    if not names or len(names) != p:
         names = [f"x{j+1}" for j in range(p)]
 
     # Build weights per group according to estimand
@@ -250,10 +280,38 @@ def _extract_balance_inputs_from_result(
     """
     Returns X (n,p), m_hat (n,), d (n,), score ('ATE'/'ATTE'), used_norm (bool), names (len p).
     Accepts:
+      - CausalEstimate object with .diagnostic_data
       - dict with keys 'model' and 'diagnostic_data' (preferred)
-      - model-like object with .data and cross-fitted m_hat_/predictions
+      - model-like object with .data_contracts and cross-fitted m_hat_/predictions
     """
-    # Result dict path
+    # 0) CausalEstimate
+    if hasattr(res, "diagnostic_data") and res.diagnostic_data is not None:
+        dd = res.diagnostic_data
+        X = getattr(dd, "x", None)
+        m = getattr(dd, "m_hat", None)
+        d = getattr(dd, "d", None)
+        if X is not None and m is not None and d is not None:
+            X = np.asarray(X, dtype=float)
+            m = np.asarray(m, dtype=float).ravel()
+            d = np.asarray(d, dtype=float).ravel()
+            score = str(getattr(res, "estimand", "ATE")).upper()
+            used_norm = False
+            if hasattr(res, "model_options") and isinstance(res.model_options, dict):
+                used_norm = bool(res.model_options.get("normalize_ipw", False))
+
+            names = None
+            # Try to get names from model if possible
+            model = getattr(res, "model", None)
+            if model is not None and hasattr(model, "data_contracts"):
+                try:
+                    names = list(getattr(model.data_contracts, "confounders", []))
+                except Exception:
+                    pass
+            if not names:
+                names = [f"x{j+1}" for j in range(X.shape[1])]
+            return X, m, d, ("ATTE" if "ATT" in score else "ATE"), used_norm, names
+
+    # 1) Result dict path
     if isinstance(res, dict):
         diag = res.get("diagnostic_data", {})
         if isinstance(diag, dict) and all(k in diag for k in ("x", "m_hat", "d")):
@@ -264,9 +322,9 @@ def _extract_balance_inputs_from_result(
             used_norm = bool(diag.get("normalize_ipw", False))
             names = diag.get("x_names")
             if not names or len(names) != X.shape[1]:
-                # try model data for names
+                # try model data_contracts for names
                 model = res.get("model", None)
-                if model is not None and getattr(model, "data", None) is not None:
+                if model is not None and getattr(model, "data_contracts", None) is not None:
                     try:
                         names = list(getattr(model.data, "confounders", []))
                     except Exception:
@@ -280,9 +338,9 @@ def _extract_balance_inputs_from_result(
 
     # Model-like path
     model = res
-    data_obj = getattr(model, "data", None)
+    data_obj = getattr(model, "data_contracts", None)
     if data_obj is None or not hasattr(data_obj, "get_df"):
-        raise ValueError("Could not extract data arrays. Provide `res` with diagnostic_data or a model with .data.get_df().")
+        raise ValueError("Could not extract data_contracts arrays. Provide `res` with diagnostic_data or a model with .data_contracts.get_df().")
 
     df = data_obj.get_df()
     confs = list(getattr(data_obj, "confounders", [])) or []

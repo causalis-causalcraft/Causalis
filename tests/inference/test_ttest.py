@@ -5,8 +5,8 @@ Tests for the ttest function in the inference module.
 import pytest
 import pandas as pd
 import numpy as np
-from causalis.data import CausalData
-from causalis.scenarios.rct import ttest
+from causalis.data_contracts import CausalData
+from causalis.scenarios.classic_rct import ttest
 
 
 @pytest.fixture
@@ -17,14 +17,14 @@ def random_seed():
 
 @pytest.fixture
 def test_data(random_seed):
-    """Fixture to provide test data with a known effect size."""
+    """Fixture to provide test data_contracts with a known effect size."""
     np.random.seed(random_seed)
     
     n = 1000
     control_mean = 10.0
     treatment_effect = 2.0
     
-    # Create data with treatment effect
+    # Create data_contracts with treatment effect
     df = pd.DataFrame({
         'user_id': range(1, n + 1),
         'treatment': np.random.choice([0, 1], size=n),

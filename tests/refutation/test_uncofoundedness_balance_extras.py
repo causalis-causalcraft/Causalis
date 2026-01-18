@@ -3,9 +3,9 @@ import pandas as pd
 
 from sklearn.linear_model import LinearRegression, LogisticRegression
 
-from causalis.data.causaldata import CausalData
-from causalis.data.dgps import generate_rct
-from causalis.scenarios.unconfoundedness.ate.dml_ate import dml_ate
+from causalis.dgp.causaldata import CausalData
+from causalis.dgp import generate_rct
+from causalis.scenarios.unconfoundedness.irm import IRM
 from causalis.scenarios.unconfoundedness.refutation.uncofoundedness.uncofoundedness_validation import validate_uncofoundedness_balance
 
 
@@ -17,17 +17,15 @@ def test_uncofoundedness_balance_extras_outputs():
     ml_g = LinearRegression()
     ml_m = LogisticRegression(max_iter=400)
 
-    res = dml_ate(
+    res = IRM(
         data,
         ml_g=ml_g,
         ml_m=ml_m,
         n_folds=3,
-        alpha=0.10,
         normalize_ipw=True,
         trimming_threshold=1e-3,
         random_state=11,
-        store_diagnostic_data=True,
-    )
+    ).fit().estimate(alpha=0.10, diagnostic_data=True)
 
     out = validate_uncofoundedness_balance(res)
     # New fields should be present and of correct types

@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 import pytest
 import uuid
-from causalis.data.causaldata import CausalData
+from causalis.dgp.causaldata import CausalData
 
 def test_causaldata_with_user_id_string():
     n = 20

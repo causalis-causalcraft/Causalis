@@ -2,9 +2,8 @@ import numpy as np
 import pandas as pd
 from sklearn.linear_model import LinearRegression, LogisticRegression
 
-from causalis.data.causaldata import CausalData
-from causalis.scenarios.unconfoundedness.ate.dml_ate import dml_ate
-from causalis.scenarios.unconfoundedness.atte.dml_atte import dml_atte
+from causalis.dgp.causaldata import CausalData
+from causalis.scenarios.unconfoundedness.irm import IRM
 
 
 def _make_synth(n=200, seed=42):
@@ -30,33 +29,30 @@ def test_dml_ate_returns_diagnostic_data():
     ml_g = LinearRegression()
     ml_m = LogisticRegression(max_iter=1000, solver="lbfgs")
 
-    res = dml_ate(
+    res = IRM(
         data,
         ml_g=ml_g,
         ml_m=ml_m,
         n_folds=3,
-        score="ATE",
-        alpha=0.1,
-        normalize_ipw=False,
-        trimming_threshold=1e-2,
         random_state=7,
-    )
+    ).fit().estimate(score="ATE", alpha=0.1)
 
-    assert "diagnostic_data" in res, "dml_ate must return diagnostic_data key"
-    dd = res["diagnostic_data"]
-    for key in ["m_hat", "g0_hat", "g1_hat", "y", "d", "score", "normalize_ipw", "trimming_threshold", "p1"]:
-        assert key in dd, f"diagnostic_data missing '{key}'"
+    dd = res.diagnostic_data
+    assert dd is not None
+    # Check essential fields in UnconfoundednessDiagnosticData
+    for attr in ["m_hat", "g0_hat", "g1_hat", "y", "d", "trimming_threshold"]:
+        assert hasattr(dd, attr), f"diagnostic_data missing attribute '{attr}'"
 
-    assert len(dd["m_hat"]) == n
-    assert len(dd["g0_hat"]) == n
-    assert len(dd["g1_hat"]) == n
-    assert len(dd["y"]) == n
-    assert len(dd["d"]) == n
+    assert len(dd.m_hat) == n
+    assert len(dd.g0_hat) == n
+    assert len(dd.g1_hat) == n
+    assert len(dd.y) == n
+    assert len(dd.d) == n
 
     # Quick sanity check: propensity near-edges share is a valid probability
     eps = 0.01
-    share_below = float(np.mean(dd["m_hat"] < eps))
-    share_above = float(np.mean(dd["m_hat"] > 1 - eps))
+    share_below = float(np.mean(dd.m_hat < eps))
+    share_above = float(np.mean(dd.m_hat > 1 - eps))
     assert 0.0 <= share_below <= 1.0
     assert 0.0 <= share_above <= 1.0
 
@@ -66,32 +62,26 @@ def test_dml_att_returns_diagnostic_data():
     ml_g = LinearRegression()
     ml_m = LogisticRegression(max_iter=1000, solver="lbfgs")
 
-    res = dml_atte(
+    res = IRM(
         data,
         ml_g=ml_g,
         ml_m=ml_m,
         n_folds=3,
-        alpha=0.1,
-        normalize_ipw=False,
-        trimming_threshold=1e-2,
         random_state=11,
-    )
+    ).fit().estimate(score="ATTE", alpha=0.1)
 
-    assert "diagnostic_data" in res, "dml_att must return diagnostic_data key"
-    dd = res["diagnostic_data"]
-    for key in ["m_hat", "g0_hat", "g1_hat", "y", "d", "score", "normalize_ipw", "trimming_threshold", "p1"]:
-        assert key in dd, f"diagnostic_data missing '{key}'"
-
-    assert dd["score"] == "ATTE"
-    assert len(dd["m_hat"]) == n
-    assert len(dd["y"]) == n
-    assert len(dd["d"]) == n
+    dd = res.diagnostic_data
+    assert dd is not None
+    assert res.estimand == "ATTE"
+    assert len(dd.m_hat) == n
+    assert len(dd.y) == n
+    assert len(dd.d) == n
 
     # ATT identity (raw): sum_controls m/(1-m) approx sum_treated 1
-    d = dd["d"].astype(int)
-    m = dd["m_hat"]
+    d = dd.d.astype(int)
+    m = dd.m_hat
     lhs = np.sum((1 - d) * (m / (1 - m)))
     rhs = np.sum(d)
     # Not an equality in finite sample, but should be within a reasonable range
     rel_err = abs(lhs - rhs) / max(rhs, 1.0)
-    assert rel_err < 0.5, "ATT raw identity too far off on synthetic data"
+    assert rel_err < 0.5, "ATT raw identity too far off on synthetic data_contracts"

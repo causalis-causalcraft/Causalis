@@ -2,8 +2,8 @@ import numpy as np
 import pandas as pd
 from sklearn.linear_model import LinearRegression, LogisticRegression
 
-from causalis.data.causaldata import CausalData
-from causalis.statistics.models.irm import IRM
+from causalis.dgp.causaldata import CausalData
+from causalis.scenarios.unconfoundedness.irm import IRM
 from causalis.scenarios.unconfoundedness.refutation.score.score_validation import (
     extract_nuisances,
     aipw_score_atte,
@@ -27,8 +27,8 @@ def _toy_data(n=200, seed=0):
 def _fit_irm(data, score="ATE"):
     ml_g = LinearRegression()
     ml_m = LogisticRegression(max_iter=1000)
-    irm = IRM(data, ml_g=ml_g, ml_m=ml_m, n_folds=2, score=score)
-    irm.fit()
+    irm = IRM(data, ml_g=ml_g, ml_m=ml_m, n_folds=2)
+    irm.fit().estimate(score=score)
     return irm
 
 

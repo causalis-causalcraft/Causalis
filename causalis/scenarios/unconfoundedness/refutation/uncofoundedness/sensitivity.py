@@ -6,8 +6,7 @@ entry points used by refutation utilities for uncofoundedness.
 """
 from __future__ import annotations
 
-from typing import Dict, Any, Optional, List, Tuple
-import warnings
+from typing import Dict, Any, Optional, List
 
 import numpy as np
 import pandas as pd
@@ -27,9 +26,28 @@ def _compute_sensitivity_bias_unified(
     psi_sigma2: np.ndarray,
     psi_nu2: np.ndarray,
 ) -> tuple[float, np.ndarray]:
-    """
+    """Compute max bias and its influence function.
+
     max_bias = sqrt(max(sigma2 * nu2, 0)). Influence function via delta method.
     Returns zero IF on the boundary and an IF shaped like psi_sigma2 otherwise.
+
+    Parameters
+    ----------
+    sigma2 : np.ndarray or float
+        Variance of the outcome residuals.
+    nu2 : np.ndarray or float
+        Variance related to the Riesz representer.
+    psi_sigma2 : np.ndarray
+        Influence function for sigma2.
+    psi_nu2 : np.ndarray
+        Influence function for nu2.
+
+    Returns
+    -------
+    max_bias : float
+        The maximum bias.
+    psi_max_bias : np.ndarray
+        The influence function for the maximum bias.
     """
     sigma2_f = float(np.asarray(sigma2).reshape(()))
     nu2_f = float(np.asarray(nu2).reshape(()))
@@ -51,23 +69,65 @@ def _compute_sensitivity_bias(
     psi_sigma2: np.ndarray,
     psi_nu2: np.ndarray,
 ) -> tuple[float, np.ndarray]:
+    """Backward-compatible alias for _compute_sensitivity_bias_unified.
+
+    Parameters
+    ----------
+    sigma2 : np.ndarray or float
+        Variance of the outcome residuals.
+    nu2 : np.ndarray or float
+        Variance related to the Riesz representer.
+    psi_sigma2 : np.ndarray
+        Influence function for sigma2.
+    psi_nu2 : np.ndarray
+        Influence function for nu2.
+
+    Returns
+    -------
+    tuple
+        (max_bias, psi_max_bias)
+    """
     return _compute_sensitivity_bias_unified(sigma2, nu2, psi_sigma2, psi_nu2)
 
 
-def _combine_nu2(m_alpha: np.ndarray, rr: np.ndarray, cf_y: float, cf_d: float, rho: float) -> tuple[float, np.ndarray]:
+def _combine_nu2(m_alpha: np.ndarray, rr: np.ndarray, cf_y: float, r2_d: float, rho: float) -> tuple[float, np.ndarray]:
     """Combine sensitivity levers into nu2 via per-unit quadratic form.
 
-    nu2_i = (sqrt(2*m_alpha_i))^2 * cf_y + (|rr_i|)^2 * cf_d + 2*rho*sqrt(cf_y*cf_d)*|rr_i|*sqrt(2*m_alpha_i)
+    nu2_i = (sqrt(2*m_alpha_i))^2 * cf_y + (|rr_i|)^2 * (r2_d/(1-r2_d)) + 2*rho*sqrt(cf_y*r2_d/(1-r2_d))*|rr_i|*sqrt(2*m_alpha_i)
     Returns (nu2, psi_nu2) with psi_nu2 centered.
 
     Note: we use abs(rr) for a conservative worst-case cross-term; the quadratic
     form is PSD for signed rr as well, but abs() avoids reductions when rr < 0.
+
+    Parameters
+    ----------
+    m_alpha : np.ndarray
+        Component for the representer variance.
+    rr : np.ndarray
+        Riesz representer.
+    cf_y : float
+        Sensitivity parameter for the outcome (odds form, C_Y^2).
+    r2_d : float
+        Sensitivity parameter for the treatment (R^2 form, R_D^2).
+    rho : float
+        Correlation parameter.
+
+    Returns
+    -------
+    nu2 : float
+        The combined nu2 value.
+    psi_nu2 : np.ndarray
+        The centered influence function for nu2.
     """
     cf_y = float(cf_y)
-    cf_d = float(cf_d)
+    r2_d = float(r2_d)
     rho = float(np.clip(rho, -1.0, 1.0))
-    if cf_y < 0 or cf_d < 0:
-        raise ValueError("cf_y and cf_d must be >= 0.")
+    if cf_y < 0 or r2_d < 0:
+        raise ValueError("cf_y and r2_d must be >= 0.")
+    if r2_d >= 1.0:
+        raise ValueError("r2_d must be < 1.0.")
+    
+    cf_d = r2_d / (1.0 - r2_d)
     a = np.sqrt(2.0 * np.maximum(np.asarray(m_alpha, dtype=float), 0.0))
     b = np.abs(np.asarray(rr, dtype=float))
     base = (a * a) * cf_y + (b * b) * cf_d + 2.0 * rho * np.sqrt(cf_y * cf_d) * a * b
@@ -80,11 +140,38 @@ def _combine_nu2(m_alpha: np.ndarray, rr: np.ndarray, cf_y: float, cf_d: float, 
 
 # ---------------- Bias-aware helpers (local variants + pullers) ----------------
 
-def _combine_nu2_local(m_alpha: np.ndarray, rr: np.ndarray, cf_y: float, cf_d: float, rho: float, *, use_signed_rr: bool) -> tuple[float, np.ndarray]:
-    """Nu^2 via per-unit quadratic form with optional sign-preserving rr."""
-    cf_y = float(cf_y); cf_d = float(cf_d); rho = float(np.clip(rho, -1.0, 1.0))
-    if cf_y < 0 or cf_d < 0:
-        raise ValueError("cf_y and cf_d must be >= 0.")
+def _combine_nu2_local(m_alpha: np.ndarray, rr: np.ndarray, cf_y: float, r2_d: float, rho: float, *, use_signed_rr: bool) -> tuple[float, np.ndarray]:
+    """Nu^2 via per-unit quadratic form with optional sign-preserving rr.
+
+    Parameters
+    ----------
+    m_alpha : np.ndarray
+        Component for the representer variance.
+    rr : np.ndarray
+        Riesz representer.
+    cf_y : float
+        Sensitivity parameter for the outcome (odds form, C_Y^2).
+    r2_d : float
+        Sensitivity parameter for the treatment (R^2 form, R_D^2).
+    rho : float
+        Correlation parameter.
+    use_signed_rr : bool
+        Whether to use signed rr or absolute value.
+
+    Returns
+    -------
+    nu2 : float
+        The combined nu2 value.
+    psi_nu2 : np.ndarray
+        The centered influence function for nu2.
+    """
+    cf_y = float(cf_y); r2_d = float(r2_d); rho = float(np.clip(rho, -1.0, 1.0))
+    if cf_y < 0 or r2_d < 0:
+        raise ValueError("cf_y and r2_d must be >= 0.")
+    if r2_d >= 1.0:
+        raise ValueError("r2_d must be < 1.0.")
+    
+    cf_d = r2_d / (1.0 - r2_d)
     a = np.sqrt(2.0 * np.maximum(np.asarray(m_alpha, float), 0.0))
     b = np.asarray(rr, float)
     if not use_signed_rr:
@@ -104,97 +191,264 @@ def _compute_sensitivity_bias_local(
     psi_sigma2: np.ndarray,
     psi_nu2: np.ndarray,
 ) -> tuple[float, np.ndarray]:
-    """Backward-compatible wrapper delegating to unified helper."""
+    """Backward-compatible wrapper delegating to unified helper.
+
+    Parameters
+    ----------
+    sigma2 : float
+        Variance of the outcome residuals.
+    nu2 : float
+        Variance related to the Riesz representer.
+    psi_sigma2 : np.ndarray
+        Influence function for sigma2.
+    psi_nu2 : np.ndarray
+        Influence function for nu2.
+
+    Returns
+    -------
+    tuple
+        (max_bias, psi_max_bias)
+    """
     return _compute_sensitivity_bias_unified(sigma2, nu2, psi_sigma2, psi_nu2)
 
 
-def _pull_theta_se_ci(effect_estimation: Dict[str, Any], alpha: float) -> tuple[float, float, tuple[float, float]]:
-    """Robustly extract θ, se, and sampling CI."""
+def _pull_theta_se_ci(effect_estimation: Any, alpha: float) -> tuple[float, float, tuple[float, float]]:
+    """Robustly extract theta, se, and sampling CI from CausalEstimate, dict, or model.
+
+    Parameters
+    ----------
+    effect_estimation : Any
+        The effect estimation object (CausalEstimate, dict, or model).
+    alpha : float
+        Significance level.
+
+    Returns
+    -------
+    theta : float
+        The estimated effect.
+    se : float
+        The standard error.
+    ci : tuple of float
+        The confidence interval (lower, upper).
+    """
     from scipy.stats import norm as _norm
-    model = effect_estimation['model']
-    # theta
-    try:
-        theta = float(effect_estimation.get('coefficient', float(model.coef_[0])))
-    except Exception:
-        theta = float(model.coef_[0])
-    # se
-    try:
-        se = float(effect_estimation.get('std_error', float(model.se_[0])))
-    except Exception:
-        se = float(model.se_[0])
-    # sampling CI
-    ci = effect_estimation.get('confidence_interval', None)
-    if ci is None and hasattr(model, 'confint'):
+    
+    # 1. CausalEstimate
+    if hasattr(effect_estimation, "value") and hasattr(effect_estimation, "ci_lower_absolute"):
+        theta = float(effect_estimation.value)
+        # Try to get SE from model_options
+        opts = getattr(effect_estimation, "model_options", {})
+        se = float(opts.get("std_error", 0.0))
+        if se == 0.0 and hasattr(effect_estimation, "ci_upper_absolute"):
+            # Fallback: back-calculate SE from CI if missing
+            z = float(_norm.ppf(1 - getattr(effect_estimation, "alpha", 0.05) / 2.0))
+            se = (float(effect_estimation.ci_upper_absolute) - theta) / z if z > 0 else 0.0
+        ci = (float(effect_estimation.ci_lower_absolute), float(effect_estimation.ci_upper_absolute))
+        return theta, se, ci
+
+    # 2. Dict (legacy)
+    if isinstance(effect_estimation, dict):
+        model = effect_estimation.get('model')
+        # theta
         try:
-            ci_df = model.confint(alpha=alpha)
-            if isinstance(ci_df, pd.DataFrame):
-                lower = None; upper = None
-                for col in ['ci_lower', f"{alpha/2*100:.1f} %", '2.5 %', '2.5%']:
-                    if col in ci_df.columns:
-                        lower = float(ci_df[col].iloc[0]); break
-                for col in ['ci_upper', f"{(1-alpha/2)*100:.1f} %", '97.5 %', '97.5%']:
-                    if col in ci_df.columns:
-                        upper = float(ci_df[col].iloc[0]); break
-                if lower is None or upper is None:
-                    lower = float(ci_df.iloc[0, 0]); upper = float(ci_df.iloc[0, 1])
-                ci = (lower, upper)
+            theta = float(effect_estimation.get('coefficient', getattr(model, 'coef_', [0.0])[0]))
         except Exception:
-            pass
-    if ci is None:
+            theta = 0.0
+        # se
+        try:
+            se = float(effect_estimation.get('std_error', getattr(model, 'se_', [0.0])[0]))
+        except Exception:
+            se = 0.0
+        # sampling CI
+        ci = effect_estimation.get('confidence_interval', None)
+        if ci is None and hasattr(model, 'confint'):
+            try:
+                ci_df = model.confint(alpha=alpha)
+                if isinstance(ci_df, pd.DataFrame):
+                    lower = None; upper = None
+                    for col in ['ci_lower', f"{alpha/2*100:.1f} %", '2.5 %', '2.5%']:
+                        if col in ci_df.columns:
+                            lower = float(ci_df[col].iloc[0]); break
+                    for col in ['ci_upper', f"{(1-alpha/2)*100:.1f} %", '97.5 %', '97.5%']:
+                        if col in ci_df.columns:
+                            upper = float(ci_df[col].iloc[0]); break
+                    if lower is None or upper is None:
+                        lower = float(ci_df.iloc[0, 0]); upper = float(ci_df.iloc[0, 1])
+                    ci = (lower, upper)
+            except Exception:
+                pass
+        if ci is None:
+            z = _norm.ppf(1 - alpha / 2.0)
+            ci = (theta - z*se, theta + z*se)
+        return float(theta), float(se), (float(ci[0]), float(ci[1]))
+    
+    # 3. Model instance
+    if hasattr(effect_estimation, "coef_") and hasattr(effect_estimation, "se_"):
+        theta = float(effect_estimation.coef_[0])
+        se = float(effect_estimation.se_[0])
         z = _norm.ppf(1 - alpha / 2.0)
-        ci = (theta - z*se, theta + z*se)
-    return float(theta), float(se), (float(ci[0]), float(ci[1]))
+        return theta, se, (theta - z*se, theta + z*se)
+
+    return 0.0, 0.0, (0.0, 0.0)
 
 
 # ---------------- Public API: bias-aware CI and text summaries ----------------
 
 def compute_bias_aware_ci(
-    effect_estimation: Dict[str, Any],
+    effect_estimation: Dict[str, Any] | Any,
     *,
     cf_y: float,
-    cf_d: float,
+    r2_d: float,
     rho: float = 1.0,
+    H0: float = 0.0,
     alpha: float = 0.05,
     use_signed_rr: bool = False
 ) -> Dict[str, Any]:
-    """
+    """Compute bias-aware confidence intervals.
+
     Returns a dict with:
       - theta, se, alpha, z
       - sampling_ci
       - theta_bounds_cofounding = [theta_lower, theta_upper] = theta ± max_bias
       - bias_aware_ci = [theta - (max_bias + z*se), theta + (max_bias + z*se)]
       - max_bias and components (sigma2, nu2)
+
+    Parameters
+    ----------
+    effect_estimation : Dict[str, Any] or Any
+        The effect estimation object.
+    cf_y : float
+        Sensitivity parameter for the outcome (odds form, C_Y^2).
+    r2_d : float
+        Sensitivity parameter for the treatment (R^2 form, R_D^2).
+    rho : float, default 1.0
+        Correlation parameter.
+    H0 : float, default 0.0
+        Null hypothesis for robustness values.
+    alpha : float, default 0.05
+        Significance level.
+    use_signed_rr : bool, default False
+        Whether to use signed rr.
+
+    Returns
+    -------
+    dict
+        Dictionary with bias-aware results.
     """
     from scipy.stats import norm as _norm
-    if not isinstance(effect_estimation, dict) or 'model' not in effect_estimation:
-        raise TypeError("Pass the usual result dict with a fitted model under key 'model'.")
+
+    if not (0.0 < alpha < 1.0):
+        raise ValueError(f"alpha must be in (0, 1), got {alpha}")
+    if cf_y < 0 or r2_d < 0:
+        raise ValueError("cf_y and r2_d must be >= 0")
+    if r2_d >= 1.0:
+        raise ValueError("r2_d must be < 1.0 for the bias factor to be well-defined")
+
+    if isinstance(effect_estimation, dict):
+        if 'model' not in effect_estimation:
+             raise TypeError("Pass the usual result dict with a fitted model under key 'model'.")
+        effect_dict = effect_estimation
+    elif hasattr(effect_estimation, "coef_") and hasattr(effect_estimation, "se_"):
+        # Likely an IRM instance
+        model = effect_estimation
+        effect_dict = {'model': model}
+    elif hasattr(effect_estimation, "value") and hasattr(effect_estimation, "diagnostic_data"):
+        # CausalEstimate path
+        effect_dict = {'model': None}
+    else:
+        raise TypeError("effect_estimation must be a dict, CausalEstimate, or an IRM-like model instance.")
+
     theta, se, sampling_ci = _pull_theta_se_ci(effect_estimation, alpha)
     z = float(_norm.ppf(1 - alpha / 2.0))
 
-    model = effect_estimation['model']
+    model = effect_dict.get('model')
+    # Try to extract elements from diagnostic data first
+    diag = getattr(effect_estimation, 'diagnostic_data', effect_dict.get('diagnostic_data'))
+    
+    elems = None
+    if diag is not None and hasattr(diag, "sigma2") and getattr(diag, "sigma2", None) is not None:
+        elems = {
+            "sigma2": diag.sigma2,
+            "nu2": diag.nu2,
+            "psi_sigma2": diag.psi_sigma2,
+            "psi_nu2": diag.psi_nu2,
+            "riesz_rep": diag.riesz_rep,
+            "m_alpha": diag.m_alpha,
+            "psi": diag.psi,
+        }
+    elif hasattr(model, "_sensitivity_element_est"):
+        elems = model._sensitivity_element_est()
+
     # Default: no cofounding info → bias_aware = sampling CI
     max_bias = 0.0
     sigma2 = np.nan; nu2 = np.nan
 
-    if hasattr(model, "_sensitivity_element_est"):
-        elems = model._sensitivity_element_est()
-        sigma2 = float(elems["sigma2"])
-        psi_sigma2 = np.asarray(elems["psi_sigma2"], float)
-        psi_sigma2 = psi_sigma2 - float(np.mean(psi_sigma2))
-        m_alpha = np.asarray(elems["m_alpha"], float)
-        rr = np.asarray(elems["riesz_rep"], float)
-        nu2, psi_nu2 = _combine_nu2_local(m_alpha, rr, cf_y, cf_d, rho, use_signed_rr=use_signed_rr)
-        max_bias = float(np.sqrt(max(nu2, 0.0)) * se)
+    if elems:
+        sigma2 = float(elems.get("sigma2", np.nan))
+        nu2 = float(elems.get("nu2", np.nan))
 
-    theta_lower = float(theta) - float(max_bias)
-    theta_upper = float(theta) + float(max_bias)
+        # DoubleML bias: rho * sqrt(sigma2 * nu2) * sqrt(cf_y * r2_d / (1 - r2_d))
+        bias_factor = np.sqrt(cf_y * r2_d / (1.0 - r2_d))
+        max_bias = np.sqrt(max(sigma2 * nu2, 0.0)) * bias_factor
+    
+    # Robustness Values (RV/RVa)
+    # RV is the confounding strength that makes the bound include H0
+    # |theta - H0| = |rho| * sqrt(sigma2 * nu2) * RV / sqrt(1 - RV)
+    delta_theta = abs(theta - H0)
+    denom_rv = abs(rho) * np.sqrt(max(sigma2 * nu2, 0.0))
+    if denom_rv > 1e-16 and delta_theta > 0:
+        D = delta_theta / denom_rv
+        f2 = D**2
+        rv = (np.sqrt(f2**2 + 4.0 * f2) - f2) / 2.0
+    else:
+        rv = 0.0 if delta_theta == 0 else np.nan
+    
+    delta_theta_a = max(abs(theta - H0) - z * se, 0.0)
+    if denom_rv > 1e-16 and delta_theta_a > 0:
+        Da = delta_theta_a / denom_rv
+        f2a = Da**2
+        rva = (np.sqrt(f2a**2 + 4.0 * f2a) - f2a) / 2.0
+    else:
+        rva = 0.0
+
+    # DoubleML bounds: theta ± |rho| * B
+    # where B = sqrt(sigma2 * nu2) * bias_factor
+    # Note: max_bias here is B
+    bound_width = abs(rho) * max_bias
+    theta_lower = float(theta) - float(bound_width)
+    theta_upper = float(theta) + float(bound_width)
+
     # Graceful fallback: if se is non-finite, report cofounding bounds only
     if not (np.isfinite(se) and se >= 0.0 and np.isfinite(z)):
-        bias_aware_ci = (float(theta) - float(max_bias), float(theta) + float(max_bias))
-    else:
+        bias_aware_ci = (theta_lower, theta_upper)
+    elif elems and all(k in elems for k in ('psi', 'psi_sigma2', 'psi_nu2')):
+        # DoubleML-faithful inference for the bounds using orthogonal scores
+        psi = np.asarray(elems['psi'])
+        psi_sigma2 = np.asarray(elems['psi_sigma2'])
+        psi_nu2 = np.asarray(elems['psi_nu2'])
+        n = len(psi)
+
+        if sigma2 * nu2 > 0:
+            correction = (abs(rho) * bias_factor / (2.0 * np.sqrt(sigma2 * nu2))) * (
+                sigma2 * psi_nu2 + nu2 * psi_sigma2
+            )
+            psi_plus = psi + correction
+            psi_minus = psi - correction
+            se_lower = np.sqrt(np.var(psi_minus, ddof=1) / n)
+            se_upper = np.sqrt(np.var(psi_plus, ddof=1) / n)
+        else:
+            se_lower = se
+            se_upper = se
+
         bias_aware_ci = (
-            float(theta) - (float(max_bias) + z * float(se)),
-            float(theta) + (float(max_bias) + z * float(se)),
+            float(theta_lower) - z * float(se_lower),
+            float(theta_upper) + z * float(se_upper)
+        )
+    else:
+        # bias-aware CI following DoubleML (approximate if scores not available)
+        bias_aware_ci = (
+            float(theta_lower) - z * float(se),
+            float(theta_upper) + z * float(se),
         )
 
     return dict(
@@ -202,18 +456,34 @@ def compute_bias_aware_ci(
         se=float(se),
         alpha=float(alpha),
         z=z,
+        H0=float(H0),
         sampling_ci=tuple(map(float, sampling_ci)),
         theta_bounds_cofounding=(float(theta_lower), float(theta_upper)),
         bias_aware_ci=tuple(map(float, bias_aware_ci)),
         max_bias=float(max_bias),
         sigma2=float(sigma2),
         nu2=float(nu2),
-        params=dict(cf_y=float(cf_y), cf_d=float(cf_d), rho=float(np.clip(rho, -1.0, 1.0)), use_signed_rr=bool(use_signed_rr)),
+        rv=float(rv),
+        rva=float(rva),
+        params=dict(cf_y=float(cf_y), r2_d=float(r2_d), rho=float(np.clip(rho, -1.0, 1.0)), use_signed_rr=bool(use_signed_rr)),
     )
 
 
 def format_bias_aware_summary(res: Dict[str, Any], label: str | None = None) -> str:
-    """Pretty, one-row printout (aligned with new summary style)."""
+    """Render a single, unified bias-aware summary string.
+
+    Parameters
+    ----------
+    res : Dict[str, Any]
+        The result dictionary from compute_bias_aware_ci.
+    label : str, optional, default None
+        The label for the estimand.
+
+    Returns
+    -------
+    str
+        Formatted summary string.
+    """
     lbl = (label or 'theta').rjust(6)
     ci_l, ci_u = res['sampling_ci']
     th_l, th_u = res['theta_bounds_cofounding']
@@ -227,7 +497,8 @@ def format_bias_aware_summary(res: Dict[str, Any], label: str | None = None) -> 
     lines.append("")
     lines.append("------------------ Scenario          ------------------")
     lines.append(f"Significance Level: alpha={alpha}")
-    lines.append(f"Sensitivity parameters: cf_y={cf['cf_y']}; cf_d={cf['cf_d']}, rho={cf['rho']}, use_signed_rr={cf['use_signed_rr']}")
+    lines.append(f"Null Hypothesis: H0={res.get('H0', 0.0)}")
+    lines.append(f"Sensitivity parameters: cf_y={cf['cf_y']}; r2_d={cf['r2_d']}, rho={cf['rho']}, use_signed_rr={cf['use_signed_rr']}")
     lines.append("")
     lines.append("------------------ Components        ------------------")
     lines.append(f"{'':>6} {'theta':>11} {'se':>11} {'z':>8} {'max_bias':>12} {'sigma2':>12} {'nu2':>12}")
@@ -236,6 +507,13 @@ def format_bias_aware_summary(res: Dict[str, Any], label: str | None = None) -> 
     lines.append("------------------ Intervals         ------------------")
     lines.append(f"{'':>6} {'Sampling CI lower':>18} {'Conf. θ lower':>16} {'Bias-aware lower':>18} {'Bias-aware upper':>18} {'Conf. θ upper':>16} {'Sampling CI upper':>20}")
     lines.append(f"{lbl} {ci_l:18.6f} {th_l:16.6f} {bci_l:18.6f} {bci_u:18.6f} {th_u:16.6f} {ci_u:20.6f}")
+    
+    if 'rv' in res and 'rva' in res:
+        lines.append("")
+        lines.append("------------------ Robustness Values ------------------")
+        lines.append(f"{'':>6} {'RV (%)':>15} {'RVa (%)':>15}")
+        lines.append(f"{lbl} {res['rv']*100:15.6f} {res['rva']*100:15.6f}")
+    
     return "\n".join(lines)
 
 
@@ -244,7 +522,7 @@ def format_bias_aware_summary(res: Dict[str, Any], label: str | None = None) -> 
 def _format_sensitivity_summary(
     summary: pd.DataFrame,
     cf_y: float,
-    cf_d: float,
+    r2_d: float,
     rho: float,
     alpha: float
 ) -> str:
@@ -256,9 +534,9 @@ def _format_sensitivity_summary(
     summary : pd.DataFrame
         The sensitivity summary DataFrame from DoubleML
     cf_y : float
-        Sensitivity parameter for the outcome equation
-    cf_d : float
-        Sensitivity parameter for the treatment equation
+        Sensitivity parameter for the outcome equation (odds form, C_Y^2)
+    r2_d : float
+        Sensitivity parameter for the treatment equation (R^2 form, R_D^2)
     rho : float
         Correlation parameter
     alpha : float
@@ -275,7 +553,7 @@ def _format_sensitivity_summary(
     output_lines.append("")
     output_lines.append("------------------ Scenario          ------------------")
     output_lines.append(f"Significance Level: alpha={alpha}")
-    output_lines.append(f"Sensitivity parameters: cf_y={cf_y}; cf_d={cf_d}, rho={rho}")
+    output_lines.append(f"Sensitivity parameters: cf_y={cf_y}; r2_d={r2_d}, rho={rho}")
     output_lines.append("")
 
     # Bounds with CI section
@@ -290,7 +568,7 @@ def _format_sensitivity_summary(
     lower_lbl = f"{alpha / 2 * 100:.1f} %"
     upper_lbl = f"{(1 - alpha / 2) * 100:.1f} %"
     for idx, row in summary.iterrows():
-        # Format the row data - adjust column names based on actual DoubleML output
+        # Format the row data_contracts - adjust column names based on actual DoubleML output
         row_name = str(idx) if not isinstance(idx, str) else idx
         try:
             ci_lower = row.get('ci_lower', row.get(lower_lbl, row.get('2.5 %', row.get('2.5%', 0.0))))
@@ -333,27 +611,58 @@ def _format_sensitivity_summary(
 
 
 def get_sensitivity_summary(
-    effect_estimation: Dict[str, Any],
+    effect_estimation: Dict[str, Any] | Any,
     *,
     label: Optional[str] = None,
 ) -> Optional[str]:
-    """
-    Render a single, unified bias-aware summary string.
+    """Render a single, unified bias-aware summary string.
+
     If bias-aware components are missing, shows a sampling-only variant with max_bias=0
     and then formats via `format_bias_aware_summary` for consistency.
+
+    Parameters
+    ----------
+    effect_estimation : Dict[str, Any] or Any
+        The effect estimation object.
+    label : str, optional, default None
+        The label for the estimand.
+
+    Returns
+    -------
+    Optional[str]
+        Formatted summary string or None if extraction fails.
     """
-    if not isinstance(effect_estimation, dict) or 'model' not in effect_estimation:
+    if isinstance(effect_estimation, dict):
+        if 'model' not in effect_estimation:
+            return None
+        effect_dict = effect_estimation
+    elif hasattr(effect_estimation, "coef_") and hasattr(effect_estimation, "se_"):
+        # Likely an IRM instance
+        effect_dict = {'model': effect_estimation}
+    elif hasattr(effect_estimation, "value") and hasattr(effect_estimation, "diagnostic_data"):
+        # CausalEstimate
+        effect_dict = {
+            'model': None,
+            'diagnostic_data': effect_estimation.diagnostic_data,
+            'bias_aware': getattr(effect_estimation, 'sensitivity_analysis', {})
+        }
+    else:
         return None
 
-    model = effect_estimation['model']
+    model = effect_dict['model']
     if label is None:
-        t = getattr(getattr(model, 'data', None), 'treatment', None)
-        label = getattr(t, 'name', None) or 'theta'
+        if hasattr(effect_estimation, 'treatment') and isinstance(effect_estimation.treatment, str):
+            label = effect_estimation.treatment
+        else:
+            # Check 'data' or 'data_contracts' for the treatment name
+            data_obj = getattr(model, 'data', getattr(model, 'data_contracts', None))
+            t = getattr(data_obj, 'treatment', None)
+            label = getattr(t, 'name', None) or 'theta'
 
-    res = effect_estimation.get('bias_aware')
+    res = effect_dict.get('bias_aware')
 
     # Build a sampling-only placeholder if needed (alpha fixed at 0.05 here)
-    if not isinstance(res, dict):
+    if not isinstance(res, dict) or not res:
         theta, se, ci = _pull_theta_se_ci(effect_estimation, alpha=0.05)
         from scipy.stats import norm
         z = float(norm.ppf(1 - 0.05 / 2.0))
@@ -368,7 +677,7 @@ def get_sensitivity_summary(
             max_bias=0.0,
             sigma2=np.nan,
             nu2=np.nan,
-            params=dict(cf_y=0.0, cf_d=0.0, rho=0.0, use_signed_rr=False),
+            params=dict(cf_y=0.0, r2_d=0.0, rho=0.0, use_signed_rr=False),
         )
 
     # Single clean summary (reuse the one definitive formatter)
@@ -385,7 +694,7 @@ def sensitivity_benchmark(
     """
     Computes a benchmark for a given set of features by refitting a short IRM model
     (excluding the provided features) and contrasting it with the original (long) model.
-    Returns a DataFrame containing cf_y, cf_d, rho and the change in estimates.
+    Returns a DataFrame containing cf_y, r2_d, rho and the change in estimates.
 
     Parameters
     ----------
@@ -400,25 +709,43 @@ def sensitivity_benchmark(
     -------
     pandas.DataFrame
         A one-row DataFrame indexed by the treatment name with columns:
-        - cf_y, cf_d, rho: residual-based benchmarking strengths
+        - cf_y, r2_d, rho: residual-based benchmarking strengths
         - theta_long, theta_short, delta: effect estimates and their change (long - short)
     """
-    if not isinstance(effect_estimation, dict) or 'model' not in effect_estimation:
-        raise TypeError("effect_estimation must be a dict containing a fitted IRM under key 'model'.")
+    # Extract model from various possible inputs (dict, CausalEstimate, or DiagnosticData)
+    model = None
+    if isinstance(effect_estimation, dict):
+        model = effect_estimation.get('model')
+    elif hasattr(effect_estimation, '_model'):
+        # DiagnosticData path (via private attribute)
+        model = getattr(effect_estimation, '_model')
+    elif hasattr(effect_estimation, 'diagnostic_data'):
+        # CausalEstimate path
+        diag = getattr(effect_estimation, 'diagnostic_data')
+        model = getattr(diag, '_model', None)
 
-    model = effect_estimation['model']
+    # Fallback: check if effect_estimation itself is the model
+    if model is None and hasattr(effect_estimation, 'coef_'):
+        model = effect_estimation
+
+    if model is None:
+        raise TypeError("effect_estimation must be a dict with 'model', a CausalEstimate, "
+                        "or a diagnostic_data object with a model reference.")
 
     # Validate model type by attribute presence (duck-typing IRM)
     required_attrs = ['data', 'coef_', 'se_', '_sensitivity_element_est']
     for attr in required_attrs:
         if not hasattr(model, attr):
-            raise NotImplementedError("Sensitivity benchmarking requires a fitted IRM model with sensitivity elements.")
+            # Fallback for data_contracts name
+            if attr == 'data' and hasattr(model, 'data_contracts'):
+                continue
+            raise NotImplementedError(f"Sensitivity benchmarking requires a fitted IRM model with sensitivity elements. Missing: {attr}")
 
     # Extract current confounders
     try:
         x_list_long = list(getattr(model.data, 'confounders', []))
     except Exception as e:
-        raise RuntimeError(f"Failed to access model data confounders: {e}")
+        raise RuntimeError(f"Failed to access model data_contracts confounders: {e}")
 
     # input checks
     if not isinstance(benchmarking_set, list):
@@ -435,7 +762,7 @@ def sensitivity_benchmark(
     if fit_args is not None and not isinstance(fit_args, dict):
         raise TypeError(f"fit_args must be a dict. {str(fit_args)} of type {type(fit_args)} was passed.")
 
-    # Build short data excluding benchmarking features
+    # Build short data_contracts excluding benchmarking features
     x_list_short = [x for x in x_list_long if x not in benchmarking_set]
     if len(x_list_short) == 0:
         raise ValueError("After removing benchmarking_set there are no confounders left to fit the short model.")
@@ -450,8 +777,8 @@ def sensitivity_benchmark(
         CausalData  # type: ignore[name-defined]
         IRM  # type: ignore[name-defined]
     except NameError:
-        from causalis.data.causaldata import CausalData
-        from causalis.statistics.models.irm import IRM
+        from causalis.dgp.causaldata import CausalData
+        from causalis.scenarios.unconfoundedness.irm import IRM
 
     data_short = CausalData(df=df_long, treatment=treatment_name, outcome=outcome_name, confounders=x_list_short)
 
@@ -462,7 +789,6 @@ def sensitivity_benchmark(
         ml_m=model.ml_m,
         n_folds=getattr(model, 'n_folds', 4),
         n_rep=getattr(model, 'n_rep', 1),
-        score=getattr(model, 'score', 'ATE'),
         normalize_ipw=getattr(model, 'normalize_ipw', False),
         trimming_rule=getattr(model, 'trimming_rule', 'truncate'),
         trimming_threshold=getattr(model, 'trimming_threshold', 1e-2),
@@ -475,6 +801,9 @@ def sensitivity_benchmark(
         irm_short.fit()
     else:
         irm_short.fit(**fit_args)
+
+    # Estimate using the same score as the long model
+    irm_short.estimate(score=getattr(model, 'score', 'ATE'))
 
     # Long model stats
     theta_long = float(model.coef_[0])
@@ -579,7 +908,7 @@ def sensitivity_benchmark(
     R2y, yhat_u = _ols_r2_and_fit(r_y, Z, w=weights)
     R2d, dhat_u = _ols_r2_and_fit(r_d, Z, w=weights)
     cf_y = float(R2y / max(1e-12, 1.0 - R2y))
-    cf_d = float(R2d / max(1e-12, 1.0 - R2d))
+    r2_d = float(R2d)
 
     def _safe_corr(u: np.ndarray, v: np.ndarray, w: Optional[np.ndarray] = None) -> float:
         if w is None:
@@ -592,6 +921,7 @@ def sensitivity_benchmark(
         u = _center_w(u, w); v = _center_w(v, w)
         sw = float(np.sum(w))
         su = np.sqrt(max(0.0, float(np.sum(w * u * u)) / (sw if sw > 1e-12 else 1.0)))
+        sv = np.sqrt(max(0.0, float(np.sum(w * v * v)) / (sw if sw > 1e-12 else 1.0)))
         sv = np.sqrt(max(0.0, float(np.sum(w * v * v)) / (sw if sw > 1e-12 else 1.0)))
         if su <= 0 or sv <= 0:
             return 0.0
@@ -606,7 +936,7 @@ def sensitivity_benchmark(
     df_benchmark = pd.DataFrame(
         {
             "cf_y": [cf_y],
-            "cf_d": [cf_d],
+            "r2_d": [r2_d],
             "rho": [rho],
             "theta_long": [theta_long],
             "theta_short": [theta_short],
@@ -620,83 +950,56 @@ def sensitivity_benchmark(
 # ---------------- Main entry for producing textual sensitivity summary ----------------
 
 def sensitivity_analysis(
-    effect_estimation: Dict[str, Any],
+    effect_estimation: Dict[str, Any] | Any,
     *,
     cf_y: float,
-    cf_d: float,
+    r2_d: float,
     rho: float = 1.0,
+    H0: float = 0.0,
     alpha: float = 0.05,
     use_signed_rr: bool = False,
 ) -> Dict[str, Any]:
+    """Compute bias-aware components and cache them.
+
+    Parameters
+    ----------
+    effect_estimation : Dict[str, Any] or Any
+        The effect estimation object.
+    cf_y : float
+        Sensitivity parameter for the outcome (odds form, C_Y^2).
+    r2_d : float
+        Sensitivity parameter for the treatment (R^2 form, R_D^2).
+    rho : float, default 1.0
+        Correlation parameter.
+    H0 : float, default 0.0
+        Null hypothesis for robustness values.
+    alpha : float, default 0.05
+        Significance level.
+    use_signed_rr : bool, default False
+        Whether to use signed rr.
+
+    Returns
+    -------
+    dict
+        Dictionary with bias-aware results:
+          - theta, se, alpha, z
+          - sampling_ci
+          - theta_bounds_cofounding = (theta - bound_width, theta + bound_width)
+          - bias_aware_ci = faithful DoubleML CI for the bounds
+          - max_bias and components (sigma2, nu2)
+          - params (cf_y, r2_d, rho, use_signed_rr)
     """
-    Compute bias-aware components and cache them on `effect_estimation["bias_aware"]`.
-
-    Returns a dict with:
-      - theta, se, alpha, z
-      - sampling_ci
-      - theta_bounds_cofounding = (theta - max_bias, theta + max_bias)
-      - bias_aware_ci = [theta - (max_bias + z*se), theta + (max_bias + z*se)]
-      - max_bias and components (sigma2, nu2)
-      - params (cf_y, cf_d, rho, use_signed_rr)
-    """
-    if not isinstance(effect_estimation, dict) or 'model' not in effect_estimation:
-        raise TypeError("Pass a result dict with a fitted model under key 'model'.")
-    if not (0.0 < float(alpha) < 1.0):
-        raise ValueError("alpha must be in (0,1).")
-    if cf_y < 0 or cf_d < 0:
-        raise ValueError("cf_y and cf_d must be >= 0.")
-
-    from scipy.stats import norm as _norm
-
-    theta, se, sampling_ci = _pull_theta_se_ci(effect_estimation, alpha)
-    z = float(_norm.ppf(1 - alpha / 2.0))
-
-    model = effect_estimation['model']
-    max_bias = 0.0
-    sigma2 = np.nan
-    nu2 = np.nan
-
-    if hasattr(model, "_sensitivity_element_est"):
-        elems = model._sensitivity_element_est()
-        sigma2 = float(elems["sigma2"])
-        psi_sigma2 = np.asarray(elems["psi_sigma2"], float)
-        psi_sigma2 = psi_sigma2 - float(np.mean(psi_sigma2))
-        m_alpha = np.asarray(elems["m_alpha"], float)
-        rr = np.asarray(elems["riesz_rep"], float)
-        nu2, psi_nu2 = _combine_nu2_local(
-            m_alpha, rr, cf_y=cf_y, cf_d=cf_d, rho=rho, use_signed_rr=use_signed_rr
-        )
-        max_bias = float(np.sqrt(max(nu2, 0.0)) * se)
-
-    theta_lower = float(theta) - float(max_bias)
-    theta_upper = float(theta) + float(max_bias)
-    # Graceful fallback: if se is non-finite, report cofounding bounds only
-    if not (np.isfinite(se) and se >= 0.0 and np.isfinite(z)):
-        bias_aware_ci = (float(theta) - float(max_bias), float(theta) + float(max_bias))
-    else:
-        bias_aware_ci = (
-            float(theta) - (float(max_bias) + z * float(se)),
-            float(theta) + (float(max_bias) + z * float(se)),
-        )
-
-    res = dict(
-        theta=float(theta),
-        se=float(se),
-        alpha=float(alpha),
-        z=z,
-        sampling_ci=tuple(map(float, sampling_ci)),
-        theta_bounds_cofounding=(float(theta_lower), float(theta_upper)),
-        bias_aware_ci=tuple(map(float, bias_aware_ci)),
-        max_bias=float(max_bias),
-        sigma2=float(sigma2),
-        nu2=float(nu2),
-        params=dict(
-            cf_y=float(cf_y),
-            cf_d=float(cf_d),
-            rho=float(np.clip(rho, -1.0, 1.0)),
-            use_signed_rr=bool(use_signed_rr),
-        ),
+    res = compute_bias_aware_ci(
+        effect_estimation,
+        cf_y=cf_y,
+        r2_d=r2_d,
+        rho=rho,
+        H0=H0,
+        alpha=alpha,
+        use_signed_rr=use_signed_rr
     )
 
-    effect_estimation["bias_aware"] = res
+    if isinstance(effect_estimation, dict):
+        effect_estimation["bias_aware"] = res
+
     return res

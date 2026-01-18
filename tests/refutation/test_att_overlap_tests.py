@@ -3,8 +3,8 @@ import pandas as pd
 from sklearn.linear_model import LogisticRegression, LinearRegression
 
 from causalis.scenarios.unconfoundedness.refutation import att_overlap_tests
-from causalis.data.causaldata import CausalData
-from causalis.scenarios.unconfoundedness.atte.dml_atte import dml_atte
+from causalis.dgp.causaldata import CausalData
+from causalis.scenarios.unconfoundedness.irm import IRM
 
 
 def test_att_overlap_tests_structure_and_basic_flags_random():
@@ -62,7 +62,23 @@ def test_att_overlap_tests_accepts_dml_att_result():
     ml_g = LinearRegression()
     ml_m = LogisticRegression(max_iter=2000)
 
-    res = dml_atte(data, ml_g=ml_g, ml_m=ml_m, n_folds=4, trimming_threshold=1e-3, random_state=7)
+    est = IRM(
+        data,
+        ml_g=ml_g,
+        ml_m=ml_m,
+        n_folds=4,
+        trimming_threshold=1e-3,
+        random_state=7,
+    ).fit()
+    results = est.estimate(score="ATTE")
+
+    res = {
+        "model": est,
+        "diagnostic_data": {
+            "m_hat": results.diagnostic_data.m_hat,
+            "d": results.diagnostic_data.d,
+        }
+    }
 
     out = att_overlap_tests(res)
     # Sanity checks

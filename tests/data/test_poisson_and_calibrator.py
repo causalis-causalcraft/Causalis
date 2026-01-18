@@ -1,7 +1,6 @@
 import numpy as np
-import pytest
 
-from causalis.data.dgps import CausalDatasetGenerator
+from causalis.dgp import CausalDatasetGenerator
 
 
 def test_poisson_overflow_guard_clips_link_scale():
