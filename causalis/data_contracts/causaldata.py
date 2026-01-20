@@ -4,8 +4,9 @@ Causalis Dataclass for storing Cross-sectional DataFrame and column metadata for
 
 from __future__ import annotations
 import pandas as pd
+import numpy as np
 import pandas.api.types as pdtypes
-from typing import Union, List, Optional, Any
+from typing import Union, List, Optional, Any, ClassVar
 from pydantic import BaseModel, ConfigDict, Field, model_validator, field_validator
 
 
@@ -31,7 +32,11 @@ class CausalData(BaseModel):
     user_id_name : str, optional
         Column name representing the unique identifier for each observation/user.
     """
-    model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True)
+    model_config = ConfigDict(
+        arbitrary_types_allowed=True,
+        populate_by_name=True,
+        extra="forbid",
+    )
 
     df: pd.DataFrame
     treatment_name: str = Field(alias="treatment")
@@ -314,14 +319,21 @@ class CausalData(BaseModel):
         cols = [self.outcome_name, self.treatment_name] + self.confounders_names
         if self.user_id_name:
             cols.append(self.user_id_name)
-        
+
         # Unique columns preserving order
         cols = list(dict.fromkeys(cols))
+
+        def _values_equal_ignore_dtype(a: pd.Series, b: pd.Series) -> bool:
+            # NaNs are forbidden earlier, so array_equal is safe here.
+            return np.array_equal(
+                a.to_numpy(dtype=object, copy=False),
+                b.to_numpy(dtype=object, copy=False),
+            )
 
         for i, col1 in enumerate(cols):
             for j in range(i + 1, len(cols)):
                 col2 = cols[j]
-                if df[col1].equals(df[col2]):
+                if _values_equal_ignore_dtype(df[col1], df[col2]):
                     col1_role = self._get_column_type(col1)
                     col2_role = self._get_column_type(col2)
                     raise ValueError(
@@ -461,7 +473,7 @@ class CausalData(BaseModel):
             cols_to_include.extend(columns)
 
         if columns is None and not any([include_outcome, include_confounders, include_treatment, include_user_id]):
-            return self.df.copy()
+            return self.df.iloc[:, 0:0].copy()  # empty frame with same index
 
         if include_outcome:
             cols_to_include.append(self.outcome_name)
@@ -494,3 +506,4 @@ class CausalData(BaseModel):
             res += f", user_id='{self.user_id_name}'"
         res += ")"
         return res
+

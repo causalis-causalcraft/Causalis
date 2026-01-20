@@ -1,4 +1,5 @@
 from .causaldata import CausalData
+from .multicausaldata import MultiCausalData
 from .causaldata_instrumental import CausalDataInstrumental
 from .causal_estimate import CausalEstimate
 from .causal_diagnostic_data import DiagnosticData, UnconfoundednessDiagnosticData
@@ -13,6 +14,7 @@ from causalis.dgp import (
 
 __all__ = [
     "CausalData",
+    "MultiCausalData",
     "CausalDataInstrumental",
     "CausalEstimate",
     "DiagnosticData",

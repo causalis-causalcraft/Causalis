@@ -121,7 +121,8 @@ def plot_m_overlap(
         "ytick.labelsize": 10 * font_scale,
     }
     with mpl.rc_context(rc):
-        if ax is None:
+        ax_provided = ax is not None
+        if not ax_provided:
             fig, ax = plt.subplots(figsize=figsize, dpi=dpi)
         else:
             fig = ax.figure
@@ -192,5 +193,8 @@ def plot_m_overlap(
                 transparent=transparent,
                 facecolor="none" if transparent else "white"
             )
+
+        if not ax_provided:
+            plt.close(fig)
 
     return fig

@@ -7,7 +7,7 @@ def test_outcome_stats():
     df = pd.DataFrame({
         "treatment": [0, 0, 0, 1, 1],
         "outcome": [1.0, 2.0, 3.0, 4.0, 5.0],
-        "confounder": [1, 2, 3, 4, 5]
+        "confounder": [1, 2, 3, 4, 6]
     })
     data = CausalData.from_df(df, treatment="treatment", outcome="outcome", confounders=["confounder"])
     
