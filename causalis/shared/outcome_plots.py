@@ -279,6 +279,8 @@ def outcome_hist(
                 facecolor="none" if transparent else "white",
             )
 
+        plt.close(fig)
+
     return fig
 
 
@@ -414,6 +416,8 @@ def outcome_boxplot(
                 facecolor="none" if transparent else "white",
             )
 
+        plt.close(fig)
+
     return fig
 
 
@@ -471,4 +475,18 @@ def outcome_plots(
         outcome=outcome,
         figsize=figsize,
     )
+
+    # In Jupyter notebooks, returning a tuple of figures results in text output
+    # but no images. Since outcome_hist and outcome_boxplot close their figures
+    # to avoid double-plotting when called directly, we must explicitly display
+    # them here if we are in an interactive environment.
+    try:
+        from IPython import get_ipython
+        if get_ipython() is not None:
+            from IPython.display import display
+            display(fig_hist)
+            display(fig_box)
+    except (ImportError, NameError):
+        pass
+
     return fig_hist, fig_box
