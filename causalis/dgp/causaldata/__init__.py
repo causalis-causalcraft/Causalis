@@ -10,7 +10,8 @@ from .functional import (
 )
 from causalis.scenarios.unconfoundedness.dgp import (
     obs_linear_26_dataset,
-    generate_obs_hte_26
+    generate_obs_hte_26,
+    generate_obs_hte_26_rich
 )
 from causalis.scenarios.classic_rct.dgp import generate_classic_rct_26
 from causalis.scenarios.cuped.dgp import make_cuped_tweedie_26
@@ -27,5 +28,6 @@ __all__ = [
     "SmokingDGP",
     "generate_classic_rct_26",
     "make_cuped_tweedie_26",
-    "generate_obs_hte_26"
+    "generate_obs_hte_26",
+    "generate_obs_hte_26_rich"
 ]

@@ -6870,14 +6870,14 @@ Return the standard error of the estimate.
 ###### `causalis.scenarios.unconfoundedness.IRM.sensitivity_analysis`
 
 ```python
-sensitivity_analysis(cf_y, r2_d, rho=1.0, H0=0.0, alpha=0.05)
+sensitivity_analysis(r2_y, r2_d, rho=1.0, H0=0.0, alpha=0.05)
 ```
 
 Compute a sensitivity analysis following DoubleML (Chernozhukov et al., 2022).
 
 **Parameters:**
 
-- **cf_y** (<code>[float](#float)</code>) – Sensitivity parameter for outcome equation (odds form, C_Y^2).
+- **r2_y** (<code>[float](#float)</code>) – Sensitivity parameter for outcome equation (R^2 form, R_Y^2; converted to odds form internally).
 - **r2_d** (<code>[float](#float)</code>) – Sensitivity parameter for treatment equation (R^2 form, R_D^2).
 - **rho** (<code>[float](#float)</code>) – Correlation between unobserved components.
 - **H0** (<code>[float](#float)</code>) – Null hypothesis for robustness values.
@@ -7426,14 +7426,14 @@ Return the standard error of the estimate.
 ####### `causalis.scenarios.unconfoundedness.irm.IRM.sensitivity_analysis`
 
 ```python
-sensitivity_analysis(cf_y, r2_d, rho=1.0, H0=0.0, alpha=0.05)
+sensitivity_analysis(r2_y, r2_d, rho=1.0, H0=0.0, alpha=0.05)
 ```
 
 Compute a sensitivity analysis following DoubleML (Chernozhukov et al., 2022).
 
 **Parameters:**
 
-- **cf_y** (<code>[float](#float)</code>) – Sensitivity parameter for outcome equation (odds form, C_Y^2).
+- **r2_y** (<code>[float](#float)</code>) – Sensitivity parameter for outcome equation (R^2 form, R_Y^2; converted to odds form internally).
 - **r2_d** (<code>[float](#float)</code>) – Sensitivity parameter for treatment equation (R^2 form, R_D^2).
 - **rho** (<code>[float](#float)</code>) – Correlation between unobserved components.
 - **H0** (<code>[float](#float)</code>) – Null hypothesis for robustness values.
@@ -9329,7 +9329,7 @@ Re-estimate θ while progressively trimming CONTROLS with large m(X).
 ###### `causalis.scenarios.unconfoundedness.refutation.sensitivity_analysis`
 
 ```python
-sensitivity_analysis(effect_estimation, *, cf_y, r2_d, rho=1.0, H0=0.0, alpha=0.05, use_signed_rr=False)
+sensitivity_analysis(effect_estimation, *, r2_y, r2_d, rho=1.0, H0=0.0, alpha=0.05, use_signed_rr=False)
 ```
 
 Compute bias-aware components and cache them.
@@ -9337,7 +9337,7 @@ Compute bias-aware components and cache them.
 **Parameters:**
 
 - **effect_estimation** (<code>[Dict](#typing.Dict)\[[str](#str), [Any](#typing.Any)\] or [Any](#typing.Any)</code>) – The effect estimation object.
-- **cf_y** (<code>[float](#float)</code>) – Sensitivity parameter for the outcome (odds form, C_Y^2).
+- **r2_y** (<code>[float](#float)</code>) – Sensitivity parameter for the outcome (R^2 form, R_Y^2; converted to odds form internally).
 - **r2_d** (<code>[float](#float)</code>) – Sensitivity parameter for the treatment (R^2 form, R_D^2).
 - **rho** (<code>[float](#float)</code>) – Correlation parameter.
 - **H0** (<code>[float](#float)</code>) – Null hypothesis for robustness values.
@@ -9352,7 +9352,7 @@ Compute bias-aware components and cache them.
   - theta_bounds_cofounding = (theta - bound_width, theta + bound_width)
   - bias_aware_ci = faithful DoubleML CI for the bounds
   - max_bias and components (sigma2, nu2)
-  - params (cf_y, r2_d, rho, use_signed_rr)
+  - params (r2_y, r2_d, rho, use_signed_rr)
 
 ###### `causalis.scenarios.unconfoundedness.refutation.sensitivity_benchmark`
 
@@ -9362,7 +9362,7 @@ sensitivity_benchmark(effect_estimation, benchmarking_set, fit_args=None)
 
 Computes a benchmark for a given set of features by refitting a short IRM model
 (excluding the provided features) and contrasting it with the original (long) model.
-Returns a DataFrame containing cf_y, r2_d, rho and the change in estimates.
+Returns a DataFrame containing r2_y, r2_d, rho and the change in estimates.
 
 **Parameters:**
 
@@ -9373,7 +9373,7 @@ Returns a DataFrame containing cf_y, r2_d, rho and the change in estimates.
 **Returns:**
 
 - <code>[DataFrame](#pandas.DataFrame)</code> – A one-row DataFrame indexed by the treatment name with columns:
-- cf_y, r2_d, rho: residual-based benchmarking strengths
+- r2_y, r2_d, rho: residual-based benchmarking strengths
 - theta_long, theta_short, delta: effect estimates and their change (long - short)
 
 ###### `causalis.scenarios.unconfoundedness.refutation.sutva`
@@ -9490,7 +9490,7 @@ Re-estimate θ while progressively trimming CONTROLS with large m(X).
 ####### `causalis.scenarios.unconfoundedness.refutation.uncofoundedness.compute_bias_aware_ci`
 
 ```python
-compute_bias_aware_ci(effect_estimation, *, cf_y, r2_d, rho=1.0, H0=0.0, alpha=0.05, use_signed_rr=False)
+compute_bias_aware_ci(effect_estimation, *, r2_y, r2_d, rho=1.0, H0=0.0, alpha=0.05, use_signed_rr=False)
 ```
 
 Compute bias-aware confidence intervals.
@@ -9506,7 +9506,7 @@ Returns a dict with:
 **Parameters:**
 
 - **effect_estimation** (<code>[Dict](#typing.Dict)\[[str](#str), [Any](#typing.Any)\] or [Any](#typing.Any)</code>) – The effect estimation object.
-- **cf_y** (<code>[float](#float)</code>) – Sensitivity parameter for the outcome (odds form, C_Y^2).
+- **r2_y** (<code>[float](#float)</code>) – Sensitivity parameter for the outcome (R^2 form, R_Y^2; converted to odds form internally).
 - **r2_d** (<code>[float](#float)</code>) – Sensitivity parameter for the treatment (R^2 form, R_D^2).
 - **rho** (<code>[float](#float)</code>) – Correlation parameter.
 - **H0** (<code>[float](#float)</code>) – Null hypothesis for robustness values.
@@ -9594,7 +9594,7 @@ and then formats via `format_bias_aware_summary` for consistency.
 ######## `causalis.scenarios.unconfoundedness.refutation.uncofoundedness.sensitivity.sensitivity_analysis`
 
 ```python
-sensitivity_analysis(effect_estimation, *, cf_y, r2_d, rho=1.0, H0=0.0, alpha=0.05, use_signed_rr=False)
+sensitivity_analysis(effect_estimation, *, r2_y, r2_d, rho=1.0, H0=0.0, alpha=0.05, use_signed_rr=False)
 ```
 
 Compute bias-aware components and cache them.
@@ -9602,7 +9602,7 @@ Compute bias-aware components and cache them.
 **Parameters:**
 
 - **effect_estimation** (<code>[Dict](#typing.Dict)\[[str](#str), [Any](#typing.Any)\] or [Any](#typing.Any)</code>) – The effect estimation object.
-- **cf_y** (<code>[float](#float)</code>) – Sensitivity parameter for the outcome (odds form, C_Y^2).
+- **r2_y** (<code>[float](#float)</code>) – Sensitivity parameter for the outcome (R^2 form, R_Y^2; converted to odds form internally).
 - **r2_d** (<code>[float](#float)</code>) – Sensitivity parameter for the treatment (R^2 form, R_D^2).
 - **rho** (<code>[float](#float)</code>) – Correlation parameter.
 - **H0** (<code>[float](#float)</code>) – Null hypothesis for robustness values.
@@ -9617,7 +9617,7 @@ Compute bias-aware components and cache them.
   - theta_bounds_cofounding = (theta - bound_width, theta + bound_width)
   - bias_aware_ci = faithful DoubleML CI for the bounds
   - max_bias and components (sigma2, nu2)
-  - params (cf_y, r2_d, rho, use_signed_rr)
+  - params (r2_y, r2_d, rho, use_signed_rr)
 
 ######## `causalis.scenarios.unconfoundedness.refutation.uncofoundedness.sensitivity.sensitivity_benchmark`
 
@@ -9627,7 +9627,7 @@ sensitivity_benchmark(effect_estimation, benchmarking_set, fit_args=None)
 
 Computes a benchmark for a given set of features by refitting a short IRM model
 (excluding the provided features) and contrasting it with the original (long) model.
-Returns a DataFrame containing cf_y, r2_d, rho and the change in estimates.
+Returns a DataFrame containing r2_y, r2_d, rho and the change in estimates.
 
 **Parameters:**
 
@@ -9638,13 +9638,13 @@ Returns a DataFrame containing cf_y, r2_d, rho and the change in estimates.
 **Returns:**
 
 - <code>[DataFrame](#pandas.DataFrame)</code> – A one-row DataFrame indexed by the treatment name with columns:
-- cf_y, r2_d, rho: residual-based benchmarking strengths
+- r2_y, r2_d, rho: residual-based benchmarking strengths
 - theta_long, theta_short, delta: effect estimates and their change (long - short)
 
 ####### `causalis.scenarios.unconfoundedness.refutation.uncofoundedness.sensitivity_analysis`
 
 ```python
-sensitivity_analysis(effect_estimation, *, cf_y, r2_d, rho=1.0, H0=0.0, alpha=0.05, use_signed_rr=False)
+sensitivity_analysis(effect_estimation, *, r2_y, r2_d, rho=1.0, H0=0.0, alpha=0.05, use_signed_rr=False)
 ```
 
 Compute bias-aware components and cache them.
@@ -9652,7 +9652,7 @@ Compute bias-aware components and cache them.
 **Parameters:**
 
 - **effect_estimation** (<code>[Dict](#typing.Dict)\[[str](#str), [Any](#typing.Any)\] or [Any](#typing.Any)</code>) – The effect estimation object.
-- **cf_y** (<code>[float](#float)</code>) – Sensitivity parameter for the outcome (odds form, C_Y^2).
+- **r2_y** (<code>[float](#float)</code>) – Sensitivity parameter for the outcome (R^2 form, R_Y^2; converted to odds form internally).
 - **r2_d** (<code>[float](#float)</code>) – Sensitivity parameter for the treatment (R^2 form, R_D^2).
 - **rho** (<code>[float](#float)</code>) – Correlation parameter.
 - **H0** (<code>[float](#float)</code>) – Null hypothesis for robustness values.
@@ -9667,7 +9667,7 @@ Compute bias-aware components and cache them.
   - theta_bounds_cofounding = (theta - bound_width, theta + bound_width)
   - bias_aware_ci = faithful DoubleML CI for the bounds
   - max_bias and components (sigma2, nu2)
-  - params (cf_y, r2_d, rho, use_signed_rr)
+  - params (r2_y, r2_d, rho, use_signed_rr)
 
 ####### `causalis.scenarios.unconfoundedness.refutation.uncofoundedness.sensitivity_benchmark`
 
@@ -9677,7 +9677,7 @@ sensitivity_benchmark(effect_estimation, benchmarking_set, fit_args=None)
 
 Computes a benchmark for a given set of features by refitting a short IRM model
 (excluding the provided features) and contrasting it with the original (long) model.
-Returns a DataFrame containing cf_y, r2_d, rho and the change in estimates.
+Returns a DataFrame containing r2_y, r2_d, rho and the change in estimates.
 
 **Parameters:**
 
@@ -9688,7 +9688,7 @@ Returns a DataFrame containing cf_y, r2_d, rho and the change in estimates.
 **Returns:**
 
 - <code>[DataFrame](#pandas.DataFrame)</code> – A one-row DataFrame indexed by the treatment name with columns:
-- cf_y, r2_d, rho: residual-based benchmarking strengths
+- r2_y, r2_d, rho: residual-based benchmarking strengths
 - theta_long, theta_short, delta: effect estimates and their change (long - short)
 
 ####### `causalis.scenarios.unconfoundedness.refutation.uncofoundedness.uncofoundedness_validation`

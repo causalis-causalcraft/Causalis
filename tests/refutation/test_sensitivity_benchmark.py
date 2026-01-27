@@ -44,7 +44,7 @@ def test_sensitivity_benchmark_basic():
     assert hasattr(res, "loc")  # is DataFrame-like
     assert res.shape[0] == 1
     # expected columns
-    for col in ["cf_y", "r2_d", "rho", "theta_long", "theta_short", "delta"]:
+    for col in ["r2_y", "r2_d", "rho", "theta_long", "theta_short", "delta"]:
         assert col in res.columns
 
     # Delta should be non-zero when removing strong confounder
