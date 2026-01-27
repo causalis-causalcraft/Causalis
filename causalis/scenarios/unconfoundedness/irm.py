@@ -841,6 +841,18 @@ class IRM(BaseEstimator):
         with np.errstate(divide='ignore', invalid='ignore'):
             inv_m = 1.0 / m_hat
             inv_1m = 1.0 / (1.0 - m_hat)
+        # If IPW terms are normalized in the score, mirror that normalization here.
+        if self.normalize_ipw:
+            h1_raw = d * inv_m
+            h0_raw = (1.0 - d) * inv_1m
+            c1 = float(np.mean(h1_raw))
+            c0 = float(np.mean(h0_raw))
+            if not (np.isfinite(c1) and abs(c1) > 1e-12):
+                c1 = 1.0
+            if not (np.isfinite(c0) and abs(c0) > 1e-12):
+                c0 = 1.0
+            inv_m = inv_m / c1
+            inv_1m = inv_1m / c0
         m_alpha = (w_bar ** 2) * (inv_m + inv_1m)
         rr = w_bar * (d * inv_m - (1.0 - d) * inv_1m)
 
@@ -858,13 +870,13 @@ class IRM(BaseEstimator):
             "psi": psi,
         }
 
-    def sensitivity_analysis(self, cf_y: float, r2_d: float, rho: float = 1.0, H0: float = 0.0, alpha: float = 0.05) -> "IRM":
+    def sensitivity_analysis(self, r2_y: float, r2_d: float, rho: float = 1.0, H0: float = 0.0, alpha: float = 0.05) -> "IRM":
         """Compute a sensitivity analysis following DoubleML (Chernozhukov et al., 2022).
         
         Parameters
         ----------
-        cf_y : float
-            Sensitivity parameter for outcome equation (odds form, C_Y^2).
+        r2_y : float
+            Sensitivity parameter for outcome equation (R^2 form, R_Y^2; converted to odds form internally).
         r2_d : float
             Sensitivity parameter for treatment equation (R^2 form, R_D^2).
         rho : float, default 1.0
@@ -878,9 +890,10 @@ class IRM(BaseEstimator):
             sensitivity_analysis as sa_fn,
             get_sensitivity_summary
         )
+        check_is_fitted(self, attributes=["coef_", "se_", "psi_"])
 
         # Execute sensitivity analysis using the centralized module logic
-        res = sa_fn(self, cf_y=cf_y, r2_d=r2_d, rho=rho, H0=H0, alpha=alpha)
+        res = sa_fn(self, r2_y=r2_y, r2_d=r2_d, rho=rho, H0=H0, alpha=alpha)
 
         # Cache the summary string for display
         self.sensitivity_summary = get_sensitivity_summary({"model": self, "bias_aware": res})
@@ -910,5 +923,3 @@ class IRM(BaseEstimator):
             {f"{alpha/2*100:.1f} %": [ci_low], f"{(1-alpha/2)*100:.1f} %": [ci_high]},
             index=[self.data.treatment.name],
         )
-
-

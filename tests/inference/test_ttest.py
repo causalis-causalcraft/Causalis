@@ -64,7 +64,7 @@ def test_ttest_basic_functionality(causal_data):
     
     # Check that the result contains all expected keys
     expected_keys = ['p_value', 'absolute_difference', 'absolute_ci', 
-                     'relative_difference', 'relative_ci']
+                     'relative_difference', 'relative_se', 'relative_ci']
     assert all(key in result for key in expected_keys)
     
     # Check that p-value is a float between 0 and 1
