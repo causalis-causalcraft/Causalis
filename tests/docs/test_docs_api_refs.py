@@ -10,8 +10,6 @@ def test_scenarios_rct_exports():
 
 def test_scenarios_unconfoundedness_exports():
     mod = importlib.import_module('causalis.scenarios.unconfoundedness')
-    assert hasattr(mod, 'dml_atte_source')
-    assert hasattr(mod, 'dml_ate_source')
     assert hasattr(mod, 'IRM')
 
 

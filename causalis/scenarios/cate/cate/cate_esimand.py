@@ -1,8 +1,8 @@
 """
-DoubleML implementation for estimating CATE (per-observation orthogonal signals).
+IRM-based implementation for estimating CATE (per-observation orthogonal signals).
 
-This module provides a function that, given a CausalData object, fits a DoubleML IRM
-model and augments the data_contracts with a new column 'cate' that contains the orthogonal
+This module provides a function that, given a CausalData object, fits the internal IRM
+model and augments the data with a new column 'cate' that contains the orthogonal
 signals (an estimate of the conditional average treatment effect for each unit).
 """
 
@@ -11,10 +11,11 @@ from typing import Any, Optional
 import numpy as np
 import pandas as pd
 
-import doubleml as dml
 from catboost import CatBoostRegressor, CatBoostClassifier
 
 from causalis.dgp.causaldata import CausalData
+from causalis.scenarios.cate.blp import BLP
+from causalis.scenarios.unconfoundedness.model import IRM
 
 
 def cate_esimand(
@@ -27,7 +28,7 @@ def cate_esimand(
     X_new: Optional[pd.DataFrame] = None,
 ) -> pd.DataFrame:
     """
-    Estimate per-observation CATEs using DoubleML IRM and return a DataFrame with a new 'cate' column.
+    Estimate per-observation CATEs using IRM and return a DataFrame with a new 'cate' column.
 
     Parameters
     ----------
@@ -44,8 +45,8 @@ def cate_esimand(
     n_rep : int, default 1
         Number of repetitions for sample splitting.
     use_blp : bool, default False
-        If True, and X_new is provided, returns cate from obj.blp_predict(X_new) aligned to X_new.
-        If False (default), uses obj._orthogonal_signals (in-sample estimates) and appends to data_contracts.
+        If True, and X_new is provided, fits a BLP on the orthogonal signal and predicts CATE for X_new.
+        If False (default), uses the in-sample orthogonal signal and appends to data.
     X_new : pd.DataFrame, optional
         New covariate matrix for out-of-sample CATE prediction via best linear predictor.
         Must contain the same feature columns as the confounders in `data_contracts`.
@@ -53,7 +54,7 @@ def cate_esimand(
     Returns
     -------
     pd.DataFrame
-        If use_blp is False: returns a copy of data_contracts.df with a new column 'cate'.
+        If use_blp is False: returns a copy of data with a new column 'cate'.
         If use_blp is True and X_new is provided: returns a DataFrame with 'cate' column for X_new rows.
 
     Raises
@@ -82,23 +83,14 @@ def cate_esimand(
     if ml_m is None:
         ml_m = CatBoostClassifier(iterations=100, depth=5, min_data_in_leaf=2, thread_count=-1, verbose=False)
 
-    # Data for DoubleML
+    # Prepare data
     df = data.get_df()
-    dml_data = dml.DoubleMLData(
-        df,
-        y_col=data.outcome.name,
-        d_cols=data.treatment.name,
-        x_cols=data.confounders,
-    )
-
-    # Fit DoubleML IRM
-    obj = dml.DoubleMLIRM(
-        dml_data,
+    irm = IRM(
+        data=data,
         ml_g=ml_g,
         ml_m=ml_m,
         n_folds=n_folds,
         n_rep=n_rep,
-        score="ATE",
     ).fit()
 
     if use_blp:
@@ -106,31 +98,19 @@ def cate_esimand(
         if X_new is None:
             raise ValueError("X_new must be provided when use_blp=True")
         # Ensure columns match the confounders order
-        X_cols = list(data._confounders)
+        X_cols = list(data.confounders)
         missing = [c for c in X_cols if c not in X_new.columns]
         if missing:
             raise ValueError(f"X_new is missing required columns: {missing}")
-        # Some DoubleML versions may not expose blp_predict
-        if not hasattr(obj, "blp_predict"):
-            raise NotImplementedError("This DoubleML version does not support blp_predict. Use use_blp=False for in-sample CATEs.")
-        cate_hat = obj.blp_predict(X_new[X_cols])
-        # Return DataFrame aligned with X_new
+        if len(X_cols) == 0:
+            raise ValueError("CATE BLP prediction requires at least one confounder.")
+        basis = df[X_cols].copy()
+        blp_model = BLP(orth_signal=irm.orth_signal, basis=basis).fit()
+        cate_hat = blp_model.blp_model.predict(X_new[X_cols])
         return pd.DataFrame({"cate": np.asarray(cate_hat).reshape(-1)})
 
     # In-sample orthogonal signals as CATE estimates
-    if hasattr(obj, "_orthogonal_signals"):
-        cate_hat = np.asarray(obj._orthogonal_signals).reshape(-1)
-    elif hasattr(obj, "psi_elements") and isinstance(obj.psi_elements, dict) and "psi_b" in obj.psi_elements:
-        psi_b = obj.psi_elements["psi_b"]
-        arr = np.asarray(psi_b)
-        # Average across all axes except the first to obtain one value per observation
-        if arr.ndim == 1:
-            cate_hat = arr
-        else:
-            axes = tuple(range(1, arr.ndim))
-            cate_hat = np.nanmean(arr, axis=axes)
-    else:
-        raise AttributeError("Could not extract orthogonal signals from DoubleMLIRM object.")
+    cate_hat = np.asarray(irm.orth_signal).reshape(-1)
 
     out = df.copy()
     out["cate"] = np.asarray(cate_hat).reshape(-1)

@@ -4,7 +4,7 @@ from sklearn.linear_model import LogisticRegression, LinearRegression
 
 from causalis.scenarios.unconfoundedness.refutation import att_overlap_tests
 from causalis.dgp.causaldata import CausalData
-from causalis.scenarios.unconfoundedness.irm import IRM
+from causalis.scenarios.unconfoundedness.model import IRM
 
 
 def test_att_overlap_tests_structure_and_basic_flags_random():

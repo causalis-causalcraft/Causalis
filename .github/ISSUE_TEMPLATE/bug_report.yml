@@ -1,0 +1,59 @@
+name: "Bug report"
+description: "Report a problem to help us improve."
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report an issue. Please fill out the details below so we can reproduce and fix it quickly.
+  - type: input
+    id: summary
+    attributes:
+      label: "Summary"
+      description: "A one-sentence description of the bug."
+      placeholder: "Crash when calling fit() with empty dataframe"
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: "Steps to reproduce"
+      description: "Provide a minimal, reproducible example."
+      placeholder: |
+        1. ...
+        2. ...
+        3. ...
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: "Expected behavior"
+      placeholder: "What you expected to happen"
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: "Actual behavior"
+      placeholder: "What actually happened (include error output if any)"
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: "Environment"
+      description: "Please include relevant versions."
+      placeholder: |
+        OS:
+        Python:
+        Package version:
+        Installation method (pip/conda/source):
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: "Logs / traceback"
+      description: "Paste any relevant logs or traceback here."
+      render: shell

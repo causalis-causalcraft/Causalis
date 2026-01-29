@@ -5,7 +5,7 @@ from sklearn.linear_model import LinearRegression, LogisticRegression
 
 from causalis.dgp.causaldata import CausalData
 from causalis.dgp import generate_rct
-from causalis.scenarios.unconfoundedness.irm import IRM
+from causalis.scenarios.unconfoundedness.model import IRM
 from causalis.scenarios.unconfoundedness.refutation.uncofoundedness.uncofoundedness_validation import validate_uncofoundedness_balance
 
 

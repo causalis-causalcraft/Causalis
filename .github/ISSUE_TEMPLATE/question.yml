@@ -1,0 +1,22 @@
+name: "Question"
+description: "Ask a question or request clarification."
+labels: ["question"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Please consider using GitHub Discussions for Q&A if enabled. If you prefer an issue, fill out the details below.
+  - type: input
+    id: summary
+    attributes:
+      label: "Question summary"
+      placeholder: "How do I configure ...?"
+    validations:
+      required: true
+  - type: textarea
+    id: details
+    attributes:
+      label: "Details"
+      description: "Provide context, code snippets, or links that help answer the question."
+    validations:
+      required: true

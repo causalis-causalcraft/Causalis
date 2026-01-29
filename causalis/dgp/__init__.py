@@ -4,7 +4,7 @@ from .causaldata import (
     generate_rct,
     generate_classic_rct,
     obs_linear_effect,
-    make_gold_linear, SmokingDGP, obs_linear_26_dataset,
+    make_gold_linear, obs_linear_26_dataset,
     generate_classic_rct_26,
     make_cuped_tweedie, make_cuped_tweedie_26
 )
@@ -17,10 +17,8 @@ __all__ = [
     "obs_linear_effect",
     "generate_iv_data",
     "make_gold_linear",
-    "SmokingDGP",
     "obs_linear_26_dataset",
     "generate_classic_rct_26",
     "make_cuped_tweedie",
     "make_cuped_tweedie_26"
 ]
-

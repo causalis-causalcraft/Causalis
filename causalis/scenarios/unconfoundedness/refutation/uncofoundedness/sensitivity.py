@@ -11,6 +11,8 @@ from typing import Dict, Any, Optional, List
 import numpy as np
 import pandas as pd
 
+from causalis.data_contracts.causal_diagnostic_data import UnconfoundednessDiagnosticData
+
 __all__ = ["sensitivity_analysis", "sensitivity_benchmark", "get_sensitivity_summary"]
 
 # ---------------- Internals ----------------
@@ -422,7 +424,7 @@ def compute_bias_aware_ci(
                 use_signed_rr_effective = False
 
         if not use_signed_rr_effective:
-            # DoubleML bias: |rho| * sqrt(sigma2 * nu2) * sqrt(cf_y * r2_d / (1 - r2_d))
+            # Bias component: |rho| * sqrt(sigma2 * nu2) * sqrt(cf_y * r2_d / (1 - r2_d))
             cf_y = r2_y / (1.0 - r2_y)
             bias_factor = np.sqrt(cf_y * r2_d / (1.0 - r2_d))
             max_bias = np.sqrt(max(sigma2 * nu2, 0.0)) * bias_factor
@@ -461,7 +463,7 @@ def compute_bias_aware_ci(
     if not (np.isfinite(se) and se >= 0.0 and np.isfinite(z)):
         bias_aware_ci = (theta_lower, theta_upper)
     elif elems and all(k in elems for k in ('psi', 'psi_sigma2', 'psi_nu2')):
-        # DoubleML-faithful inference for the bounds using orthogonal scores
+        # Faithful inference for the bounds using orthogonal scores
         psi = np.asarray(elems['psi'])
         psi_sigma2 = np.asarray(psi_sigma2 if psi_sigma2 is not None else elems['psi_sigma2'])
         psi_nu2 = np.asarray(psi_nu2 if psi_nu2 is not None else elems['psi_nu2'])
@@ -484,7 +486,7 @@ def compute_bias_aware_ci(
             float(theta_upper) + z * float(se_upper)
         )
     else:
-        # bias-aware CI following DoubleML (approximate if scores not available)
+        # bias-aware CI (approximate if scores not available)
         bias_aware_ci = (
             float(theta_lower) - z * float(se),
             float(theta_upper) + z * float(se),
@@ -571,7 +573,7 @@ def _format_sensitivity_summary(
     Parameters
     ----------
     summary : pd.DataFrame
-        The sensitivity summary DataFrame from DoubleML
+        The sensitivity summary DataFrame
     r2_y : float
         Sensitivity parameter for the outcome equation (R^2 form, R_Y^2; converted to odds form internally)
     r2_d : float
@@ -607,7 +609,7 @@ def _format_sensitivity_summary(
     lower_lbl = f"{alpha / 2 * 100:.1f} %"
     upper_lbl = f"{(1 - alpha / 2) * 100:.1f} %"
     for idx, row in summary.iterrows():
-        # Format the row data_contracts - adjust column names based on actual DoubleML output
+        # Format the row data_contracts - adjust column names based on actual output
         row_name = str(idx) if not isinstance(idx, str) else idx
         try:
             ci_lower = row.get('ci_lower', row.get(lower_lbl, row.get('2.5 %', row.get('2.5%', 0.0))))
@@ -680,10 +682,23 @@ def get_sensitivity_summary(
         effect_dict = {'model': effect_estimation}
     elif hasattr(effect_estimation, "value") and hasattr(effect_estimation, "diagnostic_data"):
         # CausalEstimate
+        diag = effect_estimation.diagnostic_data
+        bias_aware: Dict[str, Any] = {}
+        if diag is not None:
+            if isinstance(diag, UnconfoundednessDiagnosticData):
+                bias_aware = diag.sensitivity_analysis or {}
+            elif isinstance(diag, dict):
+                bias_aware = diag.get("sensitivity_analysis") or diag.get("bias_aware") or {}
+            else:
+                bias_aware = (
+                    getattr(diag, "sensitivity_analysis", None)
+                    or getattr(diag, "bias_aware", None)
+                    or {}
+                )
         effect_dict = {
             'model': None,
-            'diagnostic_data': effect_estimation.diagnostic_data,
-            'bias_aware': getattr(effect_estimation, 'sensitivity_analysis', {})
+            'diagnostic_data': diag,
+            'bias_aware': bias_aware,
         }
     else:
         return None
@@ -817,7 +832,7 @@ def sensitivity_benchmark(
         IRM  # type: ignore[name-defined]
     except NameError:
         from causalis.dgp.causaldata import CausalData
-        from causalis.scenarios.unconfoundedness.irm import IRM
+        from causalis.scenarios.unconfoundedness.model import IRM
 
     data_short = CausalData(df=df_long, treatment=treatment_name, outcome=outcome_name, confounders=x_list_short)
 
@@ -1026,7 +1041,7 @@ def sensitivity_analysis(
           - theta, se, alpha, z
           - sampling_ci
           - theta_bounds_cofounding = (theta - bound_width, theta + bound_width)
-          - bias_aware_ci = faithful DoubleML CI for the bounds
+          - bias_aware_ci = faithful CI for the bounds
           - max_bias and components (sigma2, nu2)
           - params (r2_y, r2_d, rho, use_signed_rr)
     """
@@ -1040,7 +1055,20 @@ def sensitivity_analysis(
         use_signed_rr=use_signed_rr
     )
 
+    diag = None
     if isinstance(effect_estimation, dict):
         effect_estimation["bias_aware"] = res
+        diag = effect_estimation.get("diagnostic_data")
+    else:
+        diag = getattr(effect_estimation, "diagnostic_data", None)
+
+    if diag is not None:
+        if isinstance(diag, dict):
+            diag["sensitivity_analysis"] = res
+        else:
+            try:
+                diag.sensitivity_analysis = res
+            except Exception:
+                pass
 
     return res

@@ -144,7 +144,7 @@ def test_conversion_z_test_methods():
 
 
 def test_diff_in_means_passes_kwargs():
-    from causalis.scenarios.classic_rct.diff_in_means import DiffInMeans
+    from causalis.scenarios.classic_rct.model import DiffInMeans
 
     np.random.seed(42)
     n = 100

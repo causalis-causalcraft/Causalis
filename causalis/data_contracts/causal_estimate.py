@@ -53,8 +53,6 @@ class CausalEstimate(BaseModel):
         The date and time when the estimate was created.
     diagnostic_data : DiagnosticData, optional
         Additional diagnostic data_contracts.
-    sensitivity_analysis : dict, optional
-        Results from sensitivity analysis.
     """
 
     model_config = ConfigDict(arbitrary_types_allowed=True)
@@ -78,7 +76,6 @@ class CausalEstimate(BaseModel):
     confounders: List[str] = Field(default_factory=list)
     time: datetime = Field(default_factory=datetime.now)
     diagnostic_data: Optional[DiagnosticData] = None
-    sensitivity_analysis: Dict[str, Any] = Field(default_factory=dict)
 
     def summary(self) -> pd.DataFrame:
         """

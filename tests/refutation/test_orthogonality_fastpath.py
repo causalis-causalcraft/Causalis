@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 
 from causalis.data_contracts import CausalData
-from causalis.scenarios.unconfoundedness.irm import IRM
+from causalis.scenarios.unconfoundedness.model import IRM
 from causalis.scenarios.unconfoundedness.refutation.score.score_validation import (
     refute_irm_orthogonality,
     oos_moment_check_from_psi,
