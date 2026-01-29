@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Optional, List
+from typing import Any, Dict, Optional, List
 
 import numpy as np
 import pandas as pd
@@ -35,6 +35,7 @@ class UnconfoundednessDiagnosticData(DiagnosticData):
     m_alpha: Optional[np.ndarray] = None
     psi: Optional[np.ndarray] = None
     score: Optional[str] = None  # ATE or ATTE
+    sensitivity_analysis: Optional[Dict[str, Any]] = None
 
 
 class DiffInMeansDiagnosticData(DiagnosticData):

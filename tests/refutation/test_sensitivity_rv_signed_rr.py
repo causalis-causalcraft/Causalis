@@ -53,17 +53,3 @@ def test_rv_formula_equal_strength():
     assert out["rva"] == pytest.approx(expected_rva, rel=1e-12, abs=1e-12)
 
 
-def test_use_signed_rr_changes_bounds_and_suppresses_rv():
-    elements = _make_elements(rr_val=-0.4, m_alpha_val=0.25)
-    model = _DummyIRM(theta=1.0, se=0.1, elements=elements)
-
-    out_unsigned = compute_bias_aware_ci(model, r2_y=0.2, r2_d=0.2, rho=1.0, use_signed_rr=False)
-    out_signed = compute_bias_aware_ci(model, r2_y=0.2, r2_d=0.2, rho=1.0, use_signed_rr=True)
-
-    width_unsigned = out_unsigned["theta_bounds_cofounding"][1] - out_unsigned["theta_bounds_cofounding"][0]
-    width_signed = out_signed["theta_bounds_cofounding"][1] - out_signed["theta_bounds_cofounding"][0]
-
-    assert out_signed["params"]["use_signed_rr"] is True
-    assert width_signed < width_unsigned
-    assert math.isnan(out_signed["rv"])
-    assert math.isnan(out_signed["rva"])

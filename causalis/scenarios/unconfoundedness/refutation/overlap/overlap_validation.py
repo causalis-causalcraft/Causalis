@@ -225,7 +225,16 @@ def att_weight_sum_identity(m_hat: np.ndarray, D: np.ndarray) -> Dict[str, float
       w1_i = D_i / p1,   w0_i = (1 - D_i) * m_hat_i / ((1 - m_hat_i) * p1),  where p1 = (1/n) sum_i D_i.
       Sum check:  sum_i (1 - D_i) * m_hat_i / (1 - m_hat_i)  ?≈  sum_i D_i.
 
-    Returns: {'lhs_sum': float, 'rhs_sum': float, 'rel_err': float}
+    Returns
+    -------
+    dict
+        Dictionary with keys:
+        - lhs_sum : float
+            Left-hand side sum.
+        - rhs_sum : float
+            Right-hand side sum.
+        - rel_err : float
+            Relative error between lhs and rhs.
     """
     m = np.asarray(m_hat, dtype=float)
     d = np.asarray(D, dtype=int)
@@ -817,7 +826,7 @@ def extract_diag_from_result(res: ResultLike) -> Tuple[np.ndarray, np.ndarray, O
     """Extract m_hat, D, and trimming epsilon from IRM result or model.
     Accepts:
     - dict returned by legacy dml_ate/dml_att (prefers key 'diagnostic_data'; otherwise uses 'model'), or
-    - a fitted IRM/DoubleMLIRM-like model instance with a .data or .data_contracts attribute.
+    - a fitted IRM-like or external model instance with a .data or .data_contracts attribute.
     Returns (m_hat, D, trimming_threshold_if_any).
     """
 
@@ -833,13 +842,13 @@ def extract_diag_from_result(res: ResultLike) -> Tuple[np.ndarray, np.ndarray, O
         except Exception:
             return None
 
-    def _try_doubleml_like(model: Any) -> Optional[Tuple[np.ndarray, np.ndarray, Optional[float]]]:
-        """Attempt to extract from a DoubleMLIRM-like object (model.data_contracts is DoubleMLData)."""
+    def _try_external_like(model: Any) -> Optional[Tuple[np.ndarray, np.ndarray, Optional[float]]]:
+        """Attempt to extract from an external IRM-like object (model.data_contracts is a data container)."""
         try:
             data_obj = getattr(model, "data_contracts", None)
             if data_obj is None:
                 return None
-            # DoubleMLData exposes .data_contracts (DataFrame) and lists of columns
+            # External data containers may expose a DataFrame plus lists of columns
             df = getattr(data_obj, "data_contracts", None)
             d_cols = getattr(data_obj, "d_cols", None)
             x_cols = getattr(data_obj, "x_cols", None)
@@ -896,22 +905,22 @@ def extract_diag_from_result(res: ResultLike) -> Tuple[np.ndarray, np.ndarray, O
             out = _try_irm_like(model)
             if out is not None:
                 return out
-            # Try DoubleML-like
-            out = _try_doubleml_like(model)
+            # Try external IRM-like
+            out = _try_external_like(model)
             if out is not None:
                 return out
-            raise ValueError("Unsupported result['model'] type; expected IRM-like or DoubleML-like.")
+            raise ValueError("Unsupported result['model'] type; expected IRM-like or compatible model.")
         raise ValueError("Result dict must contain 'diagnostic_data' or 'model'.")
 
-    # Model instance path (IRM or DoubleMLIRM)
+    # Model instance path (IRM or compatible)
     model = res
     out = _try_irm_like(model)
     if out is not None:
         return out
-    out = _try_doubleml_like(model)
+    out = _try_external_like(model)
     if out is not None:
         return out
-    raise ValueError("Unsupported result type; pass IRM result or IRM/DoubleMLIRM instance.")
+    raise ValueError("Unsupported result type; pass IRM result or compatible model instance.")
 
 
 def overlap_report_from_result(
@@ -986,7 +995,7 @@ def run_overlap_diagnostics(
       A) With raw arrays:
          run_overlap_diagnostics(m_hat=..., D=...)
       B) With a model/result:
-         run_overlap_diagnostics(res=<dml_ate/dml_att result dict or IRM/DoubleML-like model>)
+         run_overlap_diagnostics(res=<dml_ate/dml_att result dict or IRM/compatible model>)
 
     The function:
       - Auto-extracts (m_hat, D, trimming_threshold) from `res` if provided.
@@ -1107,14 +1116,32 @@ def att_overlap_tests(dml_att_result: dict, epsilon_list=(0.01, 0.02)) -> dict:
       - m_hat: np.ndarray of cross-fitted propensity scores Pr(D=1|X)
       - d: np.ndarray of treatment indicators {0,1}
 
-    Returns:
-      dict with keys:
-        - edge_mass: {'eps': {eps: {'share_below': float, 'share_above': float, 'warn': bool}}}
-        - ks: {'value': float, 'warn': bool}
-        - auc: {'value': float or nan, 'flag': str}  # 'GREEN'/'YELLOW'/'RED' or 'NA' if undefined
-        - ess: {'treated': {'ess': float, 'n': int, 'ratio': float, 'flag': str},
-                'control': {'ess': float, 'n': int, 'ratio': float, 'flag': str}}
-        - att_weight_identity: {'lhs_sum': float, 'rhs_sum': float, 'rel_err': float, 'flag': str}
+    Parameters
+    ----------
+    dml_att_result : dict
+        Result dictionary with diagnostic_data containing m_hat and d.
+    epsilon_list : tuple of float, optional
+        Epsilons used for edge-mass diagnostics.
+
+    Returns
+    -------
+    dict
+        Dictionary with keys:
+        - edge_mass : dict
+            Edge-mass diagnostics by epsilon with share_below/share_above and warn flag.
+        - ks : dict
+            KS statistic and warn flag for m|D=1 vs m|D=0.
+        - auc : dict
+            AUC diagnostic with value and flag ('GREEN'/'YELLOW'/'RED' or 'NA').
+        - ess : dict
+            Effective sample size diagnostics for treated and control arms.
+        - att_weight_identity : dict
+            Weight-sum identity check with lhs_sum, rhs_sum, rel_err, and flag.
+
+    Raises
+    ------
+    ValueError
+        If diagnostic_data is missing m_hat or d, or if their lengths differ.
     """
     dd = dml_att_result.get("diagnostic_data", {})
     m = np.asarray(dd.get("m_hat", None), dtype=float)

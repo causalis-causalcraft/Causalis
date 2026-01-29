@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 
 from causalis.dgp.causaldata import CausalData
-from causalis.scenarios.unconfoundedness.irm import IRM
+from causalis.scenarios.unconfoundedness.model import IRM
 
 from sklearn.linear_model import LinearRegression, LogisticRegression
 

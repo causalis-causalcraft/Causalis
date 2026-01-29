@@ -7,7 +7,7 @@ from causalis.dgp import (
     generate_rct,
     generate_classic_rct,
     obs_linear_effect,
-    make_gold_linear, SmokingDGP, obs_linear_26_dataset,
+    make_gold_linear, obs_linear_26_dataset,
     generate_classic_rct_26,
     CausalDatasetGenerator
 )
@@ -22,8 +22,7 @@ __all__ = [
     "generate_rct",
     "generate_classic_rct",
     "obs_linear_effect",
-    "make_gold_linear", "SmokingDGP", "obs_linear_26_dataset",
+    "make_gold_linear", "obs_linear_26_dataset",
     "generate_classic_rct_26",
     "CausalDatasetGenerator",
 ]
-

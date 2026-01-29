@@ -5,8 +5,7 @@ from .functional import (
     generate_classic_rct,
     obs_linear_effect,
     make_cuped_tweedie,
-    make_gold_linear,
-    SmokingDGP
+    make_gold_linear
 )
 from causalis.scenarios.unconfoundedness.dgp import (
     obs_linear_26_dataset,
@@ -25,7 +24,6 @@ __all__ = [
     "make_cuped_tweedie",
     "make_gold_linear",
     "obs_linear_26_dataset",
-    "SmokingDGP",
     "generate_classic_rct_26",
     "make_cuped_tweedie_26",
     "generate_obs_hte_26",

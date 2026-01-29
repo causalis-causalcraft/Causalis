@@ -1,6 +1,6 @@
 from causalis.dgp import CausalDatasetGenerator
 from causalis.scenarios.unconfoundedness.refutation.score.score_validation import refute_irm_orthogonality
-from causalis.scenarios.unconfoundedness.irm import IRM
+from causalis.scenarios.unconfoundedness.model import IRM
 
 from sklearn.ensemble import RandomForestRegressor, RandomForestClassifier
 

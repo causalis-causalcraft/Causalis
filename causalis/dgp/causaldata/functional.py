@@ -762,23 +762,3 @@ def make_gold_linear(n: int = 10000, seed: int = 42) -> CausalData:
     return gen.to_causal_data(n)
 
 
-class SmokingDGP(CausalDatasetGenerator):
-    """
-    A specialized generating class for smoking-related causal scenarios.
-    Example of how users can extend CausalDatasetGenerator for specific domains.
-    """
-
-    def __init__(self, effect_size: float = 2.0, seed: Optional[int] = 42, **kwargs):
-        confounder_specs = [
-            {"name": "age", "dist": "normal", "mu": 45, "sd": 15},
-            {"name": "income", "dist": "uniform", "a": 20, "b": 150},
-            {"name": "education_years", "dist": "normal", "mu": 12, "sd": 3},
-        ]
-        super().__init__(
-            theta=effect_size,
-            confounder_specs=confounder_specs,
-            seed=seed,
-            **kwargs
-        )
-
-

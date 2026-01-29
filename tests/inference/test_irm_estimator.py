@@ -6,7 +6,7 @@ from sklearn.ensemble import RandomForestRegressor, RandomForestClassifier
 
 from causalis.dgp.causaldata import CausalData
 from causalis.dgp import generate_rct
-from causalis.scenarios.unconfoundedness.irm import IRM
+from causalis.scenarios.unconfoundedness.model import IRM
 
 
 def make_causal_data(n=1000, outcome_type="normal", random_state=1):

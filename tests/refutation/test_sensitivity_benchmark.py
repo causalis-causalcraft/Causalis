@@ -6,7 +6,7 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import RandomForestRegressor
 
 from causalis.dgp.causaldata import CausalData
-from causalis.scenarios.unconfoundedness.irm import IRM
+from causalis.scenarios.unconfoundedness.model import IRM
 from causalis.scenarios.unconfoundedness.refutation.uncofoundedness.sensitivity import sensitivity_benchmark
 
 
