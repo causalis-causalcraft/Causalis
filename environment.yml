@@ -11,6 +11,5 @@ dependencies:
   - catboost
   - pip
   - pip:
-    - doubleml
     - "-e .[docs]"
   - pydantic

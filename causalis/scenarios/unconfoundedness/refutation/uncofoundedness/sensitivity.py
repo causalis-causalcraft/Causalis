@@ -11,6 +11,8 @@ from typing import Dict, Any, Optional, List
 import numpy as np
 import pandas as pd
 
+from causalis.data_contracts.causal_diagnostic_data import UnconfoundednessDiagnosticData
+
 __all__ = ["sensitivity_analysis", "sensitivity_benchmark", "get_sensitivity_summary"]
 
 # ---------------- Internals ----------------
@@ -90,10 +92,11 @@ def _compute_sensitivity_bias(
     return _compute_sensitivity_bias_unified(sigma2, nu2, psi_sigma2, psi_nu2)
 
 
-def _combine_nu2(m_alpha: np.ndarray, rr: np.ndarray, cf_y: float, r2_d: float, rho: float) -> tuple[float, np.ndarray]:
+def _combine_nu2(m_alpha: np.ndarray, rr: np.ndarray, r2_y: float, r2_d: float, rho: float) -> tuple[float, np.ndarray]:
     """Combine sensitivity levers into nu2 via per-unit quadratic form.
 
     nu2_i = (sqrt(2*m_alpha_i))^2 * cf_y + (|rr_i|)^2 * (r2_d/(1-r2_d)) + 2*rho*sqrt(cf_y*r2_d/(1-r2_d))*|rr_i|*sqrt(2*m_alpha_i)
+    with cf_y = r2_y / (1 - r2_y).
     Returns (nu2, psi_nu2) with psi_nu2 centered.
 
     Note: we use abs(rr) for a conservative worst-case cross-term; the quadratic
@@ -105,8 +108,8 @@ def _combine_nu2(m_alpha: np.ndarray, rr: np.ndarray, cf_y: float, r2_d: float, 
         Component for the representer variance.
     rr : np.ndarray
         Riesz representer.
-    cf_y : float
-        Sensitivity parameter for the outcome (odds form, C_Y^2).
+    r2_y : float
+        Sensitivity parameter for the outcome (R^2 form, R_Y^2; converted to odds form internally).
     r2_d : float
         Sensitivity parameter for the treatment (R^2 form, R_D^2).
     rho : float
@@ -119,14 +122,17 @@ def _combine_nu2(m_alpha: np.ndarray, rr: np.ndarray, cf_y: float, r2_d: float, 
     psi_nu2 : np.ndarray
         The centered influence function for nu2.
     """
-    cf_y = float(cf_y)
+    r2_y = float(r2_y)
     r2_d = float(r2_d)
     rho = float(np.clip(rho, -1.0, 1.0))
-    if cf_y < 0 or r2_d < 0:
-        raise ValueError("cf_y and r2_d must be >= 0.")
+    if r2_y < 0 or r2_d < 0:
+        raise ValueError("r2_y and r2_d must be >= 0.")
+    if r2_y >= 1.0:
+        raise ValueError("r2_y must be < 1.0.")
     if r2_d >= 1.0:
         raise ValueError("r2_d must be < 1.0.")
     
+    cf_y = r2_y / (1.0 - r2_y)
     cf_d = r2_d / (1.0 - r2_d)
     a = np.sqrt(2.0 * np.maximum(np.asarray(m_alpha, dtype=float), 0.0))
     b = np.abs(np.asarray(rr, dtype=float))
@@ -140,7 +146,7 @@ def _combine_nu2(m_alpha: np.ndarray, rr: np.ndarray, cf_y: float, r2_d: float, 
 
 # ---------------- Bias-aware helpers (local variants + pullers) ----------------
 
-def _combine_nu2_local(m_alpha: np.ndarray, rr: np.ndarray, cf_y: float, r2_d: float, rho: float, *, use_signed_rr: bool) -> tuple[float, np.ndarray]:
+def _combine_nu2_local(m_alpha: np.ndarray, rr: np.ndarray, r2_y: float, r2_d: float, rho: float, *, use_signed_rr: bool) -> tuple[float, np.ndarray]:
     """Nu^2 via per-unit quadratic form with optional sign-preserving rr.
 
     Parameters
@@ -149,8 +155,8 @@ def _combine_nu2_local(m_alpha: np.ndarray, rr: np.ndarray, cf_y: float, r2_d: f
         Component for the representer variance.
     rr : np.ndarray
         Riesz representer.
-    cf_y : float
-        Sensitivity parameter for the outcome (odds form, C_Y^2).
+    r2_y : float
+        Sensitivity parameter for the outcome (R^2 form, R_Y^2).
     r2_d : float
         Sensitivity parameter for the treatment (R^2 form, R_D^2).
     rho : float
@@ -165,12 +171,15 @@ def _combine_nu2_local(m_alpha: np.ndarray, rr: np.ndarray, cf_y: float, r2_d: f
     psi_nu2 : np.ndarray
         The centered influence function for nu2.
     """
-    cf_y = float(cf_y); r2_d = float(r2_d); rho = float(np.clip(rho, -1.0, 1.0))
-    if cf_y < 0 or r2_d < 0:
-        raise ValueError("cf_y and r2_d must be >= 0.")
+    r2_y = float(r2_y); r2_d = float(r2_d); rho = float(np.clip(rho, -1.0, 1.0))
+    if r2_y < 0 or r2_d < 0:
+        raise ValueError("r2_y and r2_d must be >= 0.")
+    if r2_y >= 1.0:
+        raise ValueError("r2_y must be < 1.0.")
     if r2_d >= 1.0:
         raise ValueError("r2_d must be < 1.0.")
     
+    cf_y = r2_y / (1.0 - r2_y)
     cf_d = r2_d / (1.0 - r2_d)
     a = np.sqrt(2.0 * np.maximum(np.asarray(m_alpha, float), 0.0))
     b = np.asarray(rr, float)
@@ -297,7 +306,7 @@ def _pull_theta_se_ci(effect_estimation: Any, alpha: float) -> tuple[float, floa
 def compute_bias_aware_ci(
     effect_estimation: Dict[str, Any] | Any,
     *,
-    cf_y: float,
+    r2_y: float,
     r2_d: float,
     rho: float = 1.0,
     H0: float = 0.0,
@@ -317,8 +326,8 @@ def compute_bias_aware_ci(
     ----------
     effect_estimation : Dict[str, Any] or Any
         The effect estimation object.
-    cf_y : float
-        Sensitivity parameter for the outcome (odds form, C_Y^2).
+    r2_y : float
+        Sensitivity parameter for the outcome (R^2 form, R_Y^2).
     r2_d : float
         Sensitivity parameter for the treatment (R^2 form, R_D^2).
     rho : float, default 1.0
@@ -328,7 +337,9 @@ def compute_bias_aware_ci(
     alpha : float, default 0.05
         Significance level.
     use_signed_rr : bool, default False
-        Whether to use signed rr.
+        Whether to use signed rr in the quadratic combination of sensitivity components.
+        If True and m_alpha/rr are available, the bias bound is computed via the
+        per-unit quadratic form and RV/RVa are not reported.
 
     Returns
     -------
@@ -339,8 +350,10 @@ def compute_bias_aware_ci(
 
     if not (0.0 < alpha < 1.0):
         raise ValueError(f"alpha must be in (0, 1), got {alpha}")
-    if cf_y < 0 or r2_d < 0:
-        raise ValueError("cf_y and r2_d must be >= 0")
+    if r2_y < 0 or r2_d < 0:
+        raise ValueError("r2_y and r2_d must be >= 0")
+    if r2_y >= 1.0:
+        raise ValueError("r2_y must be < 1.0 for the bias factor to be well-defined")
     if r2_d >= 1.0:
         raise ValueError("r2_d must be < 1.0 for the bias factor to be well-defined")
 
@@ -382,39 +395,67 @@ def compute_bias_aware_ci(
     # Default: no cofounding info → bias_aware = sampling CI
     max_bias = 0.0
     sigma2 = np.nan; nu2 = np.nan
+    rv = np.nan; rva = np.nan
+    bound_width = 0.0
+    correction_scale = None
+    use_signed_rr_effective = bool(use_signed_rr)
 
     if elems:
         sigma2 = float(elems.get("sigma2", np.nan))
         nu2 = float(elems.get("nu2", np.nan))
+        psi_sigma2 = elems.get("psi_sigma2", None)
+        psi_nu2 = elems.get("psi_nu2", None)
 
-        # DoubleML bias: rho * sqrt(sigma2 * nu2) * sqrt(cf_y * r2_d / (1 - r2_d))
-        bias_factor = np.sqrt(cf_y * r2_d / (1.0 - r2_d))
-        max_bias = np.sqrt(max(sigma2 * nu2, 0.0)) * bias_factor
-    
-    # Robustness Values (RV/RVa)
-    # RV is the confounding strength that makes the bound include H0
-    # |theta - H0| = |rho| * sqrt(sigma2 * nu2) * RV / sqrt(1 - RV)
-    delta_theta = abs(theta - H0)
-    denom_rv = abs(rho) * np.sqrt(max(sigma2 * nu2, 0.0))
-    if denom_rv > 1e-16 and delta_theta > 0:
-        D = delta_theta / denom_rv
-        f2 = D**2
-        rv = (np.sqrt(f2**2 + 4.0 * f2) - f2) / 2.0
+        # Optional signed-rr quadratic form (uses r2_y/r2_d/rho internally).
+        if use_signed_rr_effective:
+            m_alpha = elems.get("m_alpha", None)
+            rr = elems.get("riesz_rep", None)
+            if m_alpha is not None and rr is not None:
+                nu2, psi_nu2 = _combine_nu2_local(
+                    m_alpha, rr, r2_y, r2_d, rho, use_signed_rr=True
+                )
+                max_bias = np.sqrt(max(sigma2 * nu2, 0.0))
+                bound_width = max_bias
+                correction_scale = 1.0
+                # RV/RVa are not defined under the signed-rr quadratic form
+                rv = np.nan
+                rva = np.nan
+            else:
+                use_signed_rr_effective = False
+
+        if not use_signed_rr_effective:
+            # Bias component: |rho| * sqrt(sigma2 * nu2) * sqrt(cf_y * r2_d / (1 - r2_d))
+            cf_y = r2_y / (1.0 - r2_y)
+            bias_factor = np.sqrt(cf_y * r2_d / (1.0 - r2_d))
+            max_bias = np.sqrt(max(sigma2 * nu2, 0.0)) * bias_factor
+            bound_width = abs(rho) * max_bias
+            correction_scale = abs(rho) * bias_factor
+
+            # Robustness Values (RV/RVa)
+            # RV is the confounding strength that makes the bound include H0:
+            # |theta - H0| = |rho| * sqrt(sigma2 * nu2) * RV / (1 - RV)
+            delta_theta = abs(theta - H0)
+            denom_rv = abs(rho) * np.sqrt(max(sigma2 * nu2, 0.0))
+            if denom_rv > 1e-16 and delta_theta > 0:
+                D = delta_theta / denom_rv
+                rv = D / (1.0 + D)
+            else:
+                rv = 0.0 if delta_theta == 0 else np.nan
+
+            delta_theta_a = max(abs(theta - H0) - z * se, 0.0)
+            if denom_rv > 1e-16 and delta_theta_a > 0:
+                Da = delta_theta_a / denom_rv
+                rva = Da / (1.0 + Da)
+            else:
+                rva = 0.0
     else:
+        # No cofounding info: keep max_bias=0; RV/RVa undefined unless delta=0
+        delta_theta = abs(theta - H0)
         rv = 0.0 if delta_theta == 0 else np.nan
-    
-    delta_theta_a = max(abs(theta - H0) - z * se, 0.0)
-    if denom_rv > 1e-16 and delta_theta_a > 0:
-        Da = delta_theta_a / denom_rv
-        f2a = Da**2
-        rva = (np.sqrt(f2a**2 + 4.0 * f2a) - f2a) / 2.0
-    else:
-        rva = 0.0
+        delta_theta_a = max(abs(theta - H0) - z * se, 0.0)
+        rva = 0.0 if delta_theta_a == 0 else np.nan
 
-    # DoubleML bounds: theta ± |rho| * B
-    # where B = sqrt(sigma2 * nu2) * bias_factor
-    # Note: max_bias here is B
-    bound_width = abs(rho) * max_bias
+    # Bounds: theta ± bound_width (bound_width already includes rho/bias factors as applicable)
     theta_lower = float(theta) - float(bound_width)
     theta_upper = float(theta) + float(bound_width)
 
@@ -422,14 +463,14 @@ def compute_bias_aware_ci(
     if not (np.isfinite(se) and se >= 0.0 and np.isfinite(z)):
         bias_aware_ci = (theta_lower, theta_upper)
     elif elems and all(k in elems for k in ('psi', 'psi_sigma2', 'psi_nu2')):
-        # DoubleML-faithful inference for the bounds using orthogonal scores
+        # Faithful inference for the bounds using orthogonal scores
         psi = np.asarray(elems['psi'])
-        psi_sigma2 = np.asarray(elems['psi_sigma2'])
-        psi_nu2 = np.asarray(elems['psi_nu2'])
+        psi_sigma2 = np.asarray(psi_sigma2 if psi_sigma2 is not None else elems['psi_sigma2'])
+        psi_nu2 = np.asarray(psi_nu2 if psi_nu2 is not None else elems['psi_nu2'])
         n = len(psi)
 
-        if sigma2 * nu2 > 0:
-            correction = (abs(rho) * bias_factor / (2.0 * np.sqrt(sigma2 * nu2))) * (
+        if sigma2 * nu2 > 0 and correction_scale is not None:
+            correction = (correction_scale / (2.0 * np.sqrt(sigma2 * nu2))) * (
                 sigma2 * psi_nu2 + nu2 * psi_sigma2
             )
             psi_plus = psi + correction
@@ -445,7 +486,7 @@ def compute_bias_aware_ci(
             float(theta_upper) + z * float(se_upper)
         )
     else:
-        # bias-aware CI following DoubleML (approximate if scores not available)
+        # bias-aware CI (approximate if scores not available)
         bias_aware_ci = (
             float(theta_lower) - z * float(se),
             float(theta_upper) + z * float(se),
@@ -465,7 +506,7 @@ def compute_bias_aware_ci(
         nu2=float(nu2),
         rv=float(rv),
         rva=float(rva),
-        params=dict(cf_y=float(cf_y), r2_d=float(r2_d), rho=float(np.clip(rho, -1.0, 1.0)), use_signed_rr=bool(use_signed_rr)),
+        params=dict(r2_y=float(r2_y), r2_d=float(r2_d), rho=float(np.clip(rho, -1.0, 1.0)), use_signed_rr=bool(use_signed_rr_effective)),
     )
 
 
@@ -498,7 +539,7 @@ def format_bias_aware_summary(res: Dict[str, Any], label: str | None = None) -> 
     lines.append("------------------ Scenario          ------------------")
     lines.append(f"Significance Level: alpha={alpha}")
     lines.append(f"Null Hypothesis: H0={res.get('H0', 0.0)}")
-    lines.append(f"Sensitivity parameters: cf_y={cf['cf_y']}; r2_d={cf['r2_d']}, rho={cf['rho']}, use_signed_rr={cf['use_signed_rr']}")
+    lines.append(f"Sensitivity parameters: r2_y={cf['r2_y']}; r2_d={cf['r2_d']}, rho={cf['rho']}, use_signed_rr={cf['use_signed_rr']}")
     lines.append("")
     lines.append("------------------ Components        ------------------")
     lines.append(f"{'':>6} {'theta':>11} {'se':>11} {'z':>8} {'max_bias':>12} {'sigma2':>12} {'nu2':>12}")
@@ -521,7 +562,7 @@ def format_bias_aware_summary(res: Dict[str, Any], label: str | None = None) -> 
 
 def _format_sensitivity_summary(
     summary: pd.DataFrame,
-    cf_y: float,
+    r2_y: float,
     r2_d: float,
     rho: float,
     alpha: float
@@ -532,9 +573,9 @@ def _format_sensitivity_summary(
     Parameters
     ----------
     summary : pd.DataFrame
-        The sensitivity summary DataFrame from DoubleML
-    cf_y : float
-        Sensitivity parameter for the outcome equation (odds form, C_Y^2)
+        The sensitivity summary DataFrame
+    r2_y : float
+        Sensitivity parameter for the outcome equation (R^2 form, R_Y^2; converted to odds form internally)
     r2_d : float
         Sensitivity parameter for the treatment equation (R^2 form, R_D^2)
     rho : float
@@ -553,7 +594,7 @@ def _format_sensitivity_summary(
     output_lines.append("")
     output_lines.append("------------------ Scenario          ------------------")
     output_lines.append(f"Significance Level: alpha={alpha}")
-    output_lines.append(f"Sensitivity parameters: cf_y={cf_y}; r2_d={r2_d}, rho={rho}")
+    output_lines.append(f"Sensitivity parameters: r2_y={r2_y}; r2_d={r2_d}, rho={rho}")
     output_lines.append("")
 
     # Bounds with CI section
@@ -568,7 +609,7 @@ def _format_sensitivity_summary(
     lower_lbl = f"{alpha / 2 * 100:.1f} %"
     upper_lbl = f"{(1 - alpha / 2) * 100:.1f} %"
     for idx, row in summary.iterrows():
-        # Format the row data_contracts - adjust column names based on actual DoubleML output
+        # Format the row data_contracts - adjust column names based on actual output
         row_name = str(idx) if not isinstance(idx, str) else idx
         try:
             ci_lower = row.get('ci_lower', row.get(lower_lbl, row.get('2.5 %', row.get('2.5%', 0.0))))
@@ -641,10 +682,23 @@ def get_sensitivity_summary(
         effect_dict = {'model': effect_estimation}
     elif hasattr(effect_estimation, "value") and hasattr(effect_estimation, "diagnostic_data"):
         # CausalEstimate
+        diag = effect_estimation.diagnostic_data
+        bias_aware: Dict[str, Any] = {}
+        if diag is not None:
+            if isinstance(diag, UnconfoundednessDiagnosticData):
+                bias_aware = diag.sensitivity_analysis or {}
+            elif isinstance(diag, dict):
+                bias_aware = diag.get("sensitivity_analysis") or diag.get("bias_aware") or {}
+            else:
+                bias_aware = (
+                    getattr(diag, "sensitivity_analysis", None)
+                    or getattr(diag, "bias_aware", None)
+                    or {}
+                )
         effect_dict = {
             'model': None,
-            'diagnostic_data': effect_estimation.diagnostic_data,
-            'bias_aware': getattr(effect_estimation, 'sensitivity_analysis', {})
+            'diagnostic_data': diag,
+            'bias_aware': bias_aware,
         }
     else:
         return None
@@ -677,7 +731,7 @@ def get_sensitivity_summary(
             max_bias=0.0,
             sigma2=np.nan,
             nu2=np.nan,
-            params=dict(cf_y=0.0, r2_d=0.0, rho=0.0, use_signed_rr=False),
+            params=dict(r2_y=0.0, r2_d=0.0, rho=0.0, use_signed_rr=False),
         )
 
     # Single clean summary (reuse the one definitive formatter)
@@ -694,7 +748,7 @@ def sensitivity_benchmark(
     """
     Computes a benchmark for a given set of features by refitting a short IRM model
     (excluding the provided features) and contrasting it with the original (long) model.
-    Returns a DataFrame containing cf_y, r2_d, rho and the change in estimates.
+    Returns a DataFrame containing r2_y, r2_d, rho and the change in estimates.
 
     Parameters
     ----------
@@ -709,7 +763,7 @@ def sensitivity_benchmark(
     -------
     pandas.DataFrame
         A one-row DataFrame indexed by the treatment name with columns:
-        - cf_y, r2_d, rho: residual-based benchmarking strengths
+        - r2_y, r2_d, rho: residual-based benchmarking strengths
         - theta_long, theta_short, delta: effect estimates and their change (long - short)
     """
     # Extract model from various possible inputs (dict, CausalEstimate, or DiagnosticData)
@@ -778,7 +832,7 @@ def sensitivity_benchmark(
         IRM  # type: ignore[name-defined]
     except NameError:
         from causalis.dgp.causaldata import CausalData
-        from causalis.scenarios.unconfoundedness.irm import IRM
+        from causalis.scenarios.unconfoundedness.model import IRM
 
     data_short = CausalData(df=df_long, treatment=treatment_name, outcome=outcome_name, confounders=x_list_short)
 
@@ -907,7 +961,7 @@ def sensitivity_benchmark(
 
     R2y, yhat_u = _ols_r2_and_fit(r_y, Z, w=weights)
     R2d, dhat_u = _ols_r2_and_fit(r_d, Z, w=weights)
-    cf_y = float(R2y / max(1e-12, 1.0 - R2y))
+    r2_y = float(R2y)
     r2_d = float(R2d)
 
     def _safe_corr(u: np.ndarray, v: np.ndarray, w: Optional[np.ndarray] = None) -> float:
@@ -935,7 +989,7 @@ def sensitivity_benchmark(
 
     df_benchmark = pd.DataFrame(
         {
-            "cf_y": [cf_y],
+            "r2_y": [r2_y],
             "r2_d": [r2_d],
             "rho": [rho],
             "theta_long": [theta_long],
@@ -952,7 +1006,7 @@ def sensitivity_benchmark(
 def sensitivity_analysis(
     effect_estimation: Dict[str, Any] | Any,
     *,
-    cf_y: float,
+    r2_y: float,
     r2_d: float,
     rho: float = 1.0,
     H0: float = 0.0,
@@ -965,8 +1019,8 @@ def sensitivity_analysis(
     ----------
     effect_estimation : Dict[str, Any] or Any
         The effect estimation object.
-    cf_y : float
-        Sensitivity parameter for the outcome (odds form, C_Y^2).
+    r2_y : float
+        Sensitivity parameter for the outcome (R^2 form, R_Y^2; converted to odds form internally).
     r2_d : float
         Sensitivity parameter for the treatment (R^2 form, R_D^2).
     rho : float, default 1.0
@@ -976,7 +1030,9 @@ def sensitivity_analysis(
     alpha : float, default 0.05
         Significance level.
     use_signed_rr : bool, default False
-        Whether to use signed rr.
+        Whether to use signed rr in the quadratic combination of sensitivity components.
+        If True and m_alpha/rr are available, the bias bound is computed via the
+        per-unit quadratic form and RV/RVa are not reported.
 
     Returns
     -------
@@ -985,13 +1041,13 @@ def sensitivity_analysis(
           - theta, se, alpha, z
           - sampling_ci
           - theta_bounds_cofounding = (theta - bound_width, theta + bound_width)
-          - bias_aware_ci = faithful DoubleML CI for the bounds
+          - bias_aware_ci = faithful CI for the bounds
           - max_bias and components (sigma2, nu2)
-          - params (cf_y, r2_d, rho, use_signed_rr)
+          - params (r2_y, r2_d, rho, use_signed_rr)
     """
     res = compute_bias_aware_ci(
         effect_estimation,
-        cf_y=cf_y,
+        r2_y=r2_y,
         r2_d=r2_d,
         rho=rho,
         H0=H0,
@@ -999,7 +1055,20 @@ def sensitivity_analysis(
         use_signed_rr=use_signed_rr
     )
 
+    diag = None
     if isinstance(effect_estimation, dict):
         effect_estimation["bias_aware"] = res
+        diag = effect_estimation.get("diagnostic_data")
+    else:
+        diag = getattr(effect_estimation, "diagnostic_data", None)
+
+    if diag is not None:
+        if isinstance(diag, dict):
+            diag["sensitivity_analysis"] = res
+        else:
+            try:
+                diag.sensitivity_analysis = res
+            except Exception:
+                pass
 
     return res

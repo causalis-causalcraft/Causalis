@@ -1,16 +1,7 @@
 r"""
-DML IRM estimator consuming CausalData.
+IRM estimator consuming CausalData.
 
 Implements cross-fitted nuisance estimation for g0, g1 and m, and supports ATE/ATTE scores.
-citation:
-software{DoubleML,
-  title = {{DoubleML} -- Double Machine Learning in Python},
-  author = {Bach, Philipp and Chernozhukov, Victor and Klaassen, Sven and Kurz, Malte S. and Spindler, Martin},
-  year = {2024},
-  version = {latest},
-  url = {https://github.com/DoubleML/doubleml-for-py},
-  note = {BSD-3-Clause License. Documentation: \url{https://docs.doubleml.org/stable/index.html}}
-}
 """
 from __future__ import annotations
 
@@ -132,7 +123,7 @@ def _clip_propensity(p: np.ndarray, thr: float) -> np.ndarray:
 
 
 class IRM(BaseEstimator):
-    """Interactive Regression Model (IRM) with DoubleML-style cross-fitting using CausalData.
+    """Interactive Regression Model (IRM) with cross-fitting using CausalData.
 
     Parameters
     ----------
@@ -158,6 +149,9 @@ class IRM(BaseEstimator):
         - If dict, can contain 'weights' (w) and 'weights_bar' (E[w|X]).
         - For ATTE, computed internally (w=D/P(D=1), w_bar=m(X)/P(D=1)).
         Note: If weights depend on treatment or outcome, E[w|X] must be provided for correct sensitivity analysis.
+    relative_baseline_min : float, default 1e-8
+        Minimum absolute baseline value used for relative effects. If |mu_c| is below this
+        threshold, relative estimates are set to NaN with a warning.
     random_state : Optional[int], default None
         Random seed for fold creation.
     """
@@ -174,6 +168,7 @@ class IRM(BaseEstimator):
         trimming_rule: str = "truncate",
         trimming_threshold: float = 1e-2,
         weights: Optional[np.ndarray | Dict[str, Any]] = None,
+        relative_baseline_min: float = 1e-8,
         random_state: Optional[int] = None,
     ) -> None:
         self.data = data
@@ -186,6 +181,7 @@ class IRM(BaseEstimator):
         self.trimming_rule = str(trimming_rule)
         self.trimming_threshold = float(trimming_threshold)
         self.weights = weights
+        self.relative_baseline_min = float(relative_baseline_min)
         self.random_state = random_state
 
         # Initialize default learners if not provided
@@ -223,6 +219,8 @@ class IRM(BaseEstimator):
         
         # If ml_g is still None and HAS_CATBOOST is True, it means data was not provided.
         # It will be initialized in fit().
+        if self.relative_baseline_min < 0.0:
+            raise ValueError("relative_baseline_min must be non-negative.")
 
     # --------- Helpers ---------
     def _check_data(self) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
@@ -562,15 +560,47 @@ class IRM(BaseEstimator):
         self.psi_a_ = psi_a
         self.psi_b_ = psi_b
 
-        # Baseline mean for relative effect
-        if score == "ATTE":
-            mu_c = float(np.mean(g0_hat[d == 1]))
-        else:
-            mu_c = float(np.mean(g0_hat))
+        # Baseline mean for relative effect (weighted to match estimand)
+        mu_c = float(np.mean(w * g0_hat))
+        mu_c_var = float(np.var(w * g0_hat, ddof=1)) / n if n > 1 else 0.0
+        mu_c_se = float(np.sqrt(max(mu_c_var, 0.0)))
+        tau_rel = np.nan
+        ci_low_rel = np.nan
+        ci_high_rel = np.nan
+        se_rel = np.nan
 
-        tau_rel = (theta_hat / mu_c * 100) if mu_c != 0 else np.nan
-        ci_low_rel = (ci_low / mu_c * 100) if mu_c != 0 else np.nan
-        ci_high_rel = (ci_high / mu_c * 100) if mu_c != 0 else np.nan
+        baseline_too_small = abs(mu_c) < self.relative_baseline_min
+        baseline_low_signal = np.isfinite(mu_c_se) and mu_c_se > 0.0 and abs(mu_c) < z * mu_c_se
+
+        if np.isfinite(mu_c) and not (baseline_too_small or baseline_low_signal):
+            tau_rel = 100.0 * theta_hat / mu_c
+            # Delta method for relative effect: tau_rel = 100 * theta / mu_c
+            IF_mu = w * g0_hat - mu_c
+            with np.errstate(divide="ignore", invalid="ignore"):
+                IF_rel = 100.0 * (IF / mu_c - (theta_hat * IF_mu) / (mu_c ** 2))
+            var_rel = float(np.var(IF_rel, ddof=1)) / n
+            se_rel = float(np.sqrt(max(var_rel, 0.0)))
+            ci_low_rel = tau_rel - z * se_rel
+            ci_high_rel = tau_rel + z * se_rel
+            if ci_low_rel > ci_high_rel:
+                ci_low_rel, ci_high_rel = ci_high_rel, ci_low_rel
+        else:
+            reasons = []
+            if not np.isfinite(mu_c):
+                reasons.append("is not finite")
+            if baseline_too_small:
+                reasons.append(f"is below relative_baseline_min={self.relative_baseline_min:.3e}")
+            if baseline_low_signal:
+                reasons.append(f"is within {z:.2f} SE of 0 (SE={mu_c_se:.3e})")
+            reason_str = "; ".join(reasons) if reasons else "is too small"
+            warnings.warn(
+                f"Relative effect baseline |mu_c|={abs(mu_c):.3e} {reason_str}. "
+                "Relative estimates are set to NaN.",
+                RuntimeWarning,
+            )
+        self.mu_c_ = mu_c
+        self.se_relative_ = np.array([se_rel])
+        self.confint_relative_ = np.array([[ci_low_rel, ci_high_rel]])
 
         diag = None
         if diagnostic_data:
@@ -655,7 +685,7 @@ class IRM(BaseEstimator):
             "folds": self.folds_,
         }
 
-    # Convenience properties similar to DoubleML
+    # Convenience properties
     @property
     def coef(self) -> np.ndarray:
         """Return the estimated coefficient.
@@ -763,7 +793,7 @@ class IRM(BaseEstimator):
         
         return blp_model
 
-    # --------- Sensitivity (DoubleML-style) ---------
+    # --------- Sensitivity ---------
     def _sensitivity_element_est(
         self,
         y: Optional[np.ndarray] = None,
@@ -777,7 +807,7 @@ class IRM(BaseEstimator):
     ) -> dict:
         """Compute elements needed for sensitivity bias bounds.
 
-        Mirrors DoubleMLIRM._sensitivity_element_est using fitted nuisances.
+        Mirrors a standard IRM sensitivity element computation using fitted nuisances.
         Requires fit() to have been called.
 
         Parameters
@@ -841,6 +871,18 @@ class IRM(BaseEstimator):
         with np.errstate(divide='ignore', invalid='ignore'):
             inv_m = 1.0 / m_hat
             inv_1m = 1.0 / (1.0 - m_hat)
+        # If IPW terms are normalized in the score, mirror that normalization here.
+        if self.normalize_ipw:
+            h1_raw = d * inv_m
+            h0_raw = (1.0 - d) * inv_1m
+            c1 = float(np.mean(h1_raw))
+            c0 = float(np.mean(h0_raw))
+            if not (np.isfinite(c1) and abs(c1) > 1e-12):
+                c1 = 1.0
+            if not (np.isfinite(c0) and abs(c0) > 1e-12):
+                c0 = 1.0
+            inv_m = inv_m / c1
+            inv_1m = inv_1m / c0
         m_alpha = (w_bar ** 2) * (inv_m + inv_1m)
         rr = w_bar * (d * inv_m - (1.0 - d) * inv_1m)
 
@@ -858,13 +900,13 @@ class IRM(BaseEstimator):
             "psi": psi,
         }
 
-    def sensitivity_analysis(self, cf_y: float, r2_d: float, rho: float = 1.0, H0: float = 0.0, alpha: float = 0.05) -> "IRM":
-        """Compute a sensitivity analysis following DoubleML (Chernozhukov et al., 2022).
+    def sensitivity_analysis(self, r2_y: float, r2_d: float, rho: float = 1.0, H0: float = 0.0, alpha: float = 0.05) -> "IRM":
+        """Compute a sensitivity analysis following Chernozhukov et al. (2022).
         
         Parameters
         ----------
-        cf_y : float
-            Sensitivity parameter for outcome equation (odds form, C_Y^2).
+        r2_y : float
+            Sensitivity parameter for outcome equation (R^2 form, R_Y^2; converted to odds form internally).
         r2_d : float
             Sensitivity parameter for treatment equation (R^2 form, R_D^2).
         rho : float, default 1.0
@@ -878,9 +920,10 @@ class IRM(BaseEstimator):
             sensitivity_analysis as sa_fn,
             get_sensitivity_summary
         )
+        check_is_fitted(self, attributes=["coef_", "se_", "psi_"])
 
         # Execute sensitivity analysis using the centralized module logic
-        res = sa_fn(self, cf_y=cf_y, r2_d=r2_d, rho=rho, H0=H0, alpha=alpha)
+        res = sa_fn(self, r2_y=r2_y, r2_d=r2_d, rho=rho, H0=H0, alpha=alpha)
 
         # Cache the summary string for display
         self.sensitivity_summary = get_sensitivity_summary({"model": self, "bias_aware": res})
@@ -910,5 +953,3 @@ class IRM(BaseEstimator):
             {f"{alpha/2*100:.1f} %": [ci_low], f"{(1-alpha/2)*100:.1f} %": [ci_high]},
             index=[self.data.treatment.name],
         )
-
-

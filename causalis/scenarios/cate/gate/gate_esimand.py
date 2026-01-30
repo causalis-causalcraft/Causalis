@@ -8,7 +8,7 @@ import pandas as pd
 from catboost import CatBoostRegressor, CatBoostClassifier
 
 from causalis.dgp.causaldata import CausalData
-from causalis.scenarios.unconfoundedness.irm import IRM
+from causalis.scenarios.unconfoundedness.model import IRM
 
 
 def gate_esimand(

@@ -39,7 +39,7 @@ def aipw_score_atte(y: np.ndarray, d: np.ndarray, g0: np.ndarray, g1: np.ndarray
     ψ_ATTE(W; θ, η) = [ D*(Y - g0(X) - θ)  -  (1-D)*{ m(X)/(1-m(X)) }*(Y - g0(X)) ] / E[D]
 
     Notes:
-      - Matches DoubleML's `score='ATTE'` (weights ω=D/E[D], \bar{ω}=m(X)/E[D]).
+      - Matches the ATTE score with weights ω=D/E[D], \bar{ω}=m(X)/E[D].
       - g1 enters only via θ; ∂ψ/∂g1 = 0.
     """
     m = np.clip(m, trimming_threshold, 1 - trimming_threshold)
@@ -1152,7 +1152,7 @@ def _extract_score_inputs_from_result(res: ResultLike) -> Tuple[np.ndarray, np.n
     Supports three paths:
       - CausalEstimate object with .diagnostic_data.
       - Dict with keys {'model', 'coefficient'} and optional 'diagnostic_data'.
-      - IRM/DoubleML-like model object with .data_contracts, cross-fitted nuisances, and optionally psi caches.
+      - IRM/compatible model object with .data_contracts, cross-fitted nuisances, and optionally psi caches.
     """
     model = None
     theta = float('nan')

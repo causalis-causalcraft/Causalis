@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "causalis"
-version = "0.1.3"
+version = "0.1.4"
 description = "A Python toolkit for causal inference and experimentation"
 readme = "README.md"
 authors = [
@@ -27,7 +27,6 @@ dependencies = [
     "scipy",
     "statsmodels",
     "scikit-learn",
-    "doubleml",
     "pydantic",
     "catboost"
 ]

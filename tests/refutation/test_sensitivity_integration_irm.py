@@ -2,7 +2,7 @@ from sklearn.ensemble import RandomForestRegressor, RandomForestClassifier
 
 from causalis.dgp.causaldata import CausalData
 from causalis.dgp import generate_rct
-from causalis.scenarios.unconfoundedness.irm import IRM
+from causalis.scenarios.unconfoundedness.model import IRM
 from causalis.scenarios.unconfoundedness.refutation.uncofoundedness.sensitivity import sensitivity_analysis, get_sensitivity_summary
 
 
@@ -20,7 +20,7 @@ def test_sensitivity_with_dml_ate_runs_and_returns_dict():
 
     res = IRM(cd, ml_g=ml_g, ml_m=ml_m, n_folds=3).fit()
     res.estimate(score="ATE")
-    out = sensitivity_analysis(res, cf_y=0.02, r2_d=0.03, rho=1.0)
+    out = sensitivity_analysis(res, r2_y=0.02, r2_d=0.03, rho=1.0)
 
     assert isinstance(out, dict)
     # Integration: summary should be retrievable via the getter
@@ -36,7 +36,7 @@ def test_sensitivity_with_dml_att_runs_and_returns_dict():
 
     res = IRM(cd, ml_g=ml_g, ml_m=ml_m, n_folds=3).fit()
     res.estimate(score="ATTE")
-    out = sensitivity_analysis(res, cf_y=0.01, r2_d=0.04, rho=0.8)
+    out = sensitivity_analysis(res, r2_y=0.01, r2_d=0.04, rho=0.8)
 
     assert isinstance(out, dict)
     summ = get_sensitivity_summary(res)

@@ -5,9 +5,7 @@ from typing import Any, Optional, Literal
 from causalis.dgp.causaldata import CausalData
 from causalis.data_contracts.causal_estimate import CausalEstimate
 from causalis.data_contracts.causal_diagnostic_data import DiffInMeansDiagnosticData
-from causalis.scenarios.classic_rct import ttest
-from causalis.scenarios.classic_rct import bootstrap_diff_means
-from causalis.scenarios.classic_rct import conversion_z_test
+from .inference import ttest, bootstrap_diff_means, conversion_z_test
 
 
 class DiffInMeans:
@@ -115,7 +113,6 @@ class DiffInMeans:
             treatment=self.data.treatment_name,
             confounders=self.data.confounders,
             diagnostic_data=diag_data,
-            sensitivity_analysis={},
         )
 
 

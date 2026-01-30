@@ -1,3 +1,3 @@
-from .cuped import CUPEDModel
+from .model import CUPEDModel
 
 __all__ = ["CUPEDModel"]

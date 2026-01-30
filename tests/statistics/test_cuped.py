@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 from causalis.dgp.causaldata import CausalData
 from causalis.data_contracts.causal_estimate import CausalEstimate
-from causalis.scenarios.cuped.cuped import CUPEDModel
+from causalis.scenarios.cuped.model import CUPEDModel
 
 @pytest.fixture
 def sample_data():

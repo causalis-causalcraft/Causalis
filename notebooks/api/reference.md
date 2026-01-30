@@ -21,6 +21,7 @@ Causalis: A Python package for causal inference.
 - [**causal_estimate**](#causalis.data_contracts.causal_estimate) –
 - [**causaldata**](#causalis.data_contracts.causaldata) – Causalis Dataclass for storing Cross-sectional DataFrame and column metadata for causal inference.
 - [**causaldata_instrumental**](#causalis.data_contracts.causaldata_instrumental) –
+- [**multicausaldata**](#causalis.data_contracts.multicausaldata) – Causalis Dataclass for storing Cross-sectional DataFrame and column metadata for causal inference with multiple treatments.
 
 **Classes:**
 
@@ -29,7 +30,7 @@ Causalis: A Python package for causal inference.
 - [**CausalDatasetGenerator**](#causalis.data_contracts.CausalDatasetGenerator) – Generate synthetic causal inference datasets with controllable confounding,
 - [**CausalEstimate**](#causalis.data_contracts.CausalEstimate) – Result container for causal effect estimates.
 - [**DiagnosticData**](#causalis.data_contracts.DiagnosticData) – Base class for all diagnostic data_contracts.
-- [**SmokingDGP**](#causalis.data_contracts.SmokingDGP) – A specialized generating class for smoking-related causal scenarios.
+- [**MultiCausalData**](#causalis.data_contracts.MultiCausalData) – Data contract for cross-sectional causal data with multiple binary treatment columns.
 - [**UnconfoundednessDiagnosticData**](#causalis.data_contracts.UnconfoundednessDiagnosticData) – Fields common to all models assuming unconfoundedness.
 
 **Functions:**
@@ -149,7 +150,7 @@ Get a DataFrame with specified columns.
 ##### `causalis.data_contracts.CausalData.model_config`
 
 ```python
-model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True)
+model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True, extra='forbid')
 ```
 
 ##### `causalis.data_contracts.CausalData.outcome`
@@ -325,7 +326,7 @@ instrument_name: str = Field(alias='instrument')
 ##### `causalis.data_contracts.CausalDataInstrumental.model_config`
 
 ```python
-model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True)
+model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True, extra='forbid')
 ```
 
 ##### `causalis.data_contracts.CausalDataInstrumental.outcome`
@@ -721,7 +722,6 @@ Result container for causal effect estimates.
 - **confounders** (<code>list of str</code>) – The names of the confounders used in the model.
 - **time** (<code>[datetime](#datetime.datetime)</code>) – The date and time when the estimate was created.
 - **diagnostic_data** (<code>[DiagnosticData](#causalis.data_contracts.causal_diagnostic_data.DiagnosticData)</code>) – Additional diagnostic data_contracts.
-- **sensitivity_analysis** (<code>[dict](#dict)</code>) – Results from sensitivity analysis.
 
 **Functions:**
 
@@ -745,7 +745,6 @@ Result container for causal effect estimates.
 - [**n_treated**](#causalis.data_contracts.CausalEstimate.n_treated) (<code>[int](#int)</code>) –
 - [**outcome**](#causalis.data_contracts.CausalEstimate.outcome) (<code>[str](#str)</code>) –
 - [**p_value**](#causalis.data_contracts.CausalEstimate.p_value) (<code>[Optional](#typing.Optional)\[[float](#float)\]</code>) –
-- [**sensitivity_analysis**](#causalis.data_contracts.CausalEstimate.sensitivity_analysis) (<code>[Dict](#typing.Dict)\[[str](#str), [Any](#typing.Any)\]</code>) –
 - [**time**](#causalis.data_contracts.CausalEstimate.time) (<code>[datetime](#datetime.datetime)</code>) –
 - [**treatment**](#causalis.data_contracts.CausalEstimate.treatment) (<code>[str](#str)</code>) –
 - [**value**](#causalis.data_contracts.CausalEstimate.value) (<code>[float](#float)</code>) –
@@ -847,12 +846,6 @@ outcome: str
 p_value: Optional[float] = None
 ```
 
-##### `causalis.data_contracts.CausalEstimate.sensitivity_analysis`
-
-```python
-sensitivity_analysis: Dict[str, Any] = Field(default_factory=dict)
-```
-
 ##### `causalis.data_contracts.CausalEstimate.summary`
 
 ```python
@@ -905,292 +898,201 @@ Base class for all diagnostic data_contracts.
 model_config = ConfigDict(arbitrary_types_allowed=True)
 ```
 
-#### `causalis.data_contracts.SmokingDGP`
+#### `causalis.data_contracts.MultiCausalData`
 
-```python
-SmokingDGP(effect_size=2.0, seed=42, **kwargs)
-```
+Bases: <code>[BaseModel](#pydantic.BaseModel)</code>
 
-Bases: <code>[CausalDatasetGenerator](#causalis.dgp.causaldata.base.CausalDatasetGenerator)</code>
+Data contract for cross-sectional causal data with multiple binary treatment columns.
 
-A specialized generating class for smoking-related causal scenarios.
-Example of how users can extend CausalDatasetGenerator for specific domains.
+**Parameters:**
+
+- **df** (<code>[DataFrame](#pandas.DataFrame)</code>) – The DataFrame containing the causal data.
+- **outcome_name** (<code>[str](#str)</code>) – The name of the outcome column. (Alias: "outcome")
+- **treatment_names** (<code>[List](#typing.List)\[[str](#str)\]</code>) – The names of the treatment columns. (Alias: "treatments")
+- **confounders_names** (<code>[List](#typing.List)\[[str](#str)\]</code>) – The names of the confounder columns, by default []. (Alias: "confounders")
+- **user_id_name** (<code>[Optional](#typing.Optional)\[[str](#str)\]</code>) – The name of the user ID column, by default None. (Alias: "user_id")
+
+<details class="note" open markdown="1">
+<summary>Notes</summary>
+
+This class enforces several constraints on the data, including:
+
+- Maximum number of treatments (default 5).
+- No duplicate column names in the input DataFrame.
+- Disjoint roles for columns (outcome, treatments, confounders, user_id).
+- Existence of all specified columns in the DataFrame.
+- Numeric or boolean types for outcome and confounders.
+- Non-constant values for outcome, treatments, and confounders.
+- No NaN values in used columns.
+- Binary (0/1) encoding for treatment columns.
+- No identical values between different columns.
+- Unique values for user_id (if specified).
+
+</details>
 
 **Functions:**
 
-- [**generate**](#causalis.data_contracts.SmokingDGP.generate) – Draw a synthetic dataset of size `n`.
-- [**oracle_nuisance**](#causalis.data_contracts.SmokingDGP.oracle_nuisance) – Return nuisance functions (m(x), g0(x), g1(x)) compatible with IRM.
-- [**to_causal_data**](#causalis.data_contracts.SmokingDGP.to_causal_data) – Generate a dataset and convert it to a CausalData object.
+- [**from_df**](#causalis.data_contracts.MultiCausalData.from_df) – Create a MultiCausalData instance from a pandas DataFrame.
+- [**get_df**](#causalis.data_contracts.MultiCausalData.get_df) – Get a subset of the underlying DataFrame.
 
 **Attributes:**
 
-- [**alpha_d**](#causalis.data_contracts.SmokingDGP.alpha_d) (<code>[float](#float)</code>) –
-- [**alpha_y**](#causalis.data_contracts.SmokingDGP.alpha_y) (<code>[float](#float)</code>) –
-- [**alpha_zi**](#causalis.data_contracts.SmokingDGP.alpha_zi) (<code>[float](#float)</code>) –
-- [**beta_d**](#causalis.data_contracts.SmokingDGP.beta_d) (<code>[Optional](#typing.Optional)\[[ndarray](#numpy.ndarray)\]</code>) –
-- [**beta_y**](#causalis.data_contracts.SmokingDGP.beta_y) (<code>[Optional](#typing.Optional)\[[ndarray](#numpy.ndarray)\]</code>) –
-- [**beta_zi**](#causalis.data_contracts.SmokingDGP.beta_zi) (<code>[Optional](#typing.Optional)\[[ndarray](#numpy.ndarray)\]</code>) –
-- [**confounder_specs**](#causalis.data_contracts.SmokingDGP.confounder_specs) (<code>[Optional](#typing.Optional)\[[List](#typing.List)\[[Dict](#typing.Dict)\[[str](#str), [Any](#typing.Any)\]\]\]</code>) –
-- [**copula_corr**](#causalis.data_contracts.SmokingDGP.copula_corr) (<code>[Optional](#typing.Optional)\[[ndarray](#numpy.ndarray)\]</code>) –
-- [**g_d**](#causalis.data_contracts.SmokingDGP.g_d) (<code>[Optional](#typing.Optional)\[[Callable](#typing.Callable)\[\[[ndarray](#numpy.ndarray)\], [ndarray](#numpy.ndarray)\]\]</code>) –
-- [**g_y**](#causalis.data_contracts.SmokingDGP.g_y) (<code>[Optional](#typing.Optional)\[[Callable](#typing.Callable)\[\[[ndarray](#numpy.ndarray)\], [ndarray](#numpy.ndarray)\]\]</code>) –
-- [**g_zi**](#causalis.data_contracts.SmokingDGP.g_zi) (<code>[Optional](#typing.Optional)\[[Callable](#typing.Callable)\[\[[ndarray](#numpy.ndarray)\], [ndarray](#numpy.ndarray)\]\]</code>) –
-- [**gamma_shape**](#causalis.data_contracts.SmokingDGP.gamma_shape) (<code>[float](#float)</code>) –
-- [**include_oracle**](#causalis.data_contracts.SmokingDGP.include_oracle) (<code>[bool](#bool)</code>) –
-- [**k**](#causalis.data_contracts.SmokingDGP.k) (<code>[int](#int)</code>) –
-- [**lognormal_sigma**](#causalis.data_contracts.SmokingDGP.lognormal_sigma) (<code>[float](#float)</code>) –
-- [**outcome_type**](#causalis.data_contracts.SmokingDGP.outcome_type) (<code>[str](#str)</code>) –
-- [**pos_dist**](#causalis.data_contracts.SmokingDGP.pos_dist) (<code>[str](#str)</code>) –
-- [**propensity_sharpness**](#causalis.data_contracts.SmokingDGP.propensity_sharpness) (<code>[float](#float)</code>) –
-- [**rng**](#causalis.data_contracts.SmokingDGP.rng) (<code>[Generator](#numpy.random.Generator)</code>) –
-- [**score_bounding**](#causalis.data_contracts.SmokingDGP.score_bounding) (<code>[Optional](#typing.Optional)\[[float](#float)\]</code>) –
-- [**seed**](#causalis.data_contracts.SmokingDGP.seed) (<code>[Optional](#typing.Optional)\[[int](#int)\]</code>) –
-- [**sigma_y**](#causalis.data_contracts.SmokingDGP.sigma_y) (<code>[float](#float)</code>) –
-- [**target_d_rate**](#causalis.data_contracts.SmokingDGP.target_d_rate) (<code>[Optional](#typing.Optional)\[[float](#float)\]</code>) –
-- [**tau**](#causalis.data_contracts.SmokingDGP.tau) (<code>[Optional](#typing.Optional)\[[Callable](#typing.Callable)\[\[[ndarray](#numpy.ndarray)\], [ndarray](#numpy.ndarray)\]\]</code>) –
-- [**tau_zi**](#causalis.data_contracts.SmokingDGP.tau_zi) (<code>[Optional](#typing.Optional)\[[Callable](#typing.Callable)\[\[[ndarray](#numpy.ndarray)\], [ndarray](#numpy.ndarray)\]\]</code>) –
-- [**theta**](#causalis.data_contracts.SmokingDGP.theta) (<code>[float](#float)</code>) –
-- [**u_strength_d**](#causalis.data_contracts.SmokingDGP.u_strength_d) (<code>[float](#float)</code>) –
-- [**u_strength_y**](#causalis.data_contracts.SmokingDGP.u_strength_y) (<code>[float](#float)</code>) –
-- [**u_strength_zi**](#causalis.data_contracts.SmokingDGP.u_strength_zi) (<code>[float](#float)</code>) –
-- [**use_copula**](#causalis.data_contracts.SmokingDGP.use_copula) (<code>[bool](#bool)</code>) –
-- [**x_sampler**](#causalis.data_contracts.SmokingDGP.x_sampler) (<code>[Optional](#typing.Optional)\[[Callable](#typing.Callable)\[\[[int](#int), [int](#int), [int](#int)\], [ndarray](#numpy.ndarray)\]\]</code>) –
+- [**FLOAT_TOL**](#causalis.data_contracts.MultiCausalData.FLOAT_TOL) (<code>[float](#float)</code>) –
+- [**MAX_TREATMENTS**](#causalis.data_contracts.MultiCausalData.MAX_TREATMENTS) (<code>[int](#int)</code>) –
+- [**X**](#causalis.data_contracts.MultiCausalData.X) (<code>[DataFrame](#pandas.DataFrame)</code>) – Return the confounder columns as a pandas DataFrame.
+- [**confounders_names**](#causalis.data_contracts.MultiCausalData.confounders_names) (<code>[List](#typing.List)\[[str](#str)\]</code>) –
+- [**df**](#causalis.data_contracts.MultiCausalData.df) (<code>[DataFrame](#pandas.DataFrame)</code>) –
+- [**model_config**](#causalis.data_contracts.MultiCausalData.model_config) –
+- [**outcome**](#causalis.data_contracts.MultiCausalData.outcome) (<code>[Series](#pandas.Series)</code>) – Return the outcome column as a pandas Series.
+- [**outcome_name**](#causalis.data_contracts.MultiCausalData.outcome_name) (<code>[str](#str)</code>) –
+- [**treatment**](#causalis.data_contracts.MultiCausalData.treatment) (<code>[Series](#pandas.Series)</code>) – Return the single treatment column as a pandas Series.
+- [**treatment_names**](#causalis.data_contracts.MultiCausalData.treatment_names) (<code>[List](#typing.List)\[[str](#str)\]</code>) –
+- [**treatments**](#causalis.data_contracts.MultiCausalData.treatments) (<code>[DataFrame](#pandas.DataFrame)</code>) – Return the treatment columns as a pandas DataFrame.
+- [**user_id_name**](#causalis.data_contracts.MultiCausalData.user_id_name) (<code>[Optional](#typing.Optional)\[[str](#str)\]</code>) –
 
-##### `causalis.data_contracts.SmokingDGP.alpha_d`
+##### `causalis.data_contracts.MultiCausalData.FLOAT_TOL`
 
 ```python
-alpha_d: float = 0.0
+FLOAT_TOL: float = 1e-12
 ```
 
-##### `causalis.data_contracts.SmokingDGP.alpha_y`
+##### `causalis.data_contracts.MultiCausalData.MAX_TREATMENTS`
 
 ```python
-alpha_y: float = 0.0
+MAX_TREATMENTS: int = 5
 ```
 
-##### `causalis.data_contracts.SmokingDGP.alpha_zi`
+##### `causalis.data_contracts.MultiCausalData.X`
 
 ```python
-alpha_zi: float = -1.0
+X: pd.DataFrame
 ```
 
-##### `causalis.data_contracts.SmokingDGP.beta_d`
-
-```python
-beta_d: Optional[np.ndarray] = None
-```
-
-##### `causalis.data_contracts.SmokingDGP.beta_y`
-
-```python
-beta_y: Optional[np.ndarray] = None
-```
-
-##### `causalis.data_contracts.SmokingDGP.beta_zi`
-
-```python
-beta_zi: Optional[np.ndarray] = None
-```
-
-##### `causalis.data_contracts.SmokingDGP.confounder_specs`
-
-```python
-confounder_specs: Optional[List[Dict[str, Any]]] = None
-```
-
-##### `causalis.data_contracts.SmokingDGP.copula_corr`
-
-```python
-copula_corr: Optional[np.ndarray] = None
-```
-
-##### `causalis.data_contracts.SmokingDGP.g_d`
-
-```python
-g_d: Optional[Callable[[np.ndarray], np.ndarray]] = None
-```
-
-##### `causalis.data_contracts.SmokingDGP.g_y`
-
-```python
-g_y: Optional[Callable[[np.ndarray], np.ndarray]] = None
-```
-
-##### `causalis.data_contracts.SmokingDGP.g_zi`
-
-```python
-g_zi: Optional[Callable[[np.ndarray], np.ndarray]] = None
-```
-
-##### `causalis.data_contracts.SmokingDGP.gamma_shape`
-
-```python
-gamma_shape: float = 2.0
-```
-
-##### `causalis.data_contracts.SmokingDGP.generate`
-
-```python
-generate(n, U=None)
-```
-
-Draw a synthetic dataset of size `n`.
-
-**Parameters:**
-
-- **n** (<code>[int](#int)</code>) – Number of samples to generate.
-- **U** (<code>[ndarray](#numpy.ndarray)</code>) – Unobserved confounder. If None, generated from N(0,1).
+Return the confounder columns as a pandas DataFrame.
 
 **Returns:**
 
-- <code>[DataFrame](#pandas.DataFrame)</code> – The generated dataset with outcome 'y', treatment 'd', confounders,
-  and oracle ground-truth columns.
+- <code>[DataFrame](#pandas.DataFrame)</code> – The confounder columns.
 
-##### `causalis.data_contracts.SmokingDGP.include_oracle`
-
-```python
-include_oracle: bool = True
-```
-
-##### `causalis.data_contracts.SmokingDGP.k`
+##### `causalis.data_contracts.MultiCausalData.confounders_names`
 
 ```python
-k: int = 5
+confounders_names: List[str] = Field(alias='confounders', default_factory=list)
 ```
 
-##### `causalis.data_contracts.SmokingDGP.lognormal_sigma`
+##### `causalis.data_contracts.MultiCausalData.df`
 
 ```python
-lognormal_sigma: float = 1.0
+df: pd.DataFrame
 ```
 
-##### `causalis.data_contracts.SmokingDGP.oracle_nuisance`
+##### `causalis.data_contracts.MultiCausalData.from_df`
 
 ```python
-oracle_nuisance(num_quad=21)
+from_df(df, *, outcome, treatments, confounders=None, user_id=None, **kwargs)
 ```
 
-Return nuisance functions (m(x), g0(x), g1(x)) compatible with IRM.
+Create a MultiCausalData instance from a pandas DataFrame.
 
 **Parameters:**
 
-- **num_quad** (<code>[int](#int)</code>) – Number of quadrature points for marginalizing over U.
+- **df** (<code>[DataFrame](#pandas.DataFrame)</code>) – The input DataFrame.
+- **outcome** (<code>[str](#str)</code>) – The name of the outcome column.
+- **treatments** (<code>[Union](#typing.Union)\[[str](#str), [List](#typing.List)\[[str](#str)\]\]</code>) – The name(s) of the treatment column(s).
+- **confounders** (<code>[Union](#typing.Union)\[[str](#str), [List](#typing.List)\[[str](#str)\]\]</code>) – The name(s) of the confounder column(s), by default None.
+- **user_id** (<code>[str](#str)</code>) – The name of the user ID column, by default None.
+- \*\***kwargs** (<code>[Any](#typing.Any)</code>) – Additional keyword arguments passed to the constructor.
 
 **Returns:**
 
-- <code>[dict](#dict)</code> – Dictionary of callables mapping X to nuisance values.
+- <code>[MultiCausalData](#causalis.data_contracts.multicausaldata.MultiCausalData)</code> – An instance of MultiCausalData.
 
-##### `causalis.data_contracts.SmokingDGP.outcome_type`
-
-```python
-outcome_type: str = 'continuous'
-```
-
-##### `causalis.data_contracts.SmokingDGP.pos_dist`
+##### `causalis.data_contracts.MultiCausalData.get_df`
 
 ```python
-pos_dist: str = 'gamma'
+get_df(columns=None, include_outcome=True, include_confounders=True, include_treatments=True, include_user_id=False)
 ```
 
-##### `causalis.data_contracts.SmokingDGP.propensity_sharpness`
-
-```python
-propensity_sharpness: float = 1.0
-```
-
-##### `causalis.data_contracts.SmokingDGP.rng`
-
-```python
-rng: np.random.Generator = field(init=False, repr=False)
-```
-
-##### `causalis.data_contracts.SmokingDGP.score_bounding`
-
-```python
-score_bounding: Optional[float] = None
-```
-
-##### `causalis.data_contracts.SmokingDGP.seed`
-
-```python
-seed: Optional[int] = None
-```
-
-##### `causalis.data_contracts.SmokingDGP.sigma_y`
-
-```python
-sigma_y: float = 1.0
-```
-
-##### `causalis.data_contracts.SmokingDGP.target_d_rate`
-
-```python
-target_d_rate: Optional[float] = None
-```
-
-##### `causalis.data_contracts.SmokingDGP.tau`
-
-```python
-tau: Optional[Callable[[np.ndarray], np.ndarray]] = None
-```
-
-##### `causalis.data_contracts.SmokingDGP.tau_zi`
-
-```python
-tau_zi: Optional[Callable[[np.ndarray], np.ndarray]] = None
-```
-
-##### `causalis.data_contracts.SmokingDGP.theta`
-
-```python
-theta: float = 1.0
-```
-
-##### `causalis.data_contracts.SmokingDGP.to_causal_data`
-
-```python
-to_causal_data(n, confounders=None)
-```
-
-Generate a dataset and convert it to a CausalData object.
+Get a subset of the underlying DataFrame.
 
 **Parameters:**
 
-- **n** (<code>[int](#int)</code>) – Number of samples to generate.
-- **confounders** (<code>str or list of str</code>) – List of confounder column names to include. If None, automatically detects numeric confounders.
+- **columns** (<code>[List](#typing.List)\[[str](#str)\]</code>) – Specific columns to include, by default None.
+- **include_outcome** (<code>[bool](#bool)</code>) – Whether to include the outcome column, by default True.
+- **include_confounders** (<code>[bool](#bool)</code>) – Whether to include confounder columns, by default True.
+- **include_treatments** (<code>[bool](#bool)</code>) – Whether to include treatment columns, by default True.
+- **include_user_id** (<code>[bool](#bool)</code>) – Whether to include the user ID column, by default False.
 
 **Returns:**
 
-- <code>[CausalData](#causalis.dgp.causaldata.CausalData)</code> – A CausalData object containing the generated dataset.
+- <code>[DataFrame](#pandas.DataFrame)</code> – A copy of the requested DataFrame subset.
 
-##### `causalis.data_contracts.SmokingDGP.u_strength_d`
+**Raises:**
+
+- <code>[ValueError](#ValueError)</code> – If any of the requested columns do not exist.
+
+##### `causalis.data_contracts.MultiCausalData.model_config`
 
 ```python
-u_strength_d: float = 0.0
+model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True, extra='forbid')
 ```
 
-##### `causalis.data_contracts.SmokingDGP.u_strength_y`
+##### `causalis.data_contracts.MultiCausalData.outcome`
 
 ```python
-u_strength_y: float = 0.0
+outcome: pd.Series
 ```
 
-##### `causalis.data_contracts.SmokingDGP.u_strength_zi`
+Return the outcome column as a pandas Series.
+
+**Returns:**
+
+- <code>[Series](#pandas.Series)</code> – The outcome column.
+
+##### `causalis.data_contracts.MultiCausalData.outcome_name`
 
 ```python
-u_strength_zi: float = 0.0
+outcome_name: str = Field(alias='outcome')
 ```
 
-##### `causalis.data_contracts.SmokingDGP.use_copula`
+##### `causalis.data_contracts.MultiCausalData.treatment`
 
 ```python
-use_copula: bool = False
+treatment: pd.Series
 ```
 
-##### `causalis.data_contracts.SmokingDGP.x_sampler`
+Return the single treatment column as a pandas Series.
+
+**Returns:**
+
+- <code>[Series](#pandas.Series)</code> – The treatment column.
+
+**Raises:**
+
+- <code>[AttributeError](#AttributeError)</code> – If there is more than one treatment column.
+
+##### `causalis.data_contracts.MultiCausalData.treatment_names`
 
 ```python
-x_sampler: Optional[Callable[[int, int, int], np.ndarray]] = None
+treatment_names: List[str] = Field(alias='treatments')
+```
+
+##### `causalis.data_contracts.MultiCausalData.treatments`
+
+```python
+treatments: pd.DataFrame
+```
+
+Return the treatment columns as a pandas DataFrame.
+
+**Returns:**
+
+- <code>[DataFrame](#pandas.DataFrame)</code> – The treatment columns.
+
+##### `causalis.data_contracts.MultiCausalData.user_id_name`
+
+```python
+user_id_name: Optional[str] = Field(alias='user_id', default=None)
 ```
 
 #### `causalis.data_contracts.UnconfoundednessDiagnosticData`
@@ -1215,6 +1117,7 @@ Fields common to all models assuming unconfoundedness.
 - [**psi_sigma2**](#causalis.data_contracts.UnconfoundednessDiagnosticData.psi_sigma2) (<code>[Optional](#typing.Optional)\[[ndarray](#numpy.ndarray)\]</code>) –
 - [**riesz_rep**](#causalis.data_contracts.UnconfoundednessDiagnosticData.riesz_rep) (<code>[Optional](#typing.Optional)\[[ndarray](#numpy.ndarray)\]</code>) –
 - [**score**](#causalis.data_contracts.UnconfoundednessDiagnosticData.score) (<code>[Optional](#typing.Optional)\[[str](#str)\]</code>) –
+- [**sensitivity_analysis**](#causalis.data_contracts.UnconfoundednessDiagnosticData.sensitivity_analysis) (<code>[Optional](#typing.Optional)\[[Dict](#typing.Dict)\[[str](#str), [Any](#typing.Any)\]\]</code>) –
 - [**sigma2**](#causalis.data_contracts.UnconfoundednessDiagnosticData.sigma2) (<code>[Optional](#typing.Optional)\[[float](#float)\]</code>) –
 - [**trimming_threshold**](#causalis.data_contracts.UnconfoundednessDiagnosticData.trimming_threshold) (<code>[float](#float)</code>) –
 - [**x**](#causalis.data_contracts.UnconfoundednessDiagnosticData.x) (<code>[Optional](#typing.Optional)\[[ndarray](#numpy.ndarray)\]</code>) –
@@ -1302,6 +1205,12 @@ riesz_rep: Optional[np.ndarray] = None
 
 ```python
 score: Optional[str] = None
+```
+
+##### `causalis.data_contracts.UnconfoundednessDiagnosticData.sensitivity_analysis`
+
+```python
+sensitivity_analysis: Optional[Dict[str, Any]] = None
 ```
 
 ##### `causalis.data_contracts.UnconfoundednessDiagnosticData.sigma2`
@@ -1450,6 +1359,7 @@ Fields common to all models assuming unconfoundedness.
 - [**psi_sigma2**](#causalis.data_contracts.causal_diagnostic_data.UnconfoundednessDiagnosticData.psi_sigma2) (<code>[Optional](#typing.Optional)\[[ndarray](#numpy.ndarray)\]</code>) –
 - [**riesz_rep**](#causalis.data_contracts.causal_diagnostic_data.UnconfoundednessDiagnosticData.riesz_rep) (<code>[Optional](#typing.Optional)\[[ndarray](#numpy.ndarray)\]</code>) –
 - [**score**](#causalis.data_contracts.causal_diagnostic_data.UnconfoundednessDiagnosticData.score) (<code>[Optional](#typing.Optional)\[[str](#str)\]</code>) –
+- [**sensitivity_analysis**](#causalis.data_contracts.causal_diagnostic_data.UnconfoundednessDiagnosticData.sensitivity_analysis) (<code>[Optional](#typing.Optional)\[[Dict](#typing.Dict)\[[str](#str), [Any](#typing.Any)\]\]</code>) –
 - [**sigma2**](#causalis.data_contracts.causal_diagnostic_data.UnconfoundednessDiagnosticData.sigma2) (<code>[Optional](#typing.Optional)\[[float](#float)\]</code>) –
 - [**trimming_threshold**](#causalis.data_contracts.causal_diagnostic_data.UnconfoundednessDiagnosticData.trimming_threshold) (<code>[float](#float)</code>) –
 - [**x**](#causalis.data_contracts.causal_diagnostic_data.UnconfoundednessDiagnosticData.x) (<code>[Optional](#typing.Optional)\[[ndarray](#numpy.ndarray)\]</code>) –
@@ -1539,6 +1449,12 @@ riesz_rep: Optional[np.ndarray] = None
 score: Optional[str] = None
 ```
 
+###### `causalis.data_contracts.causal_diagnostic_data.UnconfoundednessDiagnosticData.sensitivity_analysis`
+
+```python
+sensitivity_analysis: Optional[Dict[str, Any]] = None
+```
+
 ###### `causalis.data_contracts.causal_diagnostic_data.UnconfoundednessDiagnosticData.sigma2`
 
 ```python
@@ -1596,7 +1512,6 @@ Result container for causal effect estimates.
 - **confounders** (<code>list of str</code>) – The names of the confounders used in the model.
 - **time** (<code>[datetime](#datetime.datetime)</code>) – The date and time when the estimate was created.
 - **diagnostic_data** (<code>[DiagnosticData](#causalis.data_contracts.causal_diagnostic_data.DiagnosticData)</code>) – Additional diagnostic data_contracts.
-- **sensitivity_analysis** (<code>[dict](#dict)</code>) – Results from sensitivity analysis.
 
 **Functions:**
 
@@ -1620,7 +1535,6 @@ Result container for causal effect estimates.
 - [**n_treated**](#causalis.data_contracts.causal_estimate.CausalEstimate.n_treated) (<code>[int](#int)</code>) –
 - [**outcome**](#causalis.data_contracts.causal_estimate.CausalEstimate.outcome) (<code>[str](#str)</code>) –
 - [**p_value**](#causalis.data_contracts.causal_estimate.CausalEstimate.p_value) (<code>[Optional](#typing.Optional)\[[float](#float)\]</code>) –
-- [**sensitivity_analysis**](#causalis.data_contracts.causal_estimate.CausalEstimate.sensitivity_analysis) (<code>[Dict](#typing.Dict)\[[str](#str), [Any](#typing.Any)\]</code>) –
 - [**time**](#causalis.data_contracts.causal_estimate.CausalEstimate.time) (<code>[datetime](#datetime.datetime)</code>) –
 - [**treatment**](#causalis.data_contracts.causal_estimate.CausalEstimate.treatment) (<code>[str](#str)</code>) –
 - [**value**](#causalis.data_contracts.causal_estimate.CausalEstimate.value) (<code>[float](#float)</code>) –
@@ -1720,12 +1634,6 @@ outcome: str
 
 ```python
 p_value: Optional[float] = None
-```
-
-###### `causalis.data_contracts.causal_estimate.CausalEstimate.sensitivity_analysis`
-
-```python
-sensitivity_analysis: Dict[str, Any] = Field(default_factory=dict)
 ```
 
 ###### `causalis.data_contracts.causal_estimate.CausalEstimate.summary`
@@ -1880,7 +1788,7 @@ Get a DataFrame with specified columns.
 ###### `causalis.data_contracts.causaldata.CausalData.model_config`
 
 ```python
-model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True)
+model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True, extra='forbid')
 ```
 
 ###### `causalis.data_contracts.causaldata.CausalData.outcome`
@@ -2062,7 +1970,7 @@ instrument_name: str = Field(alias='instrument')
 ###### `causalis.data_contracts.causaldata_instrumental.CausalDataInstrumental.model_config`
 
 ```python
-model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True)
+model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True, extra='forbid')
 ```
 
 ###### `causalis.data_contracts.causaldata_instrumental.CausalDataInstrumental.outcome`
@@ -2224,6 +2132,211 @@ make_gold_linear(n=10000, seed=42)
 A standard linear benchmark with moderate confounding.
 Based on the benchmark scenario in docs/research/dgp_benchmarking.ipynb.
 
+#### `causalis.data_contracts.multicausaldata`
+
+Causalis Dataclass for storing Cross-sectional DataFrame and column metadata for causal inference with multiple treatments.
+
+**Classes:**
+
+- [**MultiCausalData**](#causalis.data_contracts.multicausaldata.MultiCausalData) – Data contract for cross-sectional causal data with multiple binary treatment columns.
+
+##### `causalis.data_contracts.multicausaldata.MultiCausalData`
+
+Bases: <code>[BaseModel](#pydantic.BaseModel)</code>
+
+Data contract for cross-sectional causal data with multiple binary treatment columns.
+
+**Parameters:**
+
+- **df** (<code>[DataFrame](#pandas.DataFrame)</code>) – The DataFrame containing the causal data.
+- **outcome_name** (<code>[str](#str)</code>) – The name of the outcome column. (Alias: "outcome")
+- **treatment_names** (<code>[List](#typing.List)\[[str](#str)\]</code>) – The names of the treatment columns. (Alias: "treatments")
+- **confounders_names** (<code>[List](#typing.List)\[[str](#str)\]</code>) – The names of the confounder columns, by default []. (Alias: "confounders")
+- **user_id_name** (<code>[Optional](#typing.Optional)\[[str](#str)\]</code>) – The name of the user ID column, by default None. (Alias: "user_id")
+
+<details class="note" open markdown="1">
+<summary>Notes</summary>
+
+This class enforces several constraints on the data, including:
+
+- Maximum number of treatments (default 5).
+- No duplicate column names in the input DataFrame.
+- Disjoint roles for columns (outcome, treatments, confounders, user_id).
+- Existence of all specified columns in the DataFrame.
+- Numeric or boolean types for outcome and confounders.
+- Non-constant values for outcome, treatments, and confounders.
+- No NaN values in used columns.
+- Binary (0/1) encoding for treatment columns.
+- No identical values between different columns.
+- Unique values for user_id (if specified).
+
+</details>
+
+**Functions:**
+
+- [**from_df**](#causalis.data_contracts.multicausaldata.MultiCausalData.from_df) – Create a MultiCausalData instance from a pandas DataFrame.
+- [**get_df**](#causalis.data_contracts.multicausaldata.MultiCausalData.get_df) – Get a subset of the underlying DataFrame.
+
+**Attributes:**
+
+- [**FLOAT_TOL**](#causalis.data_contracts.multicausaldata.MultiCausalData.FLOAT_TOL) (<code>[float](#float)</code>) –
+- [**MAX_TREATMENTS**](#causalis.data_contracts.multicausaldata.MultiCausalData.MAX_TREATMENTS) (<code>[int](#int)</code>) –
+- [**X**](#causalis.data_contracts.multicausaldata.MultiCausalData.X) (<code>[DataFrame](#pandas.DataFrame)</code>) – Return the confounder columns as a pandas DataFrame.
+- [**confounders_names**](#causalis.data_contracts.multicausaldata.MultiCausalData.confounders_names) (<code>[List](#typing.List)\[[str](#str)\]</code>) –
+- [**df**](#causalis.data_contracts.multicausaldata.MultiCausalData.df) (<code>[DataFrame](#pandas.DataFrame)</code>) –
+- [**model_config**](#causalis.data_contracts.multicausaldata.MultiCausalData.model_config) –
+- [**outcome**](#causalis.data_contracts.multicausaldata.MultiCausalData.outcome) (<code>[Series](#pandas.Series)</code>) – Return the outcome column as a pandas Series.
+- [**outcome_name**](#causalis.data_contracts.multicausaldata.MultiCausalData.outcome_name) (<code>[str](#str)</code>) –
+- [**treatment**](#causalis.data_contracts.multicausaldata.MultiCausalData.treatment) (<code>[Series](#pandas.Series)</code>) – Return the single treatment column as a pandas Series.
+- [**treatment_names**](#causalis.data_contracts.multicausaldata.MultiCausalData.treatment_names) (<code>[List](#typing.List)\[[str](#str)\]</code>) –
+- [**treatments**](#causalis.data_contracts.multicausaldata.MultiCausalData.treatments) (<code>[DataFrame](#pandas.DataFrame)</code>) – Return the treatment columns as a pandas DataFrame.
+- [**user_id_name**](#causalis.data_contracts.multicausaldata.MultiCausalData.user_id_name) (<code>[Optional](#typing.Optional)\[[str](#str)\]</code>) –
+
+###### `causalis.data_contracts.multicausaldata.MultiCausalData.FLOAT_TOL`
+
+```python
+FLOAT_TOL: float = 1e-12
+```
+
+###### `causalis.data_contracts.multicausaldata.MultiCausalData.MAX_TREATMENTS`
+
+```python
+MAX_TREATMENTS: int = 5
+```
+
+###### `causalis.data_contracts.multicausaldata.MultiCausalData.X`
+
+```python
+X: pd.DataFrame
+```
+
+Return the confounder columns as a pandas DataFrame.
+
+**Returns:**
+
+- <code>[DataFrame](#pandas.DataFrame)</code> – The confounder columns.
+
+###### `causalis.data_contracts.multicausaldata.MultiCausalData.confounders_names`
+
+```python
+confounders_names: List[str] = Field(alias='confounders', default_factory=list)
+```
+
+###### `causalis.data_contracts.multicausaldata.MultiCausalData.df`
+
+```python
+df: pd.DataFrame
+```
+
+###### `causalis.data_contracts.multicausaldata.MultiCausalData.from_df`
+
+```python
+from_df(df, *, outcome, treatments, confounders=None, user_id=None, **kwargs)
+```
+
+Create a MultiCausalData instance from a pandas DataFrame.
+
+**Parameters:**
+
+- **df** (<code>[DataFrame](#pandas.DataFrame)</code>) – The input DataFrame.
+- **outcome** (<code>[str](#str)</code>) – The name of the outcome column.
+- **treatments** (<code>[Union](#typing.Union)\[[str](#str), [List](#typing.List)\[[str](#str)\]\]</code>) – The name(s) of the treatment column(s).
+- **confounders** (<code>[Union](#typing.Union)\[[str](#str), [List](#typing.List)\[[str](#str)\]\]</code>) – The name(s) of the confounder column(s), by default None.
+- **user_id** (<code>[str](#str)</code>) – The name of the user ID column, by default None.
+- \*\***kwargs** (<code>[Any](#typing.Any)</code>) – Additional keyword arguments passed to the constructor.
+
+**Returns:**
+
+- <code>[MultiCausalData](#causalis.data_contracts.multicausaldata.MultiCausalData)</code> – An instance of MultiCausalData.
+
+###### `causalis.data_contracts.multicausaldata.MultiCausalData.get_df`
+
+```python
+get_df(columns=None, include_outcome=True, include_confounders=True, include_treatments=True, include_user_id=False)
+```
+
+Get a subset of the underlying DataFrame.
+
+**Parameters:**
+
+- **columns** (<code>[List](#typing.List)\[[str](#str)\]</code>) – Specific columns to include, by default None.
+- **include_outcome** (<code>[bool](#bool)</code>) – Whether to include the outcome column, by default True.
+- **include_confounders** (<code>[bool](#bool)</code>) – Whether to include confounder columns, by default True.
+- **include_treatments** (<code>[bool](#bool)</code>) – Whether to include treatment columns, by default True.
+- **include_user_id** (<code>[bool](#bool)</code>) – Whether to include the user ID column, by default False.
+
+**Returns:**
+
+- <code>[DataFrame](#pandas.DataFrame)</code> – A copy of the requested DataFrame subset.
+
+**Raises:**
+
+- <code>[ValueError](#ValueError)</code> – If any of the requested columns do not exist.
+
+###### `causalis.data_contracts.multicausaldata.MultiCausalData.model_config`
+
+```python
+model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True, extra='forbid')
+```
+
+###### `causalis.data_contracts.multicausaldata.MultiCausalData.outcome`
+
+```python
+outcome: pd.Series
+```
+
+Return the outcome column as a pandas Series.
+
+**Returns:**
+
+- <code>[Series](#pandas.Series)</code> – The outcome column.
+
+###### `causalis.data_contracts.multicausaldata.MultiCausalData.outcome_name`
+
+```python
+outcome_name: str = Field(alias='outcome')
+```
+
+###### `causalis.data_contracts.multicausaldata.MultiCausalData.treatment`
+
+```python
+treatment: pd.Series
+```
+
+Return the single treatment column as a pandas Series.
+
+**Returns:**
+
+- <code>[Series](#pandas.Series)</code> – The treatment column.
+
+**Raises:**
+
+- <code>[AttributeError](#AttributeError)</code> – If there is more than one treatment column.
+
+###### `causalis.data_contracts.multicausaldata.MultiCausalData.treatment_names`
+
+```python
+treatment_names: List[str] = Field(alias='treatments')
+```
+
+###### `causalis.data_contracts.multicausaldata.MultiCausalData.treatments`
+
+```python
+treatments: pd.DataFrame
+```
+
+Return the treatment columns as a pandas DataFrame.
+
+**Returns:**
+
+- <code>[DataFrame](#pandas.DataFrame)</code> – The treatment columns.
+
+###### `causalis.data_contracts.multicausaldata.MultiCausalData.user_id_name`
+
+```python
+user_id_name: Optional[str] = Field(alias='user_id', default=None)
+```
+
 #### `causalis.data_contracts.obs_linear_26_dataset`
 
 ```python
@@ -2286,7 +2399,6 @@ design = None
 **Classes:**
 
 - [**CausalDatasetGenerator**](#causalis.dgp.CausalDatasetGenerator) – Generate synthetic causal inference datasets with controllable confounding,
-- [**SmokingDGP**](#causalis.dgp.SmokingDGP) – A specialized generating class for smoking-related causal scenarios.
 
 **Functions:**
 
@@ -2612,294 +2724,6 @@ use_copula: bool = False
 x_sampler: Optional[Callable[[int, int, int], np.ndarray]] = None
 ```
 
-#### `causalis.dgp.SmokingDGP`
-
-```python
-SmokingDGP(effect_size=2.0, seed=42, **kwargs)
-```
-
-Bases: <code>[CausalDatasetGenerator](#causalis.dgp.causaldata.base.CausalDatasetGenerator)</code>
-
-A specialized generating class for smoking-related causal scenarios.
-Example of how users can extend CausalDatasetGenerator for specific domains.
-
-**Functions:**
-
-- [**generate**](#causalis.dgp.SmokingDGP.generate) – Draw a synthetic dataset of size `n`.
-- [**oracle_nuisance**](#causalis.dgp.SmokingDGP.oracle_nuisance) – Return nuisance functions (m(x), g0(x), g1(x)) compatible with IRM.
-- [**to_causal_data**](#causalis.dgp.SmokingDGP.to_causal_data) – Generate a dataset and convert it to a CausalData object.
-
-**Attributes:**
-
-- [**alpha_d**](#causalis.dgp.SmokingDGP.alpha_d) (<code>[float](#float)</code>) –
-- [**alpha_y**](#causalis.dgp.SmokingDGP.alpha_y) (<code>[float](#float)</code>) –
-- [**alpha_zi**](#causalis.dgp.SmokingDGP.alpha_zi) (<code>[float](#float)</code>) –
-- [**beta_d**](#causalis.dgp.SmokingDGP.beta_d) (<code>[Optional](#typing.Optional)\[[ndarray](#numpy.ndarray)\]</code>) –
-- [**beta_y**](#causalis.dgp.SmokingDGP.beta_y) (<code>[Optional](#typing.Optional)\[[ndarray](#numpy.ndarray)\]</code>) –
-- [**beta_zi**](#causalis.dgp.SmokingDGP.beta_zi) (<code>[Optional](#typing.Optional)\[[ndarray](#numpy.ndarray)\]</code>) –
-- [**confounder_specs**](#causalis.dgp.SmokingDGP.confounder_specs) (<code>[Optional](#typing.Optional)\[[List](#typing.List)\[[Dict](#typing.Dict)\[[str](#str), [Any](#typing.Any)\]\]\]</code>) –
-- [**copula_corr**](#causalis.dgp.SmokingDGP.copula_corr) (<code>[Optional](#typing.Optional)\[[ndarray](#numpy.ndarray)\]</code>) –
-- [**g_d**](#causalis.dgp.SmokingDGP.g_d) (<code>[Optional](#typing.Optional)\[[Callable](#typing.Callable)\[\[[ndarray](#numpy.ndarray)\], [ndarray](#numpy.ndarray)\]\]</code>) –
-- [**g_y**](#causalis.dgp.SmokingDGP.g_y) (<code>[Optional](#typing.Optional)\[[Callable](#typing.Callable)\[\[[ndarray](#numpy.ndarray)\], [ndarray](#numpy.ndarray)\]\]</code>) –
-- [**g_zi**](#causalis.dgp.SmokingDGP.g_zi) (<code>[Optional](#typing.Optional)\[[Callable](#typing.Callable)\[\[[ndarray](#numpy.ndarray)\], [ndarray](#numpy.ndarray)\]\]</code>) –
-- [**gamma_shape**](#causalis.dgp.SmokingDGP.gamma_shape) (<code>[float](#float)</code>) –
-- [**include_oracle**](#causalis.dgp.SmokingDGP.include_oracle) (<code>[bool](#bool)</code>) –
-- [**k**](#causalis.dgp.SmokingDGP.k) (<code>[int](#int)</code>) –
-- [**lognormal_sigma**](#causalis.dgp.SmokingDGP.lognormal_sigma) (<code>[float](#float)</code>) –
-- [**outcome_type**](#causalis.dgp.SmokingDGP.outcome_type) (<code>[str](#str)</code>) –
-- [**pos_dist**](#causalis.dgp.SmokingDGP.pos_dist) (<code>[str](#str)</code>) –
-- [**propensity_sharpness**](#causalis.dgp.SmokingDGP.propensity_sharpness) (<code>[float](#float)</code>) –
-- [**rng**](#causalis.dgp.SmokingDGP.rng) (<code>[Generator](#numpy.random.Generator)</code>) –
-- [**score_bounding**](#causalis.dgp.SmokingDGP.score_bounding) (<code>[Optional](#typing.Optional)\[[float](#float)\]</code>) –
-- [**seed**](#causalis.dgp.SmokingDGP.seed) (<code>[Optional](#typing.Optional)\[[int](#int)\]</code>) –
-- [**sigma_y**](#causalis.dgp.SmokingDGP.sigma_y) (<code>[float](#float)</code>) –
-- [**target_d_rate**](#causalis.dgp.SmokingDGP.target_d_rate) (<code>[Optional](#typing.Optional)\[[float](#float)\]</code>) –
-- [**tau**](#causalis.dgp.SmokingDGP.tau) (<code>[Optional](#typing.Optional)\[[Callable](#typing.Callable)\[\[[ndarray](#numpy.ndarray)\], [ndarray](#numpy.ndarray)\]\]</code>) –
-- [**tau_zi**](#causalis.dgp.SmokingDGP.tau_zi) (<code>[Optional](#typing.Optional)\[[Callable](#typing.Callable)\[\[[ndarray](#numpy.ndarray)\], [ndarray](#numpy.ndarray)\]\]</code>) –
-- [**theta**](#causalis.dgp.SmokingDGP.theta) (<code>[float](#float)</code>) –
-- [**u_strength_d**](#causalis.dgp.SmokingDGP.u_strength_d) (<code>[float](#float)</code>) –
-- [**u_strength_y**](#causalis.dgp.SmokingDGP.u_strength_y) (<code>[float](#float)</code>) –
-- [**u_strength_zi**](#causalis.dgp.SmokingDGP.u_strength_zi) (<code>[float](#float)</code>) –
-- [**use_copula**](#causalis.dgp.SmokingDGP.use_copula) (<code>[bool](#bool)</code>) –
-- [**x_sampler**](#causalis.dgp.SmokingDGP.x_sampler) (<code>[Optional](#typing.Optional)\[[Callable](#typing.Callable)\[\[[int](#int), [int](#int), [int](#int)\], [ndarray](#numpy.ndarray)\]\]</code>) –
-
-##### `causalis.dgp.SmokingDGP.alpha_d`
-
-```python
-alpha_d: float = 0.0
-```
-
-##### `causalis.dgp.SmokingDGP.alpha_y`
-
-```python
-alpha_y: float = 0.0
-```
-
-##### `causalis.dgp.SmokingDGP.alpha_zi`
-
-```python
-alpha_zi: float = -1.0
-```
-
-##### `causalis.dgp.SmokingDGP.beta_d`
-
-```python
-beta_d: Optional[np.ndarray] = None
-```
-
-##### `causalis.dgp.SmokingDGP.beta_y`
-
-```python
-beta_y: Optional[np.ndarray] = None
-```
-
-##### `causalis.dgp.SmokingDGP.beta_zi`
-
-```python
-beta_zi: Optional[np.ndarray] = None
-```
-
-##### `causalis.dgp.SmokingDGP.confounder_specs`
-
-```python
-confounder_specs: Optional[List[Dict[str, Any]]] = None
-```
-
-##### `causalis.dgp.SmokingDGP.copula_corr`
-
-```python
-copula_corr: Optional[np.ndarray] = None
-```
-
-##### `causalis.dgp.SmokingDGP.g_d`
-
-```python
-g_d: Optional[Callable[[np.ndarray], np.ndarray]] = None
-```
-
-##### `causalis.dgp.SmokingDGP.g_y`
-
-```python
-g_y: Optional[Callable[[np.ndarray], np.ndarray]] = None
-```
-
-##### `causalis.dgp.SmokingDGP.g_zi`
-
-```python
-g_zi: Optional[Callable[[np.ndarray], np.ndarray]] = None
-```
-
-##### `causalis.dgp.SmokingDGP.gamma_shape`
-
-```python
-gamma_shape: float = 2.0
-```
-
-##### `causalis.dgp.SmokingDGP.generate`
-
-```python
-generate(n, U=None)
-```
-
-Draw a synthetic dataset of size `n`.
-
-**Parameters:**
-
-- **n** (<code>[int](#int)</code>) – Number of samples to generate.
-- **U** (<code>[ndarray](#numpy.ndarray)</code>) – Unobserved confounder. If None, generated from N(0,1).
-
-**Returns:**
-
-- <code>[DataFrame](#pandas.DataFrame)</code> – The generated dataset with outcome 'y', treatment 'd', confounders,
-  and oracle ground-truth columns.
-
-##### `causalis.dgp.SmokingDGP.include_oracle`
-
-```python
-include_oracle: bool = True
-```
-
-##### `causalis.dgp.SmokingDGP.k`
-
-```python
-k: int = 5
-```
-
-##### `causalis.dgp.SmokingDGP.lognormal_sigma`
-
-```python
-lognormal_sigma: float = 1.0
-```
-
-##### `causalis.dgp.SmokingDGP.oracle_nuisance`
-
-```python
-oracle_nuisance(num_quad=21)
-```
-
-Return nuisance functions (m(x), g0(x), g1(x)) compatible with IRM.
-
-**Parameters:**
-
-- **num_quad** (<code>[int](#int)</code>) – Number of quadrature points for marginalizing over U.
-
-**Returns:**
-
-- <code>[dict](#dict)</code> – Dictionary of callables mapping X to nuisance values.
-
-##### `causalis.dgp.SmokingDGP.outcome_type`
-
-```python
-outcome_type: str = 'continuous'
-```
-
-##### `causalis.dgp.SmokingDGP.pos_dist`
-
-```python
-pos_dist: str = 'gamma'
-```
-
-##### `causalis.dgp.SmokingDGP.propensity_sharpness`
-
-```python
-propensity_sharpness: float = 1.0
-```
-
-##### `causalis.dgp.SmokingDGP.rng`
-
-```python
-rng: np.random.Generator = field(init=False, repr=False)
-```
-
-##### `causalis.dgp.SmokingDGP.score_bounding`
-
-```python
-score_bounding: Optional[float] = None
-```
-
-##### `causalis.dgp.SmokingDGP.seed`
-
-```python
-seed: Optional[int] = None
-```
-
-##### `causalis.dgp.SmokingDGP.sigma_y`
-
-```python
-sigma_y: float = 1.0
-```
-
-##### `causalis.dgp.SmokingDGP.target_d_rate`
-
-```python
-target_d_rate: Optional[float] = None
-```
-
-##### `causalis.dgp.SmokingDGP.tau`
-
-```python
-tau: Optional[Callable[[np.ndarray], np.ndarray]] = None
-```
-
-##### `causalis.dgp.SmokingDGP.tau_zi`
-
-```python
-tau_zi: Optional[Callable[[np.ndarray], np.ndarray]] = None
-```
-
-##### `causalis.dgp.SmokingDGP.theta`
-
-```python
-theta: float = 1.0
-```
-
-##### `causalis.dgp.SmokingDGP.to_causal_data`
-
-```python
-to_causal_data(n, confounders=None)
-```
-
-Generate a dataset and convert it to a CausalData object.
-
-**Parameters:**
-
-- **n** (<code>[int](#int)</code>) – Number of samples to generate.
-- **confounders** (<code>str or list of str</code>) – List of confounder column names to include. If None, automatically detects numeric confounders.
-
-**Returns:**
-
-- <code>[CausalData](#causalis.dgp.causaldata.CausalData)</code> – A CausalData object containing the generated dataset.
-
-##### `causalis.dgp.SmokingDGP.u_strength_d`
-
-```python
-u_strength_d: float = 0.0
-```
-
-##### `causalis.dgp.SmokingDGP.u_strength_y`
-
-```python
-u_strength_y: float = 0.0
-```
-
-##### `causalis.dgp.SmokingDGP.u_strength_zi`
-
-```python
-u_strength_zi: float = 0.0
-```
-
-##### `causalis.dgp.SmokingDGP.use_copula`
-
-```python
-use_copula: bool = False
-```
-
-##### `causalis.dgp.SmokingDGP.x_sampler`
-
-```python
-x_sampler: Optional[Callable[[int, int, int], np.ndarray]] = None
-```
-
 #### `causalis.dgp.base`
 
 **Functions:**
@@ -2927,13 +2751,13 @@ Uses rank -> normal scores -> Pearson correlation approach.
 
 - [**CausalData**](#causalis.dgp.causaldata.CausalData) – Container for causal inference datasets.
 - [**CausalDatasetGenerator**](#causalis.dgp.causaldata.CausalDatasetGenerator) – Generate synthetic causal inference datasets with controllable confounding,
-- [**SmokingDGP**](#causalis.dgp.causaldata.SmokingDGP) – A specialized generating class for smoking-related causal scenarios.
 
 **Functions:**
 
 - [**generate_classic_rct**](#causalis.dgp.causaldata.generate_classic_rct) – Generate a classic RCT dataset with three binary confounders:
 - [**generate_classic_rct_26**](#causalis.dgp.causaldata.generate_classic_rct_26) – A pre-configured classic RCT dataset with 3 binary confounders.
 - [**generate_obs_hte_26**](#causalis.dgp.causaldata.generate_obs_hte_26) – Observational dataset with nonlinear outcome model, nonlinear treatment assignment,
+- [**generate_obs_hte_26_rich**](#causalis.dgp.causaldata.generate_obs_hte_26_rich) – Observational dataset with richer confounding, nonlinear outcome model,
 - [**generate_rct**](#causalis.dgp.causaldata.generate_rct) – Generate an RCT dataset with randomized treatment assignment.
 - [**make_cuped_tweedie**](#causalis.dgp.causaldata.make_cuped_tweedie) – Tweedie-like DGP with mixed marginals and structured HTE.
 - [**make_cuped_tweedie_26**](#causalis.dgp.causaldata.make_cuped_tweedie_26) – Gold standard Tweedie-like DGP with mixed marginals and structured HTE.
@@ -3049,7 +2873,7 @@ Get a DataFrame with specified columns.
 ###### `causalis.dgp.causaldata.CausalData.model_config`
 
 ```python
-model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True)
+model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True, extra='forbid')
 ```
 
 ###### `causalis.dgp.causaldata.CausalData.outcome`
@@ -3418,294 +3242,6 @@ use_copula: bool = False
 x_sampler: Optional[Callable[[int, int, int], np.ndarray]] = None
 ```
 
-##### `causalis.dgp.causaldata.SmokingDGP`
-
-```python
-SmokingDGP(effect_size=2.0, seed=42, **kwargs)
-```
-
-Bases: <code>[CausalDatasetGenerator](#causalis.dgp.causaldata.base.CausalDatasetGenerator)</code>
-
-A specialized generating class for smoking-related causal scenarios.
-Example of how users can extend CausalDatasetGenerator for specific domains.
-
-**Functions:**
-
-- [**generate**](#causalis.dgp.causaldata.SmokingDGP.generate) – Draw a synthetic dataset of size `n`.
-- [**oracle_nuisance**](#causalis.dgp.causaldata.SmokingDGP.oracle_nuisance) – Return nuisance functions (m(x), g0(x), g1(x)) compatible with IRM.
-- [**to_causal_data**](#causalis.dgp.causaldata.SmokingDGP.to_causal_data) – Generate a dataset and convert it to a CausalData object.
-
-**Attributes:**
-
-- [**alpha_d**](#causalis.dgp.causaldata.SmokingDGP.alpha_d) (<code>[float](#float)</code>) –
-- [**alpha_y**](#causalis.dgp.causaldata.SmokingDGP.alpha_y) (<code>[float](#float)</code>) –
-- [**alpha_zi**](#causalis.dgp.causaldata.SmokingDGP.alpha_zi) (<code>[float](#float)</code>) –
-- [**beta_d**](#causalis.dgp.causaldata.SmokingDGP.beta_d) (<code>[Optional](#typing.Optional)\[[ndarray](#numpy.ndarray)\]</code>) –
-- [**beta_y**](#causalis.dgp.causaldata.SmokingDGP.beta_y) (<code>[Optional](#typing.Optional)\[[ndarray](#numpy.ndarray)\]</code>) –
-- [**beta_zi**](#causalis.dgp.causaldata.SmokingDGP.beta_zi) (<code>[Optional](#typing.Optional)\[[ndarray](#numpy.ndarray)\]</code>) –
-- [**confounder_specs**](#causalis.dgp.causaldata.SmokingDGP.confounder_specs) (<code>[Optional](#typing.Optional)\[[List](#typing.List)\[[Dict](#typing.Dict)\[[str](#str), [Any](#typing.Any)\]\]\]</code>) –
-- [**copula_corr**](#causalis.dgp.causaldata.SmokingDGP.copula_corr) (<code>[Optional](#typing.Optional)\[[ndarray](#numpy.ndarray)\]</code>) –
-- [**g_d**](#causalis.dgp.causaldata.SmokingDGP.g_d) (<code>[Optional](#typing.Optional)\[[Callable](#typing.Callable)\[\[[ndarray](#numpy.ndarray)\], [ndarray](#numpy.ndarray)\]\]</code>) –
-- [**g_y**](#causalis.dgp.causaldata.SmokingDGP.g_y) (<code>[Optional](#typing.Optional)\[[Callable](#typing.Callable)\[\[[ndarray](#numpy.ndarray)\], [ndarray](#numpy.ndarray)\]\]</code>) –
-- [**g_zi**](#causalis.dgp.causaldata.SmokingDGP.g_zi) (<code>[Optional](#typing.Optional)\[[Callable](#typing.Callable)\[\[[ndarray](#numpy.ndarray)\], [ndarray](#numpy.ndarray)\]\]</code>) –
-- [**gamma_shape**](#causalis.dgp.causaldata.SmokingDGP.gamma_shape) (<code>[float](#float)</code>) –
-- [**include_oracle**](#causalis.dgp.causaldata.SmokingDGP.include_oracle) (<code>[bool](#bool)</code>) –
-- [**k**](#causalis.dgp.causaldata.SmokingDGP.k) (<code>[int](#int)</code>) –
-- [**lognormal_sigma**](#causalis.dgp.causaldata.SmokingDGP.lognormal_sigma) (<code>[float](#float)</code>) –
-- [**outcome_type**](#causalis.dgp.causaldata.SmokingDGP.outcome_type) (<code>[str](#str)</code>) –
-- [**pos_dist**](#causalis.dgp.causaldata.SmokingDGP.pos_dist) (<code>[str](#str)</code>) –
-- [**propensity_sharpness**](#causalis.dgp.causaldata.SmokingDGP.propensity_sharpness) (<code>[float](#float)</code>) –
-- [**rng**](#causalis.dgp.causaldata.SmokingDGP.rng) (<code>[Generator](#numpy.random.Generator)</code>) –
-- [**score_bounding**](#causalis.dgp.causaldata.SmokingDGP.score_bounding) (<code>[Optional](#typing.Optional)\[[float](#float)\]</code>) –
-- [**seed**](#causalis.dgp.causaldata.SmokingDGP.seed) (<code>[Optional](#typing.Optional)\[[int](#int)\]</code>) –
-- [**sigma_y**](#causalis.dgp.causaldata.SmokingDGP.sigma_y) (<code>[float](#float)</code>) –
-- [**target_d_rate**](#causalis.dgp.causaldata.SmokingDGP.target_d_rate) (<code>[Optional](#typing.Optional)\[[float](#float)\]</code>) –
-- [**tau**](#causalis.dgp.causaldata.SmokingDGP.tau) (<code>[Optional](#typing.Optional)\[[Callable](#typing.Callable)\[\[[ndarray](#numpy.ndarray)\], [ndarray](#numpy.ndarray)\]\]</code>) –
-- [**tau_zi**](#causalis.dgp.causaldata.SmokingDGP.tau_zi) (<code>[Optional](#typing.Optional)\[[Callable](#typing.Callable)\[\[[ndarray](#numpy.ndarray)\], [ndarray](#numpy.ndarray)\]\]</code>) –
-- [**theta**](#causalis.dgp.causaldata.SmokingDGP.theta) (<code>[float](#float)</code>) –
-- [**u_strength_d**](#causalis.dgp.causaldata.SmokingDGP.u_strength_d) (<code>[float](#float)</code>) –
-- [**u_strength_y**](#causalis.dgp.causaldata.SmokingDGP.u_strength_y) (<code>[float](#float)</code>) –
-- [**u_strength_zi**](#causalis.dgp.causaldata.SmokingDGP.u_strength_zi) (<code>[float](#float)</code>) –
-- [**use_copula**](#causalis.dgp.causaldata.SmokingDGP.use_copula) (<code>[bool](#bool)</code>) –
-- [**x_sampler**](#causalis.dgp.causaldata.SmokingDGP.x_sampler) (<code>[Optional](#typing.Optional)\[[Callable](#typing.Callable)\[\[[int](#int), [int](#int), [int](#int)\], [ndarray](#numpy.ndarray)\]\]</code>) –
-
-###### `causalis.dgp.causaldata.SmokingDGP.alpha_d`
-
-```python
-alpha_d: float = 0.0
-```
-
-###### `causalis.dgp.causaldata.SmokingDGP.alpha_y`
-
-```python
-alpha_y: float = 0.0
-```
-
-###### `causalis.dgp.causaldata.SmokingDGP.alpha_zi`
-
-```python
-alpha_zi: float = -1.0
-```
-
-###### `causalis.dgp.causaldata.SmokingDGP.beta_d`
-
-```python
-beta_d: Optional[np.ndarray] = None
-```
-
-###### `causalis.dgp.causaldata.SmokingDGP.beta_y`
-
-```python
-beta_y: Optional[np.ndarray] = None
-```
-
-###### `causalis.dgp.causaldata.SmokingDGP.beta_zi`
-
-```python
-beta_zi: Optional[np.ndarray] = None
-```
-
-###### `causalis.dgp.causaldata.SmokingDGP.confounder_specs`
-
-```python
-confounder_specs: Optional[List[Dict[str, Any]]] = None
-```
-
-###### `causalis.dgp.causaldata.SmokingDGP.copula_corr`
-
-```python
-copula_corr: Optional[np.ndarray] = None
-```
-
-###### `causalis.dgp.causaldata.SmokingDGP.g_d`
-
-```python
-g_d: Optional[Callable[[np.ndarray], np.ndarray]] = None
-```
-
-###### `causalis.dgp.causaldata.SmokingDGP.g_y`
-
-```python
-g_y: Optional[Callable[[np.ndarray], np.ndarray]] = None
-```
-
-###### `causalis.dgp.causaldata.SmokingDGP.g_zi`
-
-```python
-g_zi: Optional[Callable[[np.ndarray], np.ndarray]] = None
-```
-
-###### `causalis.dgp.causaldata.SmokingDGP.gamma_shape`
-
-```python
-gamma_shape: float = 2.0
-```
-
-###### `causalis.dgp.causaldata.SmokingDGP.generate`
-
-```python
-generate(n, U=None)
-```
-
-Draw a synthetic dataset of size `n`.
-
-**Parameters:**
-
-- **n** (<code>[int](#int)</code>) – Number of samples to generate.
-- **U** (<code>[ndarray](#numpy.ndarray)</code>) – Unobserved confounder. If None, generated from N(0,1).
-
-**Returns:**
-
-- <code>[DataFrame](#pandas.DataFrame)</code> – The generated dataset with outcome 'y', treatment 'd', confounders,
-  and oracle ground-truth columns.
-
-###### `causalis.dgp.causaldata.SmokingDGP.include_oracle`
-
-```python
-include_oracle: bool = True
-```
-
-###### `causalis.dgp.causaldata.SmokingDGP.k`
-
-```python
-k: int = 5
-```
-
-###### `causalis.dgp.causaldata.SmokingDGP.lognormal_sigma`
-
-```python
-lognormal_sigma: float = 1.0
-```
-
-###### `causalis.dgp.causaldata.SmokingDGP.oracle_nuisance`
-
-```python
-oracle_nuisance(num_quad=21)
-```
-
-Return nuisance functions (m(x), g0(x), g1(x)) compatible with IRM.
-
-**Parameters:**
-
-- **num_quad** (<code>[int](#int)</code>) – Number of quadrature points for marginalizing over U.
-
-**Returns:**
-
-- <code>[dict](#dict)</code> – Dictionary of callables mapping X to nuisance values.
-
-###### `causalis.dgp.causaldata.SmokingDGP.outcome_type`
-
-```python
-outcome_type: str = 'continuous'
-```
-
-###### `causalis.dgp.causaldata.SmokingDGP.pos_dist`
-
-```python
-pos_dist: str = 'gamma'
-```
-
-###### `causalis.dgp.causaldata.SmokingDGP.propensity_sharpness`
-
-```python
-propensity_sharpness: float = 1.0
-```
-
-###### `causalis.dgp.causaldata.SmokingDGP.rng`
-
-```python
-rng: np.random.Generator = field(init=False, repr=False)
-```
-
-###### `causalis.dgp.causaldata.SmokingDGP.score_bounding`
-
-```python
-score_bounding: Optional[float] = None
-```
-
-###### `causalis.dgp.causaldata.SmokingDGP.seed`
-
-```python
-seed: Optional[int] = None
-```
-
-###### `causalis.dgp.causaldata.SmokingDGP.sigma_y`
-
-```python
-sigma_y: float = 1.0
-```
-
-###### `causalis.dgp.causaldata.SmokingDGP.target_d_rate`
-
-```python
-target_d_rate: Optional[float] = None
-```
-
-###### `causalis.dgp.causaldata.SmokingDGP.tau`
-
-```python
-tau: Optional[Callable[[np.ndarray], np.ndarray]] = None
-```
-
-###### `causalis.dgp.causaldata.SmokingDGP.tau_zi`
-
-```python
-tau_zi: Optional[Callable[[np.ndarray], np.ndarray]] = None
-```
-
-###### `causalis.dgp.causaldata.SmokingDGP.theta`
-
-```python
-theta: float = 1.0
-```
-
-###### `causalis.dgp.causaldata.SmokingDGP.to_causal_data`
-
-```python
-to_causal_data(n, confounders=None)
-```
-
-Generate a dataset and convert it to a CausalData object.
-
-**Parameters:**
-
-- **n** (<code>[int](#int)</code>) – Number of samples to generate.
-- **confounders** (<code>str or list of str</code>) – List of confounder column names to include. If None, automatically detects numeric confounders.
-
-**Returns:**
-
-- <code>[CausalData](#causalis.dgp.causaldata.CausalData)</code> – A CausalData object containing the generated dataset.
-
-###### `causalis.dgp.causaldata.SmokingDGP.u_strength_d`
-
-```python
-u_strength_d: float = 0.0
-```
-
-###### `causalis.dgp.causaldata.SmokingDGP.u_strength_y`
-
-```python
-u_strength_y: float = 0.0
-```
-
-###### `causalis.dgp.causaldata.SmokingDGP.u_strength_zi`
-
-```python
-u_strength_zi: float = 0.0
-```
-
-###### `causalis.dgp.causaldata.SmokingDGP.use_copula`
-
-```python
-use_copula: bool = False
-```
-
-###### `causalis.dgp.causaldata.SmokingDGP.x_sampler`
-
-```python
-x_sampler: Optional[Callable[[int, int, int], np.ndarray]] = None
-```
-
 ##### `causalis.dgp.causaldata.base`
 
 **Classes:**
@@ -4026,10 +3562,6 @@ x_sampler: Optional[Callable[[int, int, int], np.ndarray]] = None
 
 ##### `causalis.dgp.causaldata.functional`
 
-**Classes:**
-
-- [**SmokingDGP**](#causalis.dgp.causaldata.functional.SmokingDGP) – A specialized generating class for smoking-related causal scenarios.
-
 **Functions:**
 
 - [**generate_classic_rct**](#causalis.dgp.causaldata.functional.generate_classic_rct) – Generate a classic RCT dataset with three binary confounders:
@@ -4037,294 +3569,6 @@ x_sampler: Optional[Callable[[int, int, int], np.ndarray]] = None
 - [**make_cuped_tweedie**](#causalis.dgp.causaldata.functional.make_cuped_tweedie) – Tweedie-like DGP with mixed marginals and structured HTE.
 - [**make_gold_linear**](#causalis.dgp.causaldata.functional.make_gold_linear) – A standard linear benchmark with moderate confounding.
 - [**obs_linear_effect**](#causalis.dgp.causaldata.functional.obs_linear_effect) – Generate an observational dataset with linear effects of confounders and a constant treatment effect.
-
-###### `causalis.dgp.causaldata.functional.SmokingDGP`
-
-```python
-SmokingDGP(effect_size=2.0, seed=42, **kwargs)
-```
-
-Bases: <code>[CausalDatasetGenerator](#causalis.dgp.causaldata.base.CausalDatasetGenerator)</code>
-
-A specialized generating class for smoking-related causal scenarios.
-Example of how users can extend CausalDatasetGenerator for specific domains.
-
-**Functions:**
-
-- [**generate**](#causalis.dgp.causaldata.functional.SmokingDGP.generate) – Draw a synthetic dataset of size `n`.
-- [**oracle_nuisance**](#causalis.dgp.causaldata.functional.SmokingDGP.oracle_nuisance) – Return nuisance functions (m(x), g0(x), g1(x)) compatible with IRM.
-- [**to_causal_data**](#causalis.dgp.causaldata.functional.SmokingDGP.to_causal_data) – Generate a dataset and convert it to a CausalData object.
-
-**Attributes:**
-
-- [**alpha_d**](#causalis.dgp.causaldata.functional.SmokingDGP.alpha_d) (<code>[float](#float)</code>) –
-- [**alpha_y**](#causalis.dgp.causaldata.functional.SmokingDGP.alpha_y) (<code>[float](#float)</code>) –
-- [**alpha_zi**](#causalis.dgp.causaldata.functional.SmokingDGP.alpha_zi) (<code>[float](#float)</code>) –
-- [**beta_d**](#causalis.dgp.causaldata.functional.SmokingDGP.beta_d) (<code>[Optional](#typing.Optional)\[[ndarray](#numpy.ndarray)\]</code>) –
-- [**beta_y**](#causalis.dgp.causaldata.functional.SmokingDGP.beta_y) (<code>[Optional](#typing.Optional)\[[ndarray](#numpy.ndarray)\]</code>) –
-- [**beta_zi**](#causalis.dgp.causaldata.functional.SmokingDGP.beta_zi) (<code>[Optional](#typing.Optional)\[[ndarray](#numpy.ndarray)\]</code>) –
-- [**confounder_specs**](#causalis.dgp.causaldata.functional.SmokingDGP.confounder_specs) (<code>[Optional](#typing.Optional)\[[List](#typing.List)\[[Dict](#typing.Dict)\[[str](#str), [Any](#typing.Any)\]\]\]</code>) –
-- [**copula_corr**](#causalis.dgp.causaldata.functional.SmokingDGP.copula_corr) (<code>[Optional](#typing.Optional)\[[ndarray](#numpy.ndarray)\]</code>) –
-- [**g_d**](#causalis.dgp.causaldata.functional.SmokingDGP.g_d) (<code>[Optional](#typing.Optional)\[[Callable](#typing.Callable)\[\[[ndarray](#numpy.ndarray)\], [ndarray](#numpy.ndarray)\]\]</code>) –
-- [**g_y**](#causalis.dgp.causaldata.functional.SmokingDGP.g_y) (<code>[Optional](#typing.Optional)\[[Callable](#typing.Callable)\[\[[ndarray](#numpy.ndarray)\], [ndarray](#numpy.ndarray)\]\]</code>) –
-- [**g_zi**](#causalis.dgp.causaldata.functional.SmokingDGP.g_zi) (<code>[Optional](#typing.Optional)\[[Callable](#typing.Callable)\[\[[ndarray](#numpy.ndarray)\], [ndarray](#numpy.ndarray)\]\]</code>) –
-- [**gamma_shape**](#causalis.dgp.causaldata.functional.SmokingDGP.gamma_shape) (<code>[float](#float)</code>) –
-- [**include_oracle**](#causalis.dgp.causaldata.functional.SmokingDGP.include_oracle) (<code>[bool](#bool)</code>) –
-- [**k**](#causalis.dgp.causaldata.functional.SmokingDGP.k) (<code>[int](#int)</code>) –
-- [**lognormal_sigma**](#causalis.dgp.causaldata.functional.SmokingDGP.lognormal_sigma) (<code>[float](#float)</code>) –
-- [**outcome_type**](#causalis.dgp.causaldata.functional.SmokingDGP.outcome_type) (<code>[str](#str)</code>) –
-- [**pos_dist**](#causalis.dgp.causaldata.functional.SmokingDGP.pos_dist) (<code>[str](#str)</code>) –
-- [**propensity_sharpness**](#causalis.dgp.causaldata.functional.SmokingDGP.propensity_sharpness) (<code>[float](#float)</code>) –
-- [**rng**](#causalis.dgp.causaldata.functional.SmokingDGP.rng) (<code>[Generator](#numpy.random.Generator)</code>) –
-- [**score_bounding**](#causalis.dgp.causaldata.functional.SmokingDGP.score_bounding) (<code>[Optional](#typing.Optional)\[[float](#float)\]</code>) –
-- [**seed**](#causalis.dgp.causaldata.functional.SmokingDGP.seed) (<code>[Optional](#typing.Optional)\[[int](#int)\]</code>) –
-- [**sigma_y**](#causalis.dgp.causaldata.functional.SmokingDGP.sigma_y) (<code>[float](#float)</code>) –
-- [**target_d_rate**](#causalis.dgp.causaldata.functional.SmokingDGP.target_d_rate) (<code>[Optional](#typing.Optional)\[[float](#float)\]</code>) –
-- [**tau**](#causalis.dgp.causaldata.functional.SmokingDGP.tau) (<code>[Optional](#typing.Optional)\[[Callable](#typing.Callable)\[\[[ndarray](#numpy.ndarray)\], [ndarray](#numpy.ndarray)\]\]</code>) –
-- [**tau_zi**](#causalis.dgp.causaldata.functional.SmokingDGP.tau_zi) (<code>[Optional](#typing.Optional)\[[Callable](#typing.Callable)\[\[[ndarray](#numpy.ndarray)\], [ndarray](#numpy.ndarray)\]\]</code>) –
-- [**theta**](#causalis.dgp.causaldata.functional.SmokingDGP.theta) (<code>[float](#float)</code>) –
-- [**u_strength_d**](#causalis.dgp.causaldata.functional.SmokingDGP.u_strength_d) (<code>[float](#float)</code>) –
-- [**u_strength_y**](#causalis.dgp.causaldata.functional.SmokingDGP.u_strength_y) (<code>[float](#float)</code>) –
-- [**u_strength_zi**](#causalis.dgp.causaldata.functional.SmokingDGP.u_strength_zi) (<code>[float](#float)</code>) –
-- [**use_copula**](#causalis.dgp.causaldata.functional.SmokingDGP.use_copula) (<code>[bool](#bool)</code>) –
-- [**x_sampler**](#causalis.dgp.causaldata.functional.SmokingDGP.x_sampler) (<code>[Optional](#typing.Optional)\[[Callable](#typing.Callable)\[\[[int](#int), [int](#int), [int](#int)\], [ndarray](#numpy.ndarray)\]\]</code>) –
-
-####### `causalis.dgp.causaldata.functional.SmokingDGP.alpha_d`
-
-```python
-alpha_d: float = 0.0
-```
-
-####### `causalis.dgp.causaldata.functional.SmokingDGP.alpha_y`
-
-```python
-alpha_y: float = 0.0
-```
-
-####### `causalis.dgp.causaldata.functional.SmokingDGP.alpha_zi`
-
-```python
-alpha_zi: float = -1.0
-```
-
-####### `causalis.dgp.causaldata.functional.SmokingDGP.beta_d`
-
-```python
-beta_d: Optional[np.ndarray] = None
-```
-
-####### `causalis.dgp.causaldata.functional.SmokingDGP.beta_y`
-
-```python
-beta_y: Optional[np.ndarray] = None
-```
-
-####### `causalis.dgp.causaldata.functional.SmokingDGP.beta_zi`
-
-```python
-beta_zi: Optional[np.ndarray] = None
-```
-
-####### `causalis.dgp.causaldata.functional.SmokingDGP.confounder_specs`
-
-```python
-confounder_specs: Optional[List[Dict[str, Any]]] = None
-```
-
-####### `causalis.dgp.causaldata.functional.SmokingDGP.copula_corr`
-
-```python
-copula_corr: Optional[np.ndarray] = None
-```
-
-####### `causalis.dgp.causaldata.functional.SmokingDGP.g_d`
-
-```python
-g_d: Optional[Callable[[np.ndarray], np.ndarray]] = None
-```
-
-####### `causalis.dgp.causaldata.functional.SmokingDGP.g_y`
-
-```python
-g_y: Optional[Callable[[np.ndarray], np.ndarray]] = None
-```
-
-####### `causalis.dgp.causaldata.functional.SmokingDGP.g_zi`
-
-```python
-g_zi: Optional[Callable[[np.ndarray], np.ndarray]] = None
-```
-
-####### `causalis.dgp.causaldata.functional.SmokingDGP.gamma_shape`
-
-```python
-gamma_shape: float = 2.0
-```
-
-####### `causalis.dgp.causaldata.functional.SmokingDGP.generate`
-
-```python
-generate(n, U=None)
-```
-
-Draw a synthetic dataset of size `n`.
-
-**Parameters:**
-
-- **n** (<code>[int](#int)</code>) – Number of samples to generate.
-- **U** (<code>[ndarray](#numpy.ndarray)</code>) – Unobserved confounder. If None, generated from N(0,1).
-
-**Returns:**
-
-- <code>[DataFrame](#pandas.DataFrame)</code> – The generated dataset with outcome 'y', treatment 'd', confounders,
-  and oracle ground-truth columns.
-
-####### `causalis.dgp.causaldata.functional.SmokingDGP.include_oracle`
-
-```python
-include_oracle: bool = True
-```
-
-####### `causalis.dgp.causaldata.functional.SmokingDGP.k`
-
-```python
-k: int = 5
-```
-
-####### `causalis.dgp.causaldata.functional.SmokingDGP.lognormal_sigma`
-
-```python
-lognormal_sigma: float = 1.0
-```
-
-####### `causalis.dgp.causaldata.functional.SmokingDGP.oracle_nuisance`
-
-```python
-oracle_nuisance(num_quad=21)
-```
-
-Return nuisance functions (m(x), g0(x), g1(x)) compatible with IRM.
-
-**Parameters:**
-
-- **num_quad** (<code>[int](#int)</code>) – Number of quadrature points for marginalizing over U.
-
-**Returns:**
-
-- <code>[dict](#dict)</code> – Dictionary of callables mapping X to nuisance values.
-
-####### `causalis.dgp.causaldata.functional.SmokingDGP.outcome_type`
-
-```python
-outcome_type: str = 'continuous'
-```
-
-####### `causalis.dgp.causaldata.functional.SmokingDGP.pos_dist`
-
-```python
-pos_dist: str = 'gamma'
-```
-
-####### `causalis.dgp.causaldata.functional.SmokingDGP.propensity_sharpness`
-
-```python
-propensity_sharpness: float = 1.0
-```
-
-####### `causalis.dgp.causaldata.functional.SmokingDGP.rng`
-
-```python
-rng: np.random.Generator = field(init=False, repr=False)
-```
-
-####### `causalis.dgp.causaldata.functional.SmokingDGP.score_bounding`
-
-```python
-score_bounding: Optional[float] = None
-```
-
-####### `causalis.dgp.causaldata.functional.SmokingDGP.seed`
-
-```python
-seed: Optional[int] = None
-```
-
-####### `causalis.dgp.causaldata.functional.SmokingDGP.sigma_y`
-
-```python
-sigma_y: float = 1.0
-```
-
-####### `causalis.dgp.causaldata.functional.SmokingDGP.target_d_rate`
-
-```python
-target_d_rate: Optional[float] = None
-```
-
-####### `causalis.dgp.causaldata.functional.SmokingDGP.tau`
-
-```python
-tau: Optional[Callable[[np.ndarray], np.ndarray]] = None
-```
-
-####### `causalis.dgp.causaldata.functional.SmokingDGP.tau_zi`
-
-```python
-tau_zi: Optional[Callable[[np.ndarray], np.ndarray]] = None
-```
-
-####### `causalis.dgp.causaldata.functional.SmokingDGP.theta`
-
-```python
-theta: float = 1.0
-```
-
-####### `causalis.dgp.causaldata.functional.SmokingDGP.to_causal_data`
-
-```python
-to_causal_data(n, confounders=None)
-```
-
-Generate a dataset and convert it to a CausalData object.
-
-**Parameters:**
-
-- **n** (<code>[int](#int)</code>) – Number of samples to generate.
-- **confounders** (<code>str or list of str</code>) – List of confounder column names to include. If None, automatically detects numeric confounders.
-
-**Returns:**
-
-- <code>[CausalData](#causalis.dgp.causaldata.CausalData)</code> – A CausalData object containing the generated dataset.
-
-####### `causalis.dgp.causaldata.functional.SmokingDGP.u_strength_d`
-
-```python
-u_strength_d: float = 0.0
-```
-
-####### `causalis.dgp.causaldata.functional.SmokingDGP.u_strength_y`
-
-```python
-u_strength_y: float = 0.0
-```
-
-####### `causalis.dgp.causaldata.functional.SmokingDGP.u_strength_zi`
-
-```python
-u_strength_zi: float = 0.0
-```
-
-####### `causalis.dgp.causaldata.functional.SmokingDGP.use_copula`
-
-```python
-use_copula: bool = False
-```
-
-####### `causalis.dgp.causaldata.functional.SmokingDGP.x_sampler`
-
-```python
-x_sampler: Optional[Callable[[int, int, int], np.ndarray]] = None
-```
 
 ###### `causalis.dgp.causaldata.functional.generate_classic_rct`
 
@@ -4523,6 +3767,23 @@ generate_obs_hte_26(n=10000, seed=42, include_oracle=True, return_causal_data=Tr
 Observational dataset with nonlinear outcome model, nonlinear treatment assignment,
 and a heterogeneous (nonlinear) treatment effect tau(X).
 Based on the scenario in notebooks/cases/dml_atte.ipynb.
+
+**Parameters:**
+
+- **n** (<code>[int](#int)</code>) – Number of samples.
+- **seed** (<code>[int](#int)</code>) – Random seed.
+- **include_oracle** (<code>[bool](#bool)</code>) – Whether to include oracle ground-truth columns like 'cate', 'propensity', etc.
+- **return_causal_data** (<code>[bool](#bool)</code>) – If True, returns a CausalData object. If False, returns a pandas DataFrame.
+
+##### `causalis.dgp.causaldata.generate_obs_hte_26_rich`
+
+```python
+generate_obs_hte_26_rich(n=100000, seed=42, include_oracle=True, return_causal_data=True)
+```
+
+Observational dataset with richer confounding, nonlinear outcome model,
+nonlinear treatment assignment, and heterogeneous treatment effects.
+Adds additional realistic covariates and dependencies to mimic real data.
 
 **Parameters:**
 
@@ -5600,10 +4861,9 @@ plugin CATE proxy (g1_hat - g0_hat).
 
 **Modules:**
 
-- [**bootstrap_diff_in_means**](#causalis.scenarios.classic_rct.bootstrap_diff_in_means) – Bootstrap difference-in-means inference.
-- [**conversion_ztest**](#causalis.scenarios.classic_rct.conversion_ztest) – Two-proportion z-test
 - [**dgp**](#causalis.scenarios.classic_rct.dgp) –
-- [**diff_in_means**](#causalis.scenarios.classic_rct.diff_in_means) –
+- [**inference**](#causalis.scenarios.classic_rct.inference) – Inference helpers for the classic RCT scenario.
+- [**model**](#causalis.scenarios.classic_rct.model) –
 - [**rct_design**](#causalis.scenarios.classic_rct.rct_design) – Design module for experimental rct_design utilities.
 - [**ttest**](#causalis.scenarios.classic_rct.ttest) – T-test inference for Diff_in_Means model
 
@@ -5679,7 +4939,7 @@ Fit the model by storing the CausalData object.
 
 **Returns:**
 
-- <code>[DiffInMeans](#causalis.scenarios.classic_rct.diff_in_means.DiffInMeans)</code> – The fitted model.
+- <code>[DiffInMeans](#causalis.scenarios.classic_rct.model.DiffInMeans)</code> – The fitted model.
 
 ##### `causalis.scenarios.classic_rct.SRMResult`
 
@@ -5747,52 +5007,6 @@ p_value: float
 ```python
 warning: str | None = None
 ```
-
-##### `causalis.scenarios.classic_rct.bootstrap_diff_in_means`
-
-Bootstrap difference-in-means inference.
-
-This module computes the ATE-style difference in means (treated - control) and provides:
-
-- Two-sided p-value using a normal approximation with bootstrap standard error.
-- Percentile confidence interval for the absolute difference.
-- Relative difference (%) and corresponding CI relative to control mean.
-
-**Functions:**
-
-- [**bootstrap_diff_means**](#causalis.scenarios.classic_rct.bootstrap_diff_in_means.bootstrap_diff_means) – Bootstrap inference for difference in means between treated and control groups.
-
-###### `causalis.scenarios.classic_rct.bootstrap_diff_in_means.bootstrap_diff_means`
-
-```python
-bootstrap_diff_means(data, alpha=0.05, n_simul=10000)
-```
-
-Bootstrap inference for difference in means between treated and control groups.
-
-This function computes the ATE-style difference in means (treated - control)
-and provides a two-sided p-value using a normal approximation with bootstrap
-standard error, a percentile confidence interval for the absolute difference,
-and relative difference with its corresponding confidence interval.
-
-**Parameters:**
-
-- **data** (<code>[CausalData](#causalis.dgp.causaldata.CausalData)</code>) – The CausalData object containing treatment and outcome variables.
-- **alpha** (<code>[float](#float)</code>) – The significance level for calculating confidence intervals (between 0 and 1).
-- **n_simul** (<code>[int](#int)</code>) – Number of bootstrap resamples.
-
-**Returns:**
-
-- <code>[Dict](#typing.Dict)\[[str](#str), [Any](#typing.Any)\]</code> – A dictionary containing:
-- p_value: Two-sided p-value using normal approximation.
-- absolute_difference: The absolute difference (treated - control).
-- absolute_ci: Tuple of (lower, upper) bounds for the absolute difference CI.
-- relative_difference: The relative difference (%) relative to control mean.
-- relative_ci: Tuple of (lower, upper) bounds for the relative difference CI.
-
-**Raises:**
-
-- <code>[ValueError](#ValueError)</code> – If inputs are invalid, treatment is not binary, or groups are empty.
 
 ##### `causalis.scenarios.classic_rct.bootstrap_diff_means`
 
@@ -5892,18 +5106,128 @@ Perform a two-proportion z-test on a CausalData object with a binary outcome (co
 - <code>[ValueError](#ValueError)</code> – If treatment/outcome are missing, treatment is not binary, outcome is not binary,
   groups are empty, or alpha is outside (0, 1).
 
-##### `causalis.scenarios.classic_rct.conversion_ztest`
-
-Two-proportion z-test
-
-Compares conversion rates between treated (D=1) and control (D=0) groups.
-Returns p-value, absolute/relative differences, and their confidence intervals
+##### `causalis.scenarios.classic_rct.dgp`
 
 **Functions:**
 
-- [**conversion_z_test**](#causalis.scenarios.classic_rct.conversion_ztest.conversion_z_test) – Perform a two-proportion z-test on a CausalData object with a binary outcome (conversion).
+- [**generate_classic_rct_26**](#causalis.scenarios.classic_rct.dgp.generate_classic_rct_26) – A pre-configured classic RCT dataset with 3 binary confounders.
 
-###### `causalis.scenarios.classic_rct.conversion_ztest.conversion_z_test`
+###### `causalis.scenarios.classic_rct.dgp.generate_classic_rct_26`
+
+```python
+generate_classic_rct_26(seed=42, add_pre=False, beta_y=None, outcome_depends_on_x=True, include_oracle=False, return_causal_data=True)
+```
+
+A pre-configured classic RCT dataset with 3 binary confounders.
+n=10000, split=0.5, outcome is conversion (binary), real effect = 0.01.
+
+**Parameters:**
+
+- **seed** (<code>[int](#int)</code>) – Random seed.
+- **add_pre** (<code>[bool](#bool)</code>) – Whether to generate a pre-period covariate ('y_pre') and include prognostic signal from X.
+- **beta_y** (<code>[array](#array) - [like](#like)</code>) – Linear coefficients for confounders in the outcome model.
+- **outcome_depends_on_x** (<code>[bool](#bool)</code>) – Whether to add default effects for confounders if beta_y is None.
+- **include_oracle** (<code>[bool](#bool)</code>) – Whether to include oracle ground-truth columns like 'cate', 'propensity', etc.
+- **return_causal_data** (<code>[bool](#bool)</code>) – Whether to return a CausalData object.
+
+**Returns:**
+
+- <code>[CausalData](#causalis.dgp.causaldata.CausalData) or [DataFrame](#pandas.DataFrame)</code> –
+
+##### `causalis.scenarios.classic_rct.inference`
+
+Inference helpers for the classic RCT scenario.
+
+**Modules:**
+
+- [**bootstrap_diff_in_means**](#causalis.scenarios.classic_rct.inference.bootstrap_diff_in_means) – Bootstrap difference-in-means inference.
+- [**conversion_ztest**](#causalis.scenarios.classic_rct.inference.conversion_ztest) – Two-proportion z-test
+- [**ttest**](#causalis.scenarios.classic_rct.inference.ttest) – T-test inference for Diff_in_Means model
+
+**Functions:**
+
+- [**bootstrap_diff_means**](#causalis.scenarios.classic_rct.inference.bootstrap_diff_means) – Bootstrap inference for difference in means between treated and control groups.
+- [**conversion_z_test**](#causalis.scenarios.classic_rct.inference.conversion_z_test) – Perform a two-proportion z-test on a CausalData object with a binary outcome (conversion).
+
+###### `causalis.scenarios.classic_rct.inference.bootstrap_diff_in_means`
+
+Bootstrap difference-in-means inference.
+
+This module computes the ATE-style difference in means (treated - control) and provides:
+
+- Two-sided p-value using a normal approximation with bootstrap standard error.
+- Percentile confidence interval for the absolute difference.
+- Relative difference (%) and corresponding CI relative to control mean.
+
+**Functions:**
+
+- [**bootstrap_diff_means**](#causalis.scenarios.classic_rct.inference.bootstrap_diff_in_means.bootstrap_diff_means) – Bootstrap inference for difference in means between treated and control groups.
+
+####### `causalis.scenarios.classic_rct.inference.bootstrap_diff_in_means.bootstrap_diff_means`
+
+```python
+bootstrap_diff_means(data, alpha=0.05, n_simul=10000)
+```
+
+Bootstrap inference for difference in means between treated and control groups.
+
+This function computes the ATE-style difference in means (treated - control)
+and provides a two-sided p-value using a normal approximation with bootstrap
+standard error, a percentile confidence interval for the absolute difference,
+and relative difference with its corresponding confidence interval.
+
+**Parameters:**
+
+- **data** (<code>[CausalData](#causalis.dgp.causaldata.CausalData)</code>) – The CausalData object containing treatment and outcome variables.
+- **alpha** (<code>[float](#float)</code>) – The significance level for calculating confidence intervals (between 0 and 1).
+- **n_simul** (<code>[int](#int)</code>) – Number of bootstrap resamples.
+
+**Returns:**
+
+- <code>[Dict](#typing.Dict)\[[str](#str), [Any](#typing.Any)\]</code> – A dictionary containing:
+- p_value: Two-sided p-value using normal approximation.
+- absolute_difference: The absolute difference (treated - control).
+- absolute_ci: Tuple of (lower, upper) bounds for the absolute difference CI.
+- relative_difference: The relative difference (%) relative to control mean.
+- relative_ci: Tuple of (lower, upper) bounds for the relative difference CI.
+
+**Raises:**
+
+- <code>[ValueError](#ValueError)</code> – If inputs are invalid, treatment is not binary, or groups are empty.
+
+###### `causalis.scenarios.classic_rct.inference.bootstrap_diff_means`
+
+```python
+bootstrap_diff_means(data, alpha=0.05, n_simul=10000)
+```
+
+Bootstrap inference for difference in means between treated and control groups.
+
+This function computes the ATE-style difference in means (treated - control)
+and provides a two-sided p-value using a normal approximation with bootstrap
+standard error, a percentile confidence interval for the absolute difference,
+and relative difference with its corresponding confidence interval.
+
+**Parameters:**
+
+- **data** (<code>[CausalData](#causalis.dgp.causaldata.CausalData)</code>) – The CausalData object containing treatment and outcome variables.
+- **alpha** (<code>[float](#float)</code>) – The significance level for calculating confidence intervals (between 0 and 1).
+- **n_simul** (<code>[int](#int)</code>) – Number of bootstrap resamples.
+
+**Returns:**
+
+- <code>[Dict](#typing.Dict)\[[str](#str), [Any](#typing.Any)\]</code> – A dictionary containing:
+- p_value: Two-sided p-value using normal approximation.
+- absolute_difference: The absolute difference (treated - control).
+- absolute_ci: Tuple of (lower, upper) bounds for the absolute difference CI.
+- relative_difference: The relative difference (%) relative to control mean.
+- relative_ci: Tuple of (lower, upper) bounds for the relative difference CI.
+
+**Raises:**
+
+- <code>[ValueError](#ValueError)</code> – If inputs are invalid, treatment is not binary, or groups are empty.
+
+###### `causalis.scenarios.classic_rct.inference.conversion_z_test`
 
 ```python
 conversion_z_test(data, alpha=0.05, ci_method='newcombe', se_for_test='pooled')
@@ -5934,41 +5258,100 @@ Perform a two-proportion z-test on a CausalData object with a binary outcome (co
 - <code>[ValueError](#ValueError)</code> – If treatment/outcome are missing, treatment is not binary, outcome is not binary,
   groups are empty, or alpha is outside (0, 1).
 
-##### `causalis.scenarios.classic_rct.dgp`
+###### `causalis.scenarios.classic_rct.inference.conversion_ztest`
+
+Two-proportion z-test
+
+Compares conversion rates between treated (D=1) and control (D=0) groups.
+Returns p-value, absolute/relative differences, and their confidence intervals
 
 **Functions:**
 
-- [**generate_classic_rct_26**](#causalis.scenarios.classic_rct.dgp.generate_classic_rct_26) – A pre-configured classic RCT dataset with 3 binary confounders.
+- [**conversion_z_test**](#causalis.scenarios.classic_rct.inference.conversion_ztest.conversion_z_test) – Perform a two-proportion z-test on a CausalData object with a binary outcome (conversion).
 
-###### `causalis.scenarios.classic_rct.dgp.generate_classic_rct_26`
+####### `causalis.scenarios.classic_rct.inference.conversion_ztest.conversion_z_test`
 
 ```python
-generate_classic_rct_26(seed=42, add_pre=False, beta_y=None, outcome_depends_on_x=True, include_oracle=False, return_causal_data=True)
+conversion_z_test(data, alpha=0.05, ci_method='newcombe', se_for_test='pooled')
 ```
 
-A pre-configured classic RCT dataset with 3 binary confounders.
-n=10000, split=0.5, outcome is conversion (binary), real effect = 0.01.
+Perform a two-proportion z-test on a CausalData object with a binary outcome (conversion).
 
 **Parameters:**
 
-- **seed** (<code>[int](#int)</code>) – Random seed.
-- **add_pre** (<code>[bool](#bool)</code>) – Whether to generate a pre-period covariate ('y_pre') and include prognostic signal from X.
-- **beta_y** (<code>[array](#array) - [like](#like)</code>) – Linear coefficients for confounders in the outcome model.
-- **outcome_depends_on_x** (<code>[bool](#bool)</code>) – Whether to add default effects for confounders if beta_y is None.
-- **include_oracle** (<code>[bool](#bool)</code>) – Whether to include oracle ground-truth columns like 'cate', 'propensity', etc.
-- **return_causal_data** (<code>[bool](#bool)</code>) – Whether to return a CausalData object.
+- **data** (<code>[CausalData](#causalis.dgp.causaldata.CausalData)</code>) – The CausalData object containing treatment and outcome variables.
+- **alpha** (<code>[float](#float)</code>) – The significance level for calculating confidence intervals (between 0 and 1).
+- **ci_method** (<code>([newcombe](#newcombe), [wald_unpooled](#wald_unpooled), [wald_pooled](#wald_pooled))</code>) – Method for calculating the confidence interval for the absolute difference.
+  "newcombe" is the most robust default for conversion rates.
+- **se_for_test** (<code>([pooled](#pooled), [unpooled](#unpooled))</code>) – Method for calculating the standard error for the z-test p-value.
+  "pooled" (score test) is generally preferred for testing equality of proportions.
 
 **Returns:**
 
-- <code>[CausalData](#causalis.dgp.causaldata.CausalData) or [DataFrame](#pandas.DataFrame)</code> –
+- <code>[Dict](#typing.Dict)\[[str](#str), [Any](#typing.Any)\]</code> – A dictionary containing:
+- p_value: Two-sided p-value from the z-test
+- absolute_difference: Difference in conversion rates (treated - control)
+- absolute_ci: Tuple (lower, upper) for the absolute difference CI
+- relative_difference: Percentage change relative to control rate
+- relative_ci: Tuple (lower, upper) for the relative difference CI
 
-##### `causalis.scenarios.classic_rct.diff_in_means`
+**Raises:**
+
+- <code>[ValueError](#ValueError)</code> – If treatment/outcome are missing, treatment is not binary, outcome is not binary,
+  groups are empty, or alpha is outside (0, 1).
+
+###### `causalis.scenarios.classic_rct.inference.ttest`
+
+T-test inference for Diff_in_Means model
+
+**Functions:**
+
+- [**ttest**](#causalis.scenarios.classic_rct.inference.ttest.ttest) – Perform a Welch two-sample t-test comparing outcomes between treated (D=1)
+
+####### `causalis.scenarios.classic_rct.inference.ttest.ttest`
+
+```python
+ttest(data, alpha=0.05)
+```
+
+Perform a Welch two-sample t-test comparing outcomes between treated (D=1)
+and control (D=0) groups.
+
+**Returns:**
+
+- <code>[Dict](#typing.Dict)\[[str](#str), [Any](#typing.Any)\]</code> – - p_value: Welch t-test p-value for H0: E[Y|D=1] - E[Y|D=0] = 0
+- absolute_difference: treatment_mean - control_mean
+- absolute_ci: (lower, upper) CI for absolute_difference using Welch df
+- relative_difference: signed percent change = 100 * (treatment_mean / control_mean - 1)
+- relative_se: delta-method SE of relative_difference (percent scale)
+- relative_ci: (lower, upper) CI for relative_difference using delta method (+ Satterthwaite df)
+
+<details class="note" open markdown="1">
+<summary>Notes</summary>
+
+Delta method for relative percent change:
+r_hat = 100 * (Ybar1/Ybar0 - 1)
+
+With independent groups and CLT:
+Var(Ybar1) ≈ s1^2/n1
+Var(Ybar0) ≈ s0^2/n2
+Cov(Ybar1, Ybar0) ≈ 0
+
+Gradient of g(a,b)=a/b - 1 is (1/b, -a/b^2), so:
+Var(r_hat/100) ≈ (1/Ybar0)^2 * (s1^2/n1) + (Ybar1/Ybar0^2)^2 * (s0^2/n2)
+
+CI uses t-critical with Satterthwaite df; falls back to z if df is invalid.
+If control_mean is near 0, relative stats are undefined/unstable and return inf/nan sentinels.
+
+</details>
+
+##### `causalis.scenarios.classic_rct.model`
 
 **Classes:**
 
-- [**DiffInMeans**](#causalis.scenarios.classic_rct.diff_in_means.DiffInMeans) – Difference-in-means model for CausalData.
+- [**DiffInMeans**](#causalis.scenarios.classic_rct.model.DiffInMeans) – Difference-in-means model for CausalData.
 
-###### `causalis.scenarios.classic_rct.diff_in_means.DiffInMeans`
+###### `causalis.scenarios.classic_rct.model.DiffInMeans`
 
 ```python
 DiffInMeans()
@@ -5979,20 +5362,20 @@ Wraps common RCT inference methods: t-test, bootstrap, and conversion z-test.
 
 **Functions:**
 
-- [**estimate**](#causalis.scenarios.classic_rct.diff_in_means.DiffInMeans.estimate) – Compute the treatment effect using the specified method.
-- [**fit**](#causalis.scenarios.classic_rct.diff_in_means.DiffInMeans.fit) – Fit the model by storing the CausalData object.
+- [**estimate**](#causalis.scenarios.classic_rct.model.DiffInMeans.estimate) – Compute the treatment effect using the specified method.
+- [**fit**](#causalis.scenarios.classic_rct.model.DiffInMeans.fit) – Fit the model by storing the CausalData object.
 
 **Attributes:**
 
-- [**data**](#causalis.scenarios.classic_rct.diff_in_means.DiffInMeans.data) (<code>[Optional](#typing.Optional)\[[CausalData](#causalis.dgp.causaldata.CausalData)\]</code>) –
+- [**data**](#causalis.scenarios.classic_rct.model.DiffInMeans.data) (<code>[Optional](#typing.Optional)\[[CausalData](#causalis.dgp.causaldata.CausalData)\]</code>) –
 
-####### `causalis.scenarios.classic_rct.diff_in_means.DiffInMeans.data`
+####### `causalis.scenarios.classic_rct.model.DiffInMeans.data`
 
 ```python
 data: Optional[CausalData] = None
 ```
 
-####### `causalis.scenarios.classic_rct.diff_in_means.DiffInMeans.estimate`
+####### `causalis.scenarios.classic_rct.model.DiffInMeans.estimate`
 
 ```python
 estimate(method='ttest', alpha=0.05, diagnostic_data=True, **kwargs)
@@ -6015,7 +5398,7 @@ Compute the treatment effect using the specified method.
 
 - <code>[CausalEstimate](#causalis.data_contracts.causal_estimate.CausalEstimate)</code> – A results object containing effect estimates and inference.
 
-####### `causalis.scenarios.classic_rct.diff_in_means.DiffInMeans.fit`
+####### `causalis.scenarios.classic_rct.model.DiffInMeans.fit`
 
 ```python
 fit(data)
@@ -6029,7 +5412,7 @@ Fit the model by storing the CausalData object.
 
 **Returns:**
 
-- <code>[DiffInMeans](#causalis.scenarios.classic_rct.diff_in_means.DiffInMeans)</code> – The fitted model.
+- <code>[DiffInMeans](#causalis.scenarios.classic_rct.model.DiffInMeans)</code> – The fitted model.
 
 ##### `causalis.scenarios.classic_rct.rct_design`
 
@@ -6242,7 +5625,7 @@ T-test inference for Diff_in_Means model
 
 **Functions:**
 
-- [**ttest**](#causalis.scenarios.classic_rct.ttest.ttest) – Perform a t-test to compare the outcome between treated and control groups.
+- [**ttest**](#causalis.scenarios.classic_rct.ttest.ttest) – Perform a Welch two-sample t-test comparing outcomes between treated (D=1)
 
 ###### `causalis.scenarios.classic_rct.ttest.ttest`
 
@@ -6250,38 +5633,43 @@ T-test inference for Diff_in_Means model
 ttest(data, alpha=0.05)
 ```
 
-Perform a t-test to compare the outcome between treated and control groups.
-
-This function performs an independent two-sample t-test (Welch's t-test)
-on a CausalData object to compare the outcome variable between treated (D=1)
-and control (D=0) groups. It returns the p-value, absolute and relative
-differences, and their corresponding confidence intervals.
-
-**Parameters:**
-
-- **data** (<code>[CausalData](#causalis.dgp.causaldata.CausalData)</code>) – The CausalData object containing treatment and outcome variables.
-- **alpha** (<code>[float](#float)</code>) – The significance level for calculating confidence intervals (between 0 and 1).
+Perform a Welch two-sample t-test comparing outcomes between treated (D=1)
+and control (D=0) groups.
 
 **Returns:**
 
-- <code>[Dict](#typing.Dict)\[[str](#str), [Any](#typing.Any)\]</code> – A dictionary containing:
-- p_value: The p-value from the t-test.
-- absolute_difference: The absolute difference between treatment and control means.
-- absolute_ci: Tuple of (lower, upper) bounds for the absolute difference CI.
-- relative_difference: The relative difference (percentage change) between means.
-- relative_ci: Tuple of (lower, upper) bounds for the relative difference CI.
+- <code>[Dict](#typing.Dict)\[[str](#str), [Any](#typing.Any)\]</code> – - p_value: Welch t-test p-value for H0: E[Y|D=1] - E[Y|D=0] = 0
+- absolute_difference: treatment_mean - control_mean
+- absolute_ci: (lower, upper) CI for absolute_difference using Welch df
+- relative_difference: signed percent change = 100 * (treatment_mean / control_mean - 1)
+- relative_se: delta-method SE of relative_difference (percent scale)
+- relative_ci: (lower, upper) CI for relative_difference using delta method (+ Satterthwaite df)
 
-**Raises:**
+<details class="note" open markdown="1">
+<summary>Notes</summary>
 
-- <code>[ValueError](#ValueError)</code> – If the CausalData object doesn't have both treatment and outcome variables
-  defined, or if the treatment variable is not binary.
+Delta method for relative percent change:
+r_hat = 100 * (Ybar1/Ybar0 - 1)
+
+With independent groups and CLT:
+Var(Ybar1) ≈ s1^2/n1
+Var(Ybar0) ≈ s0^2/n2
+Cov(Ybar1, Ybar0) ≈ 0
+
+Gradient of g(a,b)=a/b - 1 is (1/b, -a/b^2), so:
+Var(r_hat/100) ≈ (1/Ybar0)^2 * (s1^2/n1) + (Ybar1/Ybar0^2)^2 * (s0^2/n2)
+
+CI uses t-critical with Satterthwaite df; falls back to z if df is invalid.
+If control_mean is near 0, relative stats are undefined/unstable and return inf/nan sentinels.
+
+</details>
 
 #### `causalis.scenarios.cuped`
 
 **Modules:**
 
-- [**cuped**](#causalis.scenarios.cuped.cuped) –
 - [**dgp**](#causalis.scenarios.cuped.dgp) –
+- [**model**](#causalis.scenarios.cuped.model) –
 
 **Classes:**
 
@@ -6396,7 +5784,7 @@ Fit CUPED/ANCOVA (or Lin-interacted) on a CausalData object.
 
 **Returns:**
 
-- <code>[CUPEDModel](#causalis.scenarios.cuped.cuped.CUPEDModel)</code> – Fitted estimator.
+- <code>[CUPEDModel](#causalis.scenarios.cuped.model.CUPEDModel)</code> – Fitted estimator.
 
 **Raises:**
 
@@ -6426,156 +5814,6 @@ Convenience JSON/logging output.
 - <code>[dict](#dict)</code> – Dictionary with estimates, inference, and diagnostics.
 
 ###### `causalis.scenarios.cuped.CUPEDModel.use_t`
-
-```python
-use_t = bool(use_t)
-```
-
-##### `causalis.scenarios.cuped.cuped`
-
-**Classes:**
-
-- [**CUPEDModel**](#causalis.scenarios.cuped.cuped.CUPEDModel) – CUPED estimator for ATE/ITT in randomized experiments.
-
-###### `causalis.scenarios.cuped.cuped.CUPEDModel`
-
-```python
-CUPEDModel(cov_type='HC3', alpha=0.05, strict_binary_treatment=True, use_t=True)
-```
-
-CUPED estimator for ATE/ITT in randomized experiments.
-
-Fits an outcome regression with pre-treatment covariates (always centered)
-using the Lin (2013) fully interacted adjustment:
-
-```
-Y ~ 1 + D + X^c + D * X^c
-```
-
-The reported effect is the coefficient on D, with robust covariance as requested.
-This specification ensures the coefficient on D is the ATE/ITT even if the
-treatment effect is heterogeneous with respect to covariates.
-
-**Parameters:**
-
-- **cov_type** (<code>[str](#str)</code>) – Covariance estimator passed to statsmodels (e.g., "nonrobust", "HC0", "HC1", "HC2", "HC3").
-  Note: for cluster-randomized designs, use cluster-robust SEs (not implemented here).
-- **alpha** (<code>[float](#float)</code>) – Significance level for confidence intervals.
-- **strict_binary_treatment** (<code>[bool](#bool)</code>) – If True, require treatment to be binary {0,1}.
-- **use_t** (<code>[bool](#bool)</code>) – Passed to statsmodels `.fit(..., use_t=use_t)`. If False, inference is based on
-  normal approximation (common asymptotic choice for robust covariances).
-
-<details class="note" open markdown="1">
-<summary>Notes</summary>
-
-- Validity requires covariates be pre-treatment. Post-treatment covariates can bias estimates.
-- The Lin (2013) specification is recommended as a robust regression-adjustment default
-  in RCTs.
-
-</details>
-
-**Functions:**
-
-- [**estimate**](#causalis.scenarios.cuped.cuped.CUPEDModel.estimate) – Return the adjusted ATE/ITT estimate and inference.
-- [**fit**](#causalis.scenarios.cuped.cuped.CUPEDModel.fit) – Fit CUPED/ANCOVA (or Lin-interacted) on a CausalData object.
-- [**summary_dict**](#causalis.scenarios.cuped.cuped.CUPEDModel.summary_dict) – Convenience JSON/logging output.
-
-**Attributes:**
-
-- [**adjustment**](#causalis.scenarios.cuped.cuped.CUPEDModel.adjustment) (<code>[Literal](#typing.Literal)['lin']</code>) –
-- [**alpha**](#causalis.scenarios.cuped.cuped.CUPEDModel.alpha) –
-- [**center_covariates**](#causalis.scenarios.cuped.cuped.CUPEDModel.center_covariates) –
-- [**cov_type**](#causalis.scenarios.cuped.cuped.CUPEDModel.cov_type) –
-- [**strict_binary_treatment**](#causalis.scenarios.cuped.cuped.CUPEDModel.strict_binary_treatment) –
-- [**use_t**](#causalis.scenarios.cuped.cuped.CUPEDModel.use_t) –
-
-####### `causalis.scenarios.cuped.cuped.CUPEDModel.adjustment`
-
-```python
-adjustment: Literal['lin'] = 'lin'
-```
-
-####### `causalis.scenarios.cuped.cuped.CUPEDModel.alpha`
-
-```python
-alpha = float(alpha)
-```
-
-####### `causalis.scenarios.cuped.cuped.CUPEDModel.center_covariates`
-
-```python
-center_covariates = True
-```
-
-####### `causalis.scenarios.cuped.cuped.CUPEDModel.cov_type`
-
-```python
-cov_type = str(cov_type)
-```
-
-####### `causalis.scenarios.cuped.cuped.CUPEDModel.estimate`
-
-```python
-estimate(alpha=None, diagnostic_data=True)
-```
-
-Return the adjusted ATE/ITT estimate and inference.
-
-**Parameters:**
-
-- **alpha** (<code>[float](#float)</code>) – Override the instance significance level for confidence intervals.
-- **diagnostic_data** (<code>[bool](#bool)</code>) – Whether to include diagnostic data_contracts in the result.
-
-**Returns:**
-
-- <code>[CausalEstimate](#causalis.data_contracts.causal_estimate.CausalEstimate)</code> – A results object containing effect estimates and inference.
-
-####### `causalis.scenarios.cuped.cuped.CUPEDModel.fit`
-
-```python
-fit(data, covariates=None)
-```
-
-Fit CUPED/ANCOVA (or Lin-interacted) on a CausalData object.
-
-**Parameters:**
-
-- **data** (<code>[CausalData](#causalis.dgp.causaldata.CausalData)</code>) – Validated dataset with columns: outcome (post), treatment, and confounders (pre covariates).
-- **covariates** (<code>sequence of str</code>) – Subset of `data_contracts.confounders_names` to use as CUPED covariates.
-  If None, uses all confounders from the object.
-
-**Returns:**
-
-- <code>[CUPEDModel](#causalis.scenarios.cuped.cuped.CUPEDModel)</code> – Fitted estimator.
-
-**Raises:**
-
-- <code>[ValueError](#ValueError)</code> – If requested covariates are missing, not in `data_contracts.confounders_names`,
-  or treatment is not binary when `strict_binary_treatment=True`.
-
-####### `causalis.scenarios.cuped.cuped.CUPEDModel.strict_binary_treatment`
-
-```python
-strict_binary_treatment = bool(strict_binary_treatment)
-```
-
-####### `causalis.scenarios.cuped.cuped.CUPEDModel.summary_dict`
-
-```python
-summary_dict(alpha=None)
-```
-
-Convenience JSON/logging output.
-
-**Parameters:**
-
-- **alpha** (<code>[float](#float)</code>) – Override the instance significance level for confidence intervals.
-
-**Returns:**
-
-- <code>[dict](#dict)</code> – Dictionary with estimates, inference, and diagnostics.
-
-####### `causalis.scenarios.cuped.cuped.CUPEDModel.use_t`
 
 ```python
 use_t = bool(use_t)
@@ -6614,6 +5852,156 @@ Wrapper for make_tweedie().
 
 - <code>[DataFrame](#pandas.DataFrame) or [CausalData](#causalis.dgp.causaldata.CausalData)</code> –
 
+##### `causalis.scenarios.cuped.model`
+
+**Classes:**
+
+- [**CUPEDModel**](#causalis.scenarios.cuped.model.CUPEDModel) – CUPED estimator for ATE/ITT in randomized experiments.
+
+###### `causalis.scenarios.cuped.model.CUPEDModel`
+
+```python
+CUPEDModel(cov_type='HC3', alpha=0.05, strict_binary_treatment=True, use_t=True)
+```
+
+CUPED estimator for ATE/ITT in randomized experiments.
+
+Fits an outcome regression with pre-treatment covariates (always centered)
+using the Lin (2013) fully interacted adjustment:
+
+```
+Y ~ 1 + D + X^c + D * X^c
+```
+
+The reported effect is the coefficient on D, with robust covariance as requested.
+This specification ensures the coefficient on D is the ATE/ITT even if the
+treatment effect is heterogeneous with respect to covariates.
+
+**Parameters:**
+
+- **cov_type** (<code>[str](#str)</code>) – Covariance estimator passed to statsmodels (e.g., "nonrobust", "HC0", "HC1", "HC2", "HC3").
+  Note: for cluster-randomized designs, use cluster-robust SEs (not implemented here).
+- **alpha** (<code>[float](#float)</code>) – Significance level for confidence intervals.
+- **strict_binary_treatment** (<code>[bool](#bool)</code>) – If True, require treatment to be binary {0,1}.
+- **use_t** (<code>[bool](#bool)</code>) – Passed to statsmodels `.fit(..., use_t=use_t)`. If False, inference is based on
+  normal approximation (common asymptotic choice for robust covariances).
+
+<details class="note" open markdown="1">
+<summary>Notes</summary>
+
+- Validity requires covariates be pre-treatment. Post-treatment covariates can bias estimates.
+- The Lin (2013) specification is recommended as a robust regression-adjustment default
+  in RCTs.
+
+</details>
+
+**Functions:**
+
+- [**estimate**](#causalis.scenarios.cuped.model.CUPEDModel.estimate) – Return the adjusted ATE/ITT estimate and inference.
+- [**fit**](#causalis.scenarios.cuped.model.CUPEDModel.fit) – Fit CUPED/ANCOVA (or Lin-interacted) on a CausalData object.
+- [**summary_dict**](#causalis.scenarios.cuped.model.CUPEDModel.summary_dict) – Convenience JSON/logging output.
+
+**Attributes:**
+
+- [**adjustment**](#causalis.scenarios.cuped.model.CUPEDModel.adjustment) (<code>[Literal](#typing.Literal)['lin']</code>) –
+- [**alpha**](#causalis.scenarios.cuped.model.CUPEDModel.alpha) –
+- [**center_covariates**](#causalis.scenarios.cuped.model.CUPEDModel.center_covariates) –
+- [**cov_type**](#causalis.scenarios.cuped.model.CUPEDModel.cov_type) –
+- [**strict_binary_treatment**](#causalis.scenarios.cuped.model.CUPEDModel.strict_binary_treatment) –
+- [**use_t**](#causalis.scenarios.cuped.model.CUPEDModel.use_t) –
+
+####### `causalis.scenarios.cuped.model.CUPEDModel.adjustment`
+
+```python
+adjustment: Literal['lin'] = 'lin'
+```
+
+####### `causalis.scenarios.cuped.model.CUPEDModel.alpha`
+
+```python
+alpha = float(alpha)
+```
+
+####### `causalis.scenarios.cuped.model.CUPEDModel.center_covariates`
+
+```python
+center_covariates = True
+```
+
+####### `causalis.scenarios.cuped.model.CUPEDModel.cov_type`
+
+```python
+cov_type = str(cov_type)
+```
+
+####### `causalis.scenarios.cuped.model.CUPEDModel.estimate`
+
+```python
+estimate(alpha=None, diagnostic_data=True)
+```
+
+Return the adjusted ATE/ITT estimate and inference.
+
+**Parameters:**
+
+- **alpha** (<code>[float](#float)</code>) – Override the instance significance level for confidence intervals.
+- **diagnostic_data** (<code>[bool](#bool)</code>) – Whether to include diagnostic data_contracts in the result.
+
+**Returns:**
+
+- <code>[CausalEstimate](#causalis.data_contracts.causal_estimate.CausalEstimate)</code> – A results object containing effect estimates and inference.
+
+####### `causalis.scenarios.cuped.model.CUPEDModel.fit`
+
+```python
+fit(data, covariates=None)
+```
+
+Fit CUPED/ANCOVA (or Lin-interacted) on a CausalData object.
+
+**Parameters:**
+
+- **data** (<code>[CausalData](#causalis.dgp.causaldata.CausalData)</code>) – Validated dataset with columns: outcome (post), treatment, and confounders (pre covariates).
+- **covariates** (<code>sequence of str</code>) – Subset of `data_contracts.confounders_names` to use as CUPED covariates.
+  If None, uses all confounders from the object.
+
+**Returns:**
+
+- <code>[CUPEDModel](#causalis.scenarios.cuped.model.CUPEDModel)</code> – Fitted estimator.
+
+**Raises:**
+
+- <code>[ValueError](#ValueError)</code> – If requested covariates are missing, not in `data_contracts.confounders_names`,
+  or treatment is not binary when `strict_binary_treatment=True`.
+
+####### `causalis.scenarios.cuped.model.CUPEDModel.strict_binary_treatment`
+
+```python
+strict_binary_treatment = bool(strict_binary_treatment)
+```
+
+####### `causalis.scenarios.cuped.model.CUPEDModel.summary_dict`
+
+```python
+summary_dict(alpha=None)
+```
+
+Convenience JSON/logging output.
+
+**Parameters:**
+
+- **alpha** (<code>[float](#float)</code>) – Override the instance significance level for confidence intervals.
+
+**Returns:**
+
+- <code>[dict](#dict)</code> – Dictionary with estimates, inference, and diagnostics.
+
+####### `causalis.scenarios.cuped.model.CUPEDModel.use_t`
+
+```python
+use_t = bool(use_t)
+```
+
 #### `causalis.scenarios.unconfoundedness`
 
 **Modules:**
@@ -6622,7 +6010,7 @@ Wrapper for make_tweedie().
 - [**dgp**](#causalis.scenarios.unconfoundedness.dgp) –
 - [**dml_source**](#causalis.scenarios.unconfoundedness.dml_source) – DoubleML implementation for estimating average treatment effects.
 - [**gate**](#causalis.scenarios.unconfoundedness.gate) – Group Average Treatment Effect (GATE) inference methods for causalis.
-- [**irm**](#causalis.scenarios.unconfoundedness.irm) – DML IRM estimator consuming CausalData.
+- [**model**](#causalis.scenarios.unconfoundedness.model) – DML IRM estimator consuming CausalData.
 - [**refutation**](#causalis.scenarios.unconfoundedness.refutation) – Refutation and robustness utilities for Causalis.
 
 **Classes:**
@@ -6637,7 +6025,7 @@ Wrapper for make_tweedie().
 ##### `causalis.scenarios.unconfoundedness.IRM`
 
 ```python
-IRM(data=None, ml_g=None, ml_m=None, *, n_folds=5, n_rep=1, normalize_ipw=False, trimming_rule='truncate', trimming_threshold=0.01, weights=None, random_state=None)
+IRM(data=None, ml_g=None, ml_m=None, *, n_folds=5, n_rep=1, normalize_ipw=False, trimming_rule='truncate', trimming_threshold=0.01, weights=None, relative_baseline_min=1e-08, random_state=None)
 ```
 
 Bases: <code>[BaseEstimator](#sklearn.base.BaseEstimator)</code>
@@ -6659,6 +6047,8 @@ Interactive Regression Model (IRM) with DoubleML-style cross-fitting using Causa
 - If dict, can contain 'weights' (w) and 'weights_bar' (E[w|X]).
 - For ATTE, computed internally (w=D/P(D=1), w_bar=m(X)/P(D=1)).
   Note: If weights depend on treatment or outcome, E[w|X] must be provided for correct sensitivity analysis.
+- **relative_baseline_min** (<code>[float](#float)</code>) – Minimum absolute baseline value used for relative effects. If |mu_c| is below this
+  threshold, relative estimates are set to NaN with a warning.
 - **random_state** (<code>[Optional](#typing.Optional)\[[int](#int)\]</code>) – Random seed for fold creation.
 
 **Functions:**
@@ -6682,6 +6072,7 @@ Interactive Regression Model (IRM) with DoubleML-style cross-fitting using Causa
 - [**orth_signal**](#causalis.scenarios.unconfoundedness.IRM.orth_signal) (<code>[ndarray](#numpy.ndarray)</code>) – Return the cross-fitted orthogonal signal (psi_b).
 - [**pvalues**](#causalis.scenarios.unconfoundedness.IRM.pvalues) (<code>[ndarray](#numpy.ndarray)</code>) – Return the p-values for the estimate.
 - [**random_state**](#causalis.scenarios.unconfoundedness.IRM.random_state) –
+- [**relative_baseline_min**](#causalis.scenarios.unconfoundedness.IRM.relative_baseline_min) –
 - [**score**](#causalis.scenarios.unconfoundedness.IRM.score) –
 - [**se**](#causalis.scenarios.unconfoundedness.IRM.se) (<code>[ndarray](#numpy.ndarray)</code>) – Return the standard error of the estimate.
 - [**summary**](#causalis.scenarios.unconfoundedness.IRM.summary) (<code>[DataFrame](#pandas.DataFrame)</code>) – Return a summary DataFrame of the results.
@@ -6767,7 +6158,7 @@ Fit nuisance models via cross-fitting.
 
 **Returns:**
 
-- **self** (<code>[IRM](#causalis.scenarios.unconfoundedness.irm.IRM)</code>) – Fitted estimator.
+- **self** (<code>[IRM](#causalis.scenarios.unconfoundedness.model.IRM)</code>) – Fitted estimator.
 
 ###### `causalis.scenarios.unconfoundedness.IRM.gate`
 
@@ -6849,6 +6240,12 @@ Return the p-values for the estimate.
 random_state = random_state
 ```
 
+###### `causalis.scenarios.unconfoundedness.IRM.relative_baseline_min`
+
+```python
+relative_baseline_min = float(relative_baseline_min)
+```
+
 ###### `causalis.scenarios.unconfoundedness.IRM.score`
 
 ```python
@@ -6870,14 +6267,14 @@ Return the standard error of the estimate.
 ###### `causalis.scenarios.unconfoundedness.IRM.sensitivity_analysis`
 
 ```python
-sensitivity_analysis(cf_y, r2_d, rho=1.0, H0=0.0, alpha=0.05)
+sensitivity_analysis(r2_y, r2_d, rho=1.0, H0=0.0, alpha=0.05)
 ```
 
 Compute a sensitivity analysis following DoubleML (Chernozhukov et al., 2022).
 
 **Parameters:**
 
-- **cf_y** (<code>[float](#float)</code>) – Sensitivity parameter for outcome equation (odds form, C_Y^2).
+- **r2_y** (<code>[float](#float)</code>) – Sensitivity parameter for outcome equation (R^2 form, R_Y^2; converted to odds form internally).
 - **r2_d** (<code>[float](#float)</code>) – Sensitivity parameter for treatment equation (R^2 form, R_D^2).
 - **rho** (<code>[float](#float)</code>) – Correlation between unobserved components.
 - **H0** (<code>[float](#float)</code>) – Null hypothesis for robustness values.
@@ -6971,6 +6368,7 @@ Estimate per-observation CATEs using DoubleML IRM and return a DataFrame with a 
 **Functions:**
 
 - [**generate_obs_hte_26**](#causalis.scenarios.unconfoundedness.dgp.generate_obs_hte_26) – Observational dataset with nonlinear outcome model, nonlinear treatment assignment,
+- [**generate_obs_hte_26_rich**](#causalis.scenarios.unconfoundedness.dgp.generate_obs_hte_26_rich) – Observational dataset with richer confounding, nonlinear outcome model,
 - [**obs_linear_26_dataset**](#causalis.scenarios.unconfoundedness.dgp.obs_linear_26_dataset) – A pre-configured observational linear dataset with 5 standard confounders.
 
 ###### `causalis.scenarios.unconfoundedness.dgp.generate_obs_hte_26`
@@ -6982,6 +6380,23 @@ generate_obs_hte_26(n=10000, seed=42, include_oracle=True, return_causal_data=Tr
 Observational dataset with nonlinear outcome model, nonlinear treatment assignment,
 and a heterogeneous (nonlinear) treatment effect tau(X).
 Based on the scenario in notebooks/cases/dml_atte.ipynb.
+
+**Parameters:**
+
+- **n** (<code>[int](#int)</code>) – Number of samples.
+- **seed** (<code>[int](#int)</code>) – Random seed.
+- **include_oracle** (<code>[bool](#bool)</code>) – Whether to include oracle ground-truth columns like 'cate', 'propensity', etc.
+- **return_causal_data** (<code>[bool](#bool)</code>) – If True, returns a CausalData object. If False, returns a pandas DataFrame.
+
+###### `causalis.scenarios.unconfoundedness.dgp.generate_obs_hte_26_rich`
+
+```python
+generate_obs_hte_26_rich(n=100000, seed=42, include_oracle=True, return_causal_data=True)
+```
+
+Observational dataset with richer confounding, nonlinear outcome model,
+nonlinear treatment assignment, and heterogeneous treatment effects.
+Adds additional realistic covariates and dependencies to mimic real data.
 
 **Parameters:**
 
@@ -7161,7 +6576,7 @@ Estimate Group Average Treatment Effects (GATEs).
 If `groups` is None, observations are grouped by quantiles of the
 plugin CATE proxy (g1_hat - g0_hat).
 
-##### `causalis.scenarios.unconfoundedness.irm`
+##### `causalis.scenarios.unconfoundedness.model`
 
 DML IRM estimator consuming CausalData.
 
@@ -7178,22 +6593,22 @@ note = {BSD-3-Clause License. Documentation: \\url{https://docs.doubleml.org/sta
 
 **Classes:**
 
-- [**IRM**](#causalis.scenarios.unconfoundedness.irm.IRM) – Interactive Regression Model (IRM) with DoubleML-style cross-fitting using CausalData.
+- [**IRM**](#causalis.scenarios.unconfoundedness.model.IRM) – Interactive Regression Model (IRM) with DoubleML-style cross-fitting using CausalData.
 
 **Attributes:**
 
-- [**HAS_CATBOOST**](#causalis.scenarios.unconfoundedness.irm.HAS_CATBOOST) –
+- [**HAS_CATBOOST**](#causalis.scenarios.unconfoundedness.model.HAS_CATBOOST) –
 
-###### `causalis.scenarios.unconfoundedness.irm.HAS_CATBOOST`
+###### `causalis.scenarios.unconfoundedness.model.HAS_CATBOOST`
 
 ```python
 HAS_CATBOOST = True
 ```
 
-###### `causalis.scenarios.unconfoundedness.irm.IRM`
+###### `causalis.scenarios.unconfoundedness.model.IRM`
 
 ```python
-IRM(data=None, ml_g=None, ml_m=None, *, n_folds=5, n_rep=1, normalize_ipw=False, trimming_rule='truncate', trimming_threshold=0.01, weights=None, random_state=None)
+IRM(data=None, ml_g=None, ml_m=None, *, n_folds=5, n_rep=1, normalize_ipw=False, trimming_rule='truncate', trimming_threshold=0.01, weights=None, relative_baseline_min=1e-08, random_state=None)
 ```
 
 Bases: <code>[BaseEstimator](#sklearn.base.BaseEstimator)</code>
@@ -7215,37 +6630,40 @@ Interactive Regression Model (IRM) with DoubleML-style cross-fitting using Causa
 - If dict, can contain 'weights' (w) and 'weights_bar' (E[w|X]).
 - For ATTE, computed internally (w=D/P(D=1), w_bar=m(X)/P(D=1)).
   Note: If weights depend on treatment or outcome, E[w|X] must be provided for correct sensitivity analysis.
+- **relative_baseline_min** (<code>[float](#float)</code>) – Minimum absolute baseline value used for relative effects. If |mu_c| is below this
+  threshold, relative estimates are set to NaN with a warning.
 - **random_state** (<code>[Optional](#typing.Optional)\[[int](#int)\]</code>) – Random seed for fold creation.
 
 **Functions:**
 
-- [**confint**](#causalis.scenarios.unconfoundedness.irm.IRM.confint) – Compute confidence intervals for the estimated coefficient.
-- [**estimate**](#causalis.scenarios.unconfoundedness.irm.IRM.estimate) – Compute treatment effects using stored nuisance predictions.
-- [**fit**](#causalis.scenarios.unconfoundedness.irm.IRM.fit) – Fit nuisance models via cross-fitting.
-- [**gate**](#causalis.scenarios.unconfoundedness.irm.IRM.gate) – Estimate Group Average Treatment Effects via BLP on orthogonal signal.
-- [**sensitivity_analysis**](#causalis.scenarios.unconfoundedness.irm.IRM.sensitivity_analysis) – Compute a sensitivity analysis following DoubleML (Chernozhukov et al., 2022).
+- [**confint**](#causalis.scenarios.unconfoundedness.model.IRM.confint) – Compute confidence intervals for the estimated coefficient.
+- [**estimate**](#causalis.scenarios.unconfoundedness.model.IRM.estimate) – Compute treatment effects using stored nuisance predictions.
+- [**fit**](#causalis.scenarios.unconfoundedness.model.IRM.fit) – Fit nuisance models via cross-fitting.
+- [**gate**](#causalis.scenarios.unconfoundedness.model.IRM.gate) – Estimate Group Average Treatment Effects via BLP on orthogonal signal.
+- [**sensitivity_analysis**](#causalis.scenarios.unconfoundedness.model.IRM.sensitivity_analysis) – Compute a sensitivity analysis following DoubleML (Chernozhukov et al., 2022).
 
 **Attributes:**
 
-- [**coef**](#causalis.scenarios.unconfoundedness.irm.IRM.coef) (<code>[ndarray](#numpy.ndarray)</code>) – Return the estimated coefficient.
-- [**data**](#causalis.scenarios.unconfoundedness.irm.IRM.data) –
-- [**diagnostics\_**](#causalis.scenarios.unconfoundedness.irm.IRM.diagnostics_) (<code>[Dict](#typing.Dict)\[[str](#str), [Any](#typing.Any)\]</code>) – Return diagnostic data.
-- [**ml_g**](#causalis.scenarios.unconfoundedness.irm.IRM.ml_g) –
-- [**ml_m**](#causalis.scenarios.unconfoundedness.irm.IRM.ml_m) –
-- [**n_folds**](#causalis.scenarios.unconfoundedness.irm.IRM.n_folds) –
-- [**n_rep**](#causalis.scenarios.unconfoundedness.irm.IRM.n_rep) –
-- [**normalize_ipw**](#causalis.scenarios.unconfoundedness.irm.IRM.normalize_ipw) –
-- [**orth_signal**](#causalis.scenarios.unconfoundedness.irm.IRM.orth_signal) (<code>[ndarray](#numpy.ndarray)</code>) – Return the cross-fitted orthogonal signal (psi_b).
-- [**pvalues**](#causalis.scenarios.unconfoundedness.irm.IRM.pvalues) (<code>[ndarray](#numpy.ndarray)</code>) – Return the p-values for the estimate.
-- [**random_state**](#causalis.scenarios.unconfoundedness.irm.IRM.random_state) –
-- [**score**](#causalis.scenarios.unconfoundedness.irm.IRM.score) –
-- [**se**](#causalis.scenarios.unconfoundedness.irm.IRM.se) (<code>[ndarray](#numpy.ndarray)</code>) – Return the standard error of the estimate.
-- [**summary**](#causalis.scenarios.unconfoundedness.irm.IRM.summary) (<code>[DataFrame](#pandas.DataFrame)</code>) – Return a summary DataFrame of the results.
-- [**trimming_rule**](#causalis.scenarios.unconfoundedness.irm.IRM.trimming_rule) –
-- [**trimming_threshold**](#causalis.scenarios.unconfoundedness.irm.IRM.trimming_threshold) –
-- [**weights**](#causalis.scenarios.unconfoundedness.irm.IRM.weights) –
+- [**coef**](#causalis.scenarios.unconfoundedness.model.IRM.coef) (<code>[ndarray](#numpy.ndarray)</code>) – Return the estimated coefficient.
+- [**data**](#causalis.scenarios.unconfoundedness.model.IRM.data) –
+- [**diagnostics\_**](#causalis.scenarios.unconfoundedness.model.IRM.diagnostics_) (<code>[Dict](#typing.Dict)\[[str](#str), [Any](#typing.Any)\]</code>) – Return diagnostic data.
+- [**ml_g**](#causalis.scenarios.unconfoundedness.model.IRM.ml_g) –
+- [**ml_m**](#causalis.scenarios.unconfoundedness.model.IRM.ml_m) –
+- [**n_folds**](#causalis.scenarios.unconfoundedness.model.IRM.n_folds) –
+- [**n_rep**](#causalis.scenarios.unconfoundedness.model.IRM.n_rep) –
+- [**normalize_ipw**](#causalis.scenarios.unconfoundedness.model.IRM.normalize_ipw) –
+- [**orth_signal**](#causalis.scenarios.unconfoundedness.model.IRM.orth_signal) (<code>[ndarray](#numpy.ndarray)</code>) – Return the cross-fitted orthogonal signal (psi_b).
+- [**pvalues**](#causalis.scenarios.unconfoundedness.model.IRM.pvalues) (<code>[ndarray](#numpy.ndarray)</code>) – Return the p-values for the estimate.
+- [**random_state**](#causalis.scenarios.unconfoundedness.model.IRM.random_state) –
+- [**relative_baseline_min**](#causalis.scenarios.unconfoundedness.model.IRM.relative_baseline_min) –
+- [**score**](#causalis.scenarios.unconfoundedness.model.IRM.score) –
+- [**se**](#causalis.scenarios.unconfoundedness.model.IRM.se) (<code>[ndarray](#numpy.ndarray)</code>) – Return the standard error of the estimate.
+- [**summary**](#causalis.scenarios.unconfoundedness.model.IRM.summary) (<code>[DataFrame](#pandas.DataFrame)</code>) – Return a summary DataFrame of the results.
+- [**trimming_rule**](#causalis.scenarios.unconfoundedness.model.IRM.trimming_rule) –
+- [**trimming_threshold**](#causalis.scenarios.unconfoundedness.model.IRM.trimming_threshold) –
+- [**weights**](#causalis.scenarios.unconfoundedness.model.IRM.weights) –
 
-####### `causalis.scenarios.unconfoundedness.irm.IRM.coef`
+####### `causalis.scenarios.unconfoundedness.model.IRM.coef`
 
 ```python
 coef: np.ndarray
@@ -7257,7 +6675,7 @@ Return the estimated coefficient.
 
 - <code>[ndarray](#numpy.ndarray)</code> – The estimated coefficient.
 
-####### `causalis.scenarios.unconfoundedness.irm.IRM.confint`
+####### `causalis.scenarios.unconfoundedness.model.IRM.confint`
 
 ```python
 confint(alpha=0.05)
@@ -7273,13 +6691,13 @@ Compute confidence intervals for the estimated coefficient.
 
 - <code>[DataFrame](#pandas.DataFrame)</code> – DataFrame with confidence intervals.
 
-####### `causalis.scenarios.unconfoundedness.irm.IRM.data`
+####### `causalis.scenarios.unconfoundedness.model.IRM.data`
 
 ```python
 data = data
 ```
 
-####### `causalis.scenarios.unconfoundedness.irm.IRM.diagnostics_`
+####### `causalis.scenarios.unconfoundedness.model.IRM.diagnostics_`
 
 ```python
 diagnostics_: Dict[str, Any]
@@ -7291,7 +6709,7 @@ Return diagnostic data.
 
 - <code>[dict](#dict)</code> – Dictionary containing 'm_hat', 'g0_hat', 'g1_hat', and 'folds'.
 
-####### `causalis.scenarios.unconfoundedness.irm.IRM.estimate`
+####### `causalis.scenarios.unconfoundedness.model.IRM.estimate`
 
 ```python
 estimate(score='ATE', alpha=0.05, diagnostic_data=True)
@@ -7309,7 +6727,7 @@ Compute treatment effects using stored nuisance predictions.
 
 - <code>[CausalEstimate](#causalis.data_contracts.causal_estimate.CausalEstimate)</code> – Result container for the estimated effect.
 
-####### `causalis.scenarios.unconfoundedness.irm.IRM.fit`
+####### `causalis.scenarios.unconfoundedness.model.IRM.fit`
 
 ```python
 fit(data=None)
@@ -7323,9 +6741,9 @@ Fit nuisance models via cross-fitting.
 
 **Returns:**
 
-- **self** (<code>[IRM](#causalis.scenarios.unconfoundedness.irm.IRM)</code>) – Fitted estimator.
+- **self** (<code>[IRM](#causalis.scenarios.unconfoundedness.model.IRM)</code>) – Fitted estimator.
 
-####### `causalis.scenarios.unconfoundedness.irm.IRM.gate`
+####### `causalis.scenarios.unconfoundedness.model.IRM.gate`
 
 ```python
 gate(groups, alpha=0.05)
@@ -7345,37 +6763,37 @@ Estimate Group Average Treatment Effects via BLP on orthogonal signal.
 
 - <code>[BLP](#causalis.scenarios.cate.blp.BLP)</code> – Fitted Best Linear Predictor model.
 
-####### `causalis.scenarios.unconfoundedness.irm.IRM.ml_g`
+####### `causalis.scenarios.unconfoundedness.model.IRM.ml_g`
 
 ```python
 ml_g = ml_g
 ```
 
-####### `causalis.scenarios.unconfoundedness.irm.IRM.ml_m`
+####### `causalis.scenarios.unconfoundedness.model.IRM.ml_m`
 
 ```python
 ml_m = ml_m
 ```
 
-####### `causalis.scenarios.unconfoundedness.irm.IRM.n_folds`
+####### `causalis.scenarios.unconfoundedness.model.IRM.n_folds`
 
 ```python
 n_folds = int(n_folds)
 ```
 
-####### `causalis.scenarios.unconfoundedness.irm.IRM.n_rep`
+####### `causalis.scenarios.unconfoundedness.model.IRM.n_rep`
 
 ```python
 n_rep = int(n_rep)
 ```
 
-####### `causalis.scenarios.unconfoundedness.irm.IRM.normalize_ipw`
+####### `causalis.scenarios.unconfoundedness.model.IRM.normalize_ipw`
 
 ```python
 normalize_ipw = bool(normalize_ipw)
 ```
 
-####### `causalis.scenarios.unconfoundedness.irm.IRM.orth_signal`
+####### `causalis.scenarios.unconfoundedness.model.IRM.orth_signal`
 
 ```python
 orth_signal: np.ndarray
@@ -7387,7 +6805,7 @@ Return the cross-fitted orthogonal signal (psi_b).
 
 - <code>[ndarray](#numpy.ndarray)</code> – The orthogonal signal.
 
-####### `causalis.scenarios.unconfoundedness.irm.IRM.pvalues`
+####### `causalis.scenarios.unconfoundedness.model.IRM.pvalues`
 
 ```python
 pvalues: np.ndarray
@@ -7399,19 +6817,25 @@ Return the p-values for the estimate.
 
 - <code>[ndarray](#numpy.ndarray)</code> – The p-values.
 
-####### `causalis.scenarios.unconfoundedness.irm.IRM.random_state`
+####### `causalis.scenarios.unconfoundedness.model.IRM.random_state`
 
 ```python
 random_state = random_state
 ```
 
-####### `causalis.scenarios.unconfoundedness.irm.IRM.score`
+####### `causalis.scenarios.unconfoundedness.model.IRM.relative_baseline_min`
+
+```python
+relative_baseline_min = float(relative_baseline_min)
+```
+
+####### `causalis.scenarios.unconfoundedness.model.IRM.score`
 
 ```python
 score = 'ATE'
 ```
 
-####### `causalis.scenarios.unconfoundedness.irm.IRM.se`
+####### `causalis.scenarios.unconfoundedness.model.IRM.se`
 
 ```python
 se: np.ndarray
@@ -7423,23 +6847,23 @@ Return the standard error of the estimate.
 
 - <code>[ndarray](#numpy.ndarray)</code> – The standard error.
 
-####### `causalis.scenarios.unconfoundedness.irm.IRM.sensitivity_analysis`
+####### `causalis.scenarios.unconfoundedness.model.IRM.sensitivity_analysis`
 
 ```python
-sensitivity_analysis(cf_y, r2_d, rho=1.0, H0=0.0, alpha=0.05)
+sensitivity_analysis(r2_y, r2_d, rho=1.0, H0=0.0, alpha=0.05)
 ```
 
 Compute a sensitivity analysis following DoubleML (Chernozhukov et al., 2022).
 
 **Parameters:**
 
-- **cf_y** (<code>[float](#float)</code>) – Sensitivity parameter for outcome equation (odds form, C_Y^2).
+- **r2_y** (<code>[float](#float)</code>) – Sensitivity parameter for outcome equation (R^2 form, R_Y^2; converted to odds form internally).
 - **r2_d** (<code>[float](#float)</code>) – Sensitivity parameter for treatment equation (R^2 form, R_D^2).
 - **rho** (<code>[float](#float)</code>) – Correlation between unobserved components.
 - **H0** (<code>[float](#float)</code>) – Null hypothesis for robustness values.
 - **alpha** (<code>[float](#float)</code>) – Significance level for CI bounds.
 
-####### `causalis.scenarios.unconfoundedness.irm.IRM.summary`
+####### `causalis.scenarios.unconfoundedness.model.IRM.summary`
 
 ```python
 summary: pd.DataFrame
@@ -7451,19 +6875,19 @@ Return a summary DataFrame of the results.
 
 - <code>[DataFrame](#pandas.DataFrame)</code> – The results summary.
 
-####### `causalis.scenarios.unconfoundedness.irm.IRM.trimming_rule`
+####### `causalis.scenarios.unconfoundedness.model.IRM.trimming_rule`
 
 ```python
 trimming_rule = str(trimming_rule)
 ```
 
-####### `causalis.scenarios.unconfoundedness.irm.IRM.trimming_threshold`
+####### `causalis.scenarios.unconfoundedness.model.IRM.trimming_threshold`
 
 ```python
 trimming_threshold = float(trimming_threshold)
 ```
 
-####### `causalis.scenarios.unconfoundedness.irm.IRM.weights`
+####### `causalis.scenarios.unconfoundedness.model.IRM.weights`
 
 ```python
 weights = weights
@@ -7641,7 +7065,7 @@ Get a DataFrame with specified columns.
 ####### `causalis.scenarios.unconfoundedness.refutation.CausalData.model_config`
 
 ```python
-model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True)
+model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True, extra='forbid')
 ```
 
 ####### `causalis.scenarios.unconfoundedness.refutation.CausalData.outcome`
@@ -9329,7 +8753,7 @@ Re-estimate θ while progressively trimming CONTROLS with large m(X).
 ###### `causalis.scenarios.unconfoundedness.refutation.sensitivity_analysis`
 
 ```python
-sensitivity_analysis(effect_estimation, *, cf_y, r2_d, rho=1.0, H0=0.0, alpha=0.05, use_signed_rr=False)
+sensitivity_analysis(effect_estimation, *, r2_y, r2_d, rho=1.0, H0=0.0, alpha=0.05, use_signed_rr=False)
 ```
 
 Compute bias-aware components and cache them.
@@ -9337,12 +8761,14 @@ Compute bias-aware components and cache them.
 **Parameters:**
 
 - **effect_estimation** (<code>[Dict](#typing.Dict)\[[str](#str), [Any](#typing.Any)\] or [Any](#typing.Any)</code>) – The effect estimation object.
-- **cf_y** (<code>[float](#float)</code>) – Sensitivity parameter for the outcome (odds form, C_Y^2).
+- **r2_y** (<code>[float](#float)</code>) – Sensitivity parameter for the outcome (R^2 form, R_Y^2; converted to odds form internally).
 - **r2_d** (<code>[float](#float)</code>) – Sensitivity parameter for the treatment (R^2 form, R_D^2).
 - **rho** (<code>[float](#float)</code>) – Correlation parameter.
 - **H0** (<code>[float](#float)</code>) – Null hypothesis for robustness values.
 - **alpha** (<code>[float](#float)</code>) – Significance level.
-- **use_signed_rr** (<code>[bool](#bool)</code>) – Whether to use signed rr.
+- **use_signed_rr** (<code>[bool](#bool)</code>) – Whether to use signed rr in the quadratic combination of sensitivity components.
+  If True and m_alpha/rr are available, the bias bound is computed via the
+  per-unit quadratic form and RV/RVa are not reported.
 
 **Returns:**
 
@@ -9352,7 +8778,7 @@ Compute bias-aware components and cache them.
   - theta_bounds_cofounding = (theta - bound_width, theta + bound_width)
   - bias_aware_ci = faithful DoubleML CI for the bounds
   - max_bias and components (sigma2, nu2)
-  - params (cf_y, r2_d, rho, use_signed_rr)
+  - params (r2_y, r2_d, rho, use_signed_rr)
 
 ###### `causalis.scenarios.unconfoundedness.refutation.sensitivity_benchmark`
 
@@ -9362,7 +8788,7 @@ sensitivity_benchmark(effect_estimation, benchmarking_set, fit_args=None)
 
 Computes a benchmark for a given set of features by refitting a short IRM model
 (excluding the provided features) and contrasting it with the original (long) model.
-Returns a DataFrame containing cf_y, r2_d, rho and the change in estimates.
+Returns a DataFrame containing r2_y, r2_d, rho and the change in estimates.
 
 **Parameters:**
 
@@ -9373,7 +8799,7 @@ Returns a DataFrame containing cf_y, r2_d, rho and the change in estimates.
 **Returns:**
 
 - <code>[DataFrame](#pandas.DataFrame)</code> – A one-row DataFrame indexed by the treatment name with columns:
-- cf_y, r2_d, rho: residual-based benchmarking strengths
+- r2_y, r2_d, rho: residual-based benchmarking strengths
 - theta_long, theta_short, delta: effect estimates and their change (long - short)
 
 ###### `causalis.scenarios.unconfoundedness.refutation.sutva`
@@ -9490,7 +8916,7 @@ Re-estimate θ while progressively trimming CONTROLS with large m(X).
 ####### `causalis.scenarios.unconfoundedness.refutation.uncofoundedness.compute_bias_aware_ci`
 
 ```python
-compute_bias_aware_ci(effect_estimation, *, cf_y, r2_d, rho=1.0, H0=0.0, alpha=0.05, use_signed_rr=False)
+compute_bias_aware_ci(effect_estimation, *, r2_y, r2_d, rho=1.0, H0=0.0, alpha=0.05, use_signed_rr=False)
 ```
 
 Compute bias-aware confidence intervals.
@@ -9506,12 +8932,14 @@ Returns a dict with:
 **Parameters:**
 
 - **effect_estimation** (<code>[Dict](#typing.Dict)\[[str](#str), [Any](#typing.Any)\] or [Any](#typing.Any)</code>) – The effect estimation object.
-- **cf_y** (<code>[float](#float)</code>) – Sensitivity parameter for the outcome (odds form, C_Y^2).
+- **r2_y** (<code>[float](#float)</code>) – Sensitivity parameter for the outcome (R^2 form, R_Y^2).
 - **r2_d** (<code>[float](#float)</code>) – Sensitivity parameter for the treatment (R^2 form, R_D^2).
 - **rho** (<code>[float](#float)</code>) – Correlation parameter.
 - **H0** (<code>[float](#float)</code>) – Null hypothesis for robustness values.
 - **alpha** (<code>[float](#float)</code>) – Significance level.
-- **use_signed_rr** (<code>[bool](#bool)</code>) – Whether to use signed rr.
+- **use_signed_rr** (<code>[bool](#bool)</code>) – Whether to use signed rr in the quadratic combination of sensitivity components.
+  If True and m_alpha/rr are available, the bias bound is computed via the
+  per-unit quadratic form and RV/RVa are not reported.
 
 **Returns:**
 
@@ -9594,7 +9022,7 @@ and then formats via `format_bias_aware_summary` for consistency.
 ######## `causalis.scenarios.unconfoundedness.refutation.uncofoundedness.sensitivity.sensitivity_analysis`
 
 ```python
-sensitivity_analysis(effect_estimation, *, cf_y, r2_d, rho=1.0, H0=0.0, alpha=0.05, use_signed_rr=False)
+sensitivity_analysis(effect_estimation, *, r2_y, r2_d, rho=1.0, H0=0.0, alpha=0.05, use_signed_rr=False)
 ```
 
 Compute bias-aware components and cache them.
@@ -9602,12 +9030,14 @@ Compute bias-aware components and cache them.
 **Parameters:**
 
 - **effect_estimation** (<code>[Dict](#typing.Dict)\[[str](#str), [Any](#typing.Any)\] or [Any](#typing.Any)</code>) – The effect estimation object.
-- **cf_y** (<code>[float](#float)</code>) – Sensitivity parameter for the outcome (odds form, C_Y^2).
+- **r2_y** (<code>[float](#float)</code>) – Sensitivity parameter for the outcome (R^2 form, R_Y^2; converted to odds form internally).
 - **r2_d** (<code>[float](#float)</code>) – Sensitivity parameter for the treatment (R^2 form, R_D^2).
 - **rho** (<code>[float](#float)</code>) – Correlation parameter.
 - **H0** (<code>[float](#float)</code>) – Null hypothesis for robustness values.
 - **alpha** (<code>[float](#float)</code>) – Significance level.
-- **use_signed_rr** (<code>[bool](#bool)</code>) – Whether to use signed rr.
+- **use_signed_rr** (<code>[bool](#bool)</code>) – Whether to use signed rr in the quadratic combination of sensitivity components.
+  If True and m_alpha/rr are available, the bias bound is computed via the
+  per-unit quadratic form and RV/RVa are not reported.
 
 **Returns:**
 
@@ -9617,7 +9047,7 @@ Compute bias-aware components and cache them.
   - theta_bounds_cofounding = (theta - bound_width, theta + bound_width)
   - bias_aware_ci = faithful DoubleML CI for the bounds
   - max_bias and components (sigma2, nu2)
-  - params (cf_y, r2_d, rho, use_signed_rr)
+  - params (r2_y, r2_d, rho, use_signed_rr)
 
 ######## `causalis.scenarios.unconfoundedness.refutation.uncofoundedness.sensitivity.sensitivity_benchmark`
 
@@ -9627,7 +9057,7 @@ sensitivity_benchmark(effect_estimation, benchmarking_set, fit_args=None)
 
 Computes a benchmark for a given set of features by refitting a short IRM model
 (excluding the provided features) and contrasting it with the original (long) model.
-Returns a DataFrame containing cf_y, r2_d, rho and the change in estimates.
+Returns a DataFrame containing r2_y, r2_d, rho and the change in estimates.
 
 **Parameters:**
 
@@ -9638,13 +9068,13 @@ Returns a DataFrame containing cf_y, r2_d, rho and the change in estimates.
 **Returns:**
 
 - <code>[DataFrame](#pandas.DataFrame)</code> – A one-row DataFrame indexed by the treatment name with columns:
-- cf_y, r2_d, rho: residual-based benchmarking strengths
+- r2_y, r2_d, rho: residual-based benchmarking strengths
 - theta_long, theta_short, delta: effect estimates and their change (long - short)
 
 ####### `causalis.scenarios.unconfoundedness.refutation.uncofoundedness.sensitivity_analysis`
 
 ```python
-sensitivity_analysis(effect_estimation, *, cf_y, r2_d, rho=1.0, H0=0.0, alpha=0.05, use_signed_rr=False)
+sensitivity_analysis(effect_estimation, *, r2_y, r2_d, rho=1.0, H0=0.0, alpha=0.05, use_signed_rr=False)
 ```
 
 Compute bias-aware components and cache them.
@@ -9652,12 +9082,14 @@ Compute bias-aware components and cache them.
 **Parameters:**
 
 - **effect_estimation** (<code>[Dict](#typing.Dict)\[[str](#str), [Any](#typing.Any)\] or [Any](#typing.Any)</code>) – The effect estimation object.
-- **cf_y** (<code>[float](#float)</code>) – Sensitivity parameter for the outcome (odds form, C_Y^2).
+- **r2_y** (<code>[float](#float)</code>) – Sensitivity parameter for the outcome (R^2 form, R_Y^2; converted to odds form internally).
 - **r2_d** (<code>[float](#float)</code>) – Sensitivity parameter for the treatment (R^2 form, R_D^2).
 - **rho** (<code>[float](#float)</code>) – Correlation parameter.
 - **H0** (<code>[float](#float)</code>) – Null hypothesis for robustness values.
 - **alpha** (<code>[float](#float)</code>) – Significance level.
-- **use_signed_rr** (<code>[bool](#bool)</code>) – Whether to use signed rr.
+- **use_signed_rr** (<code>[bool](#bool)</code>) – Whether to use signed rr in the quadratic combination of sensitivity components.
+  If True and m_alpha/rr are available, the bias bound is computed via the
+  per-unit quadratic form and RV/RVa are not reported.
 
 **Returns:**
 
@@ -9667,7 +9099,7 @@ Compute bias-aware components and cache them.
   - theta_bounds_cofounding = (theta - bound_width, theta + bound_width)
   - bias_aware_ci = faithful DoubleML CI for the bounds
   - max_bias and components (sigma2, nu2)
-  - params (cf_y, r2_d, rho, use_signed_rr)
+  - params (r2_y, r2_d, rho, use_signed_rr)
 
 ####### `causalis.scenarios.unconfoundedness.refutation.uncofoundedness.sensitivity_benchmark`
 
@@ -9677,7 +9109,7 @@ sensitivity_benchmark(effect_estimation, benchmarking_set, fit_args=None)
 
 Computes a benchmark for a given set of features by refitting a short IRM model
 (excluding the provided features) and contrasting it with the original (long) model.
-Returns a DataFrame containing cf_y, r2_d, rho and the change in estimates.
+Returns a DataFrame containing r2_y, r2_d, rho and the change in estimates.
 
 **Parameters:**
 
@@ -9688,7 +9120,7 @@ Returns a DataFrame containing cf_y, r2_d, rho and the change in estimates.
 **Returns:**
 
 - <code>[DataFrame](#pandas.DataFrame)</code> – A one-row DataFrame indexed by the treatment name with columns:
-- cf_y, r2_d, rho: residual-based benchmarking strengths
+- r2_y, r2_d, rho: residual-based benchmarking strengths
 - theta_long, theta_short, delta: effect estimates and their change (long - short)
 
 ####### `causalis.scenarios.unconfoundedness.refutation.uncofoundedness.uncofoundedness_validation`
