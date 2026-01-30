@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Optional, List
+from typing import Optional, List, Union
 
 import numpy as np
 import pandas as pd
@@ -29,6 +29,29 @@ class UnconfoundednessDiagnosticData(DiagnosticData):
     # Sensitivity elements (DoubleML-style)
     sigma2: Optional[float] = None
     nu2: Optional[float] = None
+    psi_sigma2: Optional[np.ndarray] = None
+    psi_nu2: Optional[np.ndarray] = None
+    riesz_rep: Optional[np.ndarray] = None
+    m_alpha: Optional[np.ndarray] = None
+    psi: Optional[np.ndarray] = None
+    score: Optional[str] = None  # ATE or ATTE
+
+
+class MultiUnconfoundednessDiagnosticData(DiagnosticData):
+    """Fields common to all models assuming unconfoundedness with multiple_treatment."""
+
+    m_hat: np.ndarray  # Propensity scores
+    d: np.ndarray  # Treatments indicators
+    y: Optional[np.ndarray] = None  # Outcomes
+    x: Optional[np.ndarray] = None  # Confounders (for balance checks)
+    g_hat: Optional[np.ndarray] = None  # Estimated outcome under control
+    psi_b: Optional[np.ndarray] = None  # Orthogonal signal (for DML)
+    folds: Optional[np.ndarray] = None  # Cross-fitting folds
+    trimming_threshold: float = 0.0
+
+    # Sensitivity elements (DoubleML-style)
+    sigma2: Union[float, np.ndarray] = None
+    nu2: Optional[np.ndarray] = None
     psi_sigma2: Optional[np.ndarray] = None
     psi_nu2: Optional[np.ndarray] = None
     riesz_rep: Optional[np.ndarray] = None
