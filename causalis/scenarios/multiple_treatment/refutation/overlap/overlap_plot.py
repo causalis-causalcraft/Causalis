@@ -1,0 +1,299 @@
+from typing import Tuple, Optional, Any, List, Union
+import numpy as np
+import matplotlib as mpl
+import matplotlib.pyplot as plt
+
+from causalis.data_contracts.causal_diagnostic_data import MultiUnconfoundednessDiagnosticData
+
+
+def plot_m_overlap(
+    diag: MultiUnconfoundednessDiagnosticData,
+    clip: Tuple[float, float] = (0.01, 0.99),
+    bins: Any = "fd",
+    kde: bool = True,
+    shade_overlap: bool = True,
+    ax: Optional[plt.Axes] = None,
+    figsize: Tuple[float, float] = (9, 5.5),
+    dpi: int = 220,
+    font_scale: float = 1.15,
+    save: Optional[str] = None,
+    save_dpi: Optional[int] = None,
+    transparent: bool = False,
+    color_t: Optional[Any] = None,
+    color_c: Optional[Any] = None,
+    *,
+    treatment_idx: Optional[Union[int, List[int]]] = None,
+    baseline_idx: int = 0,
+    treatment_names: Optional[List[str]] = None,
+) -> plt.Figure:
+    """
+    Multi-treatment overlap plot for propensity scores m_k(x)=P(D=k|X), ATE diagnostics style.
+
+    Делает pairwise-плоты baseline (по умолчанию 0) vs k:
+      - сравниваем распределение m_k(x) среди наблюдений с D=k (treated)
+        и среди наблюдений с D=baseline (control для пары 0 vs k).
+
+    Параметры:
+      - diag.d: (n, K) one-hot
+      - diag.m_hat: (n, K) propensity
+      - treatment_idx:
+          * None -> построить для всех k != baseline_idx (мультипанель)
+          * int -> построить для конкретного k
+          * list[int] -> построить для набора k
+      - ax: поддерживается только для одиночного графика (когда выбран ровно один k)
+
+    Возвращает matplotlib.figure.Figure.
+    """
+
+    # ------- Helpers --------------------------------------------------------
+    def _silverman_bandwidth(x: np.ndarray) -> float:
+        x = np.asarray(x, float)
+        n = x.size
+        if n < 2:
+            return 0.04
+        sd = np.std(x, ddof=1)
+        iqr = np.subtract(*np.percentile(x, [75, 25]))
+        s = sd if iqr <= 0 else min(sd, iqr / 1.34)
+        h = 0.9 * s * n ** (-1 / 5)
+        return float(max(h, 0.02))
+
+    def _kde_reflect(x: np.ndarray, xs: np.ndarray, h: float) -> np.ndarray:
+        x = np.asarray(x, float)
+        if x.size == 0:
+            return np.zeros_like(xs)
+        if x.size < 2 or np.std(x) < 1e-8:
+            mu = float(np.mean(x)) if x.size else 0.5
+            h0 = max(float(h), 0.02)
+            z = (xs - mu) / h0
+            return np.exp(-0.5 * z**2) / (np.sqrt(2 * np.pi) * h0)
+
+        xr = np.concatenate([x, -x, 2 - x])  # reflect at 0 and 1
+        diff = (xs[None, :] - xr[:, None]) / h
+        kern = np.exp(-0.5 * diff**2) / (np.sqrt(2 * np.pi) * h)
+        return kern.mean(axis=0)
+
+    def _patch_color(patches, fallback):
+        for p in patches:
+            fc = p.get_facecolor()
+            if fc is not None:
+                return fc
+        return fallback
+
+    def _plot_one(
+        ax1: plt.Axes,
+        mt: np.ndarray,
+        mc: np.ndarray,
+        *,
+        label_t: str,
+        label_c: str,
+        xlabel: str,
+        title: str,
+    ):
+        # Clamp to [0,1]
+        mtp = np.clip(mt, 0.0, 1.0)
+        mcp = np.clip(mc, 0.0, 1.0)
+
+        # Histograms
+        ht = ax1.hist(
+            mtp, bins=bins, range=(0.0, 1.0), density=True,
+            alpha=0.45, label=label_t, edgecolor="white", linewidth=0.6,
+            color=color_t
+        )
+        hc = ax1.hist(
+            mcp, bins=bins, range=(0.0, 1.0), density=True,
+            alpha=0.45, label=label_c, edgecolor="white", linewidth=0.6,
+            color=color_c
+        )
+
+        cycle = mpl.rcParams["axes.prop_cycle"].by_key().get("color", ["C0", "C1"])
+        used_t = color_t or _patch_color(ht[2], cycle[0])
+        used_c = color_c or _patch_color(hc[2], cycle[1])
+
+        # KDE
+        if kde:
+            if clip:
+                allm = np.clip(np.r_[mtp, mcp], 0, 1)
+                lo, hi = np.quantile(allm, [clip[0], clip[1]])
+                lo, hi = float(max(0.0, lo)), float(min(1.0, hi))
+                if not (hi > lo):
+                    lo, hi = 0.0, 1.0
+            else:
+                lo, hi = 0.0, 1.0
+
+            xs = np.linspace(0.0, 1.0, 800)
+            h_t = _silverman_bandwidth(mtp)
+            h_c = _silverman_bandwidth(mcp)
+            yt = _kde_reflect(mtp, xs, h_t)
+            yc = _kde_reflect(mcp, xs, h_c)
+
+            ax1.plot(xs, yt, linewidth=2.2, label=f"{label_t} (KDE)", color=used_t, antialiased=True)
+            ax1.plot(xs, yc, linewidth=2.2, linestyle="--", label=f"{label_c} (KDE)", color=used_c, antialiased=True)
+
+            if shade_overlap:
+                ax1.fill_between(xs, np.minimum(yt, yc), 0, alpha=0.12, color="grey", rasterized=False)
+
+        # Means
+        ax1.axvline(float(np.mean(mtp)), linestyle=":", linewidth=1.8, color=used_t, alpha=0.95)
+        ax1.axvline(float(np.mean(mcp)), linestyle=":", linewidth=1.8, color=used_c, alpha=0.95)
+
+        # Cosmetics
+        ax1.set_xlabel(xlabel)
+        ax1.set_ylabel("Density")
+        ax1.set_title(title)
+        ax1.set_xlim(0.0, 1.0)
+        ax1.grid(True, linewidth=0.5, alpha=0.45)
+        for spine in ("top", "right"):
+            ax1.spines[spine].set_visible(False)
+        ax1.legend(frameon=False)
+
+    # ------- Data -----------------------------------------------------------
+    d = np.asarray(getattr(diag, "d"), dtype=float)
+    m = np.asarray(getattr(diag, "m_hat"), dtype=float)
+
+    if d.ndim != 2 or m.ndim != 2:
+        raise ValueError("Expected multi-treatment diag: d and m_hat must be 2D arrays (n, K).")
+    if d.shape != m.shape:
+        raise ValueError(f"d and m_hat must have same shape (n, K). Got d={d.shape}, m_hat={m.shape}.")
+
+    n, K = d.shape
+    if not (0 <= baseline_idx < K):
+        raise ValueError(f"baseline_idx must be in [0, {K-1}]")
+
+    # treatment names
+    if treatment_names is None:
+        treatment_names = getattr(diag, "treatment_names", None) or getattr(diag, "d_names", None)
+    if not treatment_names or len(treatment_names) != K:
+        treatment_names = [str(k) for k in range(K)]
+
+    # which k to plot
+    if treatment_idx is None:
+        ks = [k for k in range(K) if k != baseline_idx]
+    elif isinstance(treatment_idx, int):
+        ks = [treatment_idx]
+    else:
+        ks = list(treatment_idx)
+
+    ks = [int(k) for k in ks]
+    for k in ks:
+        if not (0 <= k < K):
+            raise ValueError(f"treatment_idx contains invalid k={k} for K={K}")
+        if k == baseline_idx:
+            raise ValueError("treatment_idx cannot include baseline_idx (comparison would be baseline vs baseline).")
+
+    # clean finite rows (по соответствующему столбцу m_k и one-hot d)
+    # (чистим по всему d и m, чтобы не было NaN/inf)
+    mask = np.isfinite(m).all(axis=1) & np.isfinite(d).all(axis=1)
+    d = d[mask]
+    m = m[mask]
+
+    # ------- Figure/axes with high DPI & scaled fonts ----------------------
+    rc = {
+        "font.size": 11 * font_scale,
+        "axes.titlesize": 13 * font_scale,
+        "axes.labelsize": 12 * font_scale,
+        "legend.fontsize": 10 * font_scale,
+        "xtick.labelsize": 10 * font_scale,
+        "ytick.labelsize": 10 * font_scale,
+    }
+
+    with mpl.rc_context(rc):
+        # Single plot case (allow ax)
+        if len(ks) == 1:
+            k = ks[0]
+            ax_provided = ax is not None
+            if not ax_provided:
+                fig, ax1 = plt.subplots(figsize=figsize, dpi=dpi)
+            else:
+                fig = ax.figure
+                ax1 = ax
+                try:
+                    fig.set_dpi(dpi)
+                except Exception:
+                    pass
+
+            mask_t = d[:, k].astype(bool)
+            mask_c = d[:, baseline_idx].astype(bool)
+
+            mt = m[mask_t, k]
+            mc = m[mask_c, k]
+
+            if mt.size == 0 or mc.size == 0:
+                raise ValueError(
+                    f"Both groups must have at least one observation for baseline={baseline_idx} vs k={k}."
+                )
+
+            _plot_one(
+                ax1, mt, mc,
+                label_t=f"T={treatment_names[k]} (n={mt.size})",
+                label_c=f"T={treatment_names[baseline_idx]} (n={mc.size})",
+                xlabel=rf"$m_{{{treatment_names[k]}}}(x)=\mathbb{{P}}(D={treatment_names[k]}\mid X)$",
+                title=f"Propensity overlap: {treatment_names[baseline_idx]} vs {treatment_names[k]}",
+            )
+
+            fig.tight_layout()
+
+            if save is not None:
+                ext = str(save).lower().split(".")[-1]
+                _dpi = save_dpi or (300 if ext in {"png", "jpg", "jpeg", "tif", "tiff"} else dpi)
+                fig.savefig(
+                    save, dpi=_dpi, bbox_inches="tight", pad_inches=0.1,
+                    transparent=transparent,
+                    facecolor="none" if transparent else "white",
+                )
+            if not ax_provided:
+                plt.close(fig)
+            return fig
+
+        # Multi-panel case (ax not supported)
+        if ax is not None:
+            raise ValueError("`ax` can be used only when plotting a single treatment comparison. "
+                             "Set treatment_idx=int for single plot, or pass ax=None.")
+
+        # layout
+        n_plots = len(ks)
+        ncols = 2 if n_plots > 1 else 1
+        nrows = int(np.ceil(n_plots / ncols))
+
+        # scale figsize a bit with number of panels
+        fig_w = max(figsize[0], figsize[0] * (ncols / 2))
+        fig_h = max(figsize[1], figsize[1] * (nrows / 1.6))
+        fig, axs = plt.subplots(nrows=nrows, ncols=ncols, figsize=(fig_w, fig_h), dpi=dpi)
+        axs = np.atleast_1d(axs).ravel()
+
+        for i, k in enumerate(ks):
+            ax1 = axs[i]
+            mask_t = d[:, k].astype(bool)
+            mask_c = d[:, baseline_idx].astype(bool)
+
+            mt = m[mask_t, k]
+            mc = m[mask_c, k]
+
+            if mt.size == 0 or mc.size == 0:
+                ax1.set_title(f"{treatment_names[baseline_idx]} vs {treatment_names[k]} (insufficient data)")
+                ax1.axis("off")
+                continue
+
+            _plot_one(
+                ax1, mt, mc,
+                label_t=f"T={treatment_names[k]} (n={mt.size})",
+                label_c=f"T={treatment_names[baseline_idx]} (n={mc.size})",
+                xlabel=rf"$m_{{{treatment_names[k]}}}(x)$",
+                title=f"Overlap: {treatment_names[baseline_idx]} vs {treatment_names[k]}",
+            )
+
+        # turn off unused axes
+        for j in range(n_plots, len(axs)):
+            axs[j].axis("off")
+
+        fig.tight_layout()
+
+        if save is not None:
+            ext = str(save).lower().split(".")[-1]
+            _dpi = save_dpi or (300 if ext in {"png", "jpg", "jpeg", "tif", "tiff"} else dpi)
+            fig.savefig(
+                save, dpi=_dpi, bbox_inches="tight", pad_inches=0.1,
+                transparent=transparent,
+                facecolor="none" if transparent else "white",
+            )
+        plt.close(fig)
+        return fig
