@@ -209,6 +209,7 @@ def plot_m_overlap(
                 try:
                     fig.set_dpi(dpi)
                 except Exception:
+                    # Best-effort DPI adjustment: ignore backend/figure types that do not support set_dpi.
                     pass
 
             mask_t = d[:, k].astype(bool)
