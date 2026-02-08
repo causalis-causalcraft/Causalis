@@ -6009,7 +6009,7 @@ use_t = bool(use_t)
 - [**cate**](#causalis.scenarios.unconfoundedness.cate) – Conditional Average Treatment Effect (CATE) inference methods for causalis.
 - [**dgp**](#causalis.scenarios.unconfoundedness.dgp) –
 - [**gate**](#causalis.scenarios.unconfoundedness.gate) – Group Average Treatment Effect (GATE) inference methods for causalis.
-- [**model**](#causalis.scenarios.unconfoundedness.model) – IRM estimator consuming CausalData.
+- [**model**](#causalis.scenarios.unconfoundedness.model) – DML IRM estimator consuming CausalData.
 - [**refutation**](#causalis.scenarios.unconfoundedness.refutation) – Refutation and robustness utilities for Causalis.
 
 **Classes:**
@@ -6402,6 +6402,23 @@ Adds additional realistic covariates and dependencies to mimic real data.
 ###### `causalis.scenarios.unconfoundedness.dgp.obs_linear_26_dataset`
 
 ```python
+generate_obs_hte_26_rich(n=100000, seed=42, include_oracle=True, return_causal_data=True)
+```
+
+Observational dataset with richer confounding, nonlinear outcome model,
+nonlinear treatment assignment, and heterogeneous treatment effects.
+Adds additional realistic covariates and dependencies to mimic real data.
+
+**Parameters:**
+
+- **n** (<code>[int](#int)</code>) – Number of samples.
+- **seed** (<code>[int](#int)</code>) – Random seed.
+- **include_oracle** (<code>[bool](#bool)</code>) – Whether to include oracle ground-truth columns like 'cate', 'propensity', etc.
+- **return_causal_data** (<code>[bool](#bool)</code>) – If True, returns a CausalData object. If False, returns a pandas DataFrame.
+
+###### `causalis.scenarios.unconfoundedness.dgp.obs_linear_26_dataset`
+
+```python
 obs_linear_26_dataset(n=10000, seed=42, include_oracle=True, return_causal_data=True)
 ```
 
@@ -6452,7 +6469,7 @@ Implements cross-fitted nuisance estimation for g0, g1 and m, and supports ATE/A
 
 **Classes:**
 
-- [**IRM**](#causalis.scenarios.unconfoundedness.model.IRM) – Interactive Regression Model (IRM) with cross-fitting using CausalData.
+- [**IRM**](#causalis.scenarios.unconfoundedness.model.IRM) – Interactive Regression Model (IRM) with DoubleML-style cross-fitting using CausalData.
 
 **Attributes:**
 
@@ -6499,7 +6516,7 @@ Interactive Regression Model (IRM) with cross-fitting using CausalData.
 - [**estimate**](#causalis.scenarios.unconfoundedness.model.IRM.estimate) – Compute treatment effects using stored nuisance predictions.
 - [**fit**](#causalis.scenarios.unconfoundedness.model.IRM.fit) – Fit nuisance models via cross-fitting.
 - [**gate**](#causalis.scenarios.unconfoundedness.model.IRM.gate) – Estimate Group Average Treatment Effects via BLP on orthogonal signal.
-- [**sensitivity_analysis**](#causalis.scenarios.unconfoundedness.model.IRM.sensitivity_analysis) – Compute a sensitivity analysis following Chernozhukov et al. (2022).
+- [**sensitivity_analysis**](#causalis.scenarios.unconfoundedness.model.IRM.sensitivity_analysis) – Compute a sensitivity analysis following DoubleML (Chernozhukov et al., 2022).
 
 **Attributes:**
 

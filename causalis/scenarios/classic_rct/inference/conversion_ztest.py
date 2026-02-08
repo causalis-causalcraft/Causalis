@@ -14,7 +14,7 @@ from scipy import stats
 from causalis.dgp.causaldata import CausalData
 
 
-def conversion_ztest(
+def conversion_z_test(
     data: CausalData,
     alpha: float = 0.05,
     ci_method: Literal["newcombe", "wald_unpooled", "wald_pooled"] = "newcombe",
@@ -44,7 +44,7 @@ def conversion_ztest(
         - absolute_difference: Difference in conversion rates (treated - control)
         - absolute_ci: Tuple (lower, upper) for the absolute difference CI
         - relative_difference: Percentage change relative to control rate
-        - relative_ci: Tuple (lower, upper) for the relative difference CI (delta method)
+        - relative_ci: Tuple (lower, upper) for the relative difference CI
 
     Raises
     ------
@@ -140,24 +140,39 @@ def conversion_ztest(
         margin = z_crit * se_ci
         absolute_ci = (absolute_diff - margin, absolute_diff + margin)
 
-    # 3) Relative effect (% lift) and CI via delta method
+    # 3) Relative effect (% lift) and CI via log(RR)
     # lift = (p1/p0 - 1) * 100
-    eps = 1e-12
-    if (not np.isfinite(p0)) or abs(p0) < eps:
+    if p0 == 0.0:
         relative_diff = np.inf if p1 > 0 else 0.0
         relative_ci = (np.nan, np.nan)
     else:
         rr = p1 / p0
         relative_diff = float((rr - 1.0) * 100.0)
 
-        v1 = p1 * (1 - p1) / n1
-        v0 = p0 * (1 - p0) / n0
-        w1 = (1.0 / p0) ** 2
-        w0 = (p1 / (p0 ** 2)) ** 2
-        var_rel_scaled = float(max(w1 * v1 + w0 * v0, 0.0))
-        relative_se = 100.0 * float(np.sqrt(var_rel_scaled))
-        moe = z_crit * relative_se
-        relative_ci = (relative_diff - moe, relative_diff + moe)
+        # Haldane–Anscombe correction if any cell is zero
+        a = x1
+        b = n1 - x1
+        c = x0
+        d = n0 - x0
+        if min(a, b, c, d) == 0.0:
+            cc = 0.5
+            a += cc; b += cc; c += cc; d += cc
+            n1_cc = a + b
+            n0_cc = c + d
+        else:
+            n1_cc = n1
+            n0_cc = n0
+
+        p1_cc = a / n1_cc
+        p0_cc = c / n0_cc
+        rr_cc = p1_cc / p0_cc
+
+        se_log_rr = float(np.sqrt((1 / a) - (1 / n1_cc) + (1 / c) - (1 / n0_cc)))
+        log_rr = float(np.log(rr_cc))
+        rr_lo = float(np.exp(log_rr - z_crit * se_log_rr))
+        rr_hi = float(np.exp(log_rr + z_crit * se_log_rr))
+
+        relative_ci = (float((rr_lo - 1.0) * 100.0), float((rr_hi - 1.0) * 100.0))
 
     return {
         "p_value": float(p_value),

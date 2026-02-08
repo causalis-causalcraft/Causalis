@@ -602,9 +602,6 @@ class IRM(BaseEstimator):
         self.se_relative_ = np.array([se_rel])
         self.confint_relative_ = np.array([[ci_low_rel, ci_high_rel]])
 
-        treatment_mean = float(np.mean(y[d == 1])) if np.any(d == 1) else np.nan
-        control_mean = float(np.mean(y[d == 0])) if np.any(d == 0) else np.nan
-
         diag = None
         if diagnostic_data:
             # Calculate sensitivity elements
@@ -651,12 +648,10 @@ class IRM(BaseEstimator):
             is_significant=bool(pval < alpha) if np.isfinite(pval) else False,
             n_treated=int(np.sum(d == 1)),
             n_control=int(np.sum(d == 0)),
-            treatment_mean=treatment_mean,
-            control_mean=control_mean,
             outcome=self.data.outcome.name,
             treatment=self.data.treatment.name,
             confounders=list(self.data.confounders),
-            time=datetime.now().strftime("%Y-%m-%d"),
+            time=datetime.now(),
             diagnostic_data=diag,
         )
 

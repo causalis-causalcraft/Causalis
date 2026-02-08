@@ -1,6 +1,6 @@
 from causalis.scenarios.classic_rct.inference import (
     ttest,
-    conversion_ztest,
+    conversion_z_test,
     bootstrap_diff_means,
 )
 from causalis.scenarios.classic_rct.model import DiffInMeans

@@ -883,3 +883,5 @@ def make_gold_linear(n: int = 10000, seed: int = 42) -> CausalData:
         seed=seed
     )
     return gen.to_causal_data(n)
+
+

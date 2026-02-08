@@ -5,7 +5,7 @@ from typing import Any, Optional, Literal
 from causalis.dgp.causaldata import CausalData
 from causalis.data_contracts.causal_estimate import CausalEstimate
 from causalis.data_contracts.causal_diagnostic_data import DiffInMeansDiagnosticData
-from .inference import ttest, bootstrap_diff_means, conversion_ztest
+from .inference import ttest, bootstrap_diff_means, conversion_z_test
 
 
 class DiffInMeans:
@@ -61,7 +61,7 @@ class DiffInMeans:
             Whether to include diagnostic data_contracts in the result.
         **kwargs : Any
             Additional arguments passed to the underlying inference function.
-            - For "bootstrap": can pass `n_simul`, `batch_size`, `seed`, `index_dtype`.
+            - For "bootstrap": can pass `n_simul` (default 10000).
 
         Returns
         -------
@@ -77,10 +77,13 @@ class DiffInMeans:
 
         if method == "ttest":
             res = ttest(self.data, alpha=a)
-        elif method in ["bootstrap"]:
-            res = bootstrap_diff_means(self.data, alpha=a, **kwargs)
-        elif method in ["conversion_ztest"]:
-            res = conversion_ztest(self.data, alpha=a, **kwargs)
+        elif method in ["bootstrap", "bootsrap"]:
+            n_simul = kwargs.get("n_simul", 10000)
+            res = bootstrap_diff_means(
+                self.data, alpha=a, n_simul=n_simul
+            )
+        elif method in ["conversion_ztest", "coversion_ztest"]:
+            res = conversion_z_test(self.data, alpha=a, **kwargs)
         else:
             raise ValueError(
                 f"Unknown method: {method}. "
@@ -88,13 +91,8 @@ class DiffInMeans:
             )
 
         diag_data = None
-        conf = self.data.confounders
-        has_conf = conf is not None and (len(conf) > 0 if not hasattr(conf, "empty") else not conf.empty)
-        if diagnostic_data and has_conf:
+        if diagnostic_data and self.data.confounders:
             diag_data = DiffInMeansDiagnosticData()
-
-        treated_outcome = self.data.outcome[self.data.treatment == 1].dropna()
-        control_outcome = self.data.outcome[self.data.treatment == 0].dropna()
 
         return CausalEstimate(
             estimand="ATE",
@@ -111,8 +109,6 @@ class DiffInMeans:
             is_significant=bool(res["p_value"] < a),
             n_treated=int(self.data.outcome[self.data.treatment == 1].shape[0]),
             n_control=int(self.data.outcome[self.data.treatment == 0].shape[0]),
-            treatment_mean=float(treated_outcome.mean()),
-            control_mean=float(control_outcome.mean()),
             outcome=self.data.outcome_name,
             treatment=self.data.treatment_name,
             confounders=self.data.confounders,

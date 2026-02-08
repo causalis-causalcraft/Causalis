@@ -193,7 +193,6 @@ class CUPEDModel:
         # self._result.model.endog is Y, self._result.model.exog[:, 1] is D
         y_internal = self._result.model.endog
         d_internal = self._result.model.exog[:, 1]
-        mu_t = float(np.mean(y_internal[d_internal == 1]))
         mu_c = float(np.mean(y_internal[d_internal == 0]))
 
         if mu_c != 0:
@@ -278,8 +277,6 @@ class CUPEDModel:
             is_significant=bool(p_value < a),
             n_treated=int(np.sum(self._result.model.exog[:, 1] == 1)),
             n_control=int(np.sum(self._result.model.exog[:, 1] == 0)),
-            treatment_mean=mu_t,
-            control_mean=mu_c,
             outcome=str(self._result.model.endog_names) if hasattr(self._result.model, "endog_names") else "outcome",
             treatment=str(self._result.model.exog_names[1]) if hasattr(self._result.model, "exog_names") else "treatment",
             confounders=list(self._covariate_names),
