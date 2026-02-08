@@ -55,7 +55,44 @@ def _first_patch_color(patches, fallback):
     return fallback
 
 
-def outcome_hist(
+def _is_binary_numeric(s: pd.Series) -> bool:
+    """
+    Check if a numeric series has at most two unique finite values.
+    """
+    s = s.dropna()
+    if s.empty:
+        return False
+    if pd.api.types.is_bool_dtype(s):
+        return True
+    if not pd.api.types.is_numeric_dtype(s):
+        return False
+    uniq = pd.unique(s)
+    if len(uniq) > 2:
+        return False
+    uniq = np.asarray(uniq, float)
+    uniq = uniq[np.isfinite(uniq)]
+    return 0 < uniq.size <= 2
+
+
+def _resolve_palette(treatments, palette, default_cycle):
+    """
+    Resolve a treatment->color mapping from a list or dict palette.
+    """
+    if palette is None:
+        return {tr: default_cycle[i % len(default_cycle)] for i, tr in enumerate(treatments)}
+    if isinstance(palette, dict):
+        return {
+            tr: palette.get(tr, default_cycle[i % len(default_cycle)])
+            for i, tr in enumerate(treatments)
+        }
+    if isinstance(palette, (list, tuple)):
+        if len(palette) == 0:
+            return {tr: default_cycle[i % len(default_cycle)] for i, tr in enumerate(treatments)}
+        return {tr: palette[i % len(palette)] for i, tr in enumerate(treatments)}
+    raise ValueError("palette must be a dict, list/tuple, or None.")
+
+
+def outcome_plot_dist(
         data: CausalData,
         treatment: Optional[str] = None,
         outcome: Optional[str] = None,
@@ -68,6 +105,7 @@ def outcome_hist(
         figsize: Tuple[float, float] = (9, 5.5),
         dpi: int = 220,
         font_scale: float = 1.15,
+        palette: Optional[Union[list, dict]] = None,
         save: Optional[str] = None,
         save_dpi: Optional[int] = None,
         transparent: bool = False,
@@ -81,6 +119,7 @@ def outcome_hist(
     - Default Matplotlib colors; KDE & mean lines match their histogram colors
     - Numeric outcomes: shared x-range (optional), optional KDE, quantile clipping
     - Categorical outcomes: normalized grouped bars by treatment
+    - Binary outcomes: proportion bars with percent labels (no KDE)
     - Optional hi-res export (PNG/SVG/PDF)
 
     Parameters
@@ -109,6 +148,8 @@ def outcome_hist(
         Dots per inch for the figure.
     font_scale : float, default 1.15
         Scaling factor for all font sizes in the plot.
+    palette : list or dict, optional
+        Color palette for treatments (list in treatment order or dict {treatment: color}).
     save : str, optional
         Path to save the figure (e.g., "outcome.png").
     save_dpi : int, optional
@@ -151,29 +192,101 @@ def outcome_hist(
     with mpl.rc_context(rc):
         fig, ax = plt.subplots(figsize=figsize, dpi=dpi)
 
-        if not pd.api.types.is_numeric_dtype(valid[y_col]):
+        is_numeric = pd.api.types.is_numeric_dtype(valid[y_col])
+        is_binary_numeric = _is_binary_numeric(valid[y_col])
+        cycle = mpl.rcParams["axes.prop_cycle"].by_key().get("color", ["C0", "C1", "C2", "C3"])
+        colors = _resolve_palette(treatments, palette, cycle)
+
+        if is_binary_numeric:
+            # BINARY: 1 bar per treatment (rate of "positive" value)
+            vals = pd.unique(valid[y_col])
+            if pd.api.types.is_bool_dtype(valid[y_col]):
+                pos_value = True
+            else:
+                vals_num = np.asarray(vals, float)
+                vals_num = vals_num[np.isfinite(vals_num)]
+                pos_value = float(np.max(vals_num)) if vals_num.size else 1.0
+
+            heights = []
+            labels = []
+            ns = []
+            for tr in treatments:
+                sub = valid.loc[valid[t_col] == tr, y_col]
+                n = sub.shape[0]
+                ns.append(n)
+                if n == 0:
+                    heights.append(0.0)
+                else:
+                    if pd.api.types.is_bool_dtype(sub):
+                        heights.append(float(sub.mean()))
+                    else:
+                        heights.append(float((sub == pos_value).mean()))
+                labels.append(str(tr))
+
+            x = np.arange(len(treatments))
+            bars = ax.bar(
+                x,
+                heights,
+                width=0.6,
+                alpha=alpha,
+                color=[colors[tr] for tr in treatments],
+                edgecolor="white",
+                linewidth=0.6,
+            )
+            for bar, tr, n in zip(bars, treatments, ns):
+                bar.set_label(f"{tr} (n={n})")
+            for bar, h in zip(bars, heights):
+                if h <= 0:
+                    continue
+                ax.text(
+                    bar.get_x() + bar.get_width() / 2,
+                    h + 0.015,
+                    f"{h:.0%}",
+                    ha="center",
+                    va="bottom",
+                    fontsize=9 * font_scale,
+                )
+
+            ax.set_xticks(x)
+            ax.set_xticklabels([str(lab) for lab in labels])
+            ax.set_ylim(0, 1.05)
+            ax.yaxis.set_major_formatter(mpl.ticker.PercentFormatter(xmax=1))
+            ax.set_ylabel(f"Pr({y_col}={pos_value})")
+            ax.set_xlabel(str(t_col))
+            ax.set_title("Outcome rate by treatment")
+            ax.grid(True, axis="y", linewidth=0.5, alpha=0.45)
+            for spine in ("top", "right"):
+                ax.spines[spine].set_visible(False)
+            ax.legend(title=str(t_col), frameon=False)
+            fig.tight_layout()
+
+        elif not is_numeric:
             # CATEGORICAL: normalized grouped bars
             vals = pd.unique(valid[y_col])
             vals_sorted = sorted(vals, key=lambda v: (str(type(v)), str(v)))
             width = 0.8 / max(1, len(treatments))
             x = np.arange(len(vals_sorted))
 
-            cycle = mpl.rcParams["axes.prop_cycle"].by_key().get("color", ["C0", "C1", "C2", "C3"])
-
             for i, tr in enumerate(treatments):
                 sub = valid.loc[valid[t_col] == tr, y_col]
                 counts = sub.value_counts(normalize=True)
                 heights = [float(counts.get(v, 0.0)) for v in vals_sorted]
-                ax.bar(x + i * width, heights, width=width, alpha=alpha,
-                       label=f"{tr} (n={sub.shape[0]})",
-                       color=cycle[i % len(cycle)],
-                       edgecolor="white", linewidth=0.6)
+                ax.bar(
+                    x + i * width,
+                    heights,
+                    width=width,
+                    alpha=alpha,
+                    label=f"{tr} (n={sub.shape[0]})",
+                    color=colors[tr],
+                    edgecolor="white",
+                    linewidth=0.6,
+                )
 
             ax.set_xticks(x + (len(treatments) - 1) * width / 2)
             ax.set_xticklabels([str(v) for v in vals_sorted])
             ax.set_ylabel("Proportion")
             ax.set_xlabel(str(y_col))
-            ax.set_title("Outcome distribution by treatment (categorical)")
+            ax.set_title("Outcome distribution by treatment")
             ax.grid(True, axis="y", linewidth=0.5, alpha=0.45)
             for spine in ("top", "right"):
                 ax.spines[spine].set_visible(False)
@@ -196,7 +309,6 @@ def outcome_hist(
             else:
                 hist_range = None
 
-            cycle = mpl.rcParams["axes.prop_cycle"].by_key().get("color", ["C0", "C1", "C2", "C3"])
             used_colors = {}
 
             for i, tr in enumerate(treatments):
@@ -205,6 +317,7 @@ def outcome_hist(
                 if y_vals.size == 0:
                     continue
 
+                color_this = colors[tr]
                 h = ax.hist(
                     y_vals,
                     bins=bins,
@@ -214,10 +327,9 @@ def outcome_hist(
                     range=hist_range,
                     edgecolor="white",
                     linewidth=0.6,
-                    color=None,
+                    color=color_this,
                 )
-                color_this = _first_patch_color(h[2], cycle[i % len(cycle)])
-                used_colors[tr] = color_this
+                used_colors[tr] = _first_patch_color(h[2], color_this)
 
             if kde and len(used_colors) > 0:
                 if hist_range is None:
@@ -284,7 +396,7 @@ def outcome_hist(
     return fig
 
 
-def outcome_boxplot(
+def outcome_plot_boxplot(
         data: CausalData,
         treatment: Optional[str] = None,
         outcome: Optional[str] = None,
@@ -293,6 +405,7 @@ def outcome_boxplot(
         font_scale: float = 1.15,
         showfliers: bool = True,
         patch_artist: bool = True,
+        palette: Optional[Union[list, dict]] = None,
         save: Optional[str] = None,
         save_dpi: Optional[int] = None,
         transparent: bool = False,
@@ -325,6 +438,8 @@ def outcome_boxplot(
         Whether to show outliers (fliers).
     patch_artist : bool, default True
         Whether to fill boxes with color.
+    palette : list or dict, optional
+        Color palette for treatments (list in treatment order or dict {treatment: color}).
     save : str, optional
         Path to save the figure (e.g., "boxplot.png").
     save_dpi : int, optional
@@ -370,7 +485,8 @@ def outcome_boxplot(
     with mpl.rc_context(rc):
         fig, ax = plt.subplots(figsize=figsize, dpi=dpi)
         cycle = mpl.rcParams["axes.prop_cycle"].by_key().get("color", ["C0", "C1", "C2", "C3"])
-        colors = [cycle[i % len(cycle)] for i in range(len(treatments))]
+        color_map = _resolve_palette(treatments, palette, cycle)
+        colors = [color_map[tr] for tr in treatments]
 
         bp = ax.boxplot(
             plot_data,
@@ -421,6 +537,8 @@ def outcome_boxplot(
     return fig
 
 
+
+
 def outcome_plots(
         data: CausalData,
         treatment: Optional[str] = None,
@@ -430,6 +548,7 @@ def outcome_plots(
         alpha: float = 0.5,
         figsize: Tuple[float, float] = (7, 4),
         sharex: bool = True,
+        palette: Optional[Union[list, dict]] = None,
 ) -> Tuple[plt.Figure, plt.Figure]:
     """
     Plot the distribution of the outcome for every treatment on one plot,
@@ -453,13 +572,15 @@ def outcome_plots(
         Figure size for the plots (width, height).
     sharex : bool, default True
         If True and the outcome is numeric, use the same x-limits across treatments.
+    palette : list or dict, optional
+        Color palette for treatments (list in treatment order or dict {treatment: color}).
 
     Returns
     -------
     Tuple[matplotlib.figure.Figure, matplotlib.figure.Figure]
         (fig_distribution, fig_boxplot)
     """
-    fig_hist = outcome_hist(
+    fig_hist = outcome_plot_dist(
         data=data,
         treatment=treatment,
         outcome=outcome,
@@ -468,25 +589,14 @@ def outcome_plots(
         alpha=alpha,
         figsize=figsize,
         sharex=sharex,
+        palette=palette,
     )
-    fig_box = outcome_boxplot(
+    fig_box = outcome_plot_boxplot(
         data=data,
         treatment=treatment,
         outcome=outcome,
         figsize=figsize,
+        palette=palette,
     )
-
-    # In Jupyter notebooks, returning a tuple of figures results in text output
-    # but no images. Since outcome_hist and outcome_boxplot close their figures
-    # to avoid double-plotting when called directly, we must explicitly display
-    # them here if we are in an interactive environment.
-    try:
-        from IPython import get_ipython
-        if get_ipython() is not None:
-            from IPython.display import display
-            display(fig_hist)
-            display(fig_box)
-    except (ImportError, NameError):
-        pass
 
     return fig_hist, fig_box

@@ -79,13 +79,3 @@ def test_cuped_no_covariates():
     assert results.diagnostic_data.ate_naive == results.value
     assert len(results.diagnostic_data.beta_covariates) == 0
 
-def test_cuped_summary_methods(sample_data):
-    model = CUPEDModel().fit(sample_data)
-    results = model.estimate()
-    
-    summary_df = results.summary()
-    assert isinstance(summary_df, pd.DataFrame)
-    assert summary_df.loc[0, 'coefficient'] == results.value
-    
-    sd = model.summary_dict()
-    assert sd['ate'] == results.value

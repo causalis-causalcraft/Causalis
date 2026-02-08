@@ -43,14 +43,18 @@ class CausalEstimate(BaseModel):
         Number of units in the treatment group.
     n_control : int
         Number of units in the control group.
+    treatment_mean : float
+        Mean outcome in the treatment group.
+    control_mean : float
+        Mean outcome in the control group.
     outcome : str
         The name of the outcome variable.
     treatment : str
         The name of the treatment variable.
     confounders : list of str, optional
         The names of the confounders used in the model.
-    time : datetime
-        The date and time when the estimate was created.
+    time : str
+        The date when the estimate was created (YYYY-MM-DD).
     diagnostic_data : DiagnosticData, optional
         Additional diagnostic data_contracts.
     """
@@ -71,10 +75,12 @@ class CausalEstimate(BaseModel):
     is_significant: bool
     n_treated: int
     n_control: int
+    treatment_mean: float
+    control_mean: float
     outcome: str
     treatment: str
     confounders: List[str] = Field(default_factory=list)
-    time: datetime = Field(default_factory=datetime.now)
+    time: str = Field(default_factory=lambda: datetime.now().strftime("%Y-%m-%d"))
     diagnostic_data: Optional[DiagnosticData] = None
 
     def summary(self) -> pd.DataFrame:
@@ -86,14 +92,34 @@ class CausalEstimate(BaseModel):
         pd.DataFrame
             Summary DataFrame.
         """
-        return pd.DataFrame(
-            {
-                "estimand": [self.estimand],
-                "coefficient": [self.value],
-                "p_val": [self.p_value],
-                "lower_ci": [self.ci_lower_absolute],
-                "upper_ci": [self.ci_upper_absolute],
-                "relative_diff_%": [self.value_relative],
-                "is_significant": [self.is_significant],
-            }
+        def _fmt_float(val: Optional[float]) -> Optional[str]:
+            if val is None:
+                return None
+            return f"{val:.4f}"
+
+        value_abs = (
+            f"{_fmt_float(self.value)} "
+            f"(ci_abs: {_fmt_float(self.ci_lower_absolute)}, {_fmt_float(self.ci_upper_absolute)})"
         )
+        value_rel = None
+        if self.value_relative is not None:
+            value_rel = (
+                f"{_fmt_float(self.value_relative)} "
+                f"(ci_rel: {_fmt_float(self.ci_lower_relative)}, {_fmt_float(self.ci_upper_relative)})"
+            )
+
+        summary = {
+            "estimand": self.estimand,
+            "model": self.model,
+            "value": value_abs,
+            "value_relative": value_rel,
+            "alpha": _fmt_float(self.alpha),
+            "p_value": _fmt_float(self.p_value),
+            "is_significant": self.is_significant,
+            "n_treated": self.n_treated,
+            "n_control": self.n_control,
+            "treatment_mean": _fmt_float(self.treatment_mean),
+            "control_mean": _fmt_float(self.control_mean),
+            "time": self.time,
+        }
+        return pd.DataFrame({"field": list(summary.keys()), "value": list(summary.values())}).set_index("field")

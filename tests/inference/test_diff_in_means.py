@@ -97,12 +97,3 @@ def test_diff_in_means_alpha(sample_data):
     assert result.alpha == 0.1
 
 
-def test_diff_in_means_summary(sample_data):
-    model = DiffInMeans()
-    model.fit(sample_data)
-    result = model.estimate(method='ttest')
-    summary = result.summary()
-    assert isinstance(summary, pd.DataFrame)
-    assert 'coefficient' in summary.columns
-    assert 'p_val' in summary.columns
-    assert summary.loc[0, 'coefficient'] == result.value

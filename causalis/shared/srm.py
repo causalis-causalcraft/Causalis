@@ -1,11 +1,15 @@
 """
 Sample Ratio Mismatch (SRM) utilities for randomized experiments.
 
-This module implements a chi-square goodness-of-fit SRM check mirroring the
-reference implementation demonstrated in docs/cases/rct_design.ipynb.
+This module provides a chi-square goodness-of-fit SRM check for randomized
+experiments. It accepts observed assignments as labels or aggregated counts
+and returns a compact result object with diagnostics.
 """
 from __future__ import annotations
+from collections.abc import Mapping
 from dataclasses import dataclass
+import math
+import numbers
 from typing import Dict, Hashable, Iterable, Union, TYPE_CHECKING
 
 import numpy as np
@@ -35,23 +39,20 @@ class SRMResult:
     ----------
     chi2 : float
         The calculated chi-square statistic.
-    df : int
-        Degrees of freedom used in the test.
     p_value : float
-        The p-value of the test.
-    expected : Dict[Hashable, float]
+        The p-value of the test, rounded to 5 decimals.
+    expected : dict[Hashable, float]
         Expected counts for each variant.
-    observed : Dict[Hashable, int]
+    observed : dict[Hashable, int]
         Observed counts for each variant.
     alpha : float
         Significance level used for the check.
     is_srm : bool
-        True if an SRM was detected (p_value < alpha), False otherwise.
-    warning : str, optional
+        True if an SRM was detected (chi-square p-value < alpha), False otherwise.
+    warning : str or None
         Warning message if the test assumptions might be violated (e.g., small expected counts).
     """
     chi2: float
-    df: int
     p_value: float
     expected: Dict[Hashable, float]
     observed: Dict[Hashable, int]
@@ -63,35 +64,29 @@ class SRMResult:
         status = "SRM DETECTED" if self.is_srm else "no SRM"
         return (
             f"SRMResult(status={status}, p_value={self.p_value:.5f}, "
-            f"chi2={self.chi2:.4f}, df={self.df})"
+            f"chi2={self.chi2:.4f})"
         )
 
 
 def check_srm(
-    assignments: Union[Iterable[Hashable], pd.Series, CausalData],
+    assignments: Union[Iterable[Hashable], pd.Series, CausalData, Mapping[Hashable, Number]],
     target_allocation: Dict[Hashable, Number],
     alpha: float = 1e-3,
     min_expected: float = 5.0,
     strict_variants: bool = True,
 ) -> SRMResult:
     """
-    Check Sample Ratio Mismatch (SRM) for an RCT via chi-square goodness-of-fit test.
+    Check Sample Ratio Mismatch (SRM) for an RCT via a chi-square goodness-of-fit test.
 
     Parameters
     ----------
-    assignments : Iterable[Hashable] or pd.Series or CausalData
-        Iterable of assigned variant labels for each unit (user_id, session_id, etc.).
-        E.g. Series of ["control", "treatment", ...].
-        If CausalData is provided, the treatment column is used.
-    target_allocation : Dict[Hashable, Number]
-        Mapping {variant: p} describing intended allocation as PROBABILITIES.
-        - Each p must be > 0.
-        - Sum of all p must be 1.0 (within numerical tolerance).
-
-        Examples:
-            {"control": 0.5, "treatment": 0.5}
-            {"A": 0.2, "B": 0.3, "C": 0.5}
-
+    assignments : Iterable[Hashable] or pandas.Series or CausalData or Mapping[Hashable, Number]
+        Observed variant assignments. If iterable or Series, elements are labels per
+        unit (user_id, session_id, etc.). If CausalData is provided, the treatment
+        column is used. If a mapping is provided, it is treated as
+        ``{variant: observed_count}`` with non-negative integer counts.
+    target_allocation : dict[Hashable, Number]
+        Mapping ``{variant: p}`` describing intended allocation as probabilities.
     alpha : float, default 1e-3
         Significance level. Use strict values like 1e-3 or 1e-4 in production.
     min_expected : float, default 5.0
@@ -111,17 +106,82 @@ def check_srm(
         If inputs are invalid or empty.
     ImportError
         If scipy is required but not installed.
-    """
-    # --- Prepare data_contracts
-    if hasattr(assignments, "treatment"):
-        s = assignments.treatment.dropna()
-    elif isinstance(assignments, pd.Series):
-        s = assignments.dropna()
-    else:
-        s = pd.Series(list(assignments)).dropna()
 
-    if s.empty:
-        raise ValueError("No assignments provided for SRM check.")
+    Notes
+    -----
+    - Target allocation probabilities must sum to 1 within numerical tolerance.
+    - ``is_srm`` is computed using the unrounded p-value; the returned
+      ``p_value`` is rounded to 5 decimals.
+    - Missing assignments are dropped and reported via ``warning``.
+    - Requires SciPy for p-value computation.
+
+    Examples
+    --------
+    >>> assignments = ["control"] * 50 + ["treatment"] * 50
+    >>> check_srm(assignments, {"control": 0.5, "treatment": 0.5}, alpha=1e-3)
+    SRMResult(status=no SRM, p_value=1.00000, chi2=0.0000)
+
+    >>> counts = {"control": 70, "treatment": 30}
+    >>> check_srm(counts, {"control": 0.5, "treatment": 0.5})
+    SRMResult(status=SRM DETECTED, p_value=0.00006, chi2=16.0000)
+    """
+    # --- Prepare data
+    warning_messages: list[str] = []
+
+    def is_finite_number(value: object) -> bool:
+        if hasattr(value, "is_finite"):
+            return bool(value.is_finite())
+        try:
+            return math.isfinite(value)  # type: ignore[arg-type]
+        except TypeError:
+            return False
+
+    if isinstance(assignments, Mapping) and not isinstance(assignments, pd.Series):
+        validated_counts: dict[Hashable, int] = {}
+        for variant, value in assignments.items():
+            if isinstance(value, bool):
+                raise ValueError("Assignment counts must be integers.")
+            if isinstance(value, numbers.Integral):
+                count = int(value)
+            elif isinstance(value, numbers.Real):
+                if not is_finite_number(value):
+                    raise ValueError("All assignment counts must be finite numbers.")
+                if value != int(value):
+                    raise ValueError("Assignment counts must be integers.")
+                count = int(value)
+            else:
+                raise ValueError("Assignment counts must be numeric.")
+            if count < 0:
+                raise ValueError("Assignment counts must be >= 0.")
+            validated_counts[variant] = count
+
+        observed_counts = pd.Series(validated_counts)
+        if observed_counts.empty:
+            raise ValueError("No assignments provided for SRM check.")
+        s = None
+    else:
+        if hasattr(assignments, "treatment"):
+            s_raw = assignments.treatment
+        elif isinstance(assignments, pd.Series):
+            s_raw = assignments
+        else:
+            s_raw = pd.Series(list(assignments))
+
+        missing_count = int(s_raw.isna().sum())
+        s = s_raw.dropna()
+
+        if s.empty:
+            raise ValueError("No assignments provided for SRM check.")
+        if missing_count:
+            warning_messages.append(
+                f"{missing_count} assignments were missing and were dropped."
+            )
+
+    if not (0 < alpha < 1):
+        raise ValueError("alpha must be between 0 and 1.")
+
+    if min_expected <= 0:
+        raise ValueError("min_expected must be > 0.")
 
     if not target_allocation:
         raise ValueError("target_allocation cannot be empty.")
@@ -143,20 +203,33 @@ def check_srm(
 
     # Observed counts
     if strict_variants:
-        unexpected = set(s.unique()) - set(variants)
+        if s is None:
+            unexpected = set(observed_counts.index) - set(variants)
+        else:
+            unexpected = set(s.unique()) - set(variants)
         if unexpected:
             raise ValueError(
                 f"Found assignments to variants not in target_allocation: {unexpected}"
             )
 
     if not strict_variants:
-        s = s[s.isin(variants)]
-        if s.empty:
-            raise ValueError(
-                "After filtering to target variants, no assignments remain."
-            )
+        if s is None:
+            observed_counts = observed_counts[observed_counts.index.isin(variants)]
+            if observed_counts.sum() == 0:
+                raise ValueError(
+                    "After filtering to target variants, no assignments remain."
+                )
+        else:
+            s = s[s.isin(variants)]
+            if s.empty:
+                raise ValueError(
+                    "After filtering to target variants, no assignments remain."
+                )
 
-    observed_counts = s.value_counts().reindex(variants).fillna(0).astype(int)
+    if s is None:
+        observed_counts = observed_counts.reindex(variants).fillna(0).astype(int)
+    else:
+        observed_counts = s.value_counts().reindex(variants).fillna(0).astype(int)
     n = int(observed_counts.sum())
     if n == 0:
         raise ValueError("Total sample size is zero after preprocessing.")
@@ -174,8 +247,10 @@ def check_srm(
     chi2_stat = float(chi2_components.sum())
 
     # Degrees of freedom
-    k = (expected_counts > 0).sum()
-    df = max(int(k) - 1, 1)
+    k = int((expected_counts > 0).sum())
+    if k < 2:
+        raise ValueError("SRM check requires at least two variants.")
+    df = k - 1
 
     if chi2 is None:
         raise ImportError(
@@ -183,21 +258,24 @@ def check_srm(
             f"Original error: {_scipy_import_error}"
         )
 
-    p_value = round(float(chi2.sf(chi2_stat, df)), 5)
+    p_value_raw = float(chi2.sf(chi2_stat, df))
+    p_value = round(p_value_raw, 5)
 
     warning = None
     if (expected_counts < min_expected).any():
-        warning = (
+        warning_messages.append(
             f"Some expected cell counts are < {min_expected:.1f}. "
             "Chi-square approximation may be unreliable; "
             "consider exact or simulation-based tests."
         )
 
-    is_srm = p_value < alpha
+    if warning_messages:
+        warning = " ".join(warning_messages)
+
+    is_srm = p_value_raw < alpha
 
     return SRMResult(
         chi2=chi2_stat,
-        df=df,
         p_value=p_value,
         expected={v: float(e) for v, e in zip(variants, expected_counts)},
         observed={v: int(o) for v, o in zip(variants, observed_counts)},

@@ -26,6 +26,8 @@ class CausalDatasetGenerator:
             logit P(Y=1|T,X,U) = alpha_y + f_y(X) + u_strength_y * U + T * tau(X)
         outcome_type = "poisson":
             log E[Y|T,X,U]     = alpha_y + f_y(X) + u_strength_y * U + T * tau(X)
+        outcome_type = "gamma":
+            log E[Y|T,X,U]     = alpha_y + f_y(X) + u_strength_y * U + T * tau(X)
       where f_y(X) = X @ beta_y + g_y(X), and tau(X) is either constant `theta` or a user function.
 
     **Returned columns**
@@ -43,7 +45,7 @@ class CausalDatasetGenerator:
     Notes on effect scale:
       - For "continuous", `theta` (or tau(X)) is an additive mean difference, so `tau_link == cate`.
       - For "binary", tau acts on the *log-odds* scale. `cate` is reported as a risk difference.
-      - For "poisson", tau acts on the *log-mean* scale. `cate` is reported on the mean (rate) scale.
+      - For "poisson" and "gamma", tau acts on the *log-mean* scale. `cate` is reported on the mean scale.
 
     Parameters
     ----------
@@ -60,12 +62,12 @@ class CausalDatasetGenerator:
     g_d : callable, optional
         Nonlinear/additive function g_d(X) -> (n,) added to the treatment score.
     alpha_y : float, default=0.0
-        Outcome intercept (natural scale for continuous; log-odds for binary; log-mean for Poisson).
+        Outcome intercept (natural scale for continuous; log-odds for binary; log-mean for Poisson/Gamma).
     alpha_d : float, default=0.0
         Treatment intercept (log-odds). If `target_d_rate` is set, `alpha_d` is auto-calibrated.
     sigma_y : float, default=1.0
         Std. dev. of the Gaussian noise for continuous outcomes.
-    outcome_type : {"continuous", "binary", "poisson"}, default="continuous"
+    outcome_type : {"continuous", "binary", "poisson", "gamma", "tweedie"}, default="continuous"
         Outcome family and link as defined above.
     confounder_specs : list of dict, optional
         Schema for generating confounders. See `_gaussian_copula` for details.
@@ -107,7 +109,7 @@ class CausalDatasetGenerator:
     alpha_y: float = 0.0
     alpha_d: float = 0.0
     sigma_y: float = 1.0                          # used when outcome_type="continuous"
-    outcome_type: str = "continuous"              # "continuous" | "binary" | "poisson"
+    outcome_type: str = "continuous"              # "continuous" | "binary" | "poisson" | "gamma" | "tweedie"
 
     # confounder generation
     confounder_specs: Optional[List[Dict[str, Any]]] = None   # list of {"name","dist",...}
@@ -131,7 +133,7 @@ class CausalDatasetGenerator:
     tau_zi: Optional[Callable[[np.ndarray], np.ndarray]] = None  # optional effect on nonzero prob
 
     pos_dist: str = "gamma"          # "gamma" | "lognormal"
-    gamma_shape: float = 2.0         # for gamma positive part
+    gamma_shape: float = 2.0         # for gamma outcomes and tweedie positive part
     lognormal_sigma: float = 1.0     # for lognormal positive part
 
     include_oracle: bool = True                   # whether to include oracle ground-truth columns in generate()
@@ -323,7 +325,7 @@ class CausalDatasetGenerator:
         Returns
         -------
         numpy.ndarray
-            Location parameter (mean for continuous, logit for binary, log for Poisson).
+            Location parameter (mean for continuous, logit for binary, log for Poisson/Gamma).
         """
         # location on natural scale for continuous; on logit/log scale for binary/poisson
         Xf = np.asarray(X, dtype=float)
@@ -452,6 +454,13 @@ class CausalDatasetGenerator:
             loc_c = np.clip(loc, -20, 20)
             lam = np.exp(loc_c)
             Y = self.rng.poisson(lam).astype(float)
+        elif self.outcome_type == "gamma":
+            # log link: log E[Y|D,X] = loc; draw Gamma with mean mu and shape k
+            loc_c = np.clip(loc, -20, 20)
+            mu = np.exp(loc_c)
+            k = float(self.gamma_shape)
+            scale = mu / max(k, 1e-12)
+            Y = self.rng.gamma(shape=k, scale=scale, size=n).astype(float)
         elif self.outcome_type == "tweedie":
             # 1) nonzero probability
             Xf = np.asarray(X, dtype=float)
@@ -493,7 +502,7 @@ class CausalDatasetGenerator:
 
             Y = is_pos * y_pos
         else:
-            raise ValueError("outcome_type must be 'continuous', 'binary', 'poisson' or 'tweedie'")
+            raise ValueError("outcome_type must be 'continuous', 'binary', 'poisson', 'gamma' or 'tweedie'")
 
         # Compute oracle g0/g1 on the natural scale, excluding U for continuous, and
         # marginalizing over U for binary/poisson when u_strength_y != 0.
@@ -515,7 +524,7 @@ class CausalDatasetGenerator:
                 g0 = _sigmoid(self._outcome_location(X, np.zeros(n), np.zeros(n), np.zeros(n)))
                 g1 = _sigmoid(self._outcome_location(X, np.ones(n),  np.zeros(n), tau_x))
 
-        elif self.outcome_type == "poisson":
+        elif self.outcome_type in {"poisson", "gamma"}:
             if float(self.u_strength_y) != 0.0:
                 gh_x, gh_w = np.polynomial.hermite.hermgauss(21)
                 gh_w = gh_w / np.sqrt(np.pi)
@@ -556,7 +565,7 @@ class CausalDatasetGenerator:
             g0 = p_pos0 * mu_pos0
             g1 = p_pos1 * mu_pos1
         else:
-            raise ValueError("outcome_type must be 'continuous', 'binary', 'poisson' or 'tweedie'")
+            raise ValueError("outcome_type must be 'continuous', 'binary', 'poisson', 'gamma' or 'tweedie'")
 
         df = pd.DataFrame({"y": Y, "d": D})
         for j, name in enumerate(names):
@@ -688,12 +697,12 @@ class CausalDatasetGenerator:
                     return float(_sigmoid(loc))
                 z = loc + uy * np.sqrt(2.0) * gh_x
                 return float(np.sum(_sigmoid(z) * gh_w))
-            if self.outcome_type == "poisson":
+            if self.outcome_type in {"poisson", "gamma"}:
                 if uy == 0.0:
                     return float(np.exp(np.clip(loc, -20.0, 20.0)))
                 z = np.clip(loc + uy * np.sqrt(2.0) * gh_x, -20.0, 20.0)
                 return float(np.sum(np.exp(z) * gh_w))
-            raise ValueError("outcome_type must be 'continuous','binary','poisson'.")
+            raise ValueError("outcome_type must be 'continuous','binary','poisson','gamma'.")
 
         return (lambda x: m_of_x(x),
                 lambda x: g_of_x_d(x, 0),

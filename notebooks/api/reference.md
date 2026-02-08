@@ -4783,19 +4783,19 @@ This submodule provides methods for estimating conditional average treatment eff
 
 **Modules:**
 
-- [**cate_esimand**](#causalis.scenarios.cate.cate.cate_esimand) – DoubleML implementation for estimating CATE (per-observation orthogonal signals).
+- [**cate_esimand**](#causalis.scenarios.cate.cate.cate_esimand) – IRM-based implementation for estimating CATE (per-observation orthogonal signals).
 
 ###### `causalis.scenarios.cate.cate.cate_esimand`
 
-DoubleML implementation for estimating CATE (per-observation orthogonal signals).
+IRM-based implementation for estimating CATE (per-observation orthogonal signals).
 
-This module provides a function that, given a CausalData object, fits a DoubleML IRM
-model and augments the data_contracts with a new column 'cate' that contains the orthogonal
+This module provides a function that, given a CausalData object, fits the internal IRM
+model and augments the data with a new column 'cate' that contains the orthogonal
 signals (an estimate of the conditional average treatment effect for each unit).
 
 **Functions:**
 
-- [**cate_esimand**](#causalis.scenarios.cate.cate.cate_esimand.cate_esimand) – Estimate per-observation CATEs using DoubleML IRM and return a DataFrame with a new 'cate' column.
+- [**cate_esimand**](#causalis.scenarios.cate.cate.cate_esimand.cate_esimand) – Estimate per-observation CATEs using IRM and return a DataFrame with a new 'cate' column.
 
 ####### `causalis.scenarios.cate.cate.cate_esimand.cate_esimand`
 
@@ -4803,7 +4803,7 @@ signals (an estimate of the conditional average treatment effect for each unit).
 cate_esimand(data, ml_g=None, ml_m=None, n_folds=5, n_rep=1, use_blp=False, X_new=None)
 ```
 
-Estimate per-observation CATEs using DoubleML IRM and return a DataFrame with a new 'cate' column.
+Estimate per-observation CATEs using IRM and return a DataFrame with a new 'cate' column.
 
 **Parameters:**
 
@@ -4814,14 +4814,14 @@ Estimate per-observation CATEs using DoubleML IRM and return a DataFrame with a 
   Defaults to CatBoostClassifier if None.
 - **n_folds** (<code>[int](#int)</code>) – Number of folds for cross-fitting.
 - **n_rep** (<code>[int](#int)</code>) – Number of repetitions for sample splitting.
-- **use_blp** (<code>[bool](#bool)</code>) – If True, and X_new is provided, returns cate from obj.blp_predict(X_new) aligned to X_new.
-  If False (default), uses obj.\_orthogonal_signals (in-sample estimates) and appends to data_contracts.
+- **use_blp** (<code>[bool](#bool)</code>) – If True, and X_new is provided, fits a BLP on the orthogonal signal and predicts CATE for X_new.
+  If False (default), uses the in-sample orthogonal signal and appends to data.
 - **X_new** (<code>[DataFrame](#pandas.DataFrame)</code>) – New covariate matrix for out-of-sample CATE prediction via best linear predictor.
   Must contain the same feature columns as the confounders in `data_contracts`.
 
 **Returns:**
 
-- <code>[DataFrame](#pandas.DataFrame)</code> – If use_blp is False: returns a copy of data_contracts.df with a new column 'cate'.
+- <code>[DataFrame](#pandas.DataFrame)</code> – If use_blp is False: returns a copy of data with a new column 'cate'.
   If use_blp is True and X_new is provided: returns a DataFrame with 'cate' column for X_new rows.
 
 **Raises:**
@@ -6008,19 +6008,13 @@ use_t = bool(use_t)
 
 - [**cate**](#causalis.scenarios.unconfoundedness.cate) – Conditional Average Treatment Effect (CATE) inference methods for causalis.
 - [**dgp**](#causalis.scenarios.unconfoundedness.dgp) –
-- [**dml_source**](#causalis.scenarios.unconfoundedness.dml_source) – DoubleML implementation for estimating average treatment effects.
 - [**gate**](#causalis.scenarios.unconfoundedness.gate) – Group Average Treatment Effect (GATE) inference methods for causalis.
-- [**model**](#causalis.scenarios.unconfoundedness.model) – DML IRM estimator consuming CausalData.
+- [**model**](#causalis.scenarios.unconfoundedness.model) – IRM estimator consuming CausalData.
 - [**refutation**](#causalis.scenarios.unconfoundedness.refutation) – Refutation and robustness utilities for Causalis.
 
 **Classes:**
 
-- [**IRM**](#causalis.scenarios.unconfoundedness.IRM) – Interactive Regression Model (IRM) with DoubleML-style cross-fitting using CausalData.
-
-**Functions:**
-
-- [**dml_ate_source**](#causalis.scenarios.unconfoundedness.dml_ate_source) – Estimate average treatment effects using DoubleML's interactive regression model (IRM).
-- [**dml_atte_source**](#causalis.scenarios.unconfoundedness.dml_atte_source) – Estimate average treatment effects on the treated using DoubleML's interactive regression model (IRM).
+- [**IRM**](#causalis.scenarios.unconfoundedness.IRM) – Interactive Regression Model (IRM) with cross-fitting using CausalData.
 
 ##### `causalis.scenarios.unconfoundedness.IRM`
 
@@ -6030,7 +6024,7 @@ IRM(data=None, ml_g=None, ml_m=None, *, n_folds=5, n_rep=1, normalize_ipw=False,
 
 Bases: <code>[BaseEstimator](#sklearn.base.BaseEstimator)</code>
 
-Interactive Regression Model (IRM) with DoubleML-style cross-fitting using CausalData.
+Interactive Regression Model (IRM) with cross-fitting using CausalData.
 
 **Parameters:**
 
@@ -6057,7 +6051,7 @@ Interactive Regression Model (IRM) with DoubleML-style cross-fitting using Causa
 - [**estimate**](#causalis.scenarios.unconfoundedness.IRM.estimate) – Compute treatment effects using stored nuisance predictions.
 - [**fit**](#causalis.scenarios.unconfoundedness.IRM.fit) – Fit nuisance models via cross-fitting.
 - [**gate**](#causalis.scenarios.unconfoundedness.IRM.gate) – Estimate Group Average Treatment Effects via BLP on orthogonal signal.
-- [**sensitivity_analysis**](#causalis.scenarios.unconfoundedness.IRM.sensitivity_analysis) – Compute a sensitivity analysis following DoubleML (Chernozhukov et al., 2022).
+- [**sensitivity_analysis**](#causalis.scenarios.unconfoundedness.IRM.sensitivity_analysis) – Compute a sensitivity analysis following Chernozhukov et al. (2022).
 
 **Attributes:**
 
@@ -6270,7 +6264,7 @@ Return the standard error of the estimate.
 sensitivity_analysis(r2_y, r2_d, rho=1.0, H0=0.0, alpha=0.05)
 ```
 
-Compute a sensitivity analysis following DoubleML (Chernozhukov et al., 2022).
+Compute a sensitivity analysis following Chernozhukov et al. (2022).
 
 **Parameters:**
 
@@ -6318,19 +6312,19 @@ This submodule provides methods for estimating conditional average treatment eff
 
 **Modules:**
 
-- [**cate_esimand**](#causalis.scenarios.unconfoundedness.cate.cate_esimand) – DoubleML implementation for estimating CATE (per-observation orthogonal signals).
+- [**cate_esimand**](#causalis.scenarios.unconfoundedness.cate.cate_esimand) – IRM-based implementation for estimating CATE (per-observation orthogonal signals).
 
 ###### `causalis.scenarios.unconfoundedness.cate.cate_esimand`
 
-DoubleML implementation for estimating CATE (per-observation orthogonal signals).
+IRM-based implementation for estimating CATE (per-observation orthogonal signals).
 
-This module provides a function that, given a CausalData object, fits a DoubleML IRM
-model and augments the data_contracts with a new column 'cate' that contains the orthogonal
+This module provides a function that, given a CausalData object, fits the internal IRM
+model and augments the data with a new column 'cate' that contains the orthogonal
 signals (an estimate of the conditional average treatment effect for each unit).
 
 **Functions:**
 
-- [**cate_esimand**](#causalis.scenarios.unconfoundedness.cate.cate_esimand.cate_esimand) – Estimate per-observation CATEs using DoubleML IRM and return a DataFrame with a new 'cate' column.
+- [**cate_esimand**](#causalis.scenarios.unconfoundedness.cate.cate_esimand.cate_esimand) – Estimate per-observation CATEs using IRM and return a DataFrame with a new 'cate' column.
 
 ####### `causalis.scenarios.unconfoundedness.cate.cate_esimand.cate_esimand`
 
@@ -6338,7 +6332,7 @@ signals (an estimate of the conditional average treatment effect for each unit).
 cate_esimand(data, ml_g=None, ml_m=None, n_folds=5, n_rep=1, use_blp=False, X_new=None)
 ```
 
-Estimate per-observation CATEs using DoubleML IRM and return a DataFrame with a new 'cate' column.
+Estimate per-observation CATEs using IRM and return a DataFrame with a new 'cate' column.
 
 **Parameters:**
 
@@ -6349,14 +6343,14 @@ Estimate per-observation CATEs using DoubleML IRM and return a DataFrame with a 
   Defaults to CatBoostClassifier if None.
 - **n_folds** (<code>[int](#int)</code>) – Number of folds for cross-fitting.
 - **n_rep** (<code>[int](#int)</code>) – Number of repetitions for sample splitting.
-- **use_blp** (<code>[bool](#bool)</code>) – If True, and X_new is provided, returns cate from obj.blp_predict(X_new) aligned to X_new.
-  If False (default), uses obj.\_orthogonal_signals (in-sample estimates) and appends to data_contracts.
+- **use_blp** (<code>[bool](#bool)</code>) – If True, and X_new is provided, fits a BLP on the orthogonal signal and predicts CATE for X_new.
+  If False (default), uses the in-sample orthogonal signal and appends to data.
 - **X_new** (<code>[DataFrame](#pandas.DataFrame)</code>) – New covariate matrix for out-of-sample CATE prediction via best linear predictor.
   Must contain the same feature columns as the confounders in `data_contracts`.
 
 **Returns:**
 
-- <code>[DataFrame](#pandas.DataFrame)</code> – If use_blp is False: returns a copy of data_contracts.df with a new column 'cate'.
+- <code>[DataFrame](#pandas.DataFrame)</code> – If use_blp is False: returns a copy of data with a new column 'cate'.
   If use_blp is True and X_new is provided: returns a DataFrame with 'cate' column for X_new rows.
 
 **Raises:**
@@ -6421,132 +6415,6 @@ Based on the scenario in docs/cases/dml_ate.ipynb.
 - **include_oracle** (<code>[bool](#bool)</code>) – Whether to include oracle ground-truth columns like 'cate', 'propensity', etc.
 - **return_causal_data** (<code>[bool](#bool)</code>) – If True, returns a CausalData object. If False, returns a pandas DataFrame.
 
-##### `causalis.scenarios.unconfoundedness.dml_ate_source`
-
-```python
-dml_ate_source(data, ml_g=None, ml_m=None, n_folds=5, n_rep=1, score='ATE', alpha=0.05)
-```
-
-Estimate average treatment effects using DoubleML's interactive regression model (IRM).
-
-**Parameters:**
-
-- **data** (<code>[CausalData](#causalis.dgp.causaldata.CausalData)</code>) – The causaldata object containing treatment, target, and confounders variables.
-- **ml_g** (<code>[estimator](#estimator)</code>) – A machine learner implementing `fit()` and `predict()` methods for the nuisance function g_0(D,X) = E[Y|X,D].
-  If None, a CatBoostRegressor configured to use all CPU cores is used.
-- **ml_m** (<code>[classifier](#classifier)</code>) – A machine learner implementing `fit()` and `predict_proba()` methods for the nuisance function m_0(X) = E[D|X].
-  If None, a CatBoostClassifier configured to use all CPU cores is used.
-- **n_folds** (<code>[int](#int)</code>) – Number of folds for cross-fitting.
-- **n_rep** (<code>[int](#int)</code>) – Number of repetitions for the sample splitting.
-- **score** (<code>[str](#str)</code>) – A str ("ATE" or "ATTE") specifying the score function.
-- **alpha** (<code>[float](#float)</code>) – Significance level for CI in (0,1).
-
-**Returns:**
-
-- <code>[Dict](#typing.Dict)\[[str](#str), [Any](#typing.Any)\]</code> – A dictionary containing:
-- coefficient: The estimated average treatment effect
-- std_error: The standard error of the estimate
-- p_value: The p-value for the null hypothesis that the effect is zero
-- confidence_interval: Tuple of (lower, upper) bounds for the confidence interval
-- model: The fitted DoubleMLIRM object
-
-##### `causalis.scenarios.unconfoundedness.dml_atte_source`
-
-```python
-dml_atte_source(data, ml_g=None, ml_m=None, n_folds=5, n_rep=1, alpha=0.05)
-```
-
-Estimate average treatment effects on the treated using DoubleML's interactive regression model (IRM).
-
-**Parameters:**
-
-- **data** (<code>[CausalData](#causalis.dgp.causaldata.CausalData)</code>) – The causaldata object containing treatment, target, and confounders variables.
-- **ml_g** (<code>[estimator](#estimator)</code>) – A machine learner implementing `fit()` and `predict()` methods for the nuisance function g_0(D,X) = E[Y|X,D].
-  If None, a CatBoostRegressor configured to use all CPU cores is used.
-- **ml_m** (<code>[classifier](#classifier)</code>) – A machine learner implementing `fit()` and `predict_proba()` methods for the nuisance function m_0(X) = E[D|X].
-  If None, a CatBoostClassifier configured to use all CPU cores is used.
-- **n_folds** (<code>[int](#int)</code>) – Number of folds for cross-fitting.
-- **n_rep** (<code>[int](#int)</code>) – Number of repetitions for the sample splitting.
-- **alpha** (<code>[float](#float)</code>) – Significance level for CI in (0,1).
-
-**Returns:**
-
-- <code>[Dict](#typing.Dict)\[[str](#str), [Any](#typing.Any)\]</code> – A dictionary containing:
-- coefficient: The estimated average treatment effect on the treated
-- std_error: The standard error of the estimate
-- p_value: The p-value for the null hypothesis that the effect is zero
-- confidence_interval: Tuple of (lower, upper) bounds for the confidence interval
-- model: The fitted DoubleMLIRM object
-
-##### `causalis.scenarios.unconfoundedness.dml_source`
-
-DoubleML implementation for estimating average treatment effects.
-
-This module provides functions to estimate average treatment effects (ATE) and
-average treatment effects on the treated (ATT) using the DoubleML library.
-
-**Functions:**
-
-- [**dml_ate_source**](#causalis.scenarios.unconfoundedness.dml_source.dml_ate_source) – Estimate average treatment effects using DoubleML's interactive regression model (IRM).
-- [**dml_atte_source**](#causalis.scenarios.unconfoundedness.dml_source.dml_atte_source) – Estimate average treatment effects on the treated using DoubleML's interactive regression model (IRM).
-
-###### `causalis.scenarios.unconfoundedness.dml_source.dml_ate_source`
-
-```python
-dml_ate_source(data, ml_g=None, ml_m=None, n_folds=5, n_rep=1, score='ATE', alpha=0.05)
-```
-
-Estimate average treatment effects using DoubleML's interactive regression model (IRM).
-
-**Parameters:**
-
-- **data** (<code>[CausalData](#causalis.dgp.causaldata.CausalData)</code>) – The causaldata object containing treatment, target, and confounders variables.
-- **ml_g** (<code>[estimator](#estimator)</code>) – A machine learner implementing `fit()` and `predict()` methods for the nuisance function g_0(D,X) = E[Y|X,D].
-  If None, a CatBoostRegressor configured to use all CPU cores is used.
-- **ml_m** (<code>[classifier](#classifier)</code>) – A machine learner implementing `fit()` and `predict_proba()` methods for the nuisance function m_0(X) = E[D|X].
-  If None, a CatBoostClassifier configured to use all CPU cores is used.
-- **n_folds** (<code>[int](#int)</code>) – Number of folds for cross-fitting.
-- **n_rep** (<code>[int](#int)</code>) – Number of repetitions for the sample splitting.
-- **score** (<code>[str](#str)</code>) – A str ("ATE" or "ATTE") specifying the score function.
-- **alpha** (<code>[float](#float)</code>) – Significance level for CI in (0,1).
-
-**Returns:**
-
-- <code>[Dict](#typing.Dict)\[[str](#str), [Any](#typing.Any)\]</code> – A dictionary containing:
-- coefficient: The estimated average treatment effect
-- std_error: The standard error of the estimate
-- p_value: The p-value for the null hypothesis that the effect is zero
-- confidence_interval: Tuple of (lower, upper) bounds for the confidence interval
-- model: The fitted DoubleMLIRM object
-
-###### `causalis.scenarios.unconfoundedness.dml_source.dml_atte_source`
-
-```python
-dml_atte_source(data, ml_g=None, ml_m=None, n_folds=5, n_rep=1, alpha=0.05)
-```
-
-Estimate average treatment effects on the treated using DoubleML's interactive regression model (IRM).
-
-**Parameters:**
-
-- **data** (<code>[CausalData](#causalis.dgp.causaldata.CausalData)</code>) – The causaldata object containing treatment, target, and confounders variables.
-- **ml_g** (<code>[estimator](#estimator)</code>) – A machine learner implementing `fit()` and `predict()` methods for the nuisance function g_0(D,X) = E[Y|X,D].
-  If None, a CatBoostRegressor configured to use all CPU cores is used.
-- **ml_m** (<code>[classifier](#classifier)</code>) – A machine learner implementing `fit()` and `predict_proba()` methods for the nuisance function m_0(X) = E[D|X].
-  If None, a CatBoostClassifier configured to use all CPU cores is used.
-- **n_folds** (<code>[int](#int)</code>) – Number of folds for cross-fitting.
-- **n_rep** (<code>[int](#int)</code>) – Number of repetitions for the sample splitting.
-- **alpha** (<code>[float](#float)</code>) – Significance level for CI in (0,1).
-
-**Returns:**
-
-- <code>[Dict](#typing.Dict)\[[str](#str), [Any](#typing.Any)\]</code> – A dictionary containing:
-- coefficient: The estimated average treatment effect on the treated
-- std_error: The standard error of the estimate
-- p_value: The p-value for the null hypothesis that the effect is zero
-- confidence_interval: Tuple of (lower, upper) bounds for the confidence interval
-- model: The fitted DoubleMLIRM object
-
 ##### `causalis.scenarios.unconfoundedness.gate`
 
 Group Average Treatment Effect (GATE) inference methods for causalis.
@@ -6578,22 +6446,13 @@ plugin CATE proxy (g1_hat - g0_hat).
 
 ##### `causalis.scenarios.unconfoundedness.model`
 
-DML IRM estimator consuming CausalData.
+IRM estimator consuming CausalData.
 
 Implements cross-fitted nuisance estimation for g0, g1 and m, and supports ATE/ATTE scores.
-citation:
-software{DoubleML,
-title = {{DoubleML} -- Double Machine Learning in Python},
-author = {Bach, Philipp and Chernozhukov, Victor and Klaassen, Sven and Kurz, Malte S. and Spindler, Martin},
-year = {2024},
-version = {latest},
-url = {https://github.com/DoubleML/doubleml-for-py},
-note = {BSD-3-Clause License. Documentation: \\url{https://docs.doubleml.org/stable/index.html}}
-}
 
 **Classes:**
 
-- [**IRM**](#causalis.scenarios.unconfoundedness.model.IRM) – Interactive Regression Model (IRM) with DoubleML-style cross-fitting using CausalData.
+- [**IRM**](#causalis.scenarios.unconfoundedness.model.IRM) – Interactive Regression Model (IRM) with cross-fitting using CausalData.
 
 **Attributes:**
 
@@ -6613,7 +6472,7 @@ IRM(data=None, ml_g=None, ml_m=None, *, n_folds=5, n_rep=1, normalize_ipw=False,
 
 Bases: <code>[BaseEstimator](#sklearn.base.BaseEstimator)</code>
 
-Interactive Regression Model (IRM) with DoubleML-style cross-fitting using CausalData.
+Interactive Regression Model (IRM) with cross-fitting using CausalData.
 
 **Parameters:**
 
@@ -6640,7 +6499,7 @@ Interactive Regression Model (IRM) with DoubleML-style cross-fitting using Causa
 - [**estimate**](#causalis.scenarios.unconfoundedness.model.IRM.estimate) – Compute treatment effects using stored nuisance predictions.
 - [**fit**](#causalis.scenarios.unconfoundedness.model.IRM.fit) – Fit nuisance models via cross-fitting.
 - [**gate**](#causalis.scenarios.unconfoundedness.model.IRM.gate) – Estimate Group Average Treatment Effects via BLP on orthogonal signal.
-- [**sensitivity_analysis**](#causalis.scenarios.unconfoundedness.model.IRM.sensitivity_analysis) – Compute a sensitivity analysis following DoubleML (Chernozhukov et al., 2022).
+- [**sensitivity_analysis**](#causalis.scenarios.unconfoundedness.model.IRM.sensitivity_analysis) – Compute a sensitivity analysis following Chernozhukov et al. (2022).
 
 **Attributes:**
 
@@ -6853,7 +6712,7 @@ Return the standard error of the estimate.
 sensitivity_analysis(r2_y, r2_d, rho=1.0, H0=0.0, alpha=0.05)
 ```
 
-Compute a sensitivity analysis following DoubleML (Chernozhukov et al., 2022).
+Compute a sensitivity analysis following Chernozhukov et al. (2022).
 
 **Parameters:**
 
@@ -7182,7 +7041,7 @@ Efficient influence function (EIF) for ATTE under IRM/AIPW.
 
 Notes:
 
-- Matches DoubleML's `score='ATTE'` (weights ω=D/E[D], ar{ω}=m(X)/E[D]).
+- Matches the ATTE score with weights ω=D/E[D], ar{ω}=m(X)/E[D].
 - g1 enters only via θ; ∂ψ/∂g1 = 0.
 
 ###### `causalis.scenarios.unconfoundedness.refutation.att_overlap_tests`
@@ -7198,14 +7057,28 @@ Inputs expected in result\['diagnostic_data'\]:
 - m_hat: np.ndarray of cross-fitted propensity scores Pr(D=1|X)
 - d: np.ndarray of treatment indicators {0,1}
 
-Returns:
-dict with keys:
-\- edge_mass: {'eps': {eps: {'share_below': float, 'share_above': float, 'warn': bool}}}
-\- ks: {'value': float, 'warn': bool}
-\- auc: {'value': float or nan, 'flag': str} # 'GREEN'/'YELLOW'/'RED' or 'NA' if undefined
-\- ess: {'treated': {'ess': float, 'n': int, 'ratio': float, 'flag': str},
-'control': {'ess': float, 'n': int, 'ratio': float, 'flag': str}}
-\- att_weight_identity: {'lhs_sum': float, 'rhs_sum': float, 'rel_err': float, 'flag': str}
+**Parameters:**
+
+- **dml_att_result** (<code>[dict](#dict)</code>) – Result dictionary with diagnostic_data containing m_hat and d.
+- **epsilon_list** (<code>tuple of float</code>) – Epsilons used for edge-mass diagnostics.
+
+**Returns:**
+
+- <code>[dict](#dict)</code> – Dictionary with keys:
+- edge_mass : dict
+  Edge-mass diagnostics by epsilon with share_below/share_above and warn flag.
+- ks : dict
+  KS statistic and warn flag for m|D=1 vs m|D=0.
+- auc : dict
+  AUC diagnostic with value and flag ('GREEN'/'YELLOW'/'RED' or 'NA').
+- ess : dict
+  Effective sample size diagnostics for treated and control arms.
+- att_weight_identity : dict
+  Weight-sum identity check with lhs_sum, rhs_sum, rel_err, and flag.
+
+**Raises:**
+
+- <code>[ValueError](#ValueError)</code> – If diagnostic_data is missing m_hat or d, or if their lengths differ.
 
 ###### `causalis.scenarios.unconfoundedness.refutation.att_weight_sum_identity`
 
@@ -7219,7 +7092,15 @@ Math:
 w1_i = D_i / p1, w0_i = (1 - D_i) * m_hat_i / ((1 - m_hat_i) * p1), where p1 = (1/n) sum_i D_i.
 Sum check: sum_i (1 - D_i) * m_hat_i / (1 - m_hat_i) ?≈ sum_i D_i.
 
-Returns: {'lhs_sum': float, 'rhs_sum': float, 'rel_err': float}
+**Returns:**
+
+- <code>[dict](#dict)</code> – Dictionary with keys:
+- lhs_sum : float
+  Left-hand side sum.
+- rhs_sum : float
+  Right-hand side sum.
+- rel_err : float
+  Relative error between lhs and rhs.
 
 ###### `causalis.scenarios.unconfoundedness.refutation.auc_for_m`
 
@@ -7512,14 +7393,28 @@ Inputs expected in result\['diagnostic_data'\]:
 - m_hat: np.ndarray of cross-fitted propensity scores Pr(D=1|X)
 - d: np.ndarray of treatment indicators {0,1}
 
-Returns:
-dict with keys:
-\- edge_mass: {'eps': {eps: {'share_below': float, 'share_above': float, 'warn': bool}}}
-\- ks: {'value': float, 'warn': bool}
-\- auc: {'value': float or nan, 'flag': str} # 'GREEN'/'YELLOW'/'RED' or 'NA' if undefined
-\- ess: {'treated': {'ess': float, 'n': int, 'ratio': float, 'flag': str},
-'control': {'ess': float, 'n': int, 'ratio': float, 'flag': str}}
-\- att_weight_identity: {'lhs_sum': float, 'rhs_sum': float, 'rel_err': float, 'flag': str}
+**Parameters:**
+
+- **dml_att_result** (<code>[dict](#dict)</code>) – Result dictionary with diagnostic_data containing m_hat and d.
+- **epsilon_list** (<code>tuple of float</code>) – Epsilons used for edge-mass diagnostics.
+
+**Returns:**
+
+- <code>[dict](#dict)</code> – Dictionary with keys:
+- edge_mass : dict
+  Edge-mass diagnostics by epsilon with share_below/share_above and warn flag.
+- ks : dict
+  KS statistic and warn flag for m|D=1 vs m|D=0.
+- auc : dict
+  AUC diagnostic with value and flag ('GREEN'/'YELLOW'/'RED' or 'NA').
+- ess : dict
+  Effective sample size diagnostics for treated and control arms.
+- att_weight_identity : dict
+  Weight-sum identity check with lhs_sum, rhs_sum, rel_err, and flag.
+
+**Raises:**
+
+- <code>[ValueError](#ValueError)</code> – If diagnostic_data is missing m_hat or d, or if their lengths differ.
 
 ####### `causalis.scenarios.unconfoundedness.refutation.overlap.att_weight_sum_identity`
 
@@ -7533,7 +7428,15 @@ Math:
 w1_i = D_i / p1, w0_i = (1 - D_i) * m_hat_i / ((1 - m_hat_i) * p1), where p1 = (1/n) sum_i D_i.
 Sum check: sum_i (1 - D_i) * m_hat_i / (1 - m_hat_i) ?≈ sum_i D_i.
 
-Returns: {'lhs_sum': float, 'rhs_sum': float, 'rel_err': float}
+**Returns:**
+
+- <code>[dict](#dict)</code> – Dictionary with keys:
+- lhs_sum : float
+  Left-hand side sum.
+- rhs_sum : float
+  Right-hand side sum.
+- rel_err : float
+  Relative error between lhs and rhs.
 
 ####### `causalis.scenarios.unconfoundedness.refutation.overlap.auc_for_m`
 
@@ -7738,14 +7641,28 @@ Inputs expected in result\['diagnostic_data'\]:
 - m_hat: np.ndarray of cross-fitted propensity scores Pr(D=1|X)
 - d: np.ndarray of treatment indicators {0,1}
 
-Returns:
-dict with keys:
-\- edge_mass: {'eps': {eps: {'share_below': float, 'share_above': float, 'warn': bool}}}
-\- ks: {'value': float, 'warn': bool}
-\- auc: {'value': float or nan, 'flag': str} # 'GREEN'/'YELLOW'/'RED' or 'NA' if undefined
-\- ess: {'treated': {'ess': float, 'n': int, 'ratio': float, 'flag': str},
-'control': {'ess': float, 'n': int, 'ratio': float, 'flag': str}}
-\- att_weight_identity: {'lhs_sum': float, 'rhs_sum': float, 'rel_err': float, 'flag': str}
+**Parameters:**
+
+- **dml_att_result** (<code>[dict](#dict)</code>) – Result dictionary with diagnostic_data containing m_hat and d.
+- **epsilon_list** (<code>tuple of float</code>) – Epsilons used for edge-mass diagnostics.
+
+**Returns:**
+
+- <code>[dict](#dict)</code> – Dictionary with keys:
+- edge_mass : dict
+  Edge-mass diagnostics by epsilon with share_below/share_above and warn flag.
+- ks : dict
+  KS statistic and warn flag for m|D=1 vs m|D=0.
+- auc : dict
+  AUC diagnostic with value and flag ('GREEN'/'YELLOW'/'RED' or 'NA').
+- ess : dict
+  Effective sample size diagnostics for treated and control arms.
+- att_weight_identity : dict
+  Weight-sum identity check with lhs_sum, rhs_sum, rel_err, and flag.
+
+**Raises:**
+
+- <code>[ValueError](#ValueError)</code> – If diagnostic_data is missing m_hat or d, or if their lengths differ.
 
 ######## `causalis.scenarios.unconfoundedness.refutation.overlap.overlap_validation.att_weight_sum_identity`
 
@@ -7759,7 +7676,15 @@ Math:
 w1_i = D_i / p1, w0_i = (1 - D_i) * m_hat_i / ((1 - m_hat_i) * p1), where p1 = (1/n) sum_i D_i.
 Sum check: sum_i (1 - D_i) * m_hat_i / (1 - m_hat_i) ?≈ sum_i D_i.
 
-Returns: {'lhs_sum': float, 'rhs_sum': float, 'rel_err': float}
+**Returns:**
+
+- <code>[dict](#dict)</code> – Dictionary with keys:
+- lhs_sum : float
+  Left-hand side sum.
+- rhs_sum : float
+  Right-hand side sum.
+- rel_err : float
+  Relative error between lhs and rhs.
 
 ######## `causalis.scenarios.unconfoundedness.refutation.overlap.overlap_validation.auc_for_m`
 
@@ -7856,7 +7781,7 @@ Extract m_hat, D, and trimming epsilon from IRM result or model.
 Accepts:
 
 - dict returned by legacy dml_ate/dml_att (prefers key 'diagnostic_data'; otherwise uses 'model'), or
-- a fitted IRM/DoubleMLIRM-like model instance with a .data or .data_contracts attribute.
+- a fitted IRM-like or external model instance with a .data or .data_contracts attribute.
   Returns (m_hat, D, trimming_threshold_if_any).
 
 ######## `causalis.scenarios.unconfoundedness.refutation.overlap.overlap_validation.ks_distance`
@@ -7903,7 +7828,7 @@ You can call it in TWO ways:
 A) With raw arrays:
 run_overlap_diagnostics(m_hat=..., D=...)
 B) With a model/result:
-run_overlap_diagnostics(res=\<dml_ate/dml_att result dict or IRM/DoubleML-like model>)
+run_overlap_diagnostics(res=\<dml_ate/dml_att result dict or IRM/compatible model>)
 
 The function:
 
@@ -7980,7 +7905,7 @@ You can call it in TWO ways:
 A) With raw arrays:
 run_overlap_diagnostics(m_hat=..., D=...)
 B) With a model/result:
-run_overlap_diagnostics(res=\<dml_ate/dml_att result dict or IRM/DoubleML-like model>)
+run_overlap_diagnostics(res=\<dml_ate/dml_att result dict or IRM/compatible model>)
 
 The function:
 
@@ -8171,7 +8096,7 @@ You can call it in TWO ways:
 A) With raw arrays:
 run_overlap_diagnostics(m_hat=..., D=...)
 B) With a model/result:
-run_overlap_diagnostics(res=\<dml_ate/dml_att result dict or IRM/DoubleML-like model>)
+run_overlap_diagnostics(res=\<dml_ate/dml_att result dict or IRM/compatible model>)
 
 The function:
 
@@ -8468,7 +8393,7 @@ Efficient influence function (EIF) for ATTE under IRM/AIPW.
 
 Notes:
 
-- Matches DoubleML's `score='ATTE'` (weights ω=D/E[D], ar{ω}=m(X)/E[D]).
+- Matches the ATTE score with weights ω=D/E[D], ar{ω}=m(X)/E[D].
 - g1 enters only via θ; ∂ψ/∂g1 = 0.
 
 ######## `causalis.scenarios.unconfoundedness.refutation.score.score_validation.extract_nuisances`
@@ -8776,7 +8701,7 @@ Compute bias-aware components and cache them.
   - theta, se, alpha, z
   - sampling_ci
   - theta_bounds_cofounding = (theta - bound_width, theta + bound_width)
-  - bias_aware_ci = faithful DoubleML CI for the bounds
+  - bias_aware_ci = faithful CI for the bounds
   - max_bias and components (sigma2, nu2)
   - params (r2_y, r2_d, rho, use_signed_rr)
 
@@ -9045,7 +8970,7 @@ Compute bias-aware components and cache them.
   - theta, se, alpha, z
   - sampling_ci
   - theta_bounds_cofounding = (theta - bound_width, theta + bound_width)
-  - bias_aware_ci = faithful DoubleML CI for the bounds
+  - bias_aware_ci = faithful CI for the bounds
   - max_bias and components (sigma2, nu2)
   - params (r2_y, r2_d, rho, use_signed_rr)
 
@@ -9097,7 +9022,7 @@ Compute bias-aware components and cache them.
   - theta, se, alpha, z
   - sampling_ci
   - theta_bounds_cofounding = (theta - bound_width, theta + bound_width)
-  - bias_aware_ci = faithful DoubleML CI for the bounds
+  - bias_aware_ci = faithful CI for the bounds
   - max_bias and components (sigma2, nu2)
   - params (r2_y, r2_d, rho, use_signed_rr)
 

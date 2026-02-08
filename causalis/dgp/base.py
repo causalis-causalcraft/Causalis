@@ -8,7 +8,7 @@ from scipy.stats import norm, gamma as st_gamma, beta as st_beta, poisson as st_
 
 def _deterministic_ids(rng: np.random.Generator, n: int) -> List[str]:
     """
-    Return deterministic uuid-like hex strings using the provided RNG.
+    Return deterministic 5-character hex strings using the provided RNG.
 
     Parameters
     ----------
@@ -20,16 +20,17 @@ def _deterministic_ids(rng: np.random.Generator, n: int) -> List[str]:
     Returns
     -------
     list of str
-        A list of hex strings.
+        A list of 5-character hex strings.
     """
-    return [rng.bytes(16).hex() for _ in range(n)]
+    return [rng.bytes(16).hex()[:5] for _ in range(n)]
 
 
 def _add_ancillary_info(
     df: pd.DataFrame,
     n: int,
     rng: np.random.Generator,
-    deterministic_ids: bool = False
+    deterministic_ids: bool,
+    x_cols: List[str],
 ) -> pd.DataFrame:
     """
     Helper to add standard ancillary columns (age, platform, etc.) to a synthetic DFG.
@@ -46,8 +47,10 @@ def _add_ancillary_info(
         Number of samples in the DataFrame.
     rng : numpy.random.Generator
         The random number generator to use.
-    deterministic_ids : bool, default=False
+    deterministic_ids : bool
         Whether to generate deterministic hex IDs instead of random UUIDs.
+    x_cols : list of str
+        Baseline columns to use for ancillary generation. Must not include y_pre.
 
     Returns
     -------
@@ -55,14 +58,15 @@ def _add_ancillary_info(
         The DataFrame with added ancillary columns: 'user_id', 'age', 'cnt_trans',
         'platform_Android', 'platform_iOS', 'invited_friend'.
     """
-    # Build a stable feature matrix from pre-outcome columns only.
-    # (This wrapper adds ancillary after gen.generate, so we must be careful to
-    # not use y or other post-outcome quantities to avoid outcome leakage.)
-    exclude = {"y", "d", "m", "m_obs", "tau_link", "g0", "g1", "cate"}
-    x_cols = [
-        c for c in df.columns
-        if c not in exclude and pd.api.types.is_numeric_dtype(df[c])
-    ]
+    if x_cols is None:
+        raise ValueError("x_cols must be provided to avoid leakage from y_pre.")
+    missing = [c for c in x_cols if c not in df.columns]
+    if missing:
+        raise ValueError(f"x_cols missing from df: {missing}")
+    non_numeric = [c for c in x_cols if not pd.api.types.is_numeric_dtype(df[c])]
+    if non_numeric:
+        raise ValueError(f"x_cols must be numeric: {non_numeric}")
+
     X = df[x_cols].to_numpy(dtype=float) if x_cols else np.zeros((n, 0), dtype=float)
 
     # Defensive: ensure X is finite before forming linear combinations.
@@ -107,7 +111,7 @@ def _add_ancillary_info(
     if deterministic_ids:
         user_ids = _deterministic_ids(rng, n)
     else:
-        user_ids = [str(uuid.uuid4()) for _ in range(n)]
+        user_ids = [uuid.uuid4().hex[:5] for _ in range(n)]
     df.insert(0, "user_id", user_ids)
     df["age"] = age
     df["cnt_trans"] = cnt_trans
@@ -256,8 +260,9 @@ def _gaussian_copula(
     if corr is None:
         corr = np.eye(d)
     corr = np.asarray(corr, dtype=float)
+    corr = _nearest_psd(corr)
 
-    # Cholesky (assume PSD; if estimated, pass through nearest_psd)
+    # Cholesky after nearest-PSD correction with small jitter for stability
     L = np.linalg.cholesky(corr + 1e-10 * np.eye(d))
     Z = rng.normal(size=(n, d)) @ L.T
     U = norm.cdf(Z)  # (0,1)
@@ -277,7 +282,7 @@ def _gaussian_copula(
             probs = probs / probs.sum()
             # Use U[:,j] as a categorical draw by CDF thresholds
             thr = np.cumsum(probs)
-            draw = np.searchsorted(thr, U[:, j], side="right")
+            draw = np.searchsorted(thr, u, side="right")
             # Guard boundary: if U[:,j]==1.0
             draw[draw == len(cats)] = len(cats) - 1
             cat_vals = np.asarray(cats)[draw]
@@ -292,7 +297,7 @@ def _gaussian_copula(
                     names.append(f"{name}_{c}")
             continue
 
-        u = U[:, j]
+        u = np.clip(U[:, j], 1e-12, 1 - 1e-12)
         if dist == "normal":
             mu = float(spec.get("mu", 0.0)); sd = float(spec.get("sd", 1.0))
             col = mu + sd * norm.ppf(u)

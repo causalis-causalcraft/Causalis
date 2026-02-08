@@ -7,7 +7,7 @@ import numpy as np
 import pandas as pd
 
 from causalis.data_contracts import CausalData
-from causalis.scenarios.classic_rct import conversion_z_test
+from causalis.scenarios.classic_rct import conversion_ztest
 
 
 @pytest.fixture
@@ -52,7 +52,7 @@ def causal_data(conv_test_data):
 
 
 def test_basic_keys_and_types(causal_data):
-    res = conversion_z_test(causal_data)
+    res = conversion_ztest(causal_data)
     expected_keys = ['p_value', 'absolute_difference', 'absolute_ci', 'relative_difference', 'relative_ci']
     assert all(k in res for k in expected_keys)
     assert isinstance(res['p_value'], float)
@@ -62,7 +62,7 @@ def test_basic_keys_and_types(causal_data):
 
 
 def test_effect_size_and_ci(causal_data, conv_test_data):
-    res = conversion_z_test(causal_data)
+    res = conversion_ztest(causal_data)
     expected_diff = conv_test_data['uplift']
     actual_diff = res['absolute_difference']
     # allow sampling noise
@@ -73,15 +73,15 @@ def test_effect_size_and_ci(causal_data, conv_test_data):
 
 
 def test_relative_difference(causal_data, conv_test_data):
-    res = conversion_z_test(causal_data)
+    res = conversion_ztest(causal_data)
     expected_rel = (conv_test_data['uplift'] / conv_test_data['baseline']) * 100
     assert abs(res['relative_difference'] - expected_rel) < 5
 
 
 def test_alphas_change_width(causal_data):
-    res10 = conversion_z_test(causal_data, alpha=0.10)
-    res05 = conversion_z_test(causal_data, alpha=0.05)
-    res01 = conversion_z_test(causal_data, alpha=0.01)
+    res10 = conversion_ztest(causal_data, alpha=0.10)
+    res05 = conversion_ztest(causal_data, alpha=0.05)
+    res01 = conversion_ztest(causal_data, alpha=0.01)
 
     w10 = res10['absolute_ci'][1] - res10['absolute_ci'][0]
     w05 = res05['absolute_ci'][1] - res05['absolute_ci'][0]
@@ -95,7 +95,7 @@ def test_errors_non_binary_treatment(conv_test_data):
     df['treatment'] = np.random.choice([0, 1, 2], size=conv_test_data['n'])
     ck = CausalData(df=df, outcome='outcome', treatment='treatment', confounders=['age'])
     with pytest.raises(ValueError):
-        conversion_z_test(ck)
+        conversion_ztest(ck)
 
 
 def test_errors_non_binary_outcome(conv_test_data):
@@ -106,7 +106,7 @@ def test_errors_non_binary_outcome(conv_test_data):
         df=df, outcome="outcome", treatment="treatment", confounders=["age"]
     )
     with pytest.raises(ValueError):
-        conversion_z_test(ck)
+        conversion_ztest(ck)
 
 
 def test_conversion_z_test_methods():
@@ -121,10 +121,10 @@ def test_conversion_z_test_methods():
     data = CausalData(df=df, outcome="outcome", treatment="treatment")
 
     # 1. Default (Newcombe + Pooled)
-    res_default = conversion_z_test(data)
+    res_default = conversion_ztest(data)
 
     # 2. Wald Unpooled (previously default)
-    res_wald = conversion_z_test(
+    res_wald = conversion_ztest(
         data, ci_method="wald_unpooled", se_for_test="unpooled"
     )
 
@@ -159,7 +159,7 @@ def test_diff_in_means_passes_kwargs():
     res_wald = model.estimate(method="conversion_ztest", ci_method="wald_unpooled")
 
     # Compare with direct call
-    res_direct_wald = conversion_z_test(data, ci_method="wald_unpooled")
+    res_direct_wald = conversion_ztest(data, ci_method="wald_unpooled")
 
     assert res_wald.ci_lower_absolute == res_direct_wald["absolute_ci"][0]
     assert res_wald.ci_upper_absolute == res_direct_wald["absolute_ci"][1]

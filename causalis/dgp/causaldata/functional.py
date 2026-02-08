@@ -78,7 +78,7 @@ def generate_rct(
     n: int = 20_000,
     split: float = 0.5,
     random_state: Optional[int] = 42,
-    outcome_type: str = "binary",              # {"binary","normal","poisson"}; "nonnormal" -> "poisson"
+    outcome_type: str = "binary",              # {"binary","normal","poisson","gamma"}; "nonnormal" -> "poisson"
     outcome_params: Optional[Dict] = None,
     confounder_specs: Optional[List[Dict[str, Any]]] = None,
     k: int = 0,
@@ -108,7 +108,7 @@ def generate_rct(
     How `outcome_params` maps into the structural effect:
       - outcome_type="normal": treatment shifts the mean by (mean["B"] - mean["A"]) on the outcome scale.
       - outcome_type="binary": treatment shifts the log-odds by (logit(p_B) - logit(p_A)).
-      - outcome_type="poisson": treatment shifts the log-mean by log(lam_B / lam_A).
+      - outcome_type="poisson" or "gamma": treatment shifts the log-mean by log(lam_B / lam_A).
 
     Ancillary columns (if add_ancillary=True) are generated from baseline confounders X only,
     avoiding outcome leakage and post-treatment adjustment issues.
@@ -121,11 +121,12 @@ def generate_rct(
         Proportion of samples assigned to the treatment group.
     random_state : int, optional
         Random seed for reproducibility.
-    outcome_type : {"binary", "normal", "poisson"}, default="binary"
+    outcome_type : {"binary", "normal", "poisson", "gamma"}, default="binary"
         Distribution family of the outcome.
     outcome_params : dict, optional
         Parameters defining baseline rates/means and treatment effects.
-        e.g., {"p": {"A": 0.1, "B": 0.12}} for binary.
+        e.g., {"p": {"A": 0.1, "B": 0.12}} for binary, or
+        {"shape": 2.0, "scale": {"A": 1.0, "B": 1.1}} for poisson/gamma.
     confounder_specs : list of dict, optional
         Schema for confounder distributions.
     k : int, default=0
@@ -199,8 +200,8 @@ def generate_rct(
     ttype = outcome_type.lower()
     if ttype == "nonnormal":
         ttype = "poisson"
-    if ttype not in {"binary", "normal", "poisson"}:
-        raise ValueError("outcome_type must be 'binary', 'normal', or 'poisson' (or alias 'nonnormal').")
+    if ttype not in {"binary", "normal", "poisson", "gamma"}:
+        raise ValueError("outcome_type must be 'binary', 'normal', 'poisson', or 'gamma' (or alias 'nonnormal').")
 
     # Default outcome_params
     if outcome_params is None:
@@ -208,6 +209,8 @@ def generate_rct(
             outcome_params = {"p": {"A": 0.10, "B": 0.12}}
         elif ttype == "normal":
             outcome_params = {"mean": {"A": 0.00, "B": 0.20}, "std": 1.0}
+        elif ttype == "gamma":
+            outcome_params = {"shape": 2.0, "scale": {"A": 1.0, "B": 1.1}}
         else:
             outcome_params = {"shape": 2.0, "scale": {"A": 1.0, "B": 1.1}}
 
@@ -223,14 +226,18 @@ def generate_rct(
         if not (sd > 0):
             raise ValueError("For normal outcomes, std must be > 0.")
         mu0_nat, mu1_nat = muA, muB
-    else:  # poisson
+    elif ttype in {"poisson", "gamma"}:
         shape = float(outcome_params.get("shape", 2.0))
         scaleA = float(outcome_params["scale"]["A"])
         scaleB = float(outcome_params["scale"]["B"])
-        lamA = shape * scaleA; lamB = shape * scaleB
-        if not (lamA > 0 and lamB > 0):
-            raise ValueError("For Poisson outcomes, implied rates must be > 0.")
-        mu0_nat, mu1_nat = lamA, lamB
+        if ttype == "gamma" and not (shape > 0):
+            raise ValueError("For gamma outcomes, shape must be > 0.")
+        if not (scaleA > 0 and scaleB > 0):
+            raise ValueError("For Poisson/Gamma outcomes, scales must be > 0.")
+        mu0_nat = shape * scaleA
+        mu1_nat = shape * scaleB
+        if not (mu0_nat > 0 and mu1_nat > 0):
+            raise ValueError("For Poisson/Gamma outcomes, implied means must be > 0.")
 
     # Convert to class parameters
     if ttype == "binary":
@@ -243,6 +250,11 @@ def generate_rct(
         theta = mu1_nat - mu0_nat
         outcome_type_cls = "continuous"
         sigma_y = sd
+    elif ttype == "gamma":
+        alpha_y = float(np.log(mu0_nat))
+        theta = float(np.log(mu1_nat / mu0_nat))
+        outcome_type_cls = "gamma"
+        sigma_y = 1.0
     else:  # poisson
         alpha_y = float(np.log(mu0_nat))
         theta = float(np.log(mu1_nat / mu0_nat))
@@ -250,7 +262,7 @@ def generate_rct(
         sigma_y = 1.0
 
     # Instantiate the unified generator with randomized treatment
-    gen = CausalDatasetGenerator(
+    gen_kwargs = dict(
         theta=theta,
         tau=None,
         beta_y=beta_y_arr,
@@ -271,6 +283,9 @@ def generate_rct(
         include_oracle=include_oracle,
         seed=random_state,
     )
+    if outcome_type_cls == "gamma":
+        gen_kwargs["gamma_shape"] = float(outcome_params.get("shape", 2.0))
+    gen = CausalDatasetGenerator(**gen_kwargs)
 
     df = gen.generate(n)
 
@@ -304,7 +319,11 @@ def generate_rct(
         )
 
     if add_ancillary:
-        df = _add_ancillary_info(df, n, rng, deterministic_ids)
+        exclude = {"y", "d", "m", "m_obs", "tau_link", "g0", "g1", "cate"}
+        if pre_name in df.columns:
+            exclude.add(pre_name)
+        x_cols = [c for c in df.columns if c not in exclude]
+        df = _add_ancillary_info(df, n, rng, deterministic_ids, x_cols)
 
     # Reorder columns: user_id, y, d, confounders, y_pre, oracle
     all_cols = list(df.columns)
@@ -352,6 +371,9 @@ def generate_classic_rct(
     prognostic_scale: float = 1.0,
     pre_corr: float = 0.7,
     return_causal_data: bool = False,
+    add_ancillary: bool = False,
+    deterministic_ids: bool = False,
+    include_oracle: bool = True,
     **kwargs
 ) -> Union[pd.DataFrame, CausalData]:
     """
@@ -381,6 +403,12 @@ def generate_classic_rct(
         Target correlation for y_pre (passed to generate_rct).
     return_causal_data : bool, default=False
         Whether to return a `CausalData` object instead of a `pandas.DataFrame`.
+    add_ancillary : bool, default=False
+        Whether to add standard ancillary columns (age, platform, etc.).
+    deterministic_ids : bool, default=False
+        Whether to generate deterministic user IDs.
+    include_oracle : bool, default=True
+        Whether to include oracle ground-truth columns like 'cate', 'propensity', etc.
     **kwargs :
         Additional arguments passed to `generate_rct`.
 
@@ -400,7 +428,7 @@ def generate_classic_rct(
         # Interpretation depends on outcome_type:
         #   - binary: log-odds shifts
         #   - normal: mean shifts
-        #   - poisson: log-mean shifts
+        #   - poisson/gamma: log-mean shifts
         beta_y = [0.6, 0.4, 0.8]
 
     return generate_rct(
@@ -409,15 +437,108 @@ def generate_classic_rct(
         random_state=random_state,
         outcome_params=outcome_params,
         confounder_specs=confounder_specs,
-        add_ancillary=False,
+        add_ancillary=add_ancillary,
+        deterministic_ids=deterministic_ids,
         add_pre=add_pre,
         beta_y=beta_y,
         pre_corr=pre_corr,
         prognostic_scale=prognostic_scale,
+        include_oracle=include_oracle,
         return_causal_data=return_causal_data,
         **kwargs
     )
 
+
+def classic_rct_gamma(
+    n: int = 10_000,
+    split: float = 0.5,
+    random_state: Optional[int] = 42,
+    outcome_params: Optional[Dict] = None,
+    add_pre: bool = False,
+    beta_y: Optional[Union[List[float], np.ndarray]] = None,
+    outcome_depends_on_x: bool = True,
+    prognostic_scale: float = 1.0,
+    pre_corr: float = 0.7,
+    add_ancillary: bool = True,
+    deterministic_ids: bool = False,
+    include_oracle: bool = True,
+    return_causal_data: bool = False,
+    **kwargs
+) -> Union[pd.DataFrame, CausalData]:
+    """
+    Generate a classic RCT dataset with three binary confounders and a gamma outcome.
+
+    The gamma outcome uses a log-mean link, so treatment effects are multiplicative
+    on the mean scale. The default parameters are chosen to resemble a skewed
+    real-world metric (e.g., spend or revenue).
+
+    Parameters
+    ----------
+    n : int, default=10_000
+        Number of samples to generate.
+    split : float, default=0.5
+        Proportion of samples assigned to the treatment group.
+    random_state : int, optional
+        Random seed for reproducibility.
+    outcome_params : dict, optional
+        Gamma parameters, e.g. {"shape": 2.0, "scale": {"A": 15.0, "B": 16.5}}.
+        Mean = shape * scale.
+    add_pre : bool, default=False
+        Whether to generate a pre-period covariate (`y_pre`).
+    beta_y : array-like, optional
+        Linear coefficients for confounders in the log-mean outcome model.
+    outcome_depends_on_x : bool, default=True
+        Whether to add default effects for confounders if beta_y is None.
+    prognostic_scale : float, default=1.0
+        Scale of nonlinear prognostic signal.
+    pre_corr : float, default=0.7
+        Target correlation for y_pre with post-outcome in control group.
+    add_ancillary : bool, default=True
+        Whether to add standard ancillary columns (age, platform, etc.).
+    deterministic_ids : bool, default=False
+        Whether to generate deterministic user IDs.
+    include_oracle : bool, default=True
+        Whether to include oracle ground-truth columns like 'cate', 'propensity', etc.
+    return_causal_data : bool, default=False
+        Whether to return a `CausalData` object instead of a `pandas.DataFrame`.
+    **kwargs :
+        Additional arguments passed to `generate_rct` (e.g., pre_name, g_y, use_prognostic).
+
+    Returns
+    -------
+    pandas.DataFrame or CausalData
+        Synthetic classic RCT dataset with gamma outcome.
+    """
+    confounder_specs = [
+        {"name": "platform_ios", "dist": "bernoulli", "p": 0.5},
+        {"name": "country_usa",  "dist": "bernoulli", "p": 0.6},
+        {"name": "source_paid",  "dist": "bernoulli", "p": 0.3},
+    ]
+
+    if outcome_depends_on_x and beta_y is None:
+        # Default log-mean shifts for [platform_ios, country_usa, source_paid]
+        beta_y = [0.25, 0.20, 0.45]
+
+    if outcome_params is None:
+        outcome_params = {"shape": 2.0, "scale": {"A": 15.0, "B": 16.5}}
+
+    return generate_rct(
+        n=n,
+        split=split,
+        random_state=random_state,
+        outcome_type="gamma",
+        outcome_params=outcome_params,
+        confounder_specs=confounder_specs,
+        add_ancillary=add_ancillary,
+        deterministic_ids=deterministic_ids,
+        add_pre=add_pre,
+        beta_y=beta_y,
+        pre_corr=pre_corr,
+        prognostic_scale=prognostic_scale,
+        include_oracle=include_oracle,
+        return_causal_data=return_causal_data,
+        **kwargs
+    )
 
 
 
@@ -446,7 +567,7 @@ def obs_linear_effect(
         Number of samples to generate.
     theta : float, default=1.0
         Constant treatment effect.
-    outcome_type : {"continuous", "binary", "poisson"}, default="continuous"
+    outcome_type : {"continuous", "binary", "poisson", "gamma"}, default="continuous"
         Family of the outcome distribution.
     sigma_y : float, default=1.0
         Noise level for continuous outcomes.
@@ -493,7 +614,9 @@ def obs_linear_effect(
 
     if add_ancillary:
         rng = np.random.default_rng(random_state)
-        df = _add_ancillary_info(df, n, rng, deterministic_ids)
+        exclude = {"y", "d", "m", "m_obs", "tau_link", "g0", "g1", "cate"}
+        x_cols = [c for c in df.columns if c not in exclude]
+        df = _add_ancillary_info(df, n, rng, deterministic_ids, x_cols)
 
     return df
 
@@ -760,5 +883,3 @@ def make_gold_linear(n: int = 10000, seed: int = 42) -> CausalData:
         seed=seed
     )
     return gen.to_causal_data(n)
-
-

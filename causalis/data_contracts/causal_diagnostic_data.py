@@ -40,7 +40,7 @@ class UnconfoundednessDiagnosticData(DiagnosticData):
 
 
 class MultiUnconfoundednessDiagnosticData(DiagnosticData):
-    """Fields common to all models assuming unconfoundedness with multiple_treatment."""
+    """Fields common to all models assuming unconfoundedness with multi_uncofoundedness."""
 
     m_hat: np.ndarray  # Propensity scores
     d: np.ndarray  # Treatments indicators

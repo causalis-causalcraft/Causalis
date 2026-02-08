@@ -6,9 +6,11 @@ from .causal_diagnostic_data import DiagnosticData, UnconfoundednessDiagnosticDa
 from causalis.dgp import (
     generate_rct,
     generate_classic_rct,
+    classic_rct_gamma,
     obs_linear_effect,
     make_gold_linear, obs_linear_26_dataset,
     generate_classic_rct_26,
+    classic_rct_gamma_26,
     CausalDatasetGenerator
 )
 
@@ -21,8 +23,10 @@ __all__ = [
     "UnconfoundednessDiagnosticData",
     "generate_rct",
     "generate_classic_rct",
+    "classic_rct_gamma",
     "obs_linear_effect",
     "make_gold_linear", "obs_linear_26_dataset",
     "generate_classic_rct_26",
+    "classic_rct_gamma_26",
     "CausalDatasetGenerator",
 ]

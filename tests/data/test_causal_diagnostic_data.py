@@ -59,6 +59,8 @@ def test_causal_estimate_with_diagnostic_data():
         is_significant=True,
         n_treated=10,
         n_control=10,
+        treatment_mean=1.2,
+        control_mean=0.8,
         outcome="y",
         treatment="d",
         diagnostic_data=diag
@@ -80,6 +82,8 @@ def test_causal_estimate_without_diagnostic_data():
         is_significant=True,
         n_treated=10,
         n_control=10,
+        treatment_mean=1.2,
+        control_mean=0.8,
         outcome="y",
         treatment="d"
     )
@@ -98,6 +102,8 @@ def test_causal_estimate_with_empty_dict_diagnostic_data():
         is_significant=True,
         n_treated=10,
         n_control=10,
+        treatment_mean=1.2,
+        control_mean=0.8,
         outcome="y",
         treatment="d",
         diagnostic_data={}

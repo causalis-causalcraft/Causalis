@@ -109,7 +109,7 @@ def _clip_propensity(p: np.ndarray, thr: float) -> np.ndarray:
 
 
 class MultiTreatmentIRM(BaseEstimator):
-    """Interactive Regression Model with multiple_treatment (Multi treatment IRM) with DoubleML-style cross-fitting using CausalData.
+    """Interactive Regression Model with multi_uncofoundedness (Multi treatment IRM) with DoubleML-style cross-fitting using CausalData.
        Model supports >= 2 treatments.
 
         Parameters
@@ -464,7 +464,7 @@ class MultiTreatmentIRM(BaseEstimator):
             outcome=self.data.outcome.name,
             treatment=list(self.data.treatments.columns),
             confounders=list(self.data.confounders_names),
-            time=datetime.now(),
+            time=datetime.now().strftime("%Y-%m-%d"),
             diagnostic_data=diag,
         )
 
@@ -660,7 +660,7 @@ class MultiTreatmentIRM(BaseEstimator):
 
     def sensitivity_analysis(self, cf_y: float, r2_d: float, rho: float = 1.0, H0: float = 0.0,
                              alpha: float = 0.05) -> "MultiTreatmentIRM":
-        from causalis.scenarios.multiple_treatment.refutation.unconfoundedness.sensitivity import (
+        from causalis.scenarios.multi_uncofoundedness.refutation.unconfoundedness.sensitivity import (
             sensitivity_analysis as sa_fn,
             get_sensitivity_summary
         )

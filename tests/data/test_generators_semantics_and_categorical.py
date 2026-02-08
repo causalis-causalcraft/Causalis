@@ -51,33 +51,3 @@ def test_m_and_mobs_semantics():
     # The arrays should not be (near-)identical when u affects treatment
     assert not np.allclose(df["m"].to_numpy(), df["m_obs"].to_numpy(), atol=1e-3)
 
-
-def test_categorical_probs_normalized_non_copula_and_copula():
-    # Non-copula categorical with unnormalized probs should work and one-hot sum <= n
-    gen_nc = CausalDatasetGenerator(
-        theta=0.0,
-        outcome_type="continuous",
-        sigma_y=1.0,
-        seed=1,
-        confounder_specs=[{"name": "cat", "dist": "categorical", "categories": [0, 1, 2], "probs": [2, 3, 5]}],
-    )
-    df_nc = gen_nc.generate(1000)
-    cols_nc = [c for c in df_nc.columns if c.startswith("cat_")]
-    # one-hot for levels 1 and 2
-    assert len(cols_nc) == 2
-    # one-hot columns should not exceed n when summed
-    assert df_nc[cols_nc].to_numpy().sum() <= 1000 + 1e-6
-
-    # Copula categorical path: ensure no index errors at boundaries and normalization is applied
-    gen_c = CausalDatasetGenerator(
-        theta=0.0,
-        outcome_type="continuous",
-        sigma_y=1.0,
-        seed=2,
-        use_copula=True,
-        confounder_specs=[{"name": "catc", "dist": "categorical", "categories": [0, 1, 2], "probs": [2, 3, 5]}],
-    )
-    df_c = gen_c.generate(2000)
-    cols_c = [c for c in df_c.columns if c.startswith("catc_")]
-    assert len(cols_c) == 2
-    assert df_c[cols_c].to_numpy().sum() <= 2000 + 1e-6

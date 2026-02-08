@@ -50,8 +50,8 @@ class MultiCausalEstimate(BaseModel):
         The name of the treatment variable.
     confounders : list of str, optional
         The names of the confounders used in the model.
-    time : datetime
-        The date and time when the estimate was created.
+    time : str
+        The date when the estimate was created (YYYY-MM-DD).
     diagnostic_data : DiagnosticData, optional
         Additional diagnostic data_contracts.
     sensitivity_analysis : dict, optional
@@ -77,7 +77,7 @@ class MultiCausalEstimate(BaseModel):
     outcome: str
     treatment: List[str]
     confounders: List[str] = Field(default_factory=list)
-    time: datetime = Field(default_factory=datetime.now)
+    time: str = Field(default_factory=lambda: datetime.now().strftime("%Y-%m-%d"))
     diagnostic_data: Optional[DiagnosticData] = None
     sensitivity_analysis: Dict[str, Any] = Field(default_factory=dict)
 

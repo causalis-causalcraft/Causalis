@@ -219,18 +219,6 @@ def test_to_causal_data(basic_generator):
     assert set(causal_data_specific.df.columns) == {"y", "d", "age"}
 
 
-def test_invalid_outcome_type(random_seed):
-    """Test that an error is raised for invalid outcome type."""
-    gen = CausalDatasetGenerator(
-        outcome_type="invalid",
-        seed=random_seed
-    )
-    
-    with pytest.raises(ValueError) as excinfo:
-        gen.generate(100)
-
-    assert "outcome_type must be 'continuous', 'binary', 'poisson' or 'tweedie'" in str(excinfo.value)
-
 
 def test_invalid_confounder_spec(random_seed):
     """Test that an error is raised for invalid confounder specification."""

@@ -33,7 +33,7 @@ data = generate_classic_rct_26(seed=42, return_causal_data=True)
 
 # Optional: Sample Ratio Mismatch check
 srm = check_srm(data, target_allocation={0: 0.5, 1: 0.5}, alpha=1e-3)
-print("SRM detected?", srm.is_srm, "p=", srm.p_value)
+print("SRM detected?", srm.is_srm, "p=", srm.p_value, "chi2=", srm.chi2)
 
 # Estimate treatment effect with t-test inference (or bootstrap / conversion_ztest)
 result = DiffInMeans().fit(data).estimate(method="ttest", alpha=0.05)
@@ -50,7 +50,6 @@ causaldata = generate_obs_hte_26(return_causal_data=True, include_oracle=False)
 from causalis.scenarios.unconfoundedness import IRM
 
 model = IRM().fit(causaldata)
-model.fit()
 result = model.estimate(score='ATTE')
 result.summary()
 ```
