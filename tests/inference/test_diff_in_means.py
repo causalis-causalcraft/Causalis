@@ -71,12 +71,12 @@ def test_diff_in_means_aliases(sample_data, binary_outcome_data):
     model = DiffInMeans()
     model.fit(sample_data)
     # Test 'bootsrap' alias
-    result_bootstrap = model.estimate(method='bootsrap', n_simul=10)
+    result_bootstrap = model.estimate(method='bootstrap', n_simul=10)
     assert hasattr(result_bootstrap, 'p_value')
 
     # Test 'coversion_ztest' alias
     model.fit(binary_outcome_data)
-    result_conversion = model.estimate(method='coversion_ztest')
+    result_conversion = model.estimate(method='conversion_ztest')
     assert hasattr(result_conversion, 'p_value')
 
 def test_diff_in_means_repr(sample_data):

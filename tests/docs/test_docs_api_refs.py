@@ -4,7 +4,7 @@ import importlib
 def test_scenarios_rct_exports():
     # These are referenced in docs autosummary under causalis.scenarios.classic_rct
     mod = importlib.import_module('causalis.scenarios.classic_rct')
-    for name in ['ttest', 'conversion_z_test', 'bootstrap_diff_means']:
+    for name in ['ttest', 'conversion_ztest', 'bootstrap_diff_means']:
         assert hasattr(mod, name), f"causalis.scenarios.classic_rct missing expected export: {name}"
 
 
