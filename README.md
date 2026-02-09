@@ -14,7 +14,7 @@ Robust causal inference for experiments and observational studies in Python, org
 Causalis focuses on:
 - Scenario-first workflows (you pick the study design; Causalis provides best-practice defaults).
 - Guardrails and diagnostics (e.g., SRM checks, balance checks).
-- Typed data contracts (`CausalData`) to fail fast on schema issues.
+- Typed data contracts (`CausalData`) to fail fast on schema issues. 
 
 ## Installation
 ### Recommended
