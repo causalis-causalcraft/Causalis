@@ -1,10 +1,33 @@
-#### 1. Estimand: Average Treatment Effect (ATE)  
+
+# Core causal assumptions (for ATE)
+
+1. **Random assignment (unconfoundedness by design)**
+    
+    - Treatment assignment is independent of potential outcomes (and baseline covariates), because of the randomization procedure.
+    - In notation: $(Y(1), Y(0)) \perp D$.
+        
+2. **SUTVA (Stable Unit Treatment Value Assumption)**
+    
+    - **No interference:** one unit’s outcome does not depend on other units’ treatment assignments.
+    - **No hidden versions:** “treatment” and “control” are well-defined (no multiple, meaningfully different versions bundled together).
+    
+3. **Positivity / overlap**
+    
+    - Every unit has a non-zero probability of being assigned to each arm (given the randomization scheme).
+    - Typically: $0<P(D=1)<1$ (and within each randomization stratum if stratified).
+    
+4. **Consistency**
+    
+    - Observed outcome equals the potential outcome under the treatment actually received:
+    - If $D=1$ observed $Y=Y(1)$; if $T=0$, observed $Y=Y(0)$
+
+# Estimand: Average Treatment Effect (ATE)  
 The model assumes random assignment of treatment $D \in \{0, 1\}$. The ATE ($\tau$) is defined as:  
 $$\tau = E[Y | D=1] - E[Y | D=0]$$  
 The sample estimator is the difference in group means:  
 $$\hat{\tau} = \bar{Y}_1 - \bar{Y}_0$$  
   
-#### 2. Inference Methods  
+# Inference Methods  
   
 **Welch's T-Test (`ttest`)**  
 Used for continuous outcomes without assuming equal variances.  
@@ -28,7 +51,7 @@ Non-parametric estimation by resampling data with replacement $B$ times.
 *   **P-value:** Normal approximation using the bootstrap standard error $s_{boot}$:  
     $$Z = \frac{\hat{\tau}}{s_{boot}}, \quad p = 2 \cdot (1 - \Phi(|Z|))$$  
   
-#### 3. Relative Lift and Delta Method  
+# Relative Lift and Delta Method  
 The relative lift is calculated as:  
 $$Lift (\%) = 100 \cdot \left(\frac{\bar{Y}_1}{\bar{Y}_0} - 1\right)$$  
 Its variance is estimated via the **Delta Method**:  
@@ -36,9 +59,10 @@ $$Var(Lift/100) \approx \frac{1}{\bar{Y}_0^2} Var(\bar{Y}_1) + \frac{\bar{Y}_1^2
   
 ---  
   
-### Pseudo-code  
+# Pseudo-code  
   
-#### Model Wrapper  
+#### Model Wrapper 
+
 ```python  
 class DiffInMeans:  
     def fit(data: CausalData):
@@ -60,7 +84,8 @@ class DiffInMeans:
         )  
 ```  
   
-#### Welch's T-Test Inference  
+#### Welch's T-Test Inference 
+
 ```python  
 def ttest_inference(data, alpha):
     y1, y0 = data.split_by_treatment()
@@ -99,8 +124,53 @@ def ttest_inference(data, alpha):
     return {diff, p_val, abs_ci, rel_diff, rel_ci}
   
 ```  
-  
-#### Bootstrap Inference  
+
+#### Conversion Z-Test
+```python  
+def conversion_ztest(data, alpha, ci_method="newcombe", se_for_test="pooled"):
+    y1, y0 = data.split_by_treatment()  # y is binary {0, 1}
+
+    p1, p0 = mean(y1), mean(y0)
+    diff = p1 - p0
+    z_crit = norm.ppf(1 - alpha / 2)
+
+    # 1) P-value (two-sided Z-test)
+    if se_for_test == "pooled":
+        p_pool = (sum(y1) + sum(y0)) / (len(y1) + len(y0))
+        se_test = sqrt(p_pool * (1 - p_pool) * (1 / n1 + 1 / n0))
+    else:
+        se_test = sqrt(p1 * (1 - p1) / n1 + p0 * (1 - p0) / n0)
+
+    p_val = 2 * (1 - norm.cdf(abs(diff / se_test)))
+
+    # 2) Absolute CI (Newcombe-style using Wilson score bounds)
+    if ci_method == "newcombe":
+        l1, u1 = wilson_score_interval(p1, n1, z_crit)
+        l0, u0 = wilson_score_interval(p0, n0, z_crit)
+        abs_ci = (l1 - u0, u1 - l0)
+    else:  # Wald fallback
+        abs_ci = (diff - z_crit * se_test, diff + z_crit * se_test)
+
+    # 3) Relative lift (delta method for proportions)
+    rel_diff = (p1 / p0 - 1) * 100
+    se_rel = 100 * sqrt(
+        (1 / p0) ** 2 * (p1 * (1 - p1) / n1)
+        + (p1 / p0**2) ** 2 * (p0 * (1 - p0) / n0)
+    )
+    rel_ci = (rel_diff - z_crit * se_rel, rel_diff + z_crit * se_rel)
+
+    return {
+        "p_value": p_val,
+        "absolute_difference": diff,
+        "absolute_ci": abs_ci,
+        "relative_difference": rel_diff,
+        "relative_ci": rel_ci,
+        # ...
+    }
+
+```
+#### Bootstrap Inference 
+
 ```python  
 def bootstrap_inference(data, alpha, n_simul=10000):
     y1, y0 = data.split_by_treatment()
@@ -126,7 +196,7 @@ def bootstrap_inference(data, alpha, n_simul=10000):
 
 
 # References
-## 1) Estimand / difference-in-means ATE under random assignment
+## Estimand / difference-in-means ATE under random assignment
 
 - **Neyman (1923; English translation 1990)** — potential outcomes framework for randomized experiments; difference-in-means and its sampling properties under randomization. ([ics.uci.edu](https://www.ics.uci.edu/~sternh/courses/265/neyman_statsci1990.pdf?utm_source=chatgpt.com "On the Application of Probability Theory to Agricultural ..."))
     
@@ -137,7 +207,7 @@ def bootstrap_inference(data, alpha, n_simul=10000):
 - **Imbens & Rubin (2015)** — book, but extremely standard citation for ATE estimands + sampling variances for average causal effects. ([Cambridge University Press & Assessment](https://www.cambridge.org/core/books/causal-inference-for-statistics-social-and-biomedical-sciences/71126BE90C58F1A431FE9B2DD07938AB?utm_source=chatgpt.com "Causal Inference for Statistics, Social, and Biomedical ..."))
     
 
-## 2) Welch’s t-test + Satterthwaite df
+## Welch’s t-test + Satterthwaite df
 
 - **Student (1908)** — original t distribution and small-sample inference motivation. ([JSTOR](https://www.jstor.org/stable/2331554?utm_source=chatgpt.com "The Probable Error of a Mean"))
     
@@ -146,7 +216,7 @@ def bootstrap_inference(data, alpha, n_simul=10000):
 - **Satterthwaite (1946)** — effective degrees of freedom approximation (the “Welch–Satterthwaite” df you wrote). ([JSTOR](https://www.jstor.org/stable/3002019?utm_source=chatgpt.com "An Approximate Distribution of Estimates of Variance ..."))
     
 
-## 3) Conversion z-test + “Newcombe/Wilson-style” absolute CI for two proportions
+## Conversion z-test + “Newcombe/Wilson-style” absolute CI for two proportions
 
 **Wilson score interval (single proportion):**
 
@@ -165,7 +235,7 @@ def bootstrap_inference(data, alpha, n_simul=10000):
 - **Agresti & Caffo (2000)** — simple adjusted intervals for proportions _and differences_ (alternative to Newcombe; useful “related work” citation). ([Statistics](https://users.stat.ufl.edu/~aa/articles/agresti_caffo_2000.pdf?utm_source=chatgpt.com "Simple and Effective Confidence Intervals for Proportions and ..."))
     
 
-## 4) Bootstrap percentile CI + bootstrap SE / normal-approx p-value
+## Bootstrap percentile CI + bootstrap SE / normal-approx p-value
 
 Foundational bootstrap + CI methodology:
 
@@ -180,7 +250,7 @@ Foundational bootstrap + CI methodology:
 
 (If you want a single “practitioner-friendly” bootstrap reference for SE/percentiles, you can also cite Efron & Tibshirani’s book—common but a book, not a paper.) ([Amazon](https://www.amazon.nl/-/en/Introduction-Bootstrap-Bradley-Efron/dp/0412042312?utm_source=chatgpt.com "An Introduction to the Bootstrap : Efron, Bradley, Tibshirani ..."))
 
-## 5) Relative lift (ratio) + Delta method variance
+## Relative lift (ratio) + Delta method variance
 
 - **Oehlert (1992)** — clean, standard citation for delta method approximations. DOI: 10.1080/00031305.1992.10475842. ([Taylor & Francis Online](https://www.tandfonline.com/doi/abs/10.1080/00031305.1992.10475842?utm_source=chatgpt.com "A Note on the Delta Method: The American Statistician"))
     
