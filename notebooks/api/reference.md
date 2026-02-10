@@ -21,6 +21,7 @@ Causalis: A Python package for causal inference.
 - [**causal_estimate**](#causalis.data_contracts.causal_estimate) –
 - [**causaldata**](#causalis.data_contracts.causaldata) – Causalis Dataclass for storing Cross-sectional DataFrame and column metadata for causal inference.
 - [**causaldata_instrumental**](#causalis.data_contracts.causaldata_instrumental) –
+- [**multicausal_estimate**](#causalis.data_contracts.multicausal_estimate) –
 - [**multicausaldata**](#causalis.data_contracts.multicausaldata) – Causalis Dataclass for storing Cross-sectional DataFrame and column metadata for causal inference with multiple treatments.
 
 **Classes:**
@@ -35,6 +36,8 @@ Causalis: A Python package for causal inference.
 
 **Functions:**
 
+- [**classic_rct_gamma**](#causalis.data_contracts.classic_rct_gamma) – Generate a classic RCT dataset with three binary confounders and a gamma outcome.
+- [**classic_rct_gamma_26**](#causalis.data_contracts.classic_rct_gamma_26) – A pre-configured classic RCT dataset with a gamma outcome.
 - [**generate_classic_rct**](#causalis.data_contracts.generate_classic_rct) – Generate a classic RCT dataset with three binary confounders:
 - [**generate_classic_rct_26**](#causalis.data_contracts.generate_classic_rct_26) – A pre-configured classic RCT dataset with 3 binary confounders.
 - [**generate_rct**](#causalis.data_contracts.generate_rct) – Generate an RCT dataset with randomized treatment assignment.
@@ -405,6 +408,8 @@ treatment prevalence, noise, and (optionally) heterogeneous treatment effects.
   logit P(Y=1|T,X,U) = alpha_y + f_y(X) + u_strength_y * U + T * tau(X)
   outcome_type = "poisson":
   log E[Y|T,X,U] = alpha_y + f_y(X) + u_strength_y * U + T * tau(X)
+  outcome_type = "gamma":
+  log E[Y|T,X,U] = alpha_y + f_y(X) + u_strength_y * U + T * tau(X)
   where f_y(X) = X @ beta_y + g_y(X), and tau(X) is either constant `theta` or a user function.
 
 **Returned columns**
@@ -423,7 +428,7 @@ Notes on effect scale:
 
 - For "continuous", `theta` (or tau(X)) is an additive mean difference, so `tau_link == cate`.
 - For "binary", tau acts on the *log-odds* scale. `cate` is reported as a risk difference.
-- For "poisson", tau acts on the *log-mean* scale. `cate` is reported on the mean (rate) scale.
+- For "poisson" and "gamma", tau acts on the *log-mean* scale. `cate` is reported on the mean scale.
 
 **Parameters:**
 
@@ -433,10 +438,10 @@ Notes on effect scale:
 - **beta_d** (<code>[array](#array) - [like](#like)</code>) – Linear coefficients of confounders in the treatment score f_d(X).
 - **g_y** (<code>[callable](#callable)</code>) – Nonlinear/additive function g_y(X) -> (n,) added to the outcome baseline.
 - **g_d** (<code>[callable](#callable)</code>) – Nonlinear/additive function g_d(X) -> (n,) added to the treatment score.
-- **alpha_y** (<code>[float](#float)</code>) – Outcome intercept (natural scale for continuous; log-odds for binary; log-mean for Poisson).
+- **alpha_y** (<code>[float](#float)</code>) – Outcome intercept (natural scale for continuous; log-odds for binary; log-mean for Poisson/Gamma).
 - **alpha_d** (<code>[float](#float)</code>) – Treatment intercept (log-odds). If `target_d_rate` is set, `alpha_d` is auto-calibrated.
 - **sigma_y** (<code>[float](#float)</code>) – Std. dev. of the Gaussian noise for continuous outcomes.
-- **outcome_type** (<code>('continuous', 'binary', 'poisson')</code>) – Outcome family and link as defined above.
+- **outcome_type** (<code>('continuous', 'binary', 'poisson', 'gamma', 'tweedie')</code>) – Outcome family and link as defined above.
 - **confounder_specs** (<code>list of dict</code>) – Schema for generating confounders. See `_gaussian_copula` for details.
 - **k** (<code>[int](#int)</code>) – Number of confounders when `confounder_specs` is None. Defaults to independent N(0,1).
 - **x_sampler** (<code>[callable](#callable)</code>) – Custom sampler (n, k, seed) -> X ndarray of shape (n,k). Overrides `confounder_specs`.
@@ -717,10 +722,12 @@ Result container for causal effect estimates.
 - **is_significant** (<code>[bool](#bool)</code>) – Whether the result is statistically significant at alpha.
 - **n_treated** (<code>[int](#int)</code>) – Number of units in the treatment group.
 - **n_control** (<code>[int](#int)</code>) – Number of units in the control group.
+- **treatment_mean** (<code>[float](#float)</code>) – Mean outcome in the treatment group.
+- **control_mean** (<code>[float](#float)</code>) – Mean outcome in the control group.
 - **outcome** (<code>[str](#str)</code>) – The name of the outcome variable.
 - **treatment** (<code>[str](#str)</code>) – The name of the treatment variable.
 - **confounders** (<code>list of str</code>) – The names of the confounders used in the model.
-- **time** (<code>[datetime](#datetime.datetime)</code>) – The date and time when the estimate was created.
+- **time** (<code>[str](#str)</code>) – The date when the estimate was created (YYYY-MM-DD).
 - **diagnostic_data** (<code>[DiagnosticData](#causalis.data_contracts.causal_diagnostic_data.DiagnosticData)</code>) – Additional diagnostic data_contracts.
 
 **Functions:**
@@ -735,6 +742,7 @@ Result container for causal effect estimates.
 - [**ci_upper_absolute**](#causalis.data_contracts.CausalEstimate.ci_upper_absolute) (<code>[float](#float)</code>) –
 - [**ci_upper_relative**](#causalis.data_contracts.CausalEstimate.ci_upper_relative) (<code>[Optional](#typing.Optional)\[[float](#float)\]</code>) –
 - [**confounders**](#causalis.data_contracts.CausalEstimate.confounders) (<code>[List](#typing.List)\[[str](#str)\]</code>) –
+- [**control_mean**](#causalis.data_contracts.CausalEstimate.control_mean) (<code>[float](#float)</code>) –
 - [**diagnostic_data**](#causalis.data_contracts.CausalEstimate.diagnostic_data) (<code>[Optional](#typing.Optional)\[[DiagnosticData](#causalis.data_contracts.causal_diagnostic_data.DiagnosticData)\]</code>) –
 - [**estimand**](#causalis.data_contracts.CausalEstimate.estimand) (<code>[str](#str)</code>) –
 - [**is_significant**](#causalis.data_contracts.CausalEstimate.is_significant) (<code>[bool](#bool)</code>) –
@@ -745,8 +753,9 @@ Result container for causal effect estimates.
 - [**n_treated**](#causalis.data_contracts.CausalEstimate.n_treated) (<code>[int](#int)</code>) –
 - [**outcome**](#causalis.data_contracts.CausalEstimate.outcome) (<code>[str](#str)</code>) –
 - [**p_value**](#causalis.data_contracts.CausalEstimate.p_value) (<code>[Optional](#typing.Optional)\[[float](#float)\]</code>) –
-- [**time**](#causalis.data_contracts.CausalEstimate.time) (<code>[datetime](#datetime.datetime)</code>) –
+- [**time**](#causalis.data_contracts.CausalEstimate.time) (<code>[str](#str)</code>) –
 - [**treatment**](#causalis.data_contracts.CausalEstimate.treatment) (<code>[str](#str)</code>) –
+- [**treatment_mean**](#causalis.data_contracts.CausalEstimate.treatment_mean) (<code>[float](#float)</code>) –
 - [**value**](#causalis.data_contracts.CausalEstimate.value) (<code>[float](#float)</code>) –
 - [**value_relative**](#causalis.data_contracts.CausalEstimate.value_relative) (<code>[Optional](#typing.Optional)\[[float](#float)\]</code>) –
 
@@ -784,6 +793,12 @@ ci_upper_relative: Optional[float] = None
 
 ```python
 confounders: List[str] = Field(default_factory=list)
+```
+
+##### `causalis.data_contracts.CausalEstimate.control_mean`
+
+```python
+control_mean: float
 ```
 
 ##### `causalis.data_contracts.CausalEstimate.diagnostic_data`
@@ -861,13 +876,19 @@ Return a summary DataFrame of the results.
 ##### `causalis.data_contracts.CausalEstimate.time`
 
 ```python
-time: datetime = Field(default_factory=(datetime.now))
+time: str = Field(default_factory=(lambda: datetime.now().strftime('%Y-%m-%d')))
 ```
 
 ##### `causalis.data_contracts.CausalEstimate.treatment`
 
 ```python
 treatment: str
+```
+
+##### `causalis.data_contracts.CausalEstimate.treatment_mean`
+
+```python
+treatment_mean: float
 ```
 
 ##### `causalis.data_contracts.CausalEstimate.value`
@@ -1244,6 +1265,7 @@ y: Optional[np.ndarray] = None
 - [**CUPEDDiagnosticData**](#causalis.data_contracts.causal_diagnostic_data.CUPEDDiagnosticData) – Diagnostic data_contracts for CUPED / ANCOVA models.
 - [**DiagnosticData**](#causalis.data_contracts.causal_diagnostic_data.DiagnosticData) – Base class for all diagnostic data_contracts.
 - [**DiffInMeansDiagnosticData**](#causalis.data_contracts.causal_diagnostic_data.DiffInMeansDiagnosticData) – Diagnostic data_contracts for Difference-in-Means model.
+- [**MultiUnconfoundednessDiagnosticData**](#causalis.data_contracts.causal_diagnostic_data.MultiUnconfoundednessDiagnosticData) – Fields common to all models assuming unconfoundedness with multi_uncofoundedness.
 - [**UnconfoundednessDiagnosticData**](#causalis.data_contracts.causal_diagnostic_data.UnconfoundednessDiagnosticData) – Fields common to all models assuming unconfoundedness.
 
 ##### `causalis.data_contracts.causal_diagnostic_data.CUPEDDiagnosticData`
@@ -1336,6 +1358,134 @@ Diagnostic data_contracts for Difference-in-Means model.
 **Attributes:**
 
 - [**model_config**](#causalis.data_contracts.causal_diagnostic_data.DiffInMeansDiagnosticData.model_config) –
+
+##### `causalis.data_contracts.causal_diagnostic_data.MultiUnconfoundednessDiagnosticData`
+
+Bases: <code>[DiagnosticData](#causalis.data_contracts.causal_diagnostic_data.DiagnosticData)</code>
+
+Fields common to all models assuming unconfoundedness with multi_uncofoundedness.
+
+**Attributes:**
+
+- [**d**](#causalis.data_contracts.causal_diagnostic_data.MultiUnconfoundednessDiagnosticData.d) (<code>[ndarray](#numpy.ndarray)</code>) –
+- [**folds**](#causalis.data_contracts.causal_diagnostic_data.MultiUnconfoundednessDiagnosticData.folds) (<code>[Optional](#typing.Optional)\[[ndarray](#numpy.ndarray)\]</code>) –
+- [**g_hat**](#causalis.data_contracts.causal_diagnostic_data.MultiUnconfoundednessDiagnosticData.g_hat) (<code>[Optional](#typing.Optional)\[[ndarray](#numpy.ndarray)\]</code>) –
+- [**m_alpha**](#causalis.data_contracts.causal_diagnostic_data.MultiUnconfoundednessDiagnosticData.m_alpha) (<code>[Optional](#typing.Optional)\[[ndarray](#numpy.ndarray)\]</code>) –
+- [**m_hat**](#causalis.data_contracts.causal_diagnostic_data.MultiUnconfoundednessDiagnosticData.m_hat) (<code>[ndarray](#numpy.ndarray)</code>) –
+- [**model_config**](#causalis.data_contracts.causal_diagnostic_data.MultiUnconfoundednessDiagnosticData.model_config) –
+- [**nu2**](#causalis.data_contracts.causal_diagnostic_data.MultiUnconfoundednessDiagnosticData.nu2) (<code>[Optional](#typing.Optional)\[[ndarray](#numpy.ndarray)\]</code>) –
+- [**psi**](#causalis.data_contracts.causal_diagnostic_data.MultiUnconfoundednessDiagnosticData.psi) (<code>[Optional](#typing.Optional)\[[ndarray](#numpy.ndarray)\]</code>) –
+- [**psi_b**](#causalis.data_contracts.causal_diagnostic_data.MultiUnconfoundednessDiagnosticData.psi_b) (<code>[Optional](#typing.Optional)\[[ndarray](#numpy.ndarray)\]</code>) –
+- [**psi_nu2**](#causalis.data_contracts.causal_diagnostic_data.MultiUnconfoundednessDiagnosticData.psi_nu2) (<code>[Optional](#typing.Optional)\[[ndarray](#numpy.ndarray)\]</code>) –
+- [**psi_sigma2**](#causalis.data_contracts.causal_diagnostic_data.MultiUnconfoundednessDiagnosticData.psi_sigma2) (<code>[Optional](#typing.Optional)\[[ndarray](#numpy.ndarray)\]</code>) –
+- [**riesz_rep**](#causalis.data_contracts.causal_diagnostic_data.MultiUnconfoundednessDiagnosticData.riesz_rep) (<code>[Optional](#typing.Optional)\[[ndarray](#numpy.ndarray)\]</code>) –
+- [**score**](#causalis.data_contracts.causal_diagnostic_data.MultiUnconfoundednessDiagnosticData.score) (<code>[Optional](#typing.Optional)\[[str](#str)\]</code>) –
+- [**sigma2**](#causalis.data_contracts.causal_diagnostic_data.MultiUnconfoundednessDiagnosticData.sigma2) (<code>[Union](#typing.Union)\[[float](#float), [ndarray](#numpy.ndarray)\]</code>) –
+- [**trimming_threshold**](#causalis.data_contracts.causal_diagnostic_data.MultiUnconfoundednessDiagnosticData.trimming_threshold) (<code>[float](#float)</code>) –
+- [**x**](#causalis.data_contracts.causal_diagnostic_data.MultiUnconfoundednessDiagnosticData.x) (<code>[Optional](#typing.Optional)\[[ndarray](#numpy.ndarray)\]</code>) –
+- [**y**](#causalis.data_contracts.causal_diagnostic_data.MultiUnconfoundednessDiagnosticData.y) (<code>[Optional](#typing.Optional)\[[ndarray](#numpy.ndarray)\]</code>) –
+
+###### `causalis.data_contracts.causal_diagnostic_data.MultiUnconfoundednessDiagnosticData.d`
+
+```python
+d: np.ndarray
+```
+
+###### `causalis.data_contracts.causal_diagnostic_data.MultiUnconfoundednessDiagnosticData.folds`
+
+```python
+folds: Optional[np.ndarray] = None
+```
+
+###### `causalis.data_contracts.causal_diagnostic_data.MultiUnconfoundednessDiagnosticData.g_hat`
+
+```python
+g_hat: Optional[np.ndarray] = None
+```
+
+###### `causalis.data_contracts.causal_diagnostic_data.MultiUnconfoundednessDiagnosticData.m_alpha`
+
+```python
+m_alpha: Optional[np.ndarray] = None
+```
+
+###### `causalis.data_contracts.causal_diagnostic_data.MultiUnconfoundednessDiagnosticData.m_hat`
+
+```python
+m_hat: np.ndarray
+```
+
+###### `causalis.data_contracts.causal_diagnostic_data.MultiUnconfoundednessDiagnosticData.model_config`
+
+```python
+model_config = ConfigDict(arbitrary_types_allowed=True)
+```
+
+###### `causalis.data_contracts.causal_diagnostic_data.MultiUnconfoundednessDiagnosticData.nu2`
+
+```python
+nu2: Optional[np.ndarray] = None
+```
+
+###### `causalis.data_contracts.causal_diagnostic_data.MultiUnconfoundednessDiagnosticData.psi`
+
+```python
+psi: Optional[np.ndarray] = None
+```
+
+###### `causalis.data_contracts.causal_diagnostic_data.MultiUnconfoundednessDiagnosticData.psi_b`
+
+```python
+psi_b: Optional[np.ndarray] = None
+```
+
+###### `causalis.data_contracts.causal_diagnostic_data.MultiUnconfoundednessDiagnosticData.psi_nu2`
+
+```python
+psi_nu2: Optional[np.ndarray] = None
+```
+
+###### `causalis.data_contracts.causal_diagnostic_data.MultiUnconfoundednessDiagnosticData.psi_sigma2`
+
+```python
+psi_sigma2: Optional[np.ndarray] = None
+```
+
+###### `causalis.data_contracts.causal_diagnostic_data.MultiUnconfoundednessDiagnosticData.riesz_rep`
+
+```python
+riesz_rep: Optional[np.ndarray] = None
+```
+
+###### `causalis.data_contracts.causal_diagnostic_data.MultiUnconfoundednessDiagnosticData.score`
+
+```python
+score: Optional[str] = None
+```
+
+###### `causalis.data_contracts.causal_diagnostic_data.MultiUnconfoundednessDiagnosticData.sigma2`
+
+```python
+sigma2: Union[float, np.ndarray] = None
+```
+
+###### `causalis.data_contracts.causal_diagnostic_data.MultiUnconfoundednessDiagnosticData.trimming_threshold`
+
+```python
+trimming_threshold: float = 0.0
+```
+
+###### `causalis.data_contracts.causal_diagnostic_data.MultiUnconfoundednessDiagnosticData.x`
+
+```python
+x: Optional[np.ndarray] = None
+```
+
+###### `causalis.data_contracts.causal_diagnostic_data.MultiUnconfoundednessDiagnosticData.y`
+
+```python
+y: Optional[np.ndarray] = None
+```
 
 ##### `causalis.data_contracts.causal_diagnostic_data.UnconfoundednessDiagnosticData`
 
@@ -1507,10 +1657,12 @@ Result container for causal effect estimates.
 - **is_significant** (<code>[bool](#bool)</code>) – Whether the result is statistically significant at alpha.
 - **n_treated** (<code>[int](#int)</code>) – Number of units in the treatment group.
 - **n_control** (<code>[int](#int)</code>) – Number of units in the control group.
+- **treatment_mean** (<code>[float](#float)</code>) – Mean outcome in the treatment group.
+- **control_mean** (<code>[float](#float)</code>) – Mean outcome in the control group.
 - **outcome** (<code>[str](#str)</code>) – The name of the outcome variable.
 - **treatment** (<code>[str](#str)</code>) – The name of the treatment variable.
 - **confounders** (<code>list of str</code>) – The names of the confounders used in the model.
-- **time** (<code>[datetime](#datetime.datetime)</code>) – The date and time when the estimate was created.
+- **time** (<code>[str](#str)</code>) – The date when the estimate was created (YYYY-MM-DD).
 - **diagnostic_data** (<code>[DiagnosticData](#causalis.data_contracts.causal_diagnostic_data.DiagnosticData)</code>) – Additional diagnostic data_contracts.
 
 **Functions:**
@@ -1525,6 +1677,7 @@ Result container for causal effect estimates.
 - [**ci_upper_absolute**](#causalis.data_contracts.causal_estimate.CausalEstimate.ci_upper_absolute) (<code>[float](#float)</code>) –
 - [**ci_upper_relative**](#causalis.data_contracts.causal_estimate.CausalEstimate.ci_upper_relative) (<code>[Optional](#typing.Optional)\[[float](#float)\]</code>) –
 - [**confounders**](#causalis.data_contracts.causal_estimate.CausalEstimate.confounders) (<code>[List](#typing.List)\[[str](#str)\]</code>) –
+- [**control_mean**](#causalis.data_contracts.causal_estimate.CausalEstimate.control_mean) (<code>[float](#float)</code>) –
 - [**diagnostic_data**](#causalis.data_contracts.causal_estimate.CausalEstimate.diagnostic_data) (<code>[Optional](#typing.Optional)\[[DiagnosticData](#causalis.data_contracts.causal_diagnostic_data.DiagnosticData)\]</code>) –
 - [**estimand**](#causalis.data_contracts.causal_estimate.CausalEstimate.estimand) (<code>[str](#str)</code>) –
 - [**is_significant**](#causalis.data_contracts.causal_estimate.CausalEstimate.is_significant) (<code>[bool](#bool)</code>) –
@@ -1535,8 +1688,9 @@ Result container for causal effect estimates.
 - [**n_treated**](#causalis.data_contracts.causal_estimate.CausalEstimate.n_treated) (<code>[int](#int)</code>) –
 - [**outcome**](#causalis.data_contracts.causal_estimate.CausalEstimate.outcome) (<code>[str](#str)</code>) –
 - [**p_value**](#causalis.data_contracts.causal_estimate.CausalEstimate.p_value) (<code>[Optional](#typing.Optional)\[[float](#float)\]</code>) –
-- [**time**](#causalis.data_contracts.causal_estimate.CausalEstimate.time) (<code>[datetime](#datetime.datetime)</code>) –
+- [**time**](#causalis.data_contracts.causal_estimate.CausalEstimate.time) (<code>[str](#str)</code>) –
 - [**treatment**](#causalis.data_contracts.causal_estimate.CausalEstimate.treatment) (<code>[str](#str)</code>) –
+- [**treatment_mean**](#causalis.data_contracts.causal_estimate.CausalEstimate.treatment_mean) (<code>[float](#float)</code>) –
 - [**value**](#causalis.data_contracts.causal_estimate.CausalEstimate.value) (<code>[float](#float)</code>) –
 - [**value_relative**](#causalis.data_contracts.causal_estimate.CausalEstimate.value_relative) (<code>[Optional](#typing.Optional)\[[float](#float)\]</code>) –
 
@@ -1574,6 +1728,12 @@ ci_upper_relative: Optional[float] = None
 
 ```python
 confounders: List[str] = Field(default_factory=list)
+```
+
+###### `causalis.data_contracts.causal_estimate.CausalEstimate.control_mean`
+
+```python
+control_mean: float
 ```
 
 ###### `causalis.data_contracts.causal_estimate.CausalEstimate.diagnostic_data`
@@ -1651,13 +1811,19 @@ Return a summary DataFrame of the results.
 ###### `causalis.data_contracts.causal_estimate.CausalEstimate.time`
 
 ```python
-time: datetime = Field(default_factory=(datetime.now))
+time: str = Field(default_factory=(lambda: datetime.now().strftime('%Y-%m-%d')))
 ```
 
 ###### `causalis.data_contracts.causal_estimate.CausalEstimate.treatment`
 
 ```python
 treatment: str
+```
+
+###### `causalis.data_contracts.causal_estimate.CausalEstimate.treatment_mean`
+
+```python
+treatment_mean: float
 ```
 
 ###### `causalis.data_contracts.causal_estimate.CausalEstimate.value`
@@ -2027,10 +2193,73 @@ user_id column as a Series.
 user_id_name: Optional[str] = Field(alias='user_id', default=None)
 ```
 
+#### `causalis.data_contracts.classic_rct_gamma`
+
+```python
+classic_rct_gamma(n=10000, split=0.5, random_state=42, outcome_params=None, add_pre=False, beta_y=None, outcome_depends_on_x=True, prognostic_scale=1.0, pre_corr=0.7, add_ancillary=True, deterministic_ids=False, include_oracle=True, return_causal_data=False, **kwargs)
+```
+
+Generate a classic RCT dataset with three binary confounders and a gamma outcome.
+
+The gamma outcome uses a log-mean link, so treatment effects are multiplicative
+on the mean scale. The default parameters are chosen to resemble a skewed
+real-world metric (e.g., spend or revenue).
+
+**Parameters:**
+
+- **n** (<code>[int](#int)</code>) – Number of samples to generate.
+- **split** (<code>[float](#float)</code>) – Proportion of samples assigned to the treatment group.
+- **random_state** (<code>[int](#int)</code>) – Random seed for reproducibility.
+- **outcome_params** (<code>[dict](#dict)</code>) – Gamma parameters, e.g. {"shape": 2.0, "scale": {"A": 15.0, "B": 16.5}}.
+  Mean = shape * scale.
+- **add_pre** (<code>[bool](#bool)</code>) – Whether to generate a pre-period covariate (`y_pre`).
+- **beta_y** (<code>[array](#array) - [like](#like)</code>) – Linear coefficients for confounders in the log-mean outcome model.
+- **outcome_depends_on_x** (<code>[bool](#bool)</code>) – Whether to add default effects for confounders if beta_y is None.
+- **prognostic_scale** (<code>[float](#float)</code>) – Scale of nonlinear prognostic signal.
+- **pre_corr** (<code>[float](#float)</code>) – Target correlation for y_pre with post-outcome in control group.
+- **add_ancillary** (<code>[bool](#bool)</code>) – Whether to add standard ancillary columns (age, platform, etc.).
+- **deterministic_ids** (<code>[bool](#bool)</code>) – Whether to generate deterministic user IDs.
+- **include_oracle** (<code>[bool](#bool)</code>) – Whether to include oracle ground-truth columns like 'cate', 'propensity', etc.
+- **return_causal_data** (<code>[bool](#bool)</code>) – Whether to return a `CausalData` object instead of a `pandas.DataFrame`.
+- \*\***kwargs** – Additional arguments passed to `generate_rct` (e.g., pre_name, g_y, use_prognostic).
+
+**Returns:**
+
+- <code>[DataFrame](#pandas.DataFrame) or [CausalData](#causalis.dgp.causaldata.CausalData)</code> – Synthetic classic RCT dataset with gamma outcome.
+
+#### `causalis.data_contracts.classic_rct_gamma_26`
+
+```python
+classic_rct_gamma_26(seed=42, add_pre=False, beta_y=None, outcome_depends_on_x=True, include_oracle=False, return_causal_data=True, *, n=10000, split=0.5, outcome_params=None, add_ancillary=True, deterministic_ids=True, **kwargs)
+```
+
+A pre-configured classic RCT dataset with a gamma outcome.
+n=10000, split=0.5, mean uplift ~10%.
+Includes deterministic `user_id` and ancillary columns.
+
+**Parameters:**
+
+- **seed** (<code>[int](#int)</code>) – Random seed.
+- **add_pre** (<code>[bool](#bool)</code>) – Whether to generate a pre-period covariate ('y_pre').
+- **beta_y** (<code>[array](#array) - [like](#like)</code>) – Linear coefficients for confounders in the outcome model.
+- **outcome_depends_on_x** (<code>[bool](#bool)</code>) – Whether to add default effects for confounders if beta_y is None.
+- **include_oracle** (<code>[bool](#bool)</code>) – Whether to include oracle ground-truth columns like 'cate', 'propensity', etc.
+- **return_causal_data** (<code>[bool](#bool)</code>) – Whether to return a CausalData object.
+- **n** (<code>[int](#int)</code>) – Number of samples.
+- **split** (<code>[float](#float)</code>) – Proportion of samples assigned to the treatment group.
+- **outcome_params** (<code>[dict](#dict)</code>) – Gamma outcome parameters, e.g. {"shape": 2.0, "scale": {"A": 15.0, "B": 16.5}}.
+- **add_ancillary** (<code>[bool](#bool)</code>) – Whether to add standard ancillary columns (age, platform, etc.).
+- **deterministic_ids** (<code>[bool](#bool)</code>) – Whether to generate deterministic user IDs.
+- \*\***kwargs** – Additional arguments passed to `classic_rct_gamma`.
+
+**Returns:**
+
+- <code>[CausalData](#causalis.dgp.causaldata.CausalData) or [DataFrame](#pandas.DataFrame)</code> –
+
 #### `causalis.data_contracts.generate_classic_rct`
 
 ```python
-generate_classic_rct(n=10000, split=0.5, random_state=42, outcome_params=None, add_pre=False, beta_y=None, outcome_depends_on_x=True, prognostic_scale=1.0, pre_corr=0.7, return_causal_data=False, **kwargs)
+generate_classic_rct(n=10000, split=0.5, random_state=42, outcome_params=None, add_pre=False, beta_y=None, outcome_depends_on_x=True, prognostic_scale=1.0, pre_corr=0.7, return_causal_data=False, add_ancillary=False, deterministic_ids=False, include_oracle=True, **kwargs)
 ```
 
 Generate a classic RCT dataset with three binary confounders:
@@ -2049,6 +2278,9 @@ platform_ios, country_usa, and source_paid.
 - **prognostic_scale** (<code>[float](#float)</code>) – Scale of nonlinear prognostic signal (passed to generate_rct).
 - **pre_corr** (<code>[float](#float)</code>) – Target correlation for y_pre (passed to generate_rct).
 - **return_causal_data** (<code>[bool](#bool)</code>) – Whether to return a `CausalData` object instead of a `pandas.DataFrame`.
+- **add_ancillary** (<code>[bool](#bool)</code>) – Whether to add standard ancillary columns (age, platform, etc.).
+- **deterministic_ids** (<code>[bool](#bool)</code>) – Whether to generate deterministic user IDs.
+- **include_oracle** (<code>[bool](#bool)</code>) – Whether to include oracle ground-truth columns like 'cate', 'propensity', etc.
 - \*\***kwargs** – Additional arguments passed to `generate_rct`.
 
 **Returns:**
@@ -2058,11 +2290,14 @@ platform_ios, country_usa, and source_paid.
 #### `causalis.data_contracts.generate_classic_rct_26`
 
 ```python
-generate_classic_rct_26(seed=42, add_pre=False, beta_y=None, outcome_depends_on_x=True, include_oracle=False, return_causal_data=True)
+generate_classic_rct_26(seed=42, add_pre=False, beta_y=None, outcome_depends_on_x=True, include_oracle=False, return_causal_data=True, *, n=10000, split=0.5, outcome_params=None, add_ancillary=False, deterministic_ids=True, **kwargs)
 ```
 
 A pre-configured classic RCT dataset with 3 binary confounders.
-n=10000, split=0.5, outcome is conversion (binary), real effect = 0.01.
+n=10000, split=0.5, outcome is conversion (binary). Baseline control p=0.10
+and treatment p=0.11 are set on the log-odds scale (X=0), so marginal rates
+and ATE can differ once covariate effects are included. Includes a
+deterministic `user_id` column.
 
 **Parameters:**
 
@@ -2072,6 +2307,12 @@ n=10000, split=0.5, outcome is conversion (binary), real effect = 0.01.
 - **outcome_depends_on_x** (<code>[bool](#bool)</code>) – Whether to add default effects for confounders if beta_y is None.
 - **include_oracle** (<code>[bool](#bool)</code>) – Whether to include oracle ground-truth columns like 'cate', 'propensity', etc.
 - **return_causal_data** (<code>[bool](#bool)</code>) – Whether to return a CausalData object.
+- **n** (<code>[int](#int)</code>) – Number of samples.
+- **split** (<code>[float](#float)</code>) – Proportion of samples assigned to the treatment group.
+- **outcome_params** (<code>[dict](#dict)</code>) – Binary outcome parameters, e.g. {"p": {"A": 0.10, "B": 0.11}}.
+- **add_ancillary** (<code>[bool](#bool)</code>) – Whether to add standard ancillary columns (age, platform, etc.).
+- **deterministic_ids** (<code>[bool](#bool)</code>) – Whether to generate deterministic user IDs.
+- \*\***kwargs** – Additional arguments passed to `generate_classic_rct`.
 
 **Returns:**
 
@@ -2094,7 +2335,7 @@ How `outcome_params` maps into the structural effect:
 
 - outcome_type="normal": treatment shifts the mean by (mean["B"] - mean["A"]) on the outcome scale.
 - outcome_type="binary": treatment shifts the log-odds by (logit(p_B) - logit(p_A)).
-- outcome_type="poisson": treatment shifts the log-mean by log(lam_B / lam_A).
+- outcome_type="poisson" or "gamma": treatment shifts the log-mean by log(lam_B / lam_A).
 
 Ancillary columns (if add_ancillary=True) are generated from baseline confounders X only,
 avoiding outcome leakage and post-treatment adjustment issues.
@@ -2104,9 +2345,10 @@ avoiding outcome leakage and post-treatment adjustment issues.
 - **n** (<code>[int](#int)</code>) – Number of samples to generate.
 - **split** (<code>[float](#float)</code>) – Proportion of samples assigned to the treatment group.
 - **random_state** (<code>[int](#int)</code>) – Random seed for reproducibility.
-- **outcome_type** (<code>('binary', 'normal', 'poisson')</code>) – Distribution family of the outcome.
+- **outcome_type** (<code>('binary', 'normal', 'poisson', 'gamma')</code>) – Distribution family of the outcome.
 - **outcome_params** (<code>[dict](#dict)</code>) – Parameters defining baseline rates/means and treatment effects.
-  e.g., {"p": {"A": 0.1, "B": 0.12}} for binary.
+  e.g., {"p": {"A": 0.1, "B": 0.12}} for binary, or
+  {"shape": 2.0, "scale": {"A": 1.0, "B": 1.1}} for poisson/gamma.
 - **confounder_specs** (<code>list of dict</code>) – Schema for confounder distributions.
 - **k** (<code>[int](#int)</code>) – Number of confounders if specs not provided.
 - **x_sampler** (<code>[callable](#callable)</code>) – Custom sampler for confounders.
@@ -2131,6 +2373,207 @@ make_gold_linear(n=10000, seed=42)
 
 A standard linear benchmark with moderate confounding.
 Based on the benchmark scenario in docs/research/dgp_benchmarking.ipynb.
+
+#### `causalis.data_contracts.multicausal_estimate`
+
+**Classes:**
+
+- [**MultiCausalEstimate**](#causalis.data_contracts.multicausal_estimate.MultiCausalEstimate) – Result container for causal effect estimates.
+
+##### `causalis.data_contracts.multicausal_estimate.MultiCausalEstimate`
+
+Bases: <code>[BaseModel](#pydantic.BaseModel)</code>
+
+Result container for causal effect estimates.
+
+**Parameters:**
+
+- **estimand** (<code>[str](#str)</code>) – The estimand being estimated (e.g., 'ATE', 'ATTE', 'CATE').
+- **model** (<code>[str](#str)</code>) – The name of the model used for estimation.
+- **model_options** (<code>[dict](#dict)</code>) – Options passed to the model.
+- **value** (<code>[float](#float)</code>) – The estimated absolute effect.
+- **ci_upper_absolute** (<code>[float](#float)</code>) – Upper bound of the absolute confidence interval.
+- **ci_lower_absolute** (<code>[float](#float)</code>) – Lower bound of the absolute confidence interval.
+- **value_relative** (<code>[float](#float)</code>) – The estimated relative effect.
+- **ci_upper_relative** (<code>[float](#float)</code>) – Upper bound of the relative confidence interval.
+- **ci_lower_relative** (<code>[float](#float)</code>) – Lower bound of the relative confidence interval.
+- **alpha** (<code>[float](#float)</code>) – The significance level (e.g., 0.05).
+- **p_value** (<code>[float](#float)</code>) – The p-value from the test.
+- **is_significant** (<code>[bool](#bool)</code>) – Whether the result is statistically significant at alpha.
+- **n_treated** (<code>[int](#int)</code>) – Number of units in the treatment group.
+- **n_control** (<code>[int](#int)</code>) – Number of units in the control group.
+- **outcome** (<code>[str](#str)</code>) – The name of the outcome variable.
+- **treatment** (<code>[str](#str)</code>) – The name of the treatment variable.
+- **confounders** (<code>list of str</code>) – The names of the confounders used in the model.
+- **time** (<code>[str](#str)</code>) – The date when the estimate was created (YYYY-MM-DD).
+- **diagnostic_data** (<code>[DiagnosticData](#causalis.data_contracts.causal_diagnostic_data.DiagnosticData)</code>) – Additional diagnostic data_contracts.
+- **sensitivity_analysis** (<code>[dict](#dict)</code>) – Results from sensitivity analysis.
+
+**Functions:**
+
+- [**summary**](#causalis.data_contracts.multicausal_estimate.MultiCausalEstimate.summary) – Return a summary DataFrame of the results.
+
+**Attributes:**
+
+- [**alpha**](#causalis.data_contracts.multicausal_estimate.MultiCausalEstimate.alpha) (<code>[float](#float)</code>) –
+- [**ci_lower_absolute**](#causalis.data_contracts.multicausal_estimate.MultiCausalEstimate.ci_lower_absolute) (<code>[ndarray](#numpy.ndarray)</code>) –
+- [**ci_lower_relative**](#causalis.data_contracts.multicausal_estimate.MultiCausalEstimate.ci_lower_relative) (<code>[Optional](#typing.Optional)\[[ndarray](#numpy.ndarray)\]</code>) –
+- [**ci_upper_absolute**](#causalis.data_contracts.multicausal_estimate.MultiCausalEstimate.ci_upper_absolute) (<code>[ndarray](#numpy.ndarray)</code>) –
+- [**ci_upper_relative**](#causalis.data_contracts.multicausal_estimate.MultiCausalEstimate.ci_upper_relative) (<code>[Optional](#typing.Optional)\[[ndarray](#numpy.ndarray)\]</code>) –
+- [**confounders**](#causalis.data_contracts.multicausal_estimate.MultiCausalEstimate.confounders) (<code>[List](#typing.List)\[[str](#str)\]</code>) –
+- [**diagnostic_data**](#causalis.data_contracts.multicausal_estimate.MultiCausalEstimate.diagnostic_data) (<code>[Optional](#typing.Optional)\[[DiagnosticData](#causalis.data_contracts.causal_diagnostic_data.DiagnosticData)\]</code>) –
+- [**estimand**](#causalis.data_contracts.multicausal_estimate.MultiCausalEstimate.estimand) (<code>[str](#str)</code>) –
+- [**is_significant**](#causalis.data_contracts.multicausal_estimate.MultiCausalEstimate.is_significant) (<code>[List](#typing.List)\[[bool](#bool)\]</code>) –
+- [**model**](#causalis.data_contracts.multicausal_estimate.MultiCausalEstimate.model) (<code>[str](#str)</code>) –
+- [**model_config**](#causalis.data_contracts.multicausal_estimate.MultiCausalEstimate.model_config) –
+- [**model_options**](#causalis.data_contracts.multicausal_estimate.MultiCausalEstimate.model_options) (<code>[Dict](#typing.Dict)\[[str](#str), [Any](#typing.Any)\]</code>) –
+- [**n_control**](#causalis.data_contracts.multicausal_estimate.MultiCausalEstimate.n_control) (<code>[int](#int)</code>) –
+- [**n_treated**](#causalis.data_contracts.multicausal_estimate.MultiCausalEstimate.n_treated) (<code>[int](#int)</code>) –
+- [**outcome**](#causalis.data_contracts.multicausal_estimate.MultiCausalEstimate.outcome) (<code>[str](#str)</code>) –
+- [**p_value**](#causalis.data_contracts.multicausal_estimate.MultiCausalEstimate.p_value) (<code>[Optional](#typing.Optional)\[[ndarray](#numpy.ndarray)\]</code>) –
+- [**sensitivity_analysis**](#causalis.data_contracts.multicausal_estimate.MultiCausalEstimate.sensitivity_analysis) (<code>[Dict](#typing.Dict)\[[str](#str), [Any](#typing.Any)\]</code>) –
+- [**time**](#causalis.data_contracts.multicausal_estimate.MultiCausalEstimate.time) (<code>[str](#str)</code>) –
+- [**treatment**](#causalis.data_contracts.multicausal_estimate.MultiCausalEstimate.treatment) (<code>[List](#typing.List)\[[str](#str)\]</code>) –
+- [**value**](#causalis.data_contracts.multicausal_estimate.MultiCausalEstimate.value) (<code>[ndarray](#numpy.ndarray)</code>) –
+- [**value_relative**](#causalis.data_contracts.multicausal_estimate.MultiCausalEstimate.value_relative) (<code>[Optional](#typing.Optional)\[[ndarray](#numpy.ndarray)\]</code>) –
+
+###### `causalis.data_contracts.multicausal_estimate.MultiCausalEstimate.alpha`
+
+```python
+alpha: float
+```
+
+###### `causalis.data_contracts.multicausal_estimate.MultiCausalEstimate.ci_lower_absolute`
+
+```python
+ci_lower_absolute: np.ndarray
+```
+
+###### `causalis.data_contracts.multicausal_estimate.MultiCausalEstimate.ci_lower_relative`
+
+```python
+ci_lower_relative: Optional[np.ndarray] = None
+```
+
+###### `causalis.data_contracts.multicausal_estimate.MultiCausalEstimate.ci_upper_absolute`
+
+```python
+ci_upper_absolute: np.ndarray
+```
+
+###### `causalis.data_contracts.multicausal_estimate.MultiCausalEstimate.ci_upper_relative`
+
+```python
+ci_upper_relative: Optional[np.ndarray] = None
+```
+
+###### `causalis.data_contracts.multicausal_estimate.MultiCausalEstimate.confounders`
+
+```python
+confounders: List[str] = Field(default_factory=list)
+```
+
+###### `causalis.data_contracts.multicausal_estimate.MultiCausalEstimate.diagnostic_data`
+
+```python
+diagnostic_data: Optional[DiagnosticData] = None
+```
+
+###### `causalis.data_contracts.multicausal_estimate.MultiCausalEstimate.estimand`
+
+```python
+estimand: str
+```
+
+###### `causalis.data_contracts.multicausal_estimate.MultiCausalEstimate.is_significant`
+
+```python
+is_significant: List[bool]
+```
+
+###### `causalis.data_contracts.multicausal_estimate.MultiCausalEstimate.model`
+
+```python
+model: str
+```
+
+###### `causalis.data_contracts.multicausal_estimate.MultiCausalEstimate.model_config`
+
+```python
+model_config = ConfigDict(arbitrary_types_allowed=True)
+```
+
+###### `causalis.data_contracts.multicausal_estimate.MultiCausalEstimate.model_options`
+
+```python
+model_options: Dict[str, Any] = Field(default_factory=dict)
+```
+
+###### `causalis.data_contracts.multicausal_estimate.MultiCausalEstimate.n_control`
+
+```python
+n_control: int
+```
+
+###### `causalis.data_contracts.multicausal_estimate.MultiCausalEstimate.n_treated`
+
+```python
+n_treated: int
+```
+
+###### `causalis.data_contracts.multicausal_estimate.MultiCausalEstimate.outcome`
+
+```python
+outcome: str
+```
+
+###### `causalis.data_contracts.multicausal_estimate.MultiCausalEstimate.p_value`
+
+```python
+p_value: Optional[np.ndarray] = None
+```
+
+###### `causalis.data_contracts.multicausal_estimate.MultiCausalEstimate.sensitivity_analysis`
+
+```python
+sensitivity_analysis: Dict[str, Any] = Field(default_factory=dict)
+```
+
+###### `causalis.data_contracts.multicausal_estimate.MultiCausalEstimate.summary`
+
+```python
+summary()
+```
+
+Return a summary DataFrame of the results.
+
+**Returns:**
+
+- <code>[DataFrame](#pandas.DataFrame)</code> – Summary DataFrame.
+
+###### `causalis.data_contracts.multicausal_estimate.MultiCausalEstimate.time`
+
+```python
+time: str = Field(default_factory=(lambda: datetime.now().strftime('%Y-%m-%d')))
+```
+
+###### `causalis.data_contracts.multicausal_estimate.MultiCausalEstimate.treatment`
+
+```python
+treatment: List[str]
+```
+
+###### `causalis.data_contracts.multicausal_estimate.MultiCausalEstimate.value`
+
+```python
+value: np.ndarray
+```
+
+###### `causalis.data_contracts.multicausal_estimate.MultiCausalEstimate.value_relative`
+
+```python
+value_relative: Optional[np.ndarray] = None
+```
 
 #### `causalis.data_contracts.multicausaldata`
 
@@ -2365,7 +2808,7 @@ Generate an observational dataset with linear effects of confounders and a const
 
 - **n** (<code>[int](#int)</code>) – Number of samples to generate.
 - **theta** (<code>[float](#float)</code>) – Constant treatment effect.
-- **outcome_type** (<code>('continuous', 'binary', 'poisson')</code>) – Family of the outcome distribution.
+- **outcome_type** (<code>('continuous', 'binary', 'poisson', 'gamma')</code>) – Family of the outcome distribution.
 - **sigma_y** (<code>[float](#float)</code>) – Noise level for continuous outcomes.
 - **target_d_rate** (<code>[float](#float)</code>) – Target treatment prevalence (propensity mean).
 - **confounder_specs** (<code>list of dict</code>) – Schema for confounder distributions.
@@ -2395,6 +2838,7 @@ design = None
 - [**base**](#causalis.dgp.base) –
 - [**causaldata**](#causalis.dgp.causaldata) –
 - [**causaldata_instrumental**](#causalis.dgp.causaldata_instrumental) –
+- [**multicausaldata**](#causalis.dgp.multicausaldata) –
 
 **Classes:**
 
@@ -2402,6 +2846,8 @@ design = None
 
 **Functions:**
 
+- [**classic_rct_gamma**](#causalis.dgp.classic_rct_gamma) – Generate a classic RCT dataset with three binary confounders and a gamma outcome.
+- [**classic_rct_gamma_26**](#causalis.dgp.classic_rct_gamma_26) – A pre-configured classic RCT dataset with a gamma outcome.
 - [**generate_classic_rct**](#causalis.dgp.generate_classic_rct) – Generate a classic RCT dataset with three binary confounders:
 - [**generate_classic_rct_26**](#causalis.dgp.generate_classic_rct_26) – A pre-configured classic RCT dataset with 3 binary confounders.
 - [**generate_iv_data**](#causalis.dgp.generate_iv_data) – Generate synthetic dataset with instrumental variables.
@@ -2434,6 +2880,8 @@ treatment prevalence, noise, and (optionally) heterogeneous treatment effects.
   logit P(Y=1|T,X,U) = alpha_y + f_y(X) + u_strength_y * U + T * tau(X)
   outcome_type = "poisson":
   log E[Y|T,X,U] = alpha_y + f_y(X) + u_strength_y * U + T * tau(X)
+  outcome_type = "gamma":
+  log E[Y|T,X,U] = alpha_y + f_y(X) + u_strength_y * U + T * tau(X)
   where f_y(X) = X @ beta_y + g_y(X), and tau(X) is either constant `theta` or a user function.
 
 **Returned columns**
@@ -2452,7 +2900,7 @@ Notes on effect scale:
 
 - For "continuous", `theta` (or tau(X)) is an additive mean difference, so `tau_link == cate`.
 - For "binary", tau acts on the *log-odds* scale. `cate` is reported as a risk difference.
-- For "poisson", tau acts on the *log-mean* scale. `cate` is reported on the mean (rate) scale.
+- For "poisson" and "gamma", tau acts on the *log-mean* scale. `cate` is reported on the mean scale.
 
 **Parameters:**
 
@@ -2462,10 +2910,10 @@ Notes on effect scale:
 - **beta_d** (<code>[array](#array) - [like](#like)</code>) – Linear coefficients of confounders in the treatment score f_d(X).
 - **g_y** (<code>[callable](#callable)</code>) – Nonlinear/additive function g_y(X) -> (n,) added to the outcome baseline.
 - **g_d** (<code>[callable](#callable)</code>) – Nonlinear/additive function g_d(X) -> (n,) added to the treatment score.
-- **alpha_y** (<code>[float](#float)</code>) – Outcome intercept (natural scale for continuous; log-odds for binary; log-mean for Poisson).
+- **alpha_y** (<code>[float](#float)</code>) – Outcome intercept (natural scale for continuous; log-odds for binary; log-mean for Poisson/Gamma).
 - **alpha_d** (<code>[float](#float)</code>) – Treatment intercept (log-odds). If `target_d_rate` is set, `alpha_d` is auto-calibrated.
 - **sigma_y** (<code>[float](#float)</code>) – Std. dev. of the Gaussian noise for continuous outcomes.
-- **outcome_type** (<code>('continuous', 'binary', 'poisson')</code>) – Outcome family and link as defined above.
+- **outcome_type** (<code>('continuous', 'binary', 'poisson', 'gamma', 'tweedie')</code>) – Outcome family and link as defined above.
 - **confounder_specs** (<code>list of dict</code>) – Schema for generating confounders. See `_gaussian_copula` for details.
 - **k** (<code>[int](#int)</code>) – Number of confounders when `confounder_specs` is None. Defaults to independent N(0,1).
 - **x_sampler** (<code>[callable](#callable)</code>) – Custom sampler (n, k, seed) -> X ndarray of shape (n,k). Overrides `confounder_specs`.
@@ -2754,6 +3202,8 @@ Uses rank -> normal scores -> Pearson correlation approach.
 
 **Functions:**
 
+- [**classic_rct_gamma**](#causalis.dgp.causaldata.classic_rct_gamma) – Generate a classic RCT dataset with three binary confounders and a gamma outcome.
+- [**classic_rct_gamma_26**](#causalis.dgp.causaldata.classic_rct_gamma_26) – A pre-configured classic RCT dataset with a gamma outcome.
 - [**generate_classic_rct**](#causalis.dgp.causaldata.generate_classic_rct) – Generate a classic RCT dataset with three binary confounders:
 - [**generate_classic_rct_26**](#causalis.dgp.causaldata.generate_classic_rct_26) – A pre-configured classic RCT dataset with 3 binary confounders.
 - [**generate_obs_hte_26**](#causalis.dgp.causaldata.generate_obs_hte_26) – Observational dataset with nonlinear outcome model, nonlinear treatment assignment,
@@ -2952,6 +3402,8 @@ treatment prevalence, noise, and (optionally) heterogeneous treatment effects.
   logit P(Y=1|T,X,U) = alpha_y + f_y(X) + u_strength_y * U + T * tau(X)
   outcome_type = "poisson":
   log E[Y|T,X,U] = alpha_y + f_y(X) + u_strength_y * U + T * tau(X)
+  outcome_type = "gamma":
+  log E[Y|T,X,U] = alpha_y + f_y(X) + u_strength_y * U + T * tau(X)
   where f_y(X) = X @ beta_y + g_y(X), and tau(X) is either constant `theta` or a user function.
 
 **Returned columns**
@@ -2970,7 +3422,7 @@ Notes on effect scale:
 
 - For "continuous", `theta` (or tau(X)) is an additive mean difference, so `tau_link == cate`.
 - For "binary", tau acts on the *log-odds* scale. `cate` is reported as a risk difference.
-- For "poisson", tau acts on the *log-mean* scale. `cate` is reported on the mean (rate) scale.
+- For "poisson" and "gamma", tau acts on the *log-mean* scale. `cate` is reported on the mean scale.
 
 **Parameters:**
 
@@ -2980,10 +3432,10 @@ Notes on effect scale:
 - **beta_d** (<code>[array](#array) - [like](#like)</code>) – Linear coefficients of confounders in the treatment score f_d(X).
 - **g_y** (<code>[callable](#callable)</code>) – Nonlinear/additive function g_y(X) -> (n,) added to the outcome baseline.
 - **g_d** (<code>[callable](#callable)</code>) – Nonlinear/additive function g_d(X) -> (n,) added to the treatment score.
-- **alpha_y** (<code>[float](#float)</code>) – Outcome intercept (natural scale for continuous; log-odds for binary; log-mean for Poisson).
+- **alpha_y** (<code>[float](#float)</code>) – Outcome intercept (natural scale for continuous; log-odds for binary; log-mean for Poisson/Gamma).
 - **alpha_d** (<code>[float](#float)</code>) – Treatment intercept (log-odds). If `target_d_rate` is set, `alpha_d` is auto-calibrated.
 - **sigma_y** (<code>[float](#float)</code>) – Std. dev. of the Gaussian noise for continuous outcomes.
-- **outcome_type** (<code>('continuous', 'binary', 'poisson')</code>) – Outcome family and link as defined above.
+- **outcome_type** (<code>('continuous', 'binary', 'poisson', 'gamma', 'tweedie')</code>) – Outcome family and link as defined above.
 - **confounder_specs** (<code>list of dict</code>) – Schema for generating confounders. See `_gaussian_copula` for details.
 - **k** (<code>[int](#int)</code>) – Number of confounders when `confounder_specs` is None. Defaults to independent N(0,1).
 - **x_sampler** (<code>[callable](#callable)</code>) – Custom sampler (n, k, seed) -> X ndarray of shape (n,k). Overrides `confounder_specs`.
@@ -3270,6 +3722,8 @@ treatment prevalence, noise, and (optionally) heterogeneous treatment effects.
   logit P(Y=1|T,X,U) = alpha_y + f_y(X) + u_strength_y * U + T * tau(X)
   outcome_type = "poisson":
   log E[Y|T,X,U] = alpha_y + f_y(X) + u_strength_y * U + T * tau(X)
+  outcome_type = "gamma":
+  log E[Y|T,X,U] = alpha_y + f_y(X) + u_strength_y * U + T * tau(X)
   where f_y(X) = X @ beta_y + g_y(X), and tau(X) is either constant `theta` or a user function.
 
 **Returned columns**
@@ -3288,7 +3742,7 @@ Notes on effect scale:
 
 - For "continuous", `theta` (or tau(X)) is an additive mean difference, so `tau_link == cate`.
 - For "binary", tau acts on the *log-odds* scale. `cate` is reported as a risk difference.
-- For "poisson", tau acts on the *log-mean* scale. `cate` is reported on the mean (rate) scale.
+- For "poisson" and "gamma", tau acts on the *log-mean* scale. `cate` is reported on the mean scale.
 
 **Parameters:**
 
@@ -3298,10 +3752,10 @@ Notes on effect scale:
 - **beta_d** (<code>[array](#array) - [like](#like)</code>) – Linear coefficients of confounders in the treatment score f_d(X).
 - **g_y** (<code>[callable](#callable)</code>) – Nonlinear/additive function g_y(X) -> (n,) added to the outcome baseline.
 - **g_d** (<code>[callable](#callable)</code>) – Nonlinear/additive function g_d(X) -> (n,) added to the treatment score.
-- **alpha_y** (<code>[float](#float)</code>) – Outcome intercept (natural scale for continuous; log-odds for binary; log-mean for Poisson).
+- **alpha_y** (<code>[float](#float)</code>) – Outcome intercept (natural scale for continuous; log-odds for binary; log-mean for Poisson/Gamma).
 - **alpha_d** (<code>[float](#float)</code>) – Treatment intercept (log-odds). If `target_d_rate` is set, `alpha_d` is auto-calibrated.
 - **sigma_y** (<code>[float](#float)</code>) – Std. dev. of the Gaussian noise for continuous outcomes.
-- **outcome_type** (<code>('continuous', 'binary', 'poisson')</code>) – Outcome family and link as defined above.
+- **outcome_type** (<code>('continuous', 'binary', 'poisson', 'gamma', 'tweedie')</code>) – Outcome family and link as defined above.
 - **confounder_specs** (<code>list of dict</code>) – Schema for generating confounders. See `_gaussian_copula` for details.
 - **k** (<code>[int](#int)</code>) – Number of confounders when `confounder_specs` is None. Defaults to independent N(0,1).
 - **x_sampler** (<code>[callable](#callable)</code>) – Custom sampler (n, k, seed) -> X ndarray of shape (n,k). Overrides `confounder_specs`.
@@ -3560,20 +4014,118 @@ use_copula: bool = False
 x_sampler: Optional[Callable[[int, int, int], np.ndarray]] = None
 ```
 
+##### `causalis.dgp.causaldata.classic_rct_gamma`
+
+```python
+classic_rct_gamma(n=10000, split=0.5, random_state=42, outcome_params=None, add_pre=False, beta_y=None, outcome_depends_on_x=True, prognostic_scale=1.0, pre_corr=0.7, add_ancillary=True, deterministic_ids=False, include_oracle=True, return_causal_data=False, **kwargs)
+```
+
+Generate a classic RCT dataset with three binary confounders and a gamma outcome.
+
+The gamma outcome uses a log-mean link, so treatment effects are multiplicative
+on the mean scale. The default parameters are chosen to resemble a skewed
+real-world metric (e.g., spend or revenue).
+
+**Parameters:**
+
+- **n** (<code>[int](#int)</code>) – Number of samples to generate.
+- **split** (<code>[float](#float)</code>) – Proportion of samples assigned to the treatment group.
+- **random_state** (<code>[int](#int)</code>) – Random seed for reproducibility.
+- **outcome_params** (<code>[dict](#dict)</code>) – Gamma parameters, e.g. {"shape": 2.0, "scale": {"A": 15.0, "B": 16.5}}.
+  Mean = shape * scale.
+- **add_pre** (<code>[bool](#bool)</code>) – Whether to generate a pre-period covariate (`y_pre`).
+- **beta_y** (<code>[array](#array) - [like](#like)</code>) – Linear coefficients for confounders in the log-mean outcome model.
+- **outcome_depends_on_x** (<code>[bool](#bool)</code>) – Whether to add default effects for confounders if beta_y is None.
+- **prognostic_scale** (<code>[float](#float)</code>) – Scale of nonlinear prognostic signal.
+- **pre_corr** (<code>[float](#float)</code>) – Target correlation for y_pre with post-outcome in control group.
+- **add_ancillary** (<code>[bool](#bool)</code>) – Whether to add standard ancillary columns (age, platform, etc.).
+- **deterministic_ids** (<code>[bool](#bool)</code>) – Whether to generate deterministic user IDs.
+- **include_oracle** (<code>[bool](#bool)</code>) – Whether to include oracle ground-truth columns like 'cate', 'propensity', etc.
+- **return_causal_data** (<code>[bool](#bool)</code>) – Whether to return a `CausalData` object instead of a `pandas.DataFrame`.
+- \*\***kwargs** – Additional arguments passed to `generate_rct` (e.g., pre_name, g_y, use_prognostic).
+
+**Returns:**
+
+- <code>[DataFrame](#pandas.DataFrame) or [CausalData](#causalis.dgp.causaldata.CausalData)</code> – Synthetic classic RCT dataset with gamma outcome.
+
+##### `causalis.dgp.causaldata.classic_rct_gamma_26`
+
+```python
+classic_rct_gamma_26(seed=42, add_pre=False, beta_y=None, outcome_depends_on_x=True, include_oracle=False, return_causal_data=True, *, n=10000, split=0.5, outcome_params=None, add_ancillary=True, deterministic_ids=True, **kwargs)
+```
+
+A pre-configured classic RCT dataset with a gamma outcome.
+n=10000, split=0.5, mean uplift ~10%.
+Includes deterministic `user_id` and ancillary columns.
+
+**Parameters:**
+
+- **seed** (<code>[int](#int)</code>) – Random seed.
+- **add_pre** (<code>[bool](#bool)</code>) – Whether to generate a pre-period covariate ('y_pre').
+- **beta_y** (<code>[array](#array) - [like](#like)</code>) – Linear coefficients for confounders in the outcome model.
+- **outcome_depends_on_x** (<code>[bool](#bool)</code>) – Whether to add default effects for confounders if beta_y is None.
+- **include_oracle** (<code>[bool](#bool)</code>) – Whether to include oracle ground-truth columns like 'cate', 'propensity', etc.
+- **return_causal_data** (<code>[bool](#bool)</code>) – Whether to return a CausalData object.
+- **n** (<code>[int](#int)</code>) – Number of samples.
+- **split** (<code>[float](#float)</code>) – Proportion of samples assigned to the treatment group.
+- **outcome_params** (<code>[dict](#dict)</code>) – Gamma outcome parameters, e.g. {"shape": 2.0, "scale": {"A": 15.0, "B": 16.5}}.
+- **add_ancillary** (<code>[bool](#bool)</code>) – Whether to add standard ancillary columns (age, platform, etc.).
+- **deterministic_ids** (<code>[bool](#bool)</code>) – Whether to generate deterministic user IDs.
+- \*\***kwargs** – Additional arguments passed to `classic_rct_gamma`.
+
+**Returns:**
+
+- <code>[CausalData](#causalis.dgp.causaldata.CausalData) or [DataFrame](#pandas.DataFrame)</code> –
+
 ##### `causalis.dgp.causaldata.functional`
 
 **Functions:**
 
+- [**classic_rct_gamma**](#causalis.dgp.causaldata.functional.classic_rct_gamma) – Generate a classic RCT dataset with three binary confounders and a gamma outcome.
 - [**generate_classic_rct**](#causalis.dgp.causaldata.functional.generate_classic_rct) – Generate a classic RCT dataset with three binary confounders:
 - [**generate_rct**](#causalis.dgp.causaldata.functional.generate_rct) – Generate an RCT dataset with randomized treatment assignment.
 - [**make_cuped_tweedie**](#causalis.dgp.causaldata.functional.make_cuped_tweedie) – Tweedie-like DGP with mixed marginals and structured HTE.
 - [**make_gold_linear**](#causalis.dgp.causaldata.functional.make_gold_linear) – A standard linear benchmark with moderate confounding.
 - [**obs_linear_effect**](#causalis.dgp.causaldata.functional.obs_linear_effect) – Generate an observational dataset with linear effects of confounders and a constant treatment effect.
 
+###### `causalis.dgp.causaldata.functional.classic_rct_gamma`
+
+```python
+classic_rct_gamma(n=10000, split=0.5, random_state=42, outcome_params=None, add_pre=False, beta_y=None, outcome_depends_on_x=True, prognostic_scale=1.0, pre_corr=0.7, add_ancillary=True, deterministic_ids=False, include_oracle=True, return_causal_data=False, **kwargs)
+```
+
+Generate a classic RCT dataset with three binary confounders and a gamma outcome.
+
+The gamma outcome uses a log-mean link, so treatment effects are multiplicative
+on the mean scale. The default parameters are chosen to resemble a skewed
+real-world metric (e.g., spend or revenue).
+
+**Parameters:**
+
+- **n** (<code>[int](#int)</code>) – Number of samples to generate.
+- **split** (<code>[float](#float)</code>) – Proportion of samples assigned to the treatment group.
+- **random_state** (<code>[int](#int)</code>) – Random seed for reproducibility.
+- **outcome_params** (<code>[dict](#dict)</code>) – Gamma parameters, e.g. {"shape": 2.0, "scale": {"A": 15.0, "B": 16.5}}.
+  Mean = shape * scale.
+- **add_pre** (<code>[bool](#bool)</code>) – Whether to generate a pre-period covariate (`y_pre`).
+- **beta_y** (<code>[array](#array) - [like](#like)</code>) – Linear coefficients for confounders in the log-mean outcome model.
+- **outcome_depends_on_x** (<code>[bool](#bool)</code>) – Whether to add default effects for confounders if beta_y is None.
+- **prognostic_scale** (<code>[float](#float)</code>) – Scale of nonlinear prognostic signal.
+- **pre_corr** (<code>[float](#float)</code>) – Target correlation for y_pre with post-outcome in control group.
+- **add_ancillary** (<code>[bool](#bool)</code>) – Whether to add standard ancillary columns (age, platform, etc.).
+- **deterministic_ids** (<code>[bool](#bool)</code>) – Whether to generate deterministic user IDs.
+- **include_oracle** (<code>[bool](#bool)</code>) – Whether to include oracle ground-truth columns like 'cate', 'propensity', etc.
+- **return_causal_data** (<code>[bool](#bool)</code>) – Whether to return a `CausalData` object instead of a `pandas.DataFrame`.
+- \*\***kwargs** – Additional arguments passed to `generate_rct` (e.g., pre_name, g_y, use_prognostic).
+
+**Returns:**
+
+- <code>[DataFrame](#pandas.DataFrame) or [CausalData](#causalis.dgp.causaldata.CausalData)</code> – Synthetic classic RCT dataset with gamma outcome.
+
 ###### `causalis.dgp.causaldata.functional.generate_classic_rct`
 
 ```python
-generate_classic_rct(n=10000, split=0.5, random_state=42, outcome_params=None, add_pre=False, beta_y=None, outcome_depends_on_x=True, prognostic_scale=1.0, pre_corr=0.7, return_causal_data=False, **kwargs)
+generate_classic_rct(n=10000, split=0.5, random_state=42, outcome_params=None, add_pre=False, beta_y=None, outcome_depends_on_x=True, prognostic_scale=1.0, pre_corr=0.7, return_causal_data=False, add_ancillary=False, deterministic_ids=False, include_oracle=True, **kwargs)
 ```
 
 Generate a classic RCT dataset with three binary confounders:
@@ -3592,6 +4144,9 @@ platform_ios, country_usa, and source_paid.
 - **prognostic_scale** (<code>[float](#float)</code>) – Scale of nonlinear prognostic signal (passed to generate_rct).
 - **pre_corr** (<code>[float](#float)</code>) – Target correlation for y_pre (passed to generate_rct).
 - **return_causal_data** (<code>[bool](#bool)</code>) – Whether to return a `CausalData` object instead of a `pandas.DataFrame`.
+- **add_ancillary** (<code>[bool](#bool)</code>) – Whether to add standard ancillary columns (age, platform, etc.).
+- **deterministic_ids** (<code>[bool](#bool)</code>) – Whether to generate deterministic user IDs.
+- **include_oracle** (<code>[bool](#bool)</code>) – Whether to include oracle ground-truth columns like 'cate', 'propensity', etc.
 - \*\***kwargs** – Additional arguments passed to `generate_rct`.
 
 **Returns:**
@@ -3615,7 +4170,7 @@ How `outcome_params` maps into the structural effect:
 
 - outcome_type="normal": treatment shifts the mean by (mean["B"] - mean["A"]) on the outcome scale.
 - outcome_type="binary": treatment shifts the log-odds by (logit(p_B) - logit(p_A)).
-- outcome_type="poisson": treatment shifts the log-mean by log(lam_B / lam_A).
+- outcome_type="poisson" or "gamma": treatment shifts the log-mean by log(lam_B / lam_A).
 
 Ancillary columns (if add_ancillary=True) are generated from baseline confounders X only,
 avoiding outcome leakage and post-treatment adjustment issues.
@@ -3625,9 +4180,10 @@ avoiding outcome leakage and post-treatment adjustment issues.
 - **n** (<code>[int](#int)</code>) – Number of samples to generate.
 - **split** (<code>[float](#float)</code>) – Proportion of samples assigned to the treatment group.
 - **random_state** (<code>[int](#int)</code>) – Random seed for reproducibility.
-- **outcome_type** (<code>('binary', 'normal', 'poisson')</code>) – Distribution family of the outcome.
+- **outcome_type** (<code>('binary', 'normal', 'poisson', 'gamma')</code>) – Distribution family of the outcome.
 - **outcome_params** (<code>[dict](#dict)</code>) – Parameters defining baseline rates/means and treatment effects.
-  e.g., {"p": {"A": 0.1, "B": 0.12}} for binary.
+  e.g., {"p": {"A": 0.1, "B": 0.12}} for binary, or
+  {"shape": 2.0, "scale": {"A": 1.0, "B": 1.1}} for poisson/gamma.
 - **confounder_specs** (<code>list of dict</code>) – Schema for confounder distributions.
 - **k** (<code>[int](#int)</code>) – Number of confounders if specs not provided.
 - **x_sampler** (<code>[callable](#callable)</code>) – Custom sampler for confounders.
@@ -3691,7 +4247,7 @@ Generate an observational dataset with linear effects of confounders and a const
 
 - **n** (<code>[int](#int)</code>) – Number of samples to generate.
 - **theta** (<code>[float](#float)</code>) – Constant treatment effect.
-- **outcome_type** (<code>('continuous', 'binary', 'poisson')</code>) – Family of the outcome distribution.
+- **outcome_type** (<code>('continuous', 'binary', 'poisson', 'gamma')</code>) – Family of the outcome distribution.
 - **sigma_y** (<code>[float](#float)</code>) – Noise level for continuous outcomes.
 - **target_d_rate** (<code>[float](#float)</code>) – Target treatment prevalence (propensity mean).
 - **confounder_specs** (<code>list of dict</code>) – Schema for confounder distributions.
@@ -3711,7 +4267,7 @@ Generate an observational dataset with linear effects of confounders and a const
 ##### `causalis.dgp.causaldata.generate_classic_rct`
 
 ```python
-generate_classic_rct(n=10000, split=0.5, random_state=42, outcome_params=None, add_pre=False, beta_y=None, outcome_depends_on_x=True, prognostic_scale=1.0, pre_corr=0.7, return_causal_data=False, **kwargs)
+generate_classic_rct(n=10000, split=0.5, random_state=42, outcome_params=None, add_pre=False, beta_y=None, outcome_depends_on_x=True, prognostic_scale=1.0, pre_corr=0.7, return_causal_data=False, add_ancillary=False, deterministic_ids=False, include_oracle=True, **kwargs)
 ```
 
 Generate a classic RCT dataset with three binary confounders:
@@ -3730,6 +4286,9 @@ platform_ios, country_usa, and source_paid.
 - **prognostic_scale** (<code>[float](#float)</code>) – Scale of nonlinear prognostic signal (passed to generate_rct).
 - **pre_corr** (<code>[float](#float)</code>) – Target correlation for y_pre (passed to generate_rct).
 - **return_causal_data** (<code>[bool](#bool)</code>) – Whether to return a `CausalData` object instead of a `pandas.DataFrame`.
+- **add_ancillary** (<code>[bool](#bool)</code>) – Whether to add standard ancillary columns (age, platform, etc.).
+- **deterministic_ids** (<code>[bool](#bool)</code>) – Whether to generate deterministic user IDs.
+- **include_oracle** (<code>[bool](#bool)</code>) – Whether to include oracle ground-truth columns like 'cate', 'propensity', etc.
 - \*\***kwargs** – Additional arguments passed to `generate_rct`.
 
 **Returns:**
@@ -3739,11 +4298,14 @@ platform_ios, country_usa, and source_paid.
 ##### `causalis.dgp.causaldata.generate_classic_rct_26`
 
 ```python
-generate_classic_rct_26(seed=42, add_pre=False, beta_y=None, outcome_depends_on_x=True, include_oracle=False, return_causal_data=True)
+generate_classic_rct_26(seed=42, add_pre=False, beta_y=None, outcome_depends_on_x=True, include_oracle=False, return_causal_data=True, *, n=10000, split=0.5, outcome_params=None, add_ancillary=False, deterministic_ids=True, **kwargs)
 ```
 
 A pre-configured classic RCT dataset with 3 binary confounders.
-n=10000, split=0.5, outcome is conversion (binary), real effect = 0.01.
+n=10000, split=0.5, outcome is conversion (binary). Baseline control p=0.10
+and treatment p=0.11 are set on the log-odds scale (X=0), so marginal rates
+and ATE can differ once covariate effects are included. Includes a
+deterministic `user_id` column.
 
 **Parameters:**
 
@@ -3753,6 +4315,12 @@ n=10000, split=0.5, outcome is conversion (binary), real effect = 0.01.
 - **outcome_depends_on_x** (<code>[bool](#bool)</code>) – Whether to add default effects for confounders if beta_y is None.
 - **include_oracle** (<code>[bool](#bool)</code>) – Whether to include oracle ground-truth columns like 'cate', 'propensity', etc.
 - **return_causal_data** (<code>[bool](#bool)</code>) – Whether to return a CausalData object.
+- **n** (<code>[int](#int)</code>) – Number of samples.
+- **split** (<code>[float](#float)</code>) – Proportion of samples assigned to the treatment group.
+- **outcome_params** (<code>[dict](#dict)</code>) – Binary outcome parameters, e.g. {"p": {"A": 0.10, "B": 0.11}}.
+- **add_ancillary** (<code>[bool](#bool)</code>) – Whether to add standard ancillary columns (age, platform, etc.).
+- **deterministic_ids** (<code>[bool](#bool)</code>) – Whether to generate deterministic user IDs.
+- \*\***kwargs** – Additional arguments passed to `generate_classic_rct`.
 
 **Returns:**
 
@@ -3809,7 +4377,7 @@ How `outcome_params` maps into the structural effect:
 
 - outcome_type="normal": treatment shifts the mean by (mean["B"] - mean["A"]) on the outcome scale.
 - outcome_type="binary": treatment shifts the log-odds by (logit(p_B) - logit(p_A)).
-- outcome_type="poisson": treatment shifts the log-mean by log(lam_B / lam_A).
+- outcome_type="poisson" or "gamma": treatment shifts the log-mean by log(lam_B / lam_A).
 
 Ancillary columns (if add_ancillary=True) are generated from baseline confounders X only,
 avoiding outcome leakage and post-treatment adjustment issues.
@@ -3819,9 +4387,10 @@ avoiding outcome leakage and post-treatment adjustment issues.
 - **n** (<code>[int](#int)</code>) – Number of samples to generate.
 - **split** (<code>[float](#float)</code>) – Proportion of samples assigned to the treatment group.
 - **random_state** (<code>[int](#int)</code>) – Random seed for reproducibility.
-- **outcome_type** (<code>('binary', 'normal', 'poisson')</code>) – Distribution family of the outcome.
+- **outcome_type** (<code>('binary', 'normal', 'poisson', 'gamma')</code>) – Distribution family of the outcome.
 - **outcome_params** (<code>[dict](#dict)</code>) – Parameters defining baseline rates/means and treatment effects.
-  e.g., {"p": {"A": 0.1, "B": 0.12}} for binary.
+  e.g., {"p": {"A": 0.1, "B": 0.12}} for binary, or
+  {"shape": 2.0, "scale": {"A": 1.0, "B": 1.1}} for poisson/gamma.
 - **confounder_specs** (<code>list of dict</code>) – Schema for confounder distributions.
 - **k** (<code>[int](#int)</code>) – Number of confounders if specs not provided.
 - **x_sampler** (<code>[callable](#callable)</code>) – Custom sampler for confounders.
@@ -3928,7 +4497,7 @@ Generate an observational dataset with linear effects of confounders and a const
 
 - **n** (<code>[int](#int)</code>) – Number of samples to generate.
 - **theta** (<code>[float](#float)</code>) – Constant treatment effect.
-- **outcome_type** (<code>('continuous', 'binary', 'poisson')</code>) – Family of the outcome distribution.
+- **outcome_type** (<code>('continuous', 'binary', 'poisson', 'gamma')</code>) – Family of the outcome distribution.
 - **sigma_y** (<code>[float](#float)</code>) – Noise level for continuous outcomes.
 - **target_d_rate** (<code>[float](#float)</code>) – Target treatment prevalence (propensity mean).
 - **confounder_specs** (<code>list of dict</code>) – Schema for confounder distributions.
@@ -4225,10 +4794,73 @@ Placeholder implementation.
 
 - <code>[DataFrame](#pandas.DataFrame)</code> – Synthetic IV dataset.
 
+#### `causalis.dgp.classic_rct_gamma`
+
+```python
+classic_rct_gamma(n=10000, split=0.5, random_state=42, outcome_params=None, add_pre=False, beta_y=None, outcome_depends_on_x=True, prognostic_scale=1.0, pre_corr=0.7, add_ancillary=True, deterministic_ids=False, include_oracle=True, return_causal_data=False, **kwargs)
+```
+
+Generate a classic RCT dataset with three binary confounders and a gamma outcome.
+
+The gamma outcome uses a log-mean link, so treatment effects are multiplicative
+on the mean scale. The default parameters are chosen to resemble a skewed
+real-world metric (e.g., spend or revenue).
+
+**Parameters:**
+
+- **n** (<code>[int](#int)</code>) – Number of samples to generate.
+- **split** (<code>[float](#float)</code>) – Proportion of samples assigned to the treatment group.
+- **random_state** (<code>[int](#int)</code>) – Random seed for reproducibility.
+- **outcome_params** (<code>[dict](#dict)</code>) – Gamma parameters, e.g. {"shape": 2.0, "scale": {"A": 15.0, "B": 16.5}}.
+  Mean = shape * scale.
+- **add_pre** (<code>[bool](#bool)</code>) – Whether to generate a pre-period covariate (`y_pre`).
+- **beta_y** (<code>[array](#array) - [like](#like)</code>) – Linear coefficients for confounders in the log-mean outcome model.
+- **outcome_depends_on_x** (<code>[bool](#bool)</code>) – Whether to add default effects for confounders if beta_y is None.
+- **prognostic_scale** (<code>[float](#float)</code>) – Scale of nonlinear prognostic signal.
+- **pre_corr** (<code>[float](#float)</code>) – Target correlation for y_pre with post-outcome in control group.
+- **add_ancillary** (<code>[bool](#bool)</code>) – Whether to add standard ancillary columns (age, platform, etc.).
+- **deterministic_ids** (<code>[bool](#bool)</code>) – Whether to generate deterministic user IDs.
+- **include_oracle** (<code>[bool](#bool)</code>) – Whether to include oracle ground-truth columns like 'cate', 'propensity', etc.
+- **return_causal_data** (<code>[bool](#bool)</code>) – Whether to return a `CausalData` object instead of a `pandas.DataFrame`.
+- \*\***kwargs** – Additional arguments passed to `generate_rct` (e.g., pre_name, g_y, use_prognostic).
+
+**Returns:**
+
+- <code>[DataFrame](#pandas.DataFrame) or [CausalData](#causalis.dgp.causaldata.CausalData)</code> – Synthetic classic RCT dataset with gamma outcome.
+
+#### `causalis.dgp.classic_rct_gamma_26`
+
+```python
+classic_rct_gamma_26(seed=42, add_pre=False, beta_y=None, outcome_depends_on_x=True, include_oracle=False, return_causal_data=True, *, n=10000, split=0.5, outcome_params=None, add_ancillary=True, deterministic_ids=True, **kwargs)
+```
+
+A pre-configured classic RCT dataset with a gamma outcome.
+n=10000, split=0.5, mean uplift ~10%.
+Includes deterministic `user_id` and ancillary columns.
+
+**Parameters:**
+
+- **seed** (<code>[int](#int)</code>) – Random seed.
+- **add_pre** (<code>[bool](#bool)</code>) – Whether to generate a pre-period covariate ('y_pre').
+- **beta_y** (<code>[array](#array) - [like](#like)</code>) – Linear coefficients for confounders in the outcome model.
+- **outcome_depends_on_x** (<code>[bool](#bool)</code>) – Whether to add default effects for confounders if beta_y is None.
+- **include_oracle** (<code>[bool](#bool)</code>) – Whether to include oracle ground-truth columns like 'cate', 'propensity', etc.
+- **return_causal_data** (<code>[bool](#bool)</code>) – Whether to return a CausalData object.
+- **n** (<code>[int](#int)</code>) – Number of samples.
+- **split** (<code>[float](#float)</code>) – Proportion of samples assigned to the treatment group.
+- **outcome_params** (<code>[dict](#dict)</code>) – Gamma outcome parameters, e.g. {"shape": 2.0, "scale": {"A": 15.0, "B": 16.5}}.
+- **add_ancillary** (<code>[bool](#bool)</code>) – Whether to add standard ancillary columns (age, platform, etc.).
+- **deterministic_ids** (<code>[bool](#bool)</code>) – Whether to generate deterministic user IDs.
+- \*\***kwargs** – Additional arguments passed to `classic_rct_gamma`.
+
+**Returns:**
+
+- <code>[CausalData](#causalis.dgp.causaldata.CausalData) or [DataFrame](#pandas.DataFrame)</code> –
+
 #### `causalis.dgp.generate_classic_rct`
 
 ```python
-generate_classic_rct(n=10000, split=0.5, random_state=42, outcome_params=None, add_pre=False, beta_y=None, outcome_depends_on_x=True, prognostic_scale=1.0, pre_corr=0.7, return_causal_data=False, **kwargs)
+generate_classic_rct(n=10000, split=0.5, random_state=42, outcome_params=None, add_pre=False, beta_y=None, outcome_depends_on_x=True, prognostic_scale=1.0, pre_corr=0.7, return_causal_data=False, add_ancillary=False, deterministic_ids=False, include_oracle=True, **kwargs)
 ```
 
 Generate a classic RCT dataset with three binary confounders:
@@ -4247,6 +4879,9 @@ platform_ios, country_usa, and source_paid.
 - **prognostic_scale** (<code>[float](#float)</code>) – Scale of nonlinear prognostic signal (passed to generate_rct).
 - **pre_corr** (<code>[float](#float)</code>) – Target correlation for y_pre (passed to generate_rct).
 - **return_causal_data** (<code>[bool](#bool)</code>) – Whether to return a `CausalData` object instead of a `pandas.DataFrame`.
+- **add_ancillary** (<code>[bool](#bool)</code>) – Whether to add standard ancillary columns (age, platform, etc.).
+- **deterministic_ids** (<code>[bool](#bool)</code>) – Whether to generate deterministic user IDs.
+- **include_oracle** (<code>[bool](#bool)</code>) – Whether to include oracle ground-truth columns like 'cate', 'propensity', etc.
 - \*\***kwargs** – Additional arguments passed to `generate_rct`.
 
 **Returns:**
@@ -4256,11 +4891,14 @@ platform_ios, country_usa, and source_paid.
 #### `causalis.dgp.generate_classic_rct_26`
 
 ```python
-generate_classic_rct_26(seed=42, add_pre=False, beta_y=None, outcome_depends_on_x=True, include_oracle=False, return_causal_data=True)
+generate_classic_rct_26(seed=42, add_pre=False, beta_y=None, outcome_depends_on_x=True, include_oracle=False, return_causal_data=True, *, n=10000, split=0.5, outcome_params=None, add_ancillary=False, deterministic_ids=True, **kwargs)
 ```
 
 A pre-configured classic RCT dataset with 3 binary confounders.
-n=10000, split=0.5, outcome is conversion (binary), real effect = 0.01.
+n=10000, split=0.5, outcome is conversion (binary). Baseline control p=0.10
+and treatment p=0.11 are set on the log-odds scale (X=0), so marginal rates
+and ATE can differ once covariate effects are included. Includes a
+deterministic `user_id` column.
 
 **Parameters:**
 
@@ -4270,6 +4908,12 @@ n=10000, split=0.5, outcome is conversion (binary), real effect = 0.01.
 - **outcome_depends_on_x** (<code>[bool](#bool)</code>) – Whether to add default effects for confounders if beta_y is None.
 - **include_oracle** (<code>[bool](#bool)</code>) – Whether to include oracle ground-truth columns like 'cate', 'propensity', etc.
 - **return_causal_data** (<code>[bool](#bool)</code>) – Whether to return a CausalData object.
+- **n** (<code>[int](#int)</code>) – Number of samples.
+- **split** (<code>[float](#float)</code>) – Proportion of samples assigned to the treatment group.
+- **outcome_params** (<code>[dict](#dict)</code>) – Binary outcome parameters, e.g. {"p": {"A": 0.10, "B": 0.11}}.
+- **add_ancillary** (<code>[bool](#bool)</code>) – Whether to add standard ancillary columns (age, platform, etc.).
+- **deterministic_ids** (<code>[bool](#bool)</code>) – Whether to generate deterministic user IDs.
+- \*\***kwargs** – Additional arguments passed to `generate_classic_rct`.
 
 **Returns:**
 
@@ -4310,7 +4954,7 @@ How `outcome_params` maps into the structural effect:
 
 - outcome_type="normal": treatment shifts the mean by (mean["B"] - mean["A"]) on the outcome scale.
 - outcome_type="binary": treatment shifts the log-odds by (logit(p_B) - logit(p_A)).
-- outcome_type="poisson": treatment shifts the log-mean by log(lam_B / lam_A).
+- outcome_type="poisson" or "gamma": treatment shifts the log-mean by log(lam_B / lam_A).
 
 Ancillary columns (if add_ancillary=True) are generated from baseline confounders X only,
 avoiding outcome leakage and post-treatment adjustment issues.
@@ -4320,9 +4964,10 @@ avoiding outcome leakage and post-treatment adjustment issues.
 - **n** (<code>[int](#int)</code>) – Number of samples to generate.
 - **split** (<code>[float](#float)</code>) – Proportion of samples assigned to the treatment group.
 - **random_state** (<code>[int](#int)</code>) – Random seed for reproducibility.
-- **outcome_type** (<code>('binary', 'normal', 'poisson')</code>) – Distribution family of the outcome.
+- **outcome_type** (<code>('binary', 'normal', 'poisson', 'gamma')</code>) – Distribution family of the outcome.
 - **outcome_params** (<code>[dict](#dict)</code>) – Parameters defining baseline rates/means and treatment effects.
-  e.g., {"p": {"A": 0.1, "B": 0.12}} for binary.
+  e.g., {"p": {"A": 0.1, "B": 0.12}} for binary, or
+  {"shape": 2.0, "scale": {"A": 1.0, "B": 1.1}} for poisson/gamma.
 - **confounder_specs** (<code>list of dict</code>) – Schema for confounder distributions.
 - **k** (<code>[int](#int)</code>) – Number of confounders if specs not provided.
 - **x_sampler** (<code>[callable](#callable)</code>) – Custom sampler for confounders.
@@ -4401,6 +5046,786 @@ make_gold_linear(n=10000, seed=42)
 A standard linear benchmark with moderate confounding.
 Based on the benchmark scenario in docs/research/dgp_benchmarking.ipynb.
 
+#### `causalis.dgp.multicausaldata`
+
+**Modules:**
+
+- [**base**](#causalis.dgp.multicausaldata.base) –
+- [**functional**](#causalis.dgp.multicausaldata.functional) –
+
+**Classes:**
+
+- [**MultiCausalData**](#causalis.dgp.multicausaldata.MultiCausalData) – Data contract for cross-sectional causal data with multiple binary treatment columns.
+- [**MultiCausalDatasetGenerator**](#causalis.dgp.multicausaldata.MultiCausalDatasetGenerator) – Generate synthetic causal datasets with multi-class (one-hot) treatments.
+
+**Functions:**
+
+- [**generate_multitreatment**](#causalis.dgp.multicausaldata.generate_multitreatment) – Generate a multi-treatment dataset using MultiCausalDatasetGenerator.
+- [**generate_multitreatment_irm_26**](#causalis.dgp.multicausaldata.generate_multitreatment_irm_26) –
+
+##### `causalis.dgp.multicausaldata.MultiCausalData`
+
+Bases: <code>[BaseModel](#pydantic.BaseModel)</code>
+
+Data contract for cross-sectional causal data with multiple binary treatment columns.
+
+**Parameters:**
+
+- **df** (<code>[DataFrame](#pandas.DataFrame)</code>) – The DataFrame containing the causal data.
+- **outcome_name** (<code>[str](#str)</code>) – The name of the outcome column. (Alias: "outcome")
+- **treatment_names** (<code>[List](#typing.List)\[[str](#str)\]</code>) – The names of the treatment columns. (Alias: "treatments")
+- **confounders_names** (<code>[List](#typing.List)\[[str](#str)\]</code>) – The names of the confounder columns, by default []. (Alias: "confounders")
+- **user_id_name** (<code>[Optional](#typing.Optional)\[[str](#str)\]</code>) – The name of the user ID column, by default None. (Alias: "user_id")
+
+<details class="note" open markdown="1">
+<summary>Notes</summary>
+
+This class enforces several constraints on the data, including:
+
+- Maximum number of treatments (default 5).
+- No duplicate column names in the input DataFrame.
+- Disjoint roles for columns (outcome, treatments, confounders, user_id).
+- Existence of all specified columns in the DataFrame.
+- Numeric or boolean types for outcome and confounders.
+- Non-constant values for outcome, treatments, and confounders.
+- No NaN values in used columns.
+- Binary (0/1) encoding for treatment columns.
+- No identical values between different columns.
+- Unique values for user_id (if specified).
+
+</details>
+
+**Functions:**
+
+- [**from_df**](#causalis.dgp.multicausaldata.MultiCausalData.from_df) – Create a MultiCausalData instance from a pandas DataFrame.
+- [**get_df**](#causalis.dgp.multicausaldata.MultiCausalData.get_df) – Get a subset of the underlying DataFrame.
+
+**Attributes:**
+
+- [**FLOAT_TOL**](#causalis.dgp.multicausaldata.MultiCausalData.FLOAT_TOL) (<code>[float](#float)</code>) –
+- [**MAX_TREATMENTS**](#causalis.dgp.multicausaldata.MultiCausalData.MAX_TREATMENTS) (<code>[int](#int)</code>) –
+- [**X**](#causalis.dgp.multicausaldata.MultiCausalData.X) (<code>[DataFrame](#pandas.DataFrame)</code>) – Return the confounder columns as a pandas DataFrame.
+- [**confounders_names**](#causalis.dgp.multicausaldata.MultiCausalData.confounders_names) (<code>[List](#typing.List)\[[str](#str)\]</code>) –
+- [**df**](#causalis.dgp.multicausaldata.MultiCausalData.df) (<code>[DataFrame](#pandas.DataFrame)</code>) –
+- [**model_config**](#causalis.dgp.multicausaldata.MultiCausalData.model_config) –
+- [**outcome**](#causalis.dgp.multicausaldata.MultiCausalData.outcome) (<code>[Series](#pandas.Series)</code>) – Return the outcome column as a pandas Series.
+- [**outcome_name**](#causalis.dgp.multicausaldata.MultiCausalData.outcome_name) (<code>[str](#str)</code>) –
+- [**treatment**](#causalis.dgp.multicausaldata.MultiCausalData.treatment) (<code>[Series](#pandas.Series)</code>) – Return the single treatment column as a pandas Series.
+- [**treatment_names**](#causalis.dgp.multicausaldata.MultiCausalData.treatment_names) (<code>[List](#typing.List)\[[str](#str)\]</code>) –
+- [**treatments**](#causalis.dgp.multicausaldata.MultiCausalData.treatments) (<code>[DataFrame](#pandas.DataFrame)</code>) – Return the treatment columns as a pandas DataFrame.
+- [**user_id_name**](#causalis.dgp.multicausaldata.MultiCausalData.user_id_name) (<code>[Optional](#typing.Optional)\[[str](#str)\]</code>) –
+
+###### `causalis.dgp.multicausaldata.MultiCausalData.FLOAT_TOL`
+
+```python
+FLOAT_TOL: float = 1e-12
+```
+
+###### `causalis.dgp.multicausaldata.MultiCausalData.MAX_TREATMENTS`
+
+```python
+MAX_TREATMENTS: int = 5
+```
+
+###### `causalis.dgp.multicausaldata.MultiCausalData.X`
+
+```python
+X: pd.DataFrame
+```
+
+Return the confounder columns as a pandas DataFrame.
+
+**Returns:**
+
+- <code>[DataFrame](#pandas.DataFrame)</code> – The confounder columns.
+
+###### `causalis.dgp.multicausaldata.MultiCausalData.confounders_names`
+
+```python
+confounders_names: List[str] = Field(alias='confounders', default_factory=list)
+```
+
+###### `causalis.dgp.multicausaldata.MultiCausalData.df`
+
+```python
+df: pd.DataFrame
+```
+
+###### `causalis.dgp.multicausaldata.MultiCausalData.from_df`
+
+```python
+from_df(df, *, outcome, treatments, confounders=None, user_id=None, **kwargs)
+```
+
+Create a MultiCausalData instance from a pandas DataFrame.
+
+**Parameters:**
+
+- **df** (<code>[DataFrame](#pandas.DataFrame)</code>) – The input DataFrame.
+- **outcome** (<code>[str](#str)</code>) – The name of the outcome column.
+- **treatments** (<code>[Union](#typing.Union)\[[str](#str), [List](#typing.List)\[[str](#str)\]\]</code>) – The name(s) of the treatment column(s).
+- **confounders** (<code>[Union](#typing.Union)\[[str](#str), [List](#typing.List)\[[str](#str)\]\]</code>) – The name(s) of the confounder column(s), by default None.
+- **user_id** (<code>[str](#str)</code>) – The name of the user ID column, by default None.
+- \*\***kwargs** (<code>[Any](#typing.Any)</code>) – Additional keyword arguments passed to the constructor.
+
+**Returns:**
+
+- <code>[MultiCausalData](#causalis.data_contracts.multicausaldata.MultiCausalData)</code> – An instance of MultiCausalData.
+
+###### `causalis.dgp.multicausaldata.MultiCausalData.get_df`
+
+```python
+get_df(columns=None, include_outcome=True, include_confounders=True, include_treatments=True, include_user_id=False)
+```
+
+Get a subset of the underlying DataFrame.
+
+**Parameters:**
+
+- **columns** (<code>[List](#typing.List)\[[str](#str)\]</code>) – Specific columns to include, by default None.
+- **include_outcome** (<code>[bool](#bool)</code>) – Whether to include the outcome column, by default True.
+- **include_confounders** (<code>[bool](#bool)</code>) – Whether to include confounder columns, by default True.
+- **include_treatments** (<code>[bool](#bool)</code>) – Whether to include treatment columns, by default True.
+- **include_user_id** (<code>[bool](#bool)</code>) – Whether to include the user ID column, by default False.
+
+**Returns:**
+
+- <code>[DataFrame](#pandas.DataFrame)</code> – A copy of the requested DataFrame subset.
+
+**Raises:**
+
+- <code>[ValueError](#ValueError)</code> – If any of the requested columns do not exist.
+
+###### `causalis.dgp.multicausaldata.MultiCausalData.model_config`
+
+```python
+model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True, extra='forbid')
+```
+
+###### `causalis.dgp.multicausaldata.MultiCausalData.outcome`
+
+```python
+outcome: pd.Series
+```
+
+Return the outcome column as a pandas Series.
+
+**Returns:**
+
+- <code>[Series](#pandas.Series)</code> – The outcome column.
+
+###### `causalis.dgp.multicausaldata.MultiCausalData.outcome_name`
+
+```python
+outcome_name: str = Field(alias='outcome')
+```
+
+###### `causalis.dgp.multicausaldata.MultiCausalData.treatment`
+
+```python
+treatment: pd.Series
+```
+
+Return the single treatment column as a pandas Series.
+
+**Returns:**
+
+- <code>[Series](#pandas.Series)</code> – The treatment column.
+
+**Raises:**
+
+- <code>[AttributeError](#AttributeError)</code> – If there is more than one treatment column.
+
+###### `causalis.dgp.multicausaldata.MultiCausalData.treatment_names`
+
+```python
+treatment_names: List[str] = Field(alias='treatments')
+```
+
+###### `causalis.dgp.multicausaldata.MultiCausalData.treatments`
+
+```python
+treatments: pd.DataFrame
+```
+
+Return the treatment columns as a pandas DataFrame.
+
+**Returns:**
+
+- <code>[DataFrame](#pandas.DataFrame)</code> – The treatment columns.
+
+###### `causalis.dgp.multicausaldata.MultiCausalData.user_id_name`
+
+```python
+user_id_name: Optional[str] = Field(alias='user_id', default=None)
+```
+
+##### `causalis.dgp.multicausaldata.MultiCausalDatasetGenerator`
+
+```python
+MultiCausalDatasetGenerator(n_treatments=3, treatment_names=None, theta=1.0, tau=None, beta_y=None, g_y=None, alpha_y=0.0, sigma_y=1.0, outcome_type='continuous', u_strength_y=0.0, confounder_specs=None, k=5, x_sampler=None, use_copula=False, copula_corr=None, beta_d=None, g_d=None, alpha_d=None, u_strength_d=0.0, propensity_sharpness=1.0, target_d_rate=None, include_oracle=True, seed=None)
+```
+
+Generate synthetic causal datasets with multi-class (one-hot) treatments.
+
+Treatment assignment is modeled via a multinomial logistic (softmax) model:
+P(D=k | X, U) = softmax_k(alpha_d[k] + f_k(X) + u_strength_d[k] * U)
+
+Outcome depends on confounders and the assigned treatment class:
+outcome_type = "continuous":
+Y = alpha_y + f_y(X) + u_strength_y * U + sum_k D_k * tau_k(X) + eps
+outcome_type = "binary":
+logit P(Y=1|X,D,U) = alpha_y + f_y(X) + u_strength_y * U + sum_k D_k * tau_k(X)
+outcome_type = "poisson":
+log E[Y|X,D,U] = alpha_y + f_y(X) + u_strength_y * U + sum_k D_k * tau_k(X)
+
+**Parameters:**
+
+- **n_treatments** (<code>[int](#int)</code>) – Number of treatment classes (including control). Column 0 is treated as control.
+- **treatment_names** (<code>list of str</code>) – Names of treatment columns. If None, uses ["t_0", "t_1", ...].
+- **theta** (<code>[float](#float) or [array](#array) - [like](#like)</code>) – Constant treatment effects on the link scale for each class.
+  If scalar, applied to all non-control classes (control effect = 0).
+  If length K-1, prepends 0 for control. If length K, uses as provided.
+- **tau** (<code>callable or list of callables</code>) – Heterogeneous effects for each class. If callable, applied to non-control classes.
+- **beta_y** (<code>[array](#array) - [like](#like)</code>) – Linear coefficients for baseline outcome f_y(X).
+- **g_y** (<code>[callable](#callable)</code>) – Nonlinear baseline outcome function g_y(X).
+- **alpha_y** (<code>[float](#float)</code>) – Outcome intercept on link scale.
+- **sigma_y** (<code>[float](#float)</code>) – Std dev for continuous outcomes.
+- **outcome_type** (<code>('continuous', 'binary', 'poisson')</code>) – Outcome family.
+- **u_strength_y** (<code>[float](#float)</code>) – Strength of unobserved confounder in outcome.
+- **confounder_specs** (<code>list of dict</code>) – Schema for generating confounders (same format as CausalDatasetGenerator).
+- **k** (<code>[int](#int)</code>) – Number of confounders if confounder_specs is None.
+- **x_sampler** (<code>[callable](#callable)</code>) – Custom sampler (n, k, seed) -> X ndarray.
+- **use_copula** (<code>[bool](#bool)</code>) – If True and confounder_specs provided, use Gaussian copula for X.
+- **copula_corr** (<code>[array](#array) - [like](#like)</code>) – Correlation matrix for copula.
+- **beta_d** (<code>[array](#array) - [like](#like) or [list](#list)</code>) – Linear coefficients for treatment assignment. If array of shape (k,),
+  applies to all non-control classes. If shape (K,k), uses per class.
+- **g_d** (<code>callable or list of callables</code>) – Nonlinear treatment score per class. If callable, applies to non-control classes.
+- **alpha_d** (<code>[float](#float) or [array](#array) - [like](#like)</code>) – Intercepts for treatment scores. If scalar, applies to non-control classes.
+- **u_strength_d** (<code>[float](#float) or [array](#array) - [like](#like)</code>) – Unobserved confounder strength in treatment assignment.
+- **propensity_sharpness** (<code>[float](#float)</code>) – Scales treatment scores to adjust overlap.
+- **target_d_rate** (<code>[array](#array) - [like](#like)</code>) – Target marginal class probabilities (length K). Calibrates alpha_d
+  using iterative scaling (approximate when u_strength_d != 0).
+- **include_oracle** (<code>[bool](#bool)</code>) – Whether to include oracle columns for propensities and potential outcomes.
+- **seed** (<code>[int](#int)</code>) – Random seed.
+
+**Functions:**
+
+- [**generate**](#causalis.dgp.multicausaldata.MultiCausalDatasetGenerator.generate) –
+- [**to_multicausal_data**](#causalis.dgp.multicausaldata.MultiCausalDatasetGenerator.to_multicausal_data) –
+
+**Attributes:**
+
+- [**alpha_d**](#causalis.dgp.multicausaldata.MultiCausalDatasetGenerator.alpha_d) (<code>[Optional](#typing.Optional)\[[Union](#typing.Union)\[[float](#float), [List](#typing.List)\[[float](#float)\], [ndarray](#numpy.ndarray)\]\]</code>) –
+- [**alpha_y**](#causalis.dgp.multicausaldata.MultiCausalDatasetGenerator.alpha_y) (<code>[float](#float)</code>) –
+- [**beta_d**](#causalis.dgp.multicausaldata.MultiCausalDatasetGenerator.beta_d) (<code>[Optional](#typing.Optional)\[[Union](#typing.Union)\[[ndarray](#numpy.ndarray), [List](#typing.List)\[[Optional](#typing.Optional)\[[ndarray](#numpy.ndarray)\]\]\]\]</code>) –
+- [**beta_y**](#causalis.dgp.multicausaldata.MultiCausalDatasetGenerator.beta_y) (<code>[Optional](#typing.Optional)\[[ndarray](#numpy.ndarray)\]</code>) –
+- [**confounder_names\_**](#causalis.dgp.multicausaldata.MultiCausalDatasetGenerator.confounder_names_) (<code>[List](#typing.List)\[[str](#str)\]</code>) –
+- [**confounder_specs**](#causalis.dgp.multicausaldata.MultiCausalDatasetGenerator.confounder_specs) (<code>[Optional](#typing.Optional)\[[List](#typing.List)\[[Dict](#typing.Dict)\[[str](#str), [Any](#typing.Any)\]\]\]</code>) –
+- [**copula_corr**](#causalis.dgp.multicausaldata.MultiCausalDatasetGenerator.copula_corr) (<code>[Optional](#typing.Optional)\[[ndarray](#numpy.ndarray)\]</code>) –
+- [**g_d**](#causalis.dgp.multicausaldata.MultiCausalDatasetGenerator.g_d) (<code>[Optional](#typing.Optional)\[[Union](#typing.Union)\[[Callable](#typing.Callable)\[\[[ndarray](#numpy.ndarray)\], [ndarray](#numpy.ndarray)\], [List](#typing.List)\[[Optional](#typing.Optional)\[[Callable](#typing.Callable)\[\[[ndarray](#numpy.ndarray)\], [ndarray](#numpy.ndarray)\]\]\]\]\]</code>) –
+- [**g_y**](#causalis.dgp.multicausaldata.MultiCausalDatasetGenerator.g_y) (<code>[Optional](#typing.Optional)\[[Callable](#typing.Callable)\[\[[ndarray](#numpy.ndarray)\], [ndarray](#numpy.ndarray)\]\]</code>) –
+- [**include_oracle**](#causalis.dgp.multicausaldata.MultiCausalDatasetGenerator.include_oracle) (<code>[bool](#bool)</code>) –
+- [**k**](#causalis.dgp.multicausaldata.MultiCausalDatasetGenerator.k) (<code>[int](#int)</code>) –
+- [**n_treatments**](#causalis.dgp.multicausaldata.MultiCausalDatasetGenerator.n_treatments) (<code>[int](#int)</code>) –
+- [**outcome_type**](#causalis.dgp.multicausaldata.MultiCausalDatasetGenerator.outcome_type) (<code>[str](#str)</code>) –
+- [**propensity_sharpness**](#causalis.dgp.multicausaldata.MultiCausalDatasetGenerator.propensity_sharpness) (<code>[float](#float)</code>) –
+- [**rng**](#causalis.dgp.multicausaldata.MultiCausalDatasetGenerator.rng) (<code>[Generator](#numpy.random.Generator)</code>) –
+- [**seed**](#causalis.dgp.multicausaldata.MultiCausalDatasetGenerator.seed) (<code>[Optional](#typing.Optional)\[[int](#int)\]</code>) –
+- [**sigma_y**](#causalis.dgp.multicausaldata.MultiCausalDatasetGenerator.sigma_y) (<code>[float](#float)</code>) –
+- [**target_d_rate**](#causalis.dgp.multicausaldata.MultiCausalDatasetGenerator.target_d_rate) (<code>[Optional](#typing.Optional)\[[Union](#typing.Union)\[[List](#typing.List)\[[float](#float)\], [ndarray](#numpy.ndarray)\]\]</code>) –
+- [**tau**](#causalis.dgp.multicausaldata.MultiCausalDatasetGenerator.tau) (<code>[Optional](#typing.Optional)\[[Union](#typing.Union)\[[Callable](#typing.Callable)\[\[[ndarray](#numpy.ndarray)\], [ndarray](#numpy.ndarray)\], [List](#typing.List)\[[Optional](#typing.Optional)\[[Callable](#typing.Callable)\[\[[ndarray](#numpy.ndarray)\], [ndarray](#numpy.ndarray)\]\]\]\]\]</code>) –
+- [**theta**](#causalis.dgp.multicausaldata.MultiCausalDatasetGenerator.theta) (<code>[Optional](#typing.Optional)\[[Union](#typing.Union)\[[float](#float), [List](#typing.List)\[[float](#float)\], [ndarray](#numpy.ndarray)\]\]</code>) –
+- [**treatment_names**](#causalis.dgp.multicausaldata.MultiCausalDatasetGenerator.treatment_names) (<code>[Optional](#typing.Optional)\[[List](#typing.List)\[[str](#str)\]\]</code>) –
+- [**u_strength_d**](#causalis.dgp.multicausaldata.MultiCausalDatasetGenerator.u_strength_d) (<code>[Union](#typing.Union)\[[float](#float), [List](#typing.List)\[[float](#float)\], [ndarray](#numpy.ndarray)\]</code>) –
+- [**u_strength_y**](#causalis.dgp.multicausaldata.MultiCausalDatasetGenerator.u_strength_y) (<code>[float](#float)</code>) –
+- [**use_copula**](#causalis.dgp.multicausaldata.MultiCausalDatasetGenerator.use_copula) (<code>[bool](#bool)</code>) –
+- [**x_sampler**](#causalis.dgp.multicausaldata.MultiCausalDatasetGenerator.x_sampler) (<code>[Optional](#typing.Optional)\[[Callable](#typing.Callable)\[\[[int](#int), [int](#int), [int](#int)\], [ndarray](#numpy.ndarray)\]\]</code>) –
+
+###### `causalis.dgp.multicausaldata.MultiCausalDatasetGenerator.alpha_d`
+
+```python
+alpha_d: Optional[Union[float, List[float], np.ndarray]] = None
+```
+
+###### `causalis.dgp.multicausaldata.MultiCausalDatasetGenerator.alpha_y`
+
+```python
+alpha_y: float = 0.0
+```
+
+###### `causalis.dgp.multicausaldata.MultiCausalDatasetGenerator.beta_d`
+
+```python
+beta_d: Optional[Union[np.ndarray, List[Optional[np.ndarray]]]] = None
+```
+
+###### `causalis.dgp.multicausaldata.MultiCausalDatasetGenerator.beta_y`
+
+```python
+beta_y: Optional[np.ndarray] = None
+```
+
+###### `causalis.dgp.multicausaldata.MultiCausalDatasetGenerator.confounder_names_`
+
+```python
+confounder_names_: List[str] = field(init=False, default_factory=list)
+```
+
+###### `causalis.dgp.multicausaldata.MultiCausalDatasetGenerator.confounder_specs`
+
+```python
+confounder_specs: Optional[List[Dict[str, Any]]] = None
+```
+
+###### `causalis.dgp.multicausaldata.MultiCausalDatasetGenerator.copula_corr`
+
+```python
+copula_corr: Optional[np.ndarray] = None
+```
+
+###### `causalis.dgp.multicausaldata.MultiCausalDatasetGenerator.g_d`
+
+```python
+g_d: Optional[Union[Callable[[np.ndarray], np.ndarray], List[Optional[Callable[[np.ndarray], np.ndarray]]]]] = None
+```
+
+###### `causalis.dgp.multicausaldata.MultiCausalDatasetGenerator.g_y`
+
+```python
+g_y: Optional[Callable[[np.ndarray], np.ndarray]] = None
+```
+
+###### `causalis.dgp.multicausaldata.MultiCausalDatasetGenerator.generate`
+
+```python
+generate(n, U=None)
+```
+
+###### `causalis.dgp.multicausaldata.MultiCausalDatasetGenerator.include_oracle`
+
+```python
+include_oracle: bool = True
+```
+
+###### `causalis.dgp.multicausaldata.MultiCausalDatasetGenerator.k`
+
+```python
+k: int = 5
+```
+
+###### `causalis.dgp.multicausaldata.MultiCausalDatasetGenerator.n_treatments`
+
+```python
+n_treatments: int = 3
+```
+
+###### `causalis.dgp.multicausaldata.MultiCausalDatasetGenerator.outcome_type`
+
+```python
+outcome_type: str = 'continuous'
+```
+
+###### `causalis.dgp.multicausaldata.MultiCausalDatasetGenerator.propensity_sharpness`
+
+```python
+propensity_sharpness: float = 1.0
+```
+
+###### `causalis.dgp.multicausaldata.MultiCausalDatasetGenerator.rng`
+
+```python
+rng: np.random.Generator = field(init=False, repr=False)
+```
+
+###### `causalis.dgp.multicausaldata.MultiCausalDatasetGenerator.seed`
+
+```python
+seed: Optional[int] = None
+```
+
+###### `causalis.dgp.multicausaldata.MultiCausalDatasetGenerator.sigma_y`
+
+```python
+sigma_y: float = 1.0
+```
+
+###### `causalis.dgp.multicausaldata.MultiCausalDatasetGenerator.target_d_rate`
+
+```python
+target_d_rate: Optional[Union[List[float], np.ndarray]] = None
+```
+
+###### `causalis.dgp.multicausaldata.MultiCausalDatasetGenerator.tau`
+
+```python
+tau: Optional[Union[Callable[[np.ndarray], np.ndarray], List[Optional[Callable[[np.ndarray], np.ndarray]]]]] = None
+```
+
+###### `causalis.dgp.multicausaldata.MultiCausalDatasetGenerator.theta`
+
+```python
+theta: Optional[Union[float, List[float], np.ndarray]] = 1.0
+```
+
+###### `causalis.dgp.multicausaldata.MultiCausalDatasetGenerator.to_multicausal_data`
+
+```python
+to_multicausal_data(n, confounders=None)
+```
+
+###### `causalis.dgp.multicausaldata.MultiCausalDatasetGenerator.treatment_names`
+
+```python
+treatment_names: Optional[List[str]] = None
+```
+
+###### `causalis.dgp.multicausaldata.MultiCausalDatasetGenerator.u_strength_d`
+
+```python
+u_strength_d: Union[float, List[float], np.ndarray] = 0.0
+```
+
+###### `causalis.dgp.multicausaldata.MultiCausalDatasetGenerator.u_strength_y`
+
+```python
+u_strength_y: float = 0.0
+```
+
+###### `causalis.dgp.multicausaldata.MultiCausalDatasetGenerator.use_copula`
+
+```python
+use_copula: bool = False
+```
+
+###### `causalis.dgp.multicausaldata.MultiCausalDatasetGenerator.x_sampler`
+
+```python
+x_sampler: Optional[Callable[[int, int, int], np.ndarray]] = None
+```
+
+##### `causalis.dgp.multicausaldata.base`
+
+**Classes:**
+
+- [**MultiCausalDatasetGenerator**](#causalis.dgp.multicausaldata.base.MultiCausalDatasetGenerator) – Generate synthetic causal datasets with multi-class (one-hot) treatments.
+
+###### `causalis.dgp.multicausaldata.base.MultiCausalDatasetGenerator`
+
+```python
+MultiCausalDatasetGenerator(n_treatments=3, treatment_names=None, theta=1.0, tau=None, beta_y=None, g_y=None, alpha_y=0.0, sigma_y=1.0, outcome_type='continuous', u_strength_y=0.0, confounder_specs=None, k=5, x_sampler=None, use_copula=False, copula_corr=None, beta_d=None, g_d=None, alpha_d=None, u_strength_d=0.0, propensity_sharpness=1.0, target_d_rate=None, include_oracle=True, seed=None)
+```
+
+Generate synthetic causal datasets with multi-class (one-hot) treatments.
+
+Treatment assignment is modeled via a multinomial logistic (softmax) model:
+P(D=k | X, U) = softmax_k(alpha_d[k] + f_k(X) + u_strength_d[k] * U)
+
+Outcome depends on confounders and the assigned treatment class:
+outcome_type = "continuous":
+Y = alpha_y + f_y(X) + u_strength_y * U + sum_k D_k * tau_k(X) + eps
+outcome_type = "binary":
+logit P(Y=1|X,D,U) = alpha_y + f_y(X) + u_strength_y * U + sum_k D_k * tau_k(X)
+outcome_type = "poisson":
+log E[Y|X,D,U] = alpha_y + f_y(X) + u_strength_y * U + sum_k D_k * tau_k(X)
+
+**Parameters:**
+
+- **n_treatments** (<code>[int](#int)</code>) – Number of treatment classes (including control). Column 0 is treated as control.
+- **treatment_names** (<code>list of str</code>) – Names of treatment columns. If None, uses ["t_0", "t_1", ...].
+- **theta** (<code>[float](#float) or [array](#array) - [like](#like)</code>) – Constant treatment effects on the link scale for each class.
+  If scalar, applied to all non-control classes (control effect = 0).
+  If length K-1, prepends 0 for control. If length K, uses as provided.
+- **tau** (<code>callable or list of callables</code>) – Heterogeneous effects for each class. If callable, applied to non-control classes.
+- **beta_y** (<code>[array](#array) - [like](#like)</code>) – Linear coefficients for baseline outcome f_y(X).
+- **g_y** (<code>[callable](#callable)</code>) – Nonlinear baseline outcome function g_y(X).
+- **alpha_y** (<code>[float](#float)</code>) – Outcome intercept on link scale.
+- **sigma_y** (<code>[float](#float)</code>) – Std dev for continuous outcomes.
+- **outcome_type** (<code>('continuous', 'binary', 'poisson')</code>) – Outcome family.
+- **u_strength_y** (<code>[float](#float)</code>) – Strength of unobserved confounder in outcome.
+- **confounder_specs** (<code>list of dict</code>) – Schema for generating confounders (same format as CausalDatasetGenerator).
+- **k** (<code>[int](#int)</code>) – Number of confounders if confounder_specs is None.
+- **x_sampler** (<code>[callable](#callable)</code>) – Custom sampler (n, k, seed) -> X ndarray.
+- **use_copula** (<code>[bool](#bool)</code>) – If True and confounder_specs provided, use Gaussian copula for X.
+- **copula_corr** (<code>[array](#array) - [like](#like)</code>) – Correlation matrix for copula.
+- **beta_d** (<code>[array](#array) - [like](#like) or [list](#list)</code>) – Linear coefficients for treatment assignment. If array of shape (k,),
+  applies to all non-control classes. If shape (K,k), uses per class.
+- **g_d** (<code>callable or list of callables</code>) – Nonlinear treatment score per class. If callable, applies to non-control classes.
+- **alpha_d** (<code>[float](#float) or [array](#array) - [like](#like)</code>) – Intercepts for treatment scores. If scalar, applies to non-control classes.
+- **u_strength_d** (<code>[float](#float) or [array](#array) - [like](#like)</code>) – Unobserved confounder strength in treatment assignment.
+- **propensity_sharpness** (<code>[float](#float)</code>) – Scales treatment scores to adjust overlap.
+- **target_d_rate** (<code>[array](#array) - [like](#like)</code>) – Target marginal class probabilities (length K). Calibrates alpha_d
+  using iterative scaling (approximate when u_strength_d != 0).
+- **include_oracle** (<code>[bool](#bool)</code>) – Whether to include oracle columns for propensities and potential outcomes.
+- **seed** (<code>[int](#int)</code>) – Random seed.
+
+**Functions:**
+
+- [**generate**](#causalis.dgp.multicausaldata.base.MultiCausalDatasetGenerator.generate) –
+- [**to_multicausal_data**](#causalis.dgp.multicausaldata.base.MultiCausalDatasetGenerator.to_multicausal_data) –
+
+**Attributes:**
+
+- [**alpha_d**](#causalis.dgp.multicausaldata.base.MultiCausalDatasetGenerator.alpha_d) (<code>[Optional](#typing.Optional)\[[Union](#typing.Union)\[[float](#float), [List](#typing.List)\[[float](#float)\], [ndarray](#numpy.ndarray)\]\]</code>) –
+- [**alpha_y**](#causalis.dgp.multicausaldata.base.MultiCausalDatasetGenerator.alpha_y) (<code>[float](#float)</code>) –
+- [**beta_d**](#causalis.dgp.multicausaldata.base.MultiCausalDatasetGenerator.beta_d) (<code>[Optional](#typing.Optional)\[[Union](#typing.Union)\[[ndarray](#numpy.ndarray), [List](#typing.List)\[[Optional](#typing.Optional)\[[ndarray](#numpy.ndarray)\]\]\]\]</code>) –
+- [**beta_y**](#causalis.dgp.multicausaldata.base.MultiCausalDatasetGenerator.beta_y) (<code>[Optional](#typing.Optional)\[[ndarray](#numpy.ndarray)\]</code>) –
+- [**confounder_names\_**](#causalis.dgp.multicausaldata.base.MultiCausalDatasetGenerator.confounder_names_) (<code>[List](#typing.List)\[[str](#str)\]</code>) –
+- [**confounder_specs**](#causalis.dgp.multicausaldata.base.MultiCausalDatasetGenerator.confounder_specs) (<code>[Optional](#typing.Optional)\[[List](#typing.List)\[[Dict](#typing.Dict)\[[str](#str), [Any](#typing.Any)\]\]\]</code>) –
+- [**copula_corr**](#causalis.dgp.multicausaldata.base.MultiCausalDatasetGenerator.copula_corr) (<code>[Optional](#typing.Optional)\[[ndarray](#numpy.ndarray)\]</code>) –
+- [**g_d**](#causalis.dgp.multicausaldata.base.MultiCausalDatasetGenerator.g_d) (<code>[Optional](#typing.Optional)\[[Union](#typing.Union)\[[Callable](#typing.Callable)\[\[[ndarray](#numpy.ndarray)\], [ndarray](#numpy.ndarray)\], [List](#typing.List)\[[Optional](#typing.Optional)\[[Callable](#typing.Callable)\[\[[ndarray](#numpy.ndarray)\], [ndarray](#numpy.ndarray)\]\]\]\]\]</code>) –
+- [**g_y**](#causalis.dgp.multicausaldata.base.MultiCausalDatasetGenerator.g_y) (<code>[Optional](#typing.Optional)\[[Callable](#typing.Callable)\[\[[ndarray](#numpy.ndarray)\], [ndarray](#numpy.ndarray)\]\]</code>) –
+- [**include_oracle**](#causalis.dgp.multicausaldata.base.MultiCausalDatasetGenerator.include_oracle) (<code>[bool](#bool)</code>) –
+- [**k**](#causalis.dgp.multicausaldata.base.MultiCausalDatasetGenerator.k) (<code>[int](#int)</code>) –
+- [**n_treatments**](#causalis.dgp.multicausaldata.base.MultiCausalDatasetGenerator.n_treatments) (<code>[int](#int)</code>) –
+- [**outcome_type**](#causalis.dgp.multicausaldata.base.MultiCausalDatasetGenerator.outcome_type) (<code>[str](#str)</code>) –
+- [**propensity_sharpness**](#causalis.dgp.multicausaldata.base.MultiCausalDatasetGenerator.propensity_sharpness) (<code>[float](#float)</code>) –
+- [**rng**](#causalis.dgp.multicausaldata.base.MultiCausalDatasetGenerator.rng) (<code>[Generator](#numpy.random.Generator)</code>) –
+- [**seed**](#causalis.dgp.multicausaldata.base.MultiCausalDatasetGenerator.seed) (<code>[Optional](#typing.Optional)\[[int](#int)\]</code>) –
+- [**sigma_y**](#causalis.dgp.multicausaldata.base.MultiCausalDatasetGenerator.sigma_y) (<code>[float](#float)</code>) –
+- [**target_d_rate**](#causalis.dgp.multicausaldata.base.MultiCausalDatasetGenerator.target_d_rate) (<code>[Optional](#typing.Optional)\[[Union](#typing.Union)\[[List](#typing.List)\[[float](#float)\], [ndarray](#numpy.ndarray)\]\]</code>) –
+- [**tau**](#causalis.dgp.multicausaldata.base.MultiCausalDatasetGenerator.tau) (<code>[Optional](#typing.Optional)\[[Union](#typing.Union)\[[Callable](#typing.Callable)\[\[[ndarray](#numpy.ndarray)\], [ndarray](#numpy.ndarray)\], [List](#typing.List)\[[Optional](#typing.Optional)\[[Callable](#typing.Callable)\[\[[ndarray](#numpy.ndarray)\], [ndarray](#numpy.ndarray)\]\]\]\]\]</code>) –
+- [**theta**](#causalis.dgp.multicausaldata.base.MultiCausalDatasetGenerator.theta) (<code>[Optional](#typing.Optional)\[[Union](#typing.Union)\[[float](#float), [List](#typing.List)\[[float](#float)\], [ndarray](#numpy.ndarray)\]\]</code>) –
+- [**treatment_names**](#causalis.dgp.multicausaldata.base.MultiCausalDatasetGenerator.treatment_names) (<code>[Optional](#typing.Optional)\[[List](#typing.List)\[[str](#str)\]\]</code>) –
+- [**u_strength_d**](#causalis.dgp.multicausaldata.base.MultiCausalDatasetGenerator.u_strength_d) (<code>[Union](#typing.Union)\[[float](#float), [List](#typing.List)\[[float](#float)\], [ndarray](#numpy.ndarray)\]</code>) –
+- [**u_strength_y**](#causalis.dgp.multicausaldata.base.MultiCausalDatasetGenerator.u_strength_y) (<code>[float](#float)</code>) –
+- [**use_copula**](#causalis.dgp.multicausaldata.base.MultiCausalDatasetGenerator.use_copula) (<code>[bool](#bool)</code>) –
+- [**x_sampler**](#causalis.dgp.multicausaldata.base.MultiCausalDatasetGenerator.x_sampler) (<code>[Optional](#typing.Optional)\[[Callable](#typing.Callable)\[\[[int](#int), [int](#int), [int](#int)\], [ndarray](#numpy.ndarray)\]\]</code>) –
+
+####### `causalis.dgp.multicausaldata.base.MultiCausalDatasetGenerator.alpha_d`
+
+```python
+alpha_d: Optional[Union[float, List[float], np.ndarray]] = None
+```
+
+####### `causalis.dgp.multicausaldata.base.MultiCausalDatasetGenerator.alpha_y`
+
+```python
+alpha_y: float = 0.0
+```
+
+####### `causalis.dgp.multicausaldata.base.MultiCausalDatasetGenerator.beta_d`
+
+```python
+beta_d: Optional[Union[np.ndarray, List[Optional[np.ndarray]]]] = None
+```
+
+####### `causalis.dgp.multicausaldata.base.MultiCausalDatasetGenerator.beta_y`
+
+```python
+beta_y: Optional[np.ndarray] = None
+```
+
+####### `causalis.dgp.multicausaldata.base.MultiCausalDatasetGenerator.confounder_names_`
+
+```python
+confounder_names_: List[str] = field(init=False, default_factory=list)
+```
+
+####### `causalis.dgp.multicausaldata.base.MultiCausalDatasetGenerator.confounder_specs`
+
+```python
+confounder_specs: Optional[List[Dict[str, Any]]] = None
+```
+
+####### `causalis.dgp.multicausaldata.base.MultiCausalDatasetGenerator.copula_corr`
+
+```python
+copula_corr: Optional[np.ndarray] = None
+```
+
+####### `causalis.dgp.multicausaldata.base.MultiCausalDatasetGenerator.g_d`
+
+```python
+g_d: Optional[Union[Callable[[np.ndarray], np.ndarray], List[Optional[Callable[[np.ndarray], np.ndarray]]]]] = None
+```
+
+####### `causalis.dgp.multicausaldata.base.MultiCausalDatasetGenerator.g_y`
+
+```python
+g_y: Optional[Callable[[np.ndarray], np.ndarray]] = None
+```
+
+####### `causalis.dgp.multicausaldata.base.MultiCausalDatasetGenerator.generate`
+
+```python
+generate(n, U=None)
+```
+
+####### `causalis.dgp.multicausaldata.base.MultiCausalDatasetGenerator.include_oracle`
+
+```python
+include_oracle: bool = True
+```
+
+####### `causalis.dgp.multicausaldata.base.MultiCausalDatasetGenerator.k`
+
+```python
+k: int = 5
+```
+
+####### `causalis.dgp.multicausaldata.base.MultiCausalDatasetGenerator.n_treatments`
+
+```python
+n_treatments: int = 3
+```
+
+####### `causalis.dgp.multicausaldata.base.MultiCausalDatasetGenerator.outcome_type`
+
+```python
+outcome_type: str = 'continuous'
+```
+
+####### `causalis.dgp.multicausaldata.base.MultiCausalDatasetGenerator.propensity_sharpness`
+
+```python
+propensity_sharpness: float = 1.0
+```
+
+####### `causalis.dgp.multicausaldata.base.MultiCausalDatasetGenerator.rng`
+
+```python
+rng: np.random.Generator = field(init=False, repr=False)
+```
+
+####### `causalis.dgp.multicausaldata.base.MultiCausalDatasetGenerator.seed`
+
+```python
+seed: Optional[int] = None
+```
+
+####### `causalis.dgp.multicausaldata.base.MultiCausalDatasetGenerator.sigma_y`
+
+```python
+sigma_y: float = 1.0
+```
+
+####### `causalis.dgp.multicausaldata.base.MultiCausalDatasetGenerator.target_d_rate`
+
+```python
+target_d_rate: Optional[Union[List[float], np.ndarray]] = None
+```
+
+####### `causalis.dgp.multicausaldata.base.MultiCausalDatasetGenerator.tau`
+
+```python
+tau: Optional[Union[Callable[[np.ndarray], np.ndarray], List[Optional[Callable[[np.ndarray], np.ndarray]]]]] = None
+```
+
+####### `causalis.dgp.multicausaldata.base.MultiCausalDatasetGenerator.theta`
+
+```python
+theta: Optional[Union[float, List[float], np.ndarray]] = 1.0
+```
+
+####### `causalis.dgp.multicausaldata.base.MultiCausalDatasetGenerator.to_multicausal_data`
+
+```python
+to_multicausal_data(n, confounders=None)
+```
+
+####### `causalis.dgp.multicausaldata.base.MultiCausalDatasetGenerator.treatment_names`
+
+```python
+treatment_names: Optional[List[str]] = None
+```
+
+####### `causalis.dgp.multicausaldata.base.MultiCausalDatasetGenerator.u_strength_d`
+
+```python
+u_strength_d: Union[float, List[float], np.ndarray] = 0.0
+```
+
+####### `causalis.dgp.multicausaldata.base.MultiCausalDatasetGenerator.u_strength_y`
+
+```python
+u_strength_y: float = 0.0
+```
+
+####### `causalis.dgp.multicausaldata.base.MultiCausalDatasetGenerator.use_copula`
+
+```python
+use_copula: bool = False
+```
+
+####### `causalis.dgp.multicausaldata.base.MultiCausalDatasetGenerator.x_sampler`
+
+```python
+x_sampler: Optional[Callable[[int, int, int], np.ndarray]] = None
+```
+
+##### `causalis.dgp.multicausaldata.functional`
+
+**Functions:**
+
+- [**generate_multitreatment**](#causalis.dgp.multicausaldata.functional.generate_multitreatment) – Generate a multi-treatment dataset using MultiCausalDatasetGenerator.
+
+###### `causalis.dgp.multicausaldata.functional.generate_multitreatment`
+
+```python
+generate_multitreatment(n=10000, n_treatments=3, outcome_type='continuous', sigma_y=1.0, target_d_rate=None, confounder_specs=None, beta_y=None, beta_d=None, theta=None, random_state=42, k=0, x_sampler=None, include_oracle=True, return_causal_data=False, treatment_names=None)
+```
+
+Generate a multi-treatment dataset using MultiCausalDatasetGenerator.
+
+**Parameters:**
+
+- **n** (<code>[int](#int)</code>) – Number of samples.
+- **n_treatments** (<code>[int](#int)</code>) – Number of treatment classes (including control).
+- **outcome_type** (<code>('continuous', 'binary', 'poisson')</code>) – Outcome family.
+- **sigma_y** (<code>[float](#float)</code>) – Noise level for continuous outcomes.
+- **target_d_rate** (<code>[array](#array) - [like](#like)</code>) – Target marginal class probabilities (length K).
+- **confounder_specs** (<code>list of dict</code>) – Schema for confounder distributions.
+- **beta_y** (<code>[array](#array) - [like](#like)</code>) – Linear coefficients for outcome model.
+- **beta_d** (<code>[array](#array) - [like](#like)</code>) – Linear coefficients for treatment model.
+- **theta** (<code>[float](#float) or [array](#array) - [like](#like)</code>) – Constant treatment effects per class.
+- **random_state** (<code>[int](#int)</code>) – Random seed.
+- **k** (<code>[int](#int)</code>) – Number of confounders if confounder_specs is None.
+- **x_sampler** (<code>[callable](#callable)</code>) – Custom sampler for confounders.
+- **include_oracle** (<code>[bool](#bool)</code>) – Whether to include oracle columns.
+- **return_causal_data** (<code>[bool](#bool)</code>) – Whether to return a MultiCausalData object.
+- **treatment_names** (<code>list of str</code>) – Names of treatment columns.
+
+**Returns:**
+
+- <code>[DataFrame](#pandas.DataFrame) or [MultiCausalData](#causalis.data_contracts.multicausaldata.MultiCausalData)</code> –
+
+##### `causalis.dgp.multicausaldata.generate_multitreatment`
+
+```python
+generate_multitreatment(n=10000, n_treatments=3, outcome_type='continuous', sigma_y=1.0, target_d_rate=None, confounder_specs=None, beta_y=None, beta_d=None, theta=None, random_state=42, k=0, x_sampler=None, include_oracle=True, return_causal_data=False, treatment_names=None)
+```
+
+Generate a multi-treatment dataset using MultiCausalDatasetGenerator.
+
+**Parameters:**
+
+- **n** (<code>[int](#int)</code>) – Number of samples.
+- **n_treatments** (<code>[int](#int)</code>) – Number of treatment classes (including control).
+- **outcome_type** (<code>('continuous', 'binary', 'poisson')</code>) – Outcome family.
+- **sigma_y** (<code>[float](#float)</code>) – Noise level for continuous outcomes.
+- **target_d_rate** (<code>[array](#array) - [like](#like)</code>) – Target marginal class probabilities (length K).
+- **confounder_specs** (<code>list of dict</code>) – Schema for confounder distributions.
+- **beta_y** (<code>[array](#array) - [like](#like)</code>) – Linear coefficients for outcome model.
+- **beta_d** (<code>[array](#array) - [like](#like)</code>) – Linear coefficients for treatment model.
+- **theta** (<code>[float](#float) or [array](#array) - [like](#like)</code>) – Constant treatment effects per class.
+- **random_state** (<code>[int](#int)</code>) – Random seed.
+- **k** (<code>[int](#int)</code>) – Number of confounders if confounder_specs is None.
+- **x_sampler** (<code>[callable](#callable)</code>) – Custom sampler for confounders.
+- **include_oracle** (<code>[bool](#bool)</code>) – Whether to include oracle columns.
+- **return_causal_data** (<code>[bool](#bool)</code>) – Whether to return a MultiCausalData object.
+- **treatment_names** (<code>list of str</code>) – Names of treatment columns.
+
+**Returns:**
+
+- <code>[DataFrame](#pandas.DataFrame) or [MultiCausalData](#causalis.data_contracts.multicausaldata.MultiCausalData)</code> –
+
+##### `causalis.dgp.multicausaldata.generate_multitreatment_irm_26`
+
+```python
+generate_multitreatment_irm_26(*args, **kwargs)
+```
+
 #### `causalis.dgp.obs_linear_26_dataset`
 
 ```python
@@ -4429,7 +5854,7 @@ Generate an observational dataset with linear effects of confounders and a const
 
 - **n** (<code>[int](#int)</code>) – Number of samples to generate.
 - **theta** (<code>[float](#float)</code>) – Constant treatment effect.
-- **outcome_type** (<code>('continuous', 'binary', 'poisson')</code>) – Family of the outcome distribution.
+- **outcome_type** (<code>('continuous', 'binary', 'poisson', 'gamma')</code>) – Family of the outcome distribution.
 - **sigma_y** (<code>[float](#float)</code>) – Noise level for continuous outcomes.
 - **target_d_rate** (<code>[float](#float)</code>) – Target treatment prevalence (propensity mean).
 - **confounder_specs** (<code>list of dict</code>) – Schema for confounder distributions.
@@ -4453,6 +5878,7 @@ Generate an observational dataset with linear effects of confounders and a const
 - [**cate**](#causalis.scenarios.cate) –
 - [**classic_rct**](#causalis.scenarios.classic_rct) –
 - [**cuped**](#causalis.scenarios.cuped) –
+- [**multi_uncofoundedness**](#causalis.scenarios.multi_uncofoundedness) –
 - [**unconfoundedness**](#causalis.scenarios.unconfoundedness) –
 
 #### `causalis.scenarios.cate`
@@ -4861,6 +6287,7 @@ plugin CATE proxy (g1_hat - g0_hat).
 
 **Modules:**
 
+- [**conversion_ztest**](#causalis.scenarios.classic_rct.conversion_ztest) – Two-proportion z-test
 - [**dgp**](#causalis.scenarios.classic_rct.dgp) –
 - [**inference**](#causalis.scenarios.classic_rct.inference) – Inference helpers for the classic RCT scenario.
 - [**model**](#causalis.scenarios.classic_rct.model) –
@@ -4875,8 +6302,7 @@ plugin CATE proxy (g1_hat - g0_hat).
 **Functions:**
 
 - [**bootstrap_diff_means**](#causalis.scenarios.classic_rct.bootstrap_diff_means) – Bootstrap inference for difference in means between treated and control groups.
-- [**check_srm**](#causalis.scenarios.classic_rct.check_srm) – Check Sample Ratio Mismatch (SRM) for an RCT via chi-square goodness-of-fit test.
-- [**conversion_z_test**](#causalis.scenarios.classic_rct.conversion_z_test) – Perform a two-proportion z-test on a CausalData object with a binary outcome (conversion).
+- [**check_srm**](#causalis.scenarios.classic_rct.check_srm) – Check Sample Ratio Mismatch (SRM) for an RCT via a chi-square goodness-of-fit test.
 
 ##### `causalis.scenarios.classic_rct.DiffInMeans`
 
@@ -4919,7 +6345,7 @@ Compute the treatment effect using the specified method.
 - **alpha** (<code>[float](#float)</code>) – The significance level for calculating confidence intervals.
 - **diagnostic_data** (<code>[bool](#bool)</code>) – Whether to include diagnostic data_contracts in the result.
 - \*\***kwargs** (<code>[Any](#typing.Any)</code>) – Additional arguments passed to the underlying inference function.
-- For "bootstrap": can pass `n_simul` (default 10000).
+- For "bootstrap": can pass `n_simul`, `batch_size`, `seed`, `index_dtype`.
 
 **Returns:**
 
@@ -4944,7 +6370,7 @@ Fit the model by storing the CausalData object.
 ##### `causalis.scenarios.classic_rct.SRMResult`
 
 ```python
-SRMResult(chi2, df, p_value, expected, observed, alpha, is_srm, warning=None)
+SRMResult(chi2, p_value, expected, observed, alpha, is_srm, warning=None)
 ```
 
 Result of a Sample Ratio Mismatch (SRM) check.
@@ -4952,13 +6378,12 @@ Result of a Sample Ratio Mismatch (SRM) check.
 **Attributes:**
 
 - [**chi2**](#causalis.scenarios.classic_rct.SRMResult.chi2) (<code>[float](#float)</code>) – The calculated chi-square statistic.
-- [**df**](#causalis.scenarios.classic_rct.SRMResult.df) (<code>[int](#int)</code>) – Degrees of freedom used in the test.
-- [**p_value**](#causalis.scenarios.classic_rct.SRMResult.p_value) (<code>[float](#float)</code>) – The p-value of the test.
-- [**expected**](#causalis.scenarios.classic_rct.SRMResult.expected) (<code>[Dict](#typing.Dict)\[[Hashable](#typing.Hashable), [float](#float)\]</code>) – Expected counts for each variant.
-- [**observed**](#causalis.scenarios.classic_rct.SRMResult.observed) (<code>[Dict](#typing.Dict)\[[Hashable](#typing.Hashable), [int](#int)\]</code>) – Observed counts for each variant.
+- [**p_value**](#causalis.scenarios.classic_rct.SRMResult.p_value) (<code>[float](#float)</code>) – The p-value of the test, rounded to 5 decimals.
+- [**expected**](#causalis.scenarios.classic_rct.SRMResult.expected) (<code>[dict](#dict)\[[Hashable](#typing.Hashable), [float](#float)\]</code>) – Expected counts for each variant.
+- [**observed**](#causalis.scenarios.classic_rct.SRMResult.observed) (<code>[dict](#dict)\[[Hashable](#typing.Hashable), [int](#int)\]</code>) – Observed counts for each variant.
 - [**alpha**](#causalis.scenarios.classic_rct.SRMResult.alpha) (<code>[float](#float)</code>) – Significance level used for the check.
-- [**is_srm**](#causalis.scenarios.classic_rct.SRMResult.is_srm) (<code>[bool](#bool)</code>) – True if an SRM was detected (p_value < alpha), False otherwise.
-- [**warning**](#causalis.scenarios.classic_rct.SRMResult.warning) (<code>([str](#str), [optional](#optional))</code>) – Warning message if the test assumptions might be violated (e.g., small expected counts).
+- [**is_srm**](#causalis.scenarios.classic_rct.SRMResult.is_srm) (<code>[bool](#bool)</code>) – True if an SRM was detected (chi-square p-value < alpha), False otherwise.
+- [**warning**](#causalis.scenarios.classic_rct.SRMResult.warning) (<code>[str](#str) or None</code>) – Warning message if the test assumptions might be violated (e.g., small expected counts).
 
 ###### `causalis.scenarios.classic_rct.SRMResult.alpha`
 
@@ -4970,12 +6395,6 @@ alpha: float
 
 ```python
 chi2: float
-```
-
-###### `causalis.scenarios.classic_rct.SRMResult.df`
-
-```python
-df: int
 ```
 
 ###### `causalis.scenarios.classic_rct.SRMResult.expected`
@@ -5011,7 +6430,7 @@ warning: str | None = None
 ##### `causalis.scenarios.classic_rct.bootstrap_diff_means`
 
 ```python
-bootstrap_diff_means(data, alpha=0.05, n_simul=10000)
+bootstrap_diff_means(data, alpha=0.05, n_simul=10000, *, batch_size=512, seed=None, index_dtype=np.int32)
 ```
 
 Bootstrap inference for difference in means between treated and control groups.
@@ -5026,6 +6445,9 @@ and relative difference with its corresponding confidence interval.
 - **data** (<code>[CausalData](#causalis.dgp.causaldata.CausalData)</code>) – The CausalData object containing treatment and outcome variables.
 - **alpha** (<code>[float](#float)</code>) – The significance level for calculating confidence intervals (between 0 and 1).
 - **n_simul** (<code>[int](#int)</code>) – Number of bootstrap resamples.
+- **batch_size** (<code>[int](#int)</code>) – Number of bootstrap samples to process per batch.
+- **seed** (<code>[int](#int)</code>) – Random seed for reproducibility.
+- **index_dtype** (<code>numpy dtype</code>) – Integer dtype for bootstrap indices to reduce memory usage.
 
 **Returns:**
 
@@ -5034,7 +6456,7 @@ and relative difference with its corresponding confidence interval.
 - absolute_difference: The absolute difference (treated - control).
 - absolute_ci: Tuple of (lower, upper) bounds for the absolute difference CI.
 - relative_difference: The relative difference (%) relative to control mean.
-- relative_ci: Tuple of (lower, upper) bounds for the relative difference CI.
+- relative_ci: Tuple of (lower, upper) bounds for the relative difference CI (delta method).
 
 **Raises:**
 
@@ -5046,21 +6468,15 @@ and relative difference with its corresponding confidence interval.
 check_srm(assignments, target_allocation, alpha=0.001, min_expected=5.0, strict_variants=True)
 ```
 
-Check Sample Ratio Mismatch (SRM) for an RCT via chi-square goodness-of-fit test.
+Check Sample Ratio Mismatch (SRM) for an RCT via a chi-square goodness-of-fit test.
 
 **Parameters:**
 
-- **assignments** (<code>[Iterable](#typing.Iterable)\[[Hashable](#typing.Hashable)\] or [Series](#pandas.Series) or [CausalData](#causalis.dgp.causaldata.CausalData)</code>) – Iterable of assigned variant labels for each unit (user_id, session_id, etc.).
-  E.g. Series of ["control", "treatment", ...].
-  If CausalData is provided, the treatment column is used.
-- **target_allocation** (<code>[Dict](#typing.Dict)\[[Hashable](#typing.Hashable), [Number](#causalis.shared.srm.Number)\]</code>) – Mapping {variant: p} describing intended allocation as PROBABILITIES.
-- Each p must be > 0.
-- Sum of all p must be 1.0 (within numerical tolerance).
-
-Examples:
-{"control": 0.5, "treatment": 0.5}
-{"A": 0.2, "B": 0.3, "C": 0.5}
-
+- **assignments** (<code>[Iterable](#typing.Iterable)\[[Hashable](#typing.Hashable)\] or [Series](#pandas.Series) or [CausalData](#causalis.dgp.causaldata.CausalData) or [Mapping](#collections.abc.Mapping)\[[Hashable](#typing.Hashable), [Number](#causalis.shared.srm.Number)\]</code>) – Observed variant assignments. If iterable or Series, elements are labels per
+  unit (user_id, session_id, etc.). If CausalData is provided, the treatment
+  column is used. If a mapping is provided, it is treated as
+  `{variant: observed_count}` with non-negative integer counts.
+- **target_allocation** (<code>[dict](#dict)\[[Hashable](#typing.Hashable), [Number](#causalis.shared.srm.Number)\]</code>) – Mapping `{variant: p}` describing intended allocation as probabilities.
 - **alpha** (<code>[float](#float)</code>) – Significance level. Use strict values like 1e-3 or 1e-4 in production.
 - **min_expected** (<code>[float](#float)</code>) – If any expected count < min_expected, a warning is attached.
 - **strict_variants** (<code>[bool](#bool)</code>) – - True: fail if observed variants differ from target keys.
@@ -5075,10 +6491,46 @@ Examples:
 - <code>[ValueError](#ValueError)</code> – If inputs are invalid or empty.
 - <code>[ImportError](#ImportError)</code> – If scipy is required but not installed.
 
-##### `causalis.scenarios.classic_rct.conversion_z_test`
+<details class="note" open markdown="1">
+<summary>Notes</summary>
+
+- Target allocation probabilities must sum to 1 within numerical tolerance.
+- `is_srm` is computed using the unrounded p-value; the returned
+  `p_value` is rounded to 5 decimals.
+- Missing assignments are dropped and reported via `warning`.
+- Requires SciPy for p-value computation.
+
+</details>
+
+**Examples:**
+
+```pycon
+>>> assignments = ["control"] * 50 + ["treatment"] * 50
+>>> check_srm(assignments, {"control": 0.5, "treatment": 0.5}, alpha=1e-3)
+SRMResult(status=no SRM, p_value=1.00000, chi2=0.0000)
+```
+
+```pycon
+>>> counts = {"control": 70, "treatment": 30}
+>>> check_srm(counts, {"control": 0.5, "treatment": 0.5})
+SRMResult(status=SRM DETECTED, p_value=0.00006, chi2=16.0000)
+```
+
+##### `causalis.scenarios.classic_rct.conversion_ztest`
+
+Two-proportion z-test
+
+Compares conversion rates between treated (D=1) and control (D=0) groups.
+Returns p-value, absolute/relative differences, and their confidence intervals
+
+**Functions:**
+
+- [**conversion_ztest**](#causalis.scenarios.classic_rct.conversion_ztest.conversion_ztest) – Perform a two-proportion z-test on a CausalData object with a binary outcome (conversion).
+
+###### `causalis.scenarios.classic_rct.conversion_ztest.conversion_ztest`
 
 ```python
-conversion_z_test(data, alpha=0.05, ci_method='newcombe', se_for_test='pooled')
+conversion_ztest(data, alpha=0.05, ci_method='newcombe', se_for_test='pooled')
 ```
 
 Perform a two-proportion z-test on a CausalData object with a binary outcome (conversion).
@@ -5099,7 +6551,7 @@ Perform a two-proportion z-test on a CausalData object with a binary outcome (co
 - absolute_difference: Difference in conversion rates (treated - control)
 - absolute_ci: Tuple (lower, upper) for the absolute difference CI
 - relative_difference: Percentage change relative to control rate
-- relative_ci: Tuple (lower, upper) for the relative difference CI
+- relative_ci: Tuple (lower, upper) for the relative difference CI (delta method)
 
 **Raises:**
 
@@ -5110,16 +6562,49 @@ Perform a two-proportion z-test on a CausalData object with a binary outcome (co
 
 **Functions:**
 
+- [**classic_rct_gamma_26**](#causalis.scenarios.classic_rct.dgp.classic_rct_gamma_26) – A pre-configured classic RCT dataset with a gamma outcome.
 - [**generate_classic_rct_26**](#causalis.scenarios.classic_rct.dgp.generate_classic_rct_26) – A pre-configured classic RCT dataset with 3 binary confounders.
+
+###### `causalis.scenarios.classic_rct.dgp.classic_rct_gamma_26`
+
+```python
+classic_rct_gamma_26(seed=42, add_pre=False, beta_y=None, outcome_depends_on_x=True, include_oracle=False, return_causal_data=True, *, n=10000, split=0.5, outcome_params=None, add_ancillary=True, deterministic_ids=True, **kwargs)
+```
+
+A pre-configured classic RCT dataset with a gamma outcome.
+n=10000, split=0.5, mean uplift ~10%.
+Includes deterministic `user_id` and ancillary columns.
+
+**Parameters:**
+
+- **seed** (<code>[int](#int)</code>) – Random seed.
+- **add_pre** (<code>[bool](#bool)</code>) – Whether to generate a pre-period covariate ('y_pre').
+- **beta_y** (<code>[array](#array) - [like](#like)</code>) – Linear coefficients for confounders in the outcome model.
+- **outcome_depends_on_x** (<code>[bool](#bool)</code>) – Whether to add default effects for confounders if beta_y is None.
+- **include_oracle** (<code>[bool](#bool)</code>) – Whether to include oracle ground-truth columns like 'cate', 'propensity', etc.
+- **return_causal_data** (<code>[bool](#bool)</code>) – Whether to return a CausalData object.
+- **n** (<code>[int](#int)</code>) – Number of samples.
+- **split** (<code>[float](#float)</code>) – Proportion of samples assigned to the treatment group.
+- **outcome_params** (<code>[dict](#dict)</code>) – Gamma outcome parameters, e.g. {"shape": 2.0, "scale": {"A": 15.0, "B": 16.5}}.
+- **add_ancillary** (<code>[bool](#bool)</code>) – Whether to add standard ancillary columns (age, platform, etc.).
+- **deterministic_ids** (<code>[bool](#bool)</code>) – Whether to generate deterministic user IDs.
+- \*\***kwargs** – Additional arguments passed to `classic_rct_gamma`.
+
+**Returns:**
+
+- <code>[CausalData](#causalis.dgp.causaldata.CausalData) or [DataFrame](#pandas.DataFrame)</code> –
 
 ###### `causalis.scenarios.classic_rct.dgp.generate_classic_rct_26`
 
 ```python
-generate_classic_rct_26(seed=42, add_pre=False, beta_y=None, outcome_depends_on_x=True, include_oracle=False, return_causal_data=True)
+generate_classic_rct_26(seed=42, add_pre=False, beta_y=None, outcome_depends_on_x=True, include_oracle=False, return_causal_data=True, *, n=10000, split=0.5, outcome_params=None, add_ancillary=False, deterministic_ids=True, **kwargs)
 ```
 
 A pre-configured classic RCT dataset with 3 binary confounders.
-n=10000, split=0.5, outcome is conversion (binary), real effect = 0.01.
+n=10000, split=0.5, outcome is conversion (binary). Baseline control p=0.10
+and treatment p=0.11 are set on the log-odds scale (X=0), so marginal rates
+and ATE can differ once covariate effects are included. Includes a
+deterministic `user_id` column.
 
 **Parameters:**
 
@@ -5129,6 +6614,12 @@ n=10000, split=0.5, outcome is conversion (binary), real effect = 0.01.
 - **outcome_depends_on_x** (<code>[bool](#bool)</code>) – Whether to add default effects for confounders if beta_y is None.
 - **include_oracle** (<code>[bool](#bool)</code>) – Whether to include oracle ground-truth columns like 'cate', 'propensity', etc.
 - **return_causal_data** (<code>[bool](#bool)</code>) – Whether to return a CausalData object.
+- **n** (<code>[int](#int)</code>) – Number of samples.
+- **split** (<code>[float](#float)</code>) – Proportion of samples assigned to the treatment group.
+- **outcome_params** (<code>[dict](#dict)</code>) – Binary outcome parameters, e.g. {"p": {"A": 0.10, "B": 0.11}}.
+- **add_ancillary** (<code>[bool](#bool)</code>) – Whether to add standard ancillary columns (age, platform, etc.).
+- **deterministic_ids** (<code>[bool](#bool)</code>) – Whether to generate deterministic user IDs.
+- \*\***kwargs** – Additional arguments passed to `generate_classic_rct`.
 
 **Returns:**
 
@@ -5147,7 +6638,6 @@ Inference helpers for the classic RCT scenario.
 **Functions:**
 
 - [**bootstrap_diff_means**](#causalis.scenarios.classic_rct.inference.bootstrap_diff_means) – Bootstrap inference for difference in means between treated and control groups.
-- [**conversion_z_test**](#causalis.scenarios.classic_rct.inference.conversion_z_test) – Perform a two-proportion z-test on a CausalData object with a binary outcome (conversion).
 
 ###### `causalis.scenarios.classic_rct.inference.bootstrap_diff_in_means`
 
@@ -5166,7 +6656,7 @@ This module computes the ATE-style difference in means (treated - control) and p
 ####### `causalis.scenarios.classic_rct.inference.bootstrap_diff_in_means.bootstrap_diff_means`
 
 ```python
-bootstrap_diff_means(data, alpha=0.05, n_simul=10000)
+bootstrap_diff_means(data, alpha=0.05, n_simul=10000, *, batch_size=512, seed=None, index_dtype=np.int32)
 ```
 
 Bootstrap inference for difference in means between treated and control groups.
@@ -5181,6 +6671,9 @@ and relative difference with its corresponding confidence interval.
 - **data** (<code>[CausalData](#causalis.dgp.causaldata.CausalData)</code>) – The CausalData object containing treatment and outcome variables.
 - **alpha** (<code>[float](#float)</code>) – The significance level for calculating confidence intervals (between 0 and 1).
 - **n_simul** (<code>[int](#int)</code>) – Number of bootstrap resamples.
+- **batch_size** (<code>[int](#int)</code>) – Number of bootstrap samples to process per batch.
+- **seed** (<code>[int](#int)</code>) – Random seed for reproducibility.
+- **index_dtype** (<code>numpy dtype</code>) – Integer dtype for bootstrap indices to reduce memory usage.
 
 **Returns:**
 
@@ -5189,7 +6682,7 @@ and relative difference with its corresponding confidence interval.
 - absolute_difference: The absolute difference (treated - control).
 - absolute_ci: Tuple of (lower, upper) bounds for the absolute difference CI.
 - relative_difference: The relative difference (%) relative to control mean.
-- relative_ci: Tuple of (lower, upper) bounds for the relative difference CI.
+- relative_ci: Tuple of (lower, upper) bounds for the relative difference CI (delta method).
 
 **Raises:**
 
@@ -5198,7 +6691,7 @@ and relative difference with its corresponding confidence interval.
 ###### `causalis.scenarios.classic_rct.inference.bootstrap_diff_means`
 
 ```python
-bootstrap_diff_means(data, alpha=0.05, n_simul=10000)
+bootstrap_diff_means(data, alpha=0.05, n_simul=10000, *, batch_size=512, seed=None, index_dtype=np.int32)
 ```
 
 Bootstrap inference for difference in means between treated and control groups.
@@ -5213,6 +6706,9 @@ and relative difference with its corresponding confidence interval.
 - **data** (<code>[CausalData](#causalis.dgp.causaldata.CausalData)</code>) – The CausalData object containing treatment and outcome variables.
 - **alpha** (<code>[float](#float)</code>) – The significance level for calculating confidence intervals (between 0 and 1).
 - **n_simul** (<code>[int](#int)</code>) – Number of bootstrap resamples.
+- **batch_size** (<code>[int](#int)</code>) – Number of bootstrap samples to process per batch.
+- **seed** (<code>[int](#int)</code>) – Random seed for reproducibility.
+- **index_dtype** (<code>numpy dtype</code>) – Integer dtype for bootstrap indices to reduce memory usage.
 
 **Returns:**
 
@@ -5221,42 +6717,11 @@ and relative difference with its corresponding confidence interval.
 - absolute_difference: The absolute difference (treated - control).
 - absolute_ci: Tuple of (lower, upper) bounds for the absolute difference CI.
 - relative_difference: The relative difference (%) relative to control mean.
-- relative_ci: Tuple of (lower, upper) bounds for the relative difference CI.
+- relative_ci: Tuple of (lower, upper) bounds for the relative difference CI (delta method).
 
 **Raises:**
 
 - <code>[ValueError](#ValueError)</code> – If inputs are invalid, treatment is not binary, or groups are empty.
-
-###### `causalis.scenarios.classic_rct.inference.conversion_z_test`
-
-```python
-conversion_z_test(data, alpha=0.05, ci_method='newcombe', se_for_test='pooled')
-```
-
-Perform a two-proportion z-test on a CausalData object with a binary outcome (conversion).
-
-**Parameters:**
-
-- **data** (<code>[CausalData](#causalis.dgp.causaldata.CausalData)</code>) – The CausalData object containing treatment and outcome variables.
-- **alpha** (<code>[float](#float)</code>) – The significance level for calculating confidence intervals (between 0 and 1).
-- **ci_method** (<code>([newcombe](#newcombe), [wald_unpooled](#wald_unpooled), [wald_pooled](#wald_pooled))</code>) – Method for calculating the confidence interval for the absolute difference.
-  "newcombe" is the most robust default for conversion rates.
-- **se_for_test** (<code>([pooled](#pooled), [unpooled](#unpooled))</code>) – Method for calculating the standard error for the z-test p-value.
-  "pooled" (score test) is generally preferred for testing equality of proportions.
-
-**Returns:**
-
-- <code>[Dict](#typing.Dict)\[[str](#str), [Any](#typing.Any)\]</code> – A dictionary containing:
-- p_value: Two-sided p-value from the z-test
-- absolute_difference: Difference in conversion rates (treated - control)
-- absolute_ci: Tuple (lower, upper) for the absolute difference CI
-- relative_difference: Percentage change relative to control rate
-- relative_ci: Tuple (lower, upper) for the relative difference CI
-
-**Raises:**
-
-- <code>[ValueError](#ValueError)</code> – If treatment/outcome are missing, treatment is not binary, outcome is not binary,
-  groups are empty, or alpha is outside (0, 1).
 
 ###### `causalis.scenarios.classic_rct.inference.conversion_ztest`
 
@@ -5267,12 +6732,12 @@ Returns p-value, absolute/relative differences, and their confidence intervals
 
 **Functions:**
 
-- [**conversion_z_test**](#causalis.scenarios.classic_rct.inference.conversion_ztest.conversion_z_test) – Perform a two-proportion z-test on a CausalData object with a binary outcome (conversion).
+- [**conversion_ztest**](#causalis.scenarios.classic_rct.inference.conversion_ztest.conversion_ztest) – Perform a two-proportion z-test on a CausalData object with a binary outcome (conversion).
 
-####### `causalis.scenarios.classic_rct.inference.conversion_ztest.conversion_z_test`
+####### `causalis.scenarios.classic_rct.inference.conversion_ztest.conversion_ztest`
 
 ```python
-conversion_z_test(data, alpha=0.05, ci_method='newcombe', se_for_test='pooled')
+conversion_ztest(data, alpha=0.05, ci_method='newcombe', se_for_test='pooled')
 ```
 
 Perform a two-proportion z-test on a CausalData object with a binary outcome (conversion).
@@ -5293,7 +6758,7 @@ Perform a two-proportion z-test on a CausalData object with a binary outcome (co
 - absolute_difference: Difference in conversion rates (treated - control)
 - absolute_ci: Tuple (lower, upper) for the absolute difference CI
 - relative_difference: Percentage change relative to control rate
-- relative_ci: Tuple (lower, upper) for the relative difference CI
+- relative_ci: Tuple (lower, upper) for the relative difference CI (delta method)
 
 **Raises:**
 
@@ -5392,7 +6857,7 @@ Compute the treatment effect using the specified method.
 - **alpha** (<code>[float](#float)</code>) – The significance level for calculating confidence intervals.
 - **diagnostic_data** (<code>[bool](#bool)</code>) – Whether to include diagnostic data_contracts in the result.
 - \*\***kwargs** (<code>[Any](#typing.Any)</code>) – Additional arguments passed to the underlying inference function.
-- For "bootstrap": can pass `n_simul` (default 10000).
+- For "bootstrap": can pass `n_simul`, `batch_size`, `seed`, `index_dtype`.
 
 **Returns:**
 
@@ -5426,12 +6891,12 @@ Design module for experimental rct_design utilities.
 
 - [**assign_variants_df**](#causalis.scenarios.classic_rct.rct_design.assign_variants_df) – Deterministically assign variants for each row in df based on id_col.
 - [**calculate_mde**](#causalis.scenarios.classic_rct.rct_design.calculate_mde) – Calculate the Minimum Detectable Effect (MDE) for conversion or continuous data_contracts.
-- [**check_srm**](#causalis.scenarios.classic_rct.rct_design.check_srm) – Check Sample Ratio Mismatch (SRM) for an RCT via chi-square goodness-of-fit test.
+- [**check_srm**](#causalis.scenarios.classic_rct.rct_design.check_srm) – Check Sample Ratio Mismatch (SRM) for an RCT via a chi-square goodness-of-fit test.
 
 ###### `causalis.scenarios.classic_rct.rct_design.SRMResult`
 
 ```python
-SRMResult(chi2, df, p_value, expected, observed, alpha, is_srm, warning=None)
+SRMResult(chi2, p_value, expected, observed, alpha, is_srm, warning=None)
 ```
 
 Result of a Sample Ratio Mismatch (SRM) check.
@@ -5439,13 +6904,12 @@ Result of a Sample Ratio Mismatch (SRM) check.
 **Attributes:**
 
 - [**chi2**](#causalis.scenarios.classic_rct.rct_design.SRMResult.chi2) (<code>[float](#float)</code>) – The calculated chi-square statistic.
-- [**df**](#causalis.scenarios.classic_rct.rct_design.SRMResult.df) (<code>[int](#int)</code>) – Degrees of freedom used in the test.
-- [**p_value**](#causalis.scenarios.classic_rct.rct_design.SRMResult.p_value) (<code>[float](#float)</code>) – The p-value of the test.
-- [**expected**](#causalis.scenarios.classic_rct.rct_design.SRMResult.expected) (<code>[Dict](#typing.Dict)\[[Hashable](#typing.Hashable), [float](#float)\]</code>) – Expected counts for each variant.
-- [**observed**](#causalis.scenarios.classic_rct.rct_design.SRMResult.observed) (<code>[Dict](#typing.Dict)\[[Hashable](#typing.Hashable), [int](#int)\]</code>) – Observed counts for each variant.
+- [**p_value**](#causalis.scenarios.classic_rct.rct_design.SRMResult.p_value) (<code>[float](#float)</code>) – The p-value of the test, rounded to 5 decimals.
+- [**expected**](#causalis.scenarios.classic_rct.rct_design.SRMResult.expected) (<code>[dict](#dict)\[[Hashable](#typing.Hashable), [float](#float)\]</code>) – Expected counts for each variant.
+- [**observed**](#causalis.scenarios.classic_rct.rct_design.SRMResult.observed) (<code>[dict](#dict)\[[Hashable](#typing.Hashable), [int](#int)\]</code>) – Observed counts for each variant.
 - [**alpha**](#causalis.scenarios.classic_rct.rct_design.SRMResult.alpha) (<code>[float](#float)</code>) – Significance level used for the check.
-- [**is_srm**](#causalis.scenarios.classic_rct.rct_design.SRMResult.is_srm) (<code>[bool](#bool)</code>) – True if an SRM was detected (p_value < alpha), False otherwise.
-- [**warning**](#causalis.scenarios.classic_rct.rct_design.SRMResult.warning) (<code>([str](#str), [optional](#optional))</code>) – Warning message if the test assumptions might be violated (e.g., small expected counts).
+- [**is_srm**](#causalis.scenarios.classic_rct.rct_design.SRMResult.is_srm) (<code>[bool](#bool)</code>) – True if an SRM was detected (chi-square p-value < alpha), False otherwise.
+- [**warning**](#causalis.scenarios.classic_rct.rct_design.SRMResult.warning) (<code>[str](#str) or None</code>) – Warning message if the test assumptions might be violated (e.g., small expected counts).
 
 ####### `causalis.scenarios.classic_rct.rct_design.SRMResult.alpha`
 
@@ -5457,12 +6921,6 @@ alpha: float
 
 ```python
 chi2: float
-```
-
-####### `causalis.scenarios.classic_rct.rct_design.SRMResult.df`
-
-```python
-df: int
 ```
 
 ####### `causalis.scenarios.classic_rct.rct_design.SRMResult.expected`
@@ -5590,21 +7048,15 @@ where:
 check_srm(assignments, target_allocation, alpha=0.001, min_expected=5.0, strict_variants=True)
 ```
 
-Check Sample Ratio Mismatch (SRM) for an RCT via chi-square goodness-of-fit test.
+Check Sample Ratio Mismatch (SRM) for an RCT via a chi-square goodness-of-fit test.
 
 **Parameters:**
 
-- **assignments** (<code>[Iterable](#typing.Iterable)\[[Hashable](#typing.Hashable)\] or [Series](#pandas.Series) or [CausalData](#causalis.dgp.causaldata.CausalData)</code>) – Iterable of assigned variant labels for each unit (user_id, session_id, etc.).
-  E.g. Series of ["control", "treatment", ...].
-  If CausalData is provided, the treatment column is used.
-- **target_allocation** (<code>[Dict](#typing.Dict)\[[Hashable](#typing.Hashable), [Number](#causalis.shared.srm.Number)\]</code>) – Mapping {variant: p} describing intended allocation as PROBABILITIES.
-- Each p must be > 0.
-- Sum of all p must be 1.0 (within numerical tolerance).
-
-Examples:
-{"control": 0.5, "treatment": 0.5}
-{"A": 0.2, "B": 0.3, "C": 0.5}
-
+- **assignments** (<code>[Iterable](#typing.Iterable)\[[Hashable](#typing.Hashable)\] or [Series](#pandas.Series) or [CausalData](#causalis.dgp.causaldata.CausalData) or [Mapping](#collections.abc.Mapping)\[[Hashable](#typing.Hashable), [Number](#causalis.shared.srm.Number)\]</code>) – Observed variant assignments. If iterable or Series, elements are labels per
+  unit (user_id, session_id, etc.). If CausalData is provided, the treatment
+  column is used. If a mapping is provided, it is treated as
+  `{variant: observed_count}` with non-negative integer counts.
+- **target_allocation** (<code>[dict](#dict)\[[Hashable](#typing.Hashable), [Number](#causalis.shared.srm.Number)\]</code>) – Mapping `{variant: p}` describing intended allocation as probabilities.
 - **alpha** (<code>[float](#float)</code>) – Significance level. Use strict values like 1e-3 or 1e-4 in production.
 - **min_expected** (<code>[float](#float)</code>) – If any expected count < min_expected, a warning is attached.
 - **strict_variants** (<code>[bool](#bool)</code>) – - True: fail if observed variants differ from target keys.
@@ -5618,6 +7070,31 @@ Examples:
 
 - <code>[ValueError](#ValueError)</code> – If inputs are invalid or empty.
 - <code>[ImportError](#ImportError)</code> – If scipy is required but not installed.
+
+<details class="note" open markdown="1">
+<summary>Notes</summary>
+
+- Target allocation probabilities must sum to 1 within numerical tolerance.
+- `is_srm` is computed using the unrounded p-value; the returned
+  `p_value` is rounded to 5 decimals.
+- Missing assignments are dropped and reported via `warning`.
+- Requires SciPy for p-value computation.
+
+</details>
+
+**Examples:**
+
+```pycon
+>>> assignments = ["control"] * 50 + ["treatment"] * 50
+>>> check_srm(assignments, {"control": 0.5, "treatment": 0.5}, alpha=1e-3)
+SRMResult(status=no SRM, p_value=1.00000, chi2=0.0000)
+```
+
+```pycon
+>>> counts = {"control": 70, "treatment": 30}
+>>> check_srm(counts, {"control": 0.5, "treatment": 0.5})
+SRMResult(status=SRM DETECTED, p_value=0.00006, chi2=16.0000)
+```
 
 ##### `causalis.scenarios.classic_rct.ttest`
 
@@ -6001,6 +7478,804 @@ Convenience JSON/logging output.
 ```python
 use_t = bool(use_t)
 ```
+
+#### `causalis.scenarios.multi_uncofoundedness`
+
+**Modules:**
+
+- [**dgp**](#causalis.scenarios.multi_uncofoundedness.dgp) –
+- [**model**](#causalis.scenarios.multi_uncofoundedness.model) –
+- [**refutation**](#causalis.scenarios.multi_uncofoundedness.refutation) –
+
+**Classes:**
+
+- [**MultiTreatmentIRM**](#causalis.scenarios.multi_uncofoundedness.MultiTreatmentIRM) – Interactive Regression Model with multi_uncofoundedness (Multi treatment IRM) with DoubleML-style cross-fitting using CausalData.
+
+##### `causalis.scenarios.multi_uncofoundedness.MultiTreatmentIRM`
+
+```python
+MultiTreatmentIRM(data=None, ml_g=None, ml_m=None, *, n_folds=5, n_rep=1, normalize_ipw=False, trimming_rule='truncate', trimming_threshold=0.01, random_state=None)
+```
+
+Bases: <code>[BaseEstimator](#sklearn.base.BaseEstimator)</code>
+
+Interactive Regression Model with multi_uncofoundedness (Multi treatment IRM) with DoubleML-style cross-fitting using CausalData.
+Model supports >= 2 treatments.
+
+<details class="-parameters" open markdown="1">
+<summary> Parameters</summary>
+
+data : MultiCausalData
+Data container with outcome, binary treatment (0/1), and confounders.
+ml_g : estimator
+Learner for E[Y|X,D]. If classifier and Y is binary, predict_proba is used; otherwise predict().
+ml_m : classifier
+Learner for E[D|X] (generelized propensity score). Must support predict_proba() or predict() in (0,1).
+n_folds : int, default 5
+Number of cross-fitting folds.
+n_rep : int, default 1
+Number of repetitions of sample splitting. Currently only 1 is supported.
+normalize_ipw : bool, default False
+Whether to normalize IPW terms within the score.
+trimming_rule : {"truncate"}, default "truncate"
+Trimming approach for propensity scores.
+trimming_threshold : float, default 1e-2
+Threshold for trimming if rule is "truncate".
+random_state : Optional[int], default None
+Random seed for fold creation.
+
+</details>
+
+**Functions:**
+
+- [**confint**](#causalis.scenarios.multi_uncofoundedness.MultiTreatmentIRM.confint) –
+- [**estimate**](#causalis.scenarios.multi_uncofoundedness.MultiTreatmentIRM.estimate) –
+- [**fit**](#causalis.scenarios.multi_uncofoundedness.MultiTreatmentIRM.fit) –
+- [**sensitivity_analysis**](#causalis.scenarios.multi_uncofoundedness.MultiTreatmentIRM.sensitivity_analysis) –
+
+**Attributes:**
+
+- [**coef**](#causalis.scenarios.multi_uncofoundedness.MultiTreatmentIRM.coef) (<code>[ndarray](#numpy.ndarray)</code>) – Return the estimated coefficient.
+- [**data**](#causalis.scenarios.multi_uncofoundedness.MultiTreatmentIRM.data) –
+- [**diagnostics\_**](#causalis.scenarios.multi_uncofoundedness.MultiTreatmentIRM.diagnostics_) (<code>[Dict](#typing.Dict)\[[str](#str), [Any](#typing.Any)\]</code>) – Return diagnostic data.
+- [**ml_g**](#causalis.scenarios.multi_uncofoundedness.MultiTreatmentIRM.ml_g) –
+- [**ml_m**](#causalis.scenarios.multi_uncofoundedness.MultiTreatmentIRM.ml_m) –
+- [**n_folds**](#causalis.scenarios.multi_uncofoundedness.MultiTreatmentIRM.n_folds) –
+- [**n_rep**](#causalis.scenarios.multi_uncofoundedness.MultiTreatmentIRM.n_rep) –
+- [**normalize_ipw**](#causalis.scenarios.multi_uncofoundedness.MultiTreatmentIRM.normalize_ipw) –
+- [**orth_signal**](#causalis.scenarios.multi_uncofoundedness.MultiTreatmentIRM.orth_signal) (<code>[ndarray](#numpy.ndarray)</code>) – Return the cross-fitted orthogonal signal (psi_b).
+- [**pvalues**](#causalis.scenarios.multi_uncofoundedness.MultiTreatmentIRM.pvalues) (<code>[ndarray](#numpy.ndarray)</code>) – Return the p-values for the estimate.
+- [**random_state**](#causalis.scenarios.multi_uncofoundedness.MultiTreatmentIRM.random_state) –
+- [**score**](#causalis.scenarios.multi_uncofoundedness.MultiTreatmentIRM.score) –
+- [**se**](#causalis.scenarios.multi_uncofoundedness.MultiTreatmentIRM.se) (<code>[ndarray](#numpy.ndarray)</code>) – Return the standard error of the estimate.
+- [**summary**](#causalis.scenarios.multi_uncofoundedness.MultiTreatmentIRM.summary) (<code>[DataFrame](#pandas.DataFrame)</code>) – Return a summary DataFrame of the results.
+- [**trimming_rule**](#causalis.scenarios.multi_uncofoundedness.MultiTreatmentIRM.trimming_rule) –
+- [**trimming_threshold**](#causalis.scenarios.multi_uncofoundedness.MultiTreatmentIRM.trimming_threshold) –
+
+###### `causalis.scenarios.multi_uncofoundedness.MultiTreatmentIRM.coef`
+
+```python
+coef: np.ndarray
+```
+
+Return the estimated coefficient.
+
+**Returns:**
+
+- <code>[ndarray](#numpy.ndarray)</code> – The estimated coefficient.
+
+###### `causalis.scenarios.multi_uncofoundedness.MultiTreatmentIRM.confint`
+
+```python
+confint()
+```
+
+###### `causalis.scenarios.multi_uncofoundedness.MultiTreatmentIRM.data`
+
+```python
+data = data
+```
+
+###### `causalis.scenarios.multi_uncofoundedness.MultiTreatmentIRM.diagnostics_`
+
+```python
+diagnostics_: Dict[str, Any]
+```
+
+Return diagnostic data.
+
+**Returns:**
+
+- <code>[dict](#dict)</code> – Dictionary containing 'm_hat', 'g_hat' and 'folds'.
+
+###### `causalis.scenarios.multi_uncofoundedness.MultiTreatmentIRM.estimate`
+
+```python
+estimate(score='ATE', alpha=0.05, diagnostic_data=True)
+```
+
+###### `causalis.scenarios.multi_uncofoundedness.MultiTreatmentIRM.fit`
+
+```python
+fit(data=None)
+```
+
+###### `causalis.scenarios.multi_uncofoundedness.MultiTreatmentIRM.ml_g`
+
+```python
+ml_g = ml_g
+```
+
+###### `causalis.scenarios.multi_uncofoundedness.MultiTreatmentIRM.ml_m`
+
+```python
+ml_m = ml_m
+```
+
+###### `causalis.scenarios.multi_uncofoundedness.MultiTreatmentIRM.n_folds`
+
+```python
+n_folds = int(n_folds)
+```
+
+###### `causalis.scenarios.multi_uncofoundedness.MultiTreatmentIRM.n_rep`
+
+```python
+n_rep = int(n_rep)
+```
+
+###### `causalis.scenarios.multi_uncofoundedness.MultiTreatmentIRM.normalize_ipw`
+
+```python
+normalize_ipw = bool(normalize_ipw)
+```
+
+###### `causalis.scenarios.multi_uncofoundedness.MultiTreatmentIRM.orth_signal`
+
+```python
+orth_signal: np.ndarray
+```
+
+Return the cross-fitted orthogonal signal (psi_b).
+
+**Returns:**
+
+- <code>[ndarray](#numpy.ndarray)</code> – The orthogonal signal.
+
+###### `causalis.scenarios.multi_uncofoundedness.MultiTreatmentIRM.pvalues`
+
+```python
+pvalues: np.ndarray
+```
+
+Return the p-values for the estimate.
+
+**Returns:**
+
+- <code>[ndarray](#numpy.ndarray)</code> – The p-values.
+
+###### `causalis.scenarios.multi_uncofoundedness.MultiTreatmentIRM.random_state`
+
+```python
+random_state = random_state
+```
+
+###### `causalis.scenarios.multi_uncofoundedness.MultiTreatmentIRM.score`
+
+```python
+score = 'ATE'
+```
+
+###### `causalis.scenarios.multi_uncofoundedness.MultiTreatmentIRM.se`
+
+```python
+se: np.ndarray
+```
+
+Return the standard error of the estimate.
+
+**Returns:**
+
+- <code>[ndarray](#numpy.ndarray)</code> – The standard error.
+
+###### `causalis.scenarios.multi_uncofoundedness.MultiTreatmentIRM.sensitivity_analysis`
+
+```python
+sensitivity_analysis(cf_y, r2_d, rho=1.0, H0=0.0, alpha=0.05)
+```
+
+###### `causalis.scenarios.multi_uncofoundedness.MultiTreatmentIRM.summary`
+
+```python
+summary: pd.DataFrame
+```
+
+Return a summary DataFrame of the results.
+
+**Returns:**
+
+- <code>[DataFrame](#pandas.DataFrame)</code> – The results summary.
+
+###### `causalis.scenarios.multi_uncofoundedness.MultiTreatmentIRM.trimming_rule`
+
+```python
+trimming_rule = str(trimming_rule)
+```
+
+###### `causalis.scenarios.multi_uncofoundedness.MultiTreatmentIRM.trimming_threshold`
+
+```python
+trimming_threshold = float(trimming_threshold)
+```
+
+##### `causalis.scenarios.multi_uncofoundedness.dgp`
+
+**Functions:**
+
+- [**generate_multitreatment_irm_26**](#causalis.scenarios.multi_uncofoundedness.dgp.generate_multitreatment_irm_26) – Pre-configured multi-treatment dataset suitable for MultiTreatmentIRM.
+
+###### `causalis.scenarios.multi_uncofoundedness.dgp.generate_multitreatment_irm_26`
+
+```python
+generate_multitreatment_irm_26(n=10000, seed=42, include_oracle=False, return_causal_data=True)
+```
+
+Pre-configured multi-treatment dataset suitable for MultiTreatmentIRM.
+
+- 3 treatment classes: control + 2 treatments
+- 5 confounders with realistic marginals
+- Continuous outcome with linear confounding
+
+##### `causalis.scenarios.multi_uncofoundedness.model`
+
+**Classes:**
+
+- [**MultiTreatmentIRM**](#causalis.scenarios.multi_uncofoundedness.model.MultiTreatmentIRM) – Interactive Regression Model with multi_uncofoundedness (Multi treatment IRM) with DoubleML-style cross-fitting using CausalData.
+
+**Attributes:**
+
+- [**HAS_CATBOOST**](#causalis.scenarios.multi_uncofoundedness.model.HAS_CATBOOST) –
+
+###### `causalis.scenarios.multi_uncofoundedness.model.HAS_CATBOOST`
+
+```python
+HAS_CATBOOST = True
+```
+
+###### `causalis.scenarios.multi_uncofoundedness.model.MultiTreatmentIRM`
+
+```python
+MultiTreatmentIRM(data=None, ml_g=None, ml_m=None, *, n_folds=5, n_rep=1, normalize_ipw=False, trimming_rule='truncate', trimming_threshold=0.01, random_state=None)
+```
+
+Bases: <code>[BaseEstimator](#sklearn.base.BaseEstimator)</code>
+
+Interactive Regression Model with multi_uncofoundedness (Multi treatment IRM) with DoubleML-style cross-fitting using CausalData.
+Model supports >= 2 treatments.
+
+<details class="-parameters" open markdown="1">
+<summary> Parameters</summary>
+
+data : MultiCausalData
+Data container with outcome, binary treatment (0/1), and confounders.
+ml_g : estimator
+Learner for E[Y|X,D]. If classifier and Y is binary, predict_proba is used; otherwise predict().
+ml_m : classifier
+Learner for E[D|X] (generelized propensity score). Must support predict_proba() or predict() in (0,1).
+n_folds : int, default 5
+Number of cross-fitting folds.
+n_rep : int, default 1
+Number of repetitions of sample splitting. Currently only 1 is supported.
+normalize_ipw : bool, default False
+Whether to normalize IPW terms within the score.
+trimming_rule : {"truncate"}, default "truncate"
+Trimming approach for propensity scores.
+trimming_threshold : float, default 1e-2
+Threshold for trimming if rule is "truncate".
+random_state : Optional[int], default None
+Random seed for fold creation.
+
+</details>
+
+**Functions:**
+
+- [**confint**](#causalis.scenarios.multi_uncofoundedness.model.MultiTreatmentIRM.confint) –
+- [**estimate**](#causalis.scenarios.multi_uncofoundedness.model.MultiTreatmentIRM.estimate) –
+- [**fit**](#causalis.scenarios.multi_uncofoundedness.model.MultiTreatmentIRM.fit) –
+- [**sensitivity_analysis**](#causalis.scenarios.multi_uncofoundedness.model.MultiTreatmentIRM.sensitivity_analysis) –
+
+**Attributes:**
+
+- [**coef**](#causalis.scenarios.multi_uncofoundedness.model.MultiTreatmentIRM.coef) (<code>[ndarray](#numpy.ndarray)</code>) – Return the estimated coefficient.
+- [**data**](#causalis.scenarios.multi_uncofoundedness.model.MultiTreatmentIRM.data) –
+- [**diagnostics\_**](#causalis.scenarios.multi_uncofoundedness.model.MultiTreatmentIRM.diagnostics_) (<code>[Dict](#typing.Dict)\[[str](#str), [Any](#typing.Any)\]</code>) – Return diagnostic data.
+- [**ml_g**](#causalis.scenarios.multi_uncofoundedness.model.MultiTreatmentIRM.ml_g) –
+- [**ml_m**](#causalis.scenarios.multi_uncofoundedness.model.MultiTreatmentIRM.ml_m) –
+- [**n_folds**](#causalis.scenarios.multi_uncofoundedness.model.MultiTreatmentIRM.n_folds) –
+- [**n_rep**](#causalis.scenarios.multi_uncofoundedness.model.MultiTreatmentIRM.n_rep) –
+- [**normalize_ipw**](#causalis.scenarios.multi_uncofoundedness.model.MultiTreatmentIRM.normalize_ipw) –
+- [**orth_signal**](#causalis.scenarios.multi_uncofoundedness.model.MultiTreatmentIRM.orth_signal) (<code>[ndarray](#numpy.ndarray)</code>) – Return the cross-fitted orthogonal signal (psi_b).
+- [**pvalues**](#causalis.scenarios.multi_uncofoundedness.model.MultiTreatmentIRM.pvalues) (<code>[ndarray](#numpy.ndarray)</code>) – Return the p-values for the estimate.
+- [**random_state**](#causalis.scenarios.multi_uncofoundedness.model.MultiTreatmentIRM.random_state) –
+- [**score**](#causalis.scenarios.multi_uncofoundedness.model.MultiTreatmentIRM.score) –
+- [**se**](#causalis.scenarios.multi_uncofoundedness.model.MultiTreatmentIRM.se) (<code>[ndarray](#numpy.ndarray)</code>) – Return the standard error of the estimate.
+- [**summary**](#causalis.scenarios.multi_uncofoundedness.model.MultiTreatmentIRM.summary) (<code>[DataFrame](#pandas.DataFrame)</code>) – Return a summary DataFrame of the results.
+- [**trimming_rule**](#causalis.scenarios.multi_uncofoundedness.model.MultiTreatmentIRM.trimming_rule) –
+- [**trimming_threshold**](#causalis.scenarios.multi_uncofoundedness.model.MultiTreatmentIRM.trimming_threshold) –
+
+####### `causalis.scenarios.multi_uncofoundedness.model.MultiTreatmentIRM.coef`
+
+```python
+coef: np.ndarray
+```
+
+Return the estimated coefficient.
+
+**Returns:**
+
+- <code>[ndarray](#numpy.ndarray)</code> – The estimated coefficient.
+
+####### `causalis.scenarios.multi_uncofoundedness.model.MultiTreatmentIRM.confint`
+
+```python
+confint()
+```
+
+####### `causalis.scenarios.multi_uncofoundedness.model.MultiTreatmentIRM.data`
+
+```python
+data = data
+```
+
+####### `causalis.scenarios.multi_uncofoundedness.model.MultiTreatmentIRM.diagnostics_`
+
+```python
+diagnostics_: Dict[str, Any]
+```
+
+Return diagnostic data.
+
+**Returns:**
+
+- <code>[dict](#dict)</code> – Dictionary containing 'm_hat', 'g_hat' and 'folds'.
+
+####### `causalis.scenarios.multi_uncofoundedness.model.MultiTreatmentIRM.estimate`
+
+```python
+estimate(score='ATE', alpha=0.05, diagnostic_data=True)
+```
+
+####### `causalis.scenarios.multi_uncofoundedness.model.MultiTreatmentIRM.fit`
+
+```python
+fit(data=None)
+```
+
+####### `causalis.scenarios.multi_uncofoundedness.model.MultiTreatmentIRM.ml_g`
+
+```python
+ml_g = ml_g
+```
+
+####### `causalis.scenarios.multi_uncofoundedness.model.MultiTreatmentIRM.ml_m`
+
+```python
+ml_m = ml_m
+```
+
+####### `causalis.scenarios.multi_uncofoundedness.model.MultiTreatmentIRM.n_folds`
+
+```python
+n_folds = int(n_folds)
+```
+
+####### `causalis.scenarios.multi_uncofoundedness.model.MultiTreatmentIRM.n_rep`
+
+```python
+n_rep = int(n_rep)
+```
+
+####### `causalis.scenarios.multi_uncofoundedness.model.MultiTreatmentIRM.normalize_ipw`
+
+```python
+normalize_ipw = bool(normalize_ipw)
+```
+
+####### `causalis.scenarios.multi_uncofoundedness.model.MultiTreatmentIRM.orth_signal`
+
+```python
+orth_signal: np.ndarray
+```
+
+Return the cross-fitted orthogonal signal (psi_b).
+
+**Returns:**
+
+- <code>[ndarray](#numpy.ndarray)</code> – The orthogonal signal.
+
+####### `causalis.scenarios.multi_uncofoundedness.model.MultiTreatmentIRM.pvalues`
+
+```python
+pvalues: np.ndarray
+```
+
+Return the p-values for the estimate.
+
+**Returns:**
+
+- <code>[ndarray](#numpy.ndarray)</code> – The p-values.
+
+####### `causalis.scenarios.multi_uncofoundedness.model.MultiTreatmentIRM.random_state`
+
+```python
+random_state = random_state
+```
+
+####### `causalis.scenarios.multi_uncofoundedness.model.MultiTreatmentIRM.score`
+
+```python
+score = 'ATE'
+```
+
+####### `causalis.scenarios.multi_uncofoundedness.model.MultiTreatmentIRM.se`
+
+```python
+se: np.ndarray
+```
+
+Return the standard error of the estimate.
+
+**Returns:**
+
+- <code>[ndarray](#numpy.ndarray)</code> – The standard error.
+
+####### `causalis.scenarios.multi_uncofoundedness.model.MultiTreatmentIRM.sensitivity_analysis`
+
+```python
+sensitivity_analysis(cf_y, r2_d, rho=1.0, H0=0.0, alpha=0.05)
+```
+
+####### `causalis.scenarios.multi_uncofoundedness.model.MultiTreatmentIRM.summary`
+
+```python
+summary: pd.DataFrame
+```
+
+Return a summary DataFrame of the results.
+
+**Returns:**
+
+- <code>[DataFrame](#pandas.DataFrame)</code> – The results summary.
+
+####### `causalis.scenarios.multi_uncofoundedness.model.MultiTreatmentIRM.trimming_rule`
+
+```python
+trimming_rule = str(trimming_rule)
+```
+
+####### `causalis.scenarios.multi_uncofoundedness.model.MultiTreatmentIRM.trimming_threshold`
+
+```python
+trimming_threshold = float(trimming_threshold)
+```
+
+##### `causalis.scenarios.multi_uncofoundedness.refutation`
+
+**Modules:**
+
+- [**overlap**](#causalis.scenarios.multi_uncofoundedness.refutation.overlap) –
+- [**unconfoundedness**](#causalis.scenarios.multi_uncofoundedness.refutation.unconfoundedness) –
+
+###### `causalis.scenarios.multi_uncofoundedness.refutation.overlap`
+
+**Modules:**
+
+- [**overlap_plot**](#causalis.scenarios.multi_uncofoundedness.refutation.overlap.overlap_plot) –
+
+**Functions:**
+
+- [**plot_m_overlap**](#causalis.scenarios.multi_uncofoundedness.refutation.overlap.plot_m_overlap) – Multi-treatment overlap plot for propensity scores m_k(x)=P(D=k|X), ATE diagnostics style.
+
+####### `causalis.scenarios.multi_uncofoundedness.refutation.overlap.overlap_plot`
+
+**Functions:**
+
+- [**plot_m_overlap**](#causalis.scenarios.multi_uncofoundedness.refutation.overlap.overlap_plot.plot_m_overlap) – Multi-treatment overlap plot for propensity scores m_k(x)=P(D=k|X), ATE diagnostics style.
+
+######## `causalis.scenarios.multi_uncofoundedness.refutation.overlap.overlap_plot.plot_m_overlap`
+
+```python
+plot_m_overlap(diag, clip=(0.01, 0.99), bins='fd', kde=True, shade_overlap=True, ax=None, figsize=(9, 5.5), dpi=220, font_scale=1.15, save=None, save_dpi=None, transparent=False, color_t=None, color_c=None, *, treatment_idx=None, baseline_idx=0, treatment_names=None)
+```
+
+Multi-treatment overlap plot for propensity scores m_k(x)=P(D=k|X), ATE diagnostics style.
+
+Делает pairwise-плоты baseline (по умолчанию 0) vs k:
+
+- сравниваем распределение m_k(x) среди наблюдений с D=k (treated)
+  и среди наблюдений с D=baseline (control для пары 0 vs k).
+
+Параметры:
+
+- diag.d: (n, K) one-hot
+- diag.m_hat: (n, K) propensity
+- treatment_idx:
+  - None -> построить для всех k != baseline_idx (мультипанель)
+  - int -> построить для конкретного k
+  - list[int] -> построить для набора k
+- ax: поддерживается только для одиночного графика (когда выбран ровно один k)
+
+Возвращает matplotlib.figure.Figure.
+
+####### `causalis.scenarios.multi_uncofoundedness.refutation.overlap.plot_m_overlap`
+
+```python
+plot_m_overlap(diag, clip=(0.01, 0.99), bins='fd', kde=True, shade_overlap=True, ax=None, figsize=(9, 5.5), dpi=220, font_scale=1.15, save=None, save_dpi=None, transparent=False, color_t=None, color_c=None, *, treatment_idx=None, baseline_idx=0, treatment_names=None)
+```
+
+Multi-treatment overlap plot for propensity scores m_k(x)=P(D=k|X), ATE diagnostics style.
+
+Делает pairwise-плоты baseline (по умолчанию 0) vs k:
+
+- сравниваем распределение m_k(x) среди наблюдений с D=k (treated)
+  и среди наблюдений с D=baseline (control для пары 0 vs k).
+
+Параметры:
+
+- diag.d: (n, K) one-hot
+- diag.m_hat: (n, K) propensity
+- treatment_idx:
+  - None -> построить для всех k != baseline_idx (мультипанель)
+  - int -> построить для конкретного k
+  - list[int] -> построить для набора k
+- ax: поддерживается только для одиночного графика (когда выбран ровно один k)
+
+Возвращает matplotlib.figure.Figure.
+
+###### `causalis.scenarios.multi_uncofoundedness.refutation.unconfoundedness`
+
+**Modules:**
+
+- [**sensitivity**](#causalis.scenarios.multi_uncofoundedness.refutation.unconfoundedness.sensitivity) –
+- [**unconfoundedness_validation**](#causalis.scenarios.multi_uncofoundedness.refutation.unconfoundedness.unconfoundedness_validation) –
+
+**Functions:**
+
+- [**compute_bias_aware_ci**](#causalis.scenarios.multi_uncofoundedness.refutation.unconfoundedness.compute_bias_aware_ci) – Multi-treatment (pairwise 0 vs k) bias-aware CI.
+- [**get_sensitivity_summary**](#causalis.scenarios.multi_uncofoundedness.refutation.unconfoundedness.get_sensitivity_summary) –
+- [**run_uncofoundedness_diagnostics**](#causalis.scenarios.multi_uncofoundedness.refutation.unconfoundedness.run_uncofoundedness_diagnostics) – Multi-treatment uncofoundedness diagnostics focused on balance (SMD), ATE only.
+- [**sensitivity_analysis**](#causalis.scenarios.multi_uncofoundedness.refutation.unconfoundedness.sensitivity_analysis) –
+- [**validate_uncofoundedness_balance**](#causalis.scenarios.multi_uncofoundedness.refutation.unconfoundedness.validate_uncofoundedness_balance) – Multitreatment version (one-hot d, matrix m_hat) for ATE only.
+
+####### `causalis.scenarios.multi_uncofoundedness.refutation.unconfoundedness.compute_bias_aware_ci`
+
+```python
+compute_bias_aware_ci(effect_estimation, _=None, cf_y=0.0, r2_d=0.0, rho=1.0, H0=0.0, alpha=0.05, use_signed_rr=False)
+```
+
+Multi-treatment (pairwise 0 vs k) bias-aware CI.
+
+Returns dict with arrays of length J=K-1:
+
+- theta, se : (J,)
+- sampling_ci, theta_bounds_cofounding, bias_aware_ci : (J,2)
+- max_bias, nu2, rv, rva : (J,)
+- sigma2 : scalar
+
+####### `causalis.scenarios.multi_uncofoundedness.refutation.unconfoundedness.get_sensitivity_summary`
+
+```python
+get_sensitivity_summary(effect_estimation, _=None, label=None)
+```
+
+####### `causalis.scenarios.multi_uncofoundedness.refutation.unconfoundedness.run_uncofoundedness_diagnostics`
+
+```python
+run_uncofoundedness_diagnostics(*, res=None, X=None, d=None, m_hat=None, names=None, treatment_names=None, score=None, normalize=None, threshold=0.1, eps_overlap=0.01, return_summary=True)
+```
+
+Multi-treatment uncofoundedness diagnostics focused on balance (SMD), ATE only.
+
+Pairwise comparisons: baseline treatment 0 vs k (k=1..K-1)
+
+Inputs:
+
+- Either `res` containing diagnostic_data with x, d(one-hot), m_hat(matrix),
+  or raw arrays X, d, m_hat (+ optional names, treatment_names, normalize).
+  Returns:
+  {
+  "params": {"score", "normalize", "smd_threshold"},
+  "balance": {
+  "smd": pd.DataFrame (p, K-1),
+  "smd_unweighted": pd.DataFrame (p, K-1),
+  "smd_max": float,
+  "frac_violations": float,
+  "pass": bool,
+  "worst_features": pd.Series (top 10 by max SMD across comparisons),
+  "comparisons": list[str],
+  },
+  "flags": {"balance_max_smd", "balance_violations"},
+  "overall_flag": str,
+  "meta": {"n", "p", "K", "treatment_names"},
+  "summary": pd.DataFrame (optional)
+  }
+
+####### `causalis.scenarios.multi_uncofoundedness.refutation.unconfoundedness.sensitivity`
+
+**Functions:**
+
+- [**combine_nu2**](#causalis.scenarios.multi_uncofoundedness.refutation.unconfoundedness.sensitivity.combine_nu2) – Для каждого контраста k:
+- [**compute_bias_aware_ci**](#causalis.scenarios.multi_uncofoundedness.refutation.unconfoundedness.sensitivity.compute_bias_aware_ci) – Multi-treatment (pairwise 0 vs k) bias-aware CI.
+- [**compute_sensitivity_bias**](#causalis.scenarios.multi_uncofoundedness.refutation.unconfoundedness.sensitivity.compute_sensitivity_bias) –
+- [**compute_sensitivity_bias_local**](#causalis.scenarios.multi_uncofoundedness.refutation.unconfoundedness.sensitivity.compute_sensitivity_bias_local) –
+- [**format_bias_aware_summary**](#causalis.scenarios.multi_uncofoundedness.refutation.unconfoundedness.sensitivity.format_bias_aware_summary) –
+- [**get_sensitivity_summary**](#causalis.scenarios.multi_uncofoundedness.refutation.unconfoundedness.sensitivity.get_sensitivity_summary) –
+- [**pulltheta_se_ci**](#causalis.scenarios.multi_uncofoundedness.refutation.unconfoundedness.sensitivity.pulltheta_se_ci) – Возвращает:
+- [**sensitivity_analysis**](#causalis.scenarios.multi_uncofoundedness.refutation.unconfoundedness.sensitivity.sensitivity_analysis) –
+
+######## `causalis.scenarios.multi_uncofoundedness.refutation.unconfoundedness.sensitivity.combine_nu2`
+
+```python
+combine_nu2(m_alpha, rr, cf_y, r2_d, rho, use_signed_rr=False)
+```
+
+Для каждого контраста k:
+base\_{i,k} = (a\_{i,k}^2)*cf_y + (b\_{i,k}^2)*cf_d + 2*rho*sqrt(cf_y\*cf_d)\*a\_{i,k}*b\_{i,k}
+a = sqrt(2*m_alpha), b = rr (signed) или abs(rr) (worst-case)
+Возвращает:
+nu2: (K-1,)
+psi_nu2: (n, K-1) (центрированная по столбцам)
+
+######## `causalis.scenarios.multi_uncofoundedness.refutation.unconfoundedness.sensitivity.compute_bias_aware_ci`
+
+```python
+compute_bias_aware_ci(effect_estimation, _=None, cf_y=0.0, r2_d=0.0, rho=1.0, H0=0.0, alpha=0.05, use_signed_rr=False)
+```
+
+Multi-treatment (pairwise 0 vs k) bias-aware CI.
+
+Returns dict with arrays of length J=K-1:
+
+- theta, se : (J,)
+- sampling_ci, theta_bounds_cofounding, bias_aware_ci : (J,2)
+- max_bias, nu2, rv, rva : (J,)
+- sigma2 : scalar
+
+######## `causalis.scenarios.multi_uncofoundedness.refutation.unconfoundedness.sensitivity.compute_sensitivity_bias`
+
+```python
+compute_sensitivity_bias(sigma2, nu2, psi_sigma2, psi_nu2)
+```
+
+######## `causalis.scenarios.multi_uncofoundedness.refutation.unconfoundedness.sensitivity.compute_sensitivity_bias_local`
+
+```python
+compute_sensitivity_bias_local(sigma2, nu2, psi_sigma2, psi_nu2)
+```
+
+######## `causalis.scenarios.multi_uncofoundedness.refutation.unconfoundedness.sensitivity.format_bias_aware_summary`
+
+```python
+format_bias_aware_summary(res, label=None)
+```
+
+######## `causalis.scenarios.multi_uncofoundedness.refutation.unconfoundedness.sensitivity.get_sensitivity_summary`
+
+```python
+get_sensitivity_summary(effect_estimation, _=None, label=None)
+```
+
+######## `causalis.scenarios.multi_uncofoundedness.refutation.unconfoundedness.sensitivity.pulltheta_se_ci`
+
+```python
+pulltheta_se_ci(effect_estimation, alpha)
+```
+
+Возвращает:
+theta: float или (K-1,)
+se: float или (K-1,)
+ci: (2,) или (K-1, 2)
+
+######## `causalis.scenarios.multi_uncofoundedness.refutation.unconfoundedness.sensitivity.sensitivity_analysis`
+
+```python
+sensitivity_analysis(effect_estimation, _=None, cf_y=0.0, r2_d=0.0, rho=1.0, H0=0.0, alpha=0.05, use_signed_rr=False)
+```
+
+####### `causalis.scenarios.multi_uncofoundedness.refutation.unconfoundedness.sensitivity_analysis`
+
+```python
+sensitivity_analysis(effect_estimation, _=None, cf_y=0.0, r2_d=0.0, rho=1.0, H0=0.0, alpha=0.05, use_signed_rr=False)
+```
+
+####### `causalis.scenarios.multi_uncofoundedness.refutation.unconfoundedness.unconfoundedness_validation`
+
+**Functions:**
+
+- [**run_uncofoundedness_diagnostics**](#causalis.scenarios.multi_uncofoundedness.refutation.unconfoundedness.unconfoundedness_validation.run_uncofoundedness_diagnostics) – Multi-treatment uncofoundedness diagnostics focused on balance (SMD), ATE only.
+- [**validate_uncofoundedness_balance**](#causalis.scenarios.multi_uncofoundedness.refutation.unconfoundedness.unconfoundedness_validation.validate_uncofoundedness_balance) – Multitreatment version (one-hot d, matrix m_hat) for ATE only.
+
+######## `causalis.scenarios.multi_uncofoundedness.refutation.unconfoundedness.unconfoundedness_validation.run_uncofoundedness_diagnostics`
+
+```python
+run_uncofoundedness_diagnostics(*, res=None, X=None, d=None, m_hat=None, names=None, treatment_names=None, score=None, normalize=None, threshold=0.1, eps_overlap=0.01, return_summary=True)
+```
+
+Multi-treatment uncofoundedness diagnostics focused on balance (SMD), ATE only.
+
+Pairwise comparisons: baseline treatment 0 vs k (k=1..K-1)
+
+Inputs:
+
+- Either `res` containing diagnostic_data with x, d(one-hot), m_hat(matrix),
+  or raw arrays X, d, m_hat (+ optional names, treatment_names, normalize).
+  Returns:
+  {
+  "params": {"score", "normalize", "smd_threshold"},
+  "balance": {
+  "smd": pd.DataFrame (p, K-1),
+  "smd_unweighted": pd.DataFrame (p, K-1),
+  "smd_max": float,
+  "frac_violations": float,
+  "pass": bool,
+  "worst_features": pd.Series (top 10 by max SMD across comparisons),
+  "comparisons": list[str],
+  },
+  "flags": {"balance_max_smd", "balance_violations"},
+  "overall_flag": str,
+  "meta": {"n", "p", "K", "treatment_names"},
+  "summary": pd.DataFrame (optional)
+  }
+
+######## `causalis.scenarios.multi_uncofoundedness.refutation.unconfoundedness.unconfoundedness_validation.validate_uncofoundedness_balance`
+
+```python
+validate_uncofoundedness_balance(effect_estimation, *, threshold=0.1, normalize=None)
+```
+
+Multitreatment version (one-hot d, matrix m_hat) for ATE only.
+
+Assumes:
+
+- d: shape (n, K) one-hot treatment indicators (baseline is column 0)
+- m_hat: shape (n, K) propensity scores for each treatment
+- X: shape (n, p) confounders
+
+Computes pairwise balance for (0 vs k) for k=1..K-1:
+
+- ATE weights: w_g = D_g / m_g
+- Optional normalization: divide each group's weights by its mean (over all n),
+  mirroring the binary IRM normalization pattern.
+
+Returns SMDs (weighted and unweighted) as DataFrames with:
+
+- rows = confounders
+- columns = comparisons "0_vs_k"
+
+####### `causalis.scenarios.multi_uncofoundedness.refutation.unconfoundedness.validate_uncofoundedness_balance`
+
+```python
+validate_uncofoundedness_balance(effect_estimation, *, threshold=0.1, normalize=None)
+```
+
+Multitreatment version (one-hot d, matrix m_hat) for ATE only.
+
+Assumes:
+
+- d: shape (n, K) one-hot treatment indicators (baseline is column 0)
+- m_hat: shape (n, K) propensity scores for each treatment
+- X: shape (n, p) confounders
+
+Computes pairwise balance for (0 vs k) for k=1..K-1:
+
+- ATE weights: w_g = D_g / m_g
+- Optional normalization: divide each group's weights by its mean (over all n),
+  mirroring the binary IRM normalization pattern.
+
+Returns SMDs (weighted and unweighted) as DataFrames with:
+
+- rows = confounders
+- columns = comparisons "0_vs_k"
 
 #### `causalis.scenarios.unconfoundedness`
 
@@ -9217,12 +11492,14 @@ variances in the two groups.
 
 **Functions:**
 
-- [**check_srm**](#causalis.shared.check_srm) – Check Sample Ratio Mismatch (SRM) for an RCT via chi-square goodness-of-fit test.
+- [**check_srm**](#causalis.shared.check_srm) – Check Sample Ratio Mismatch (SRM) for an RCT via a chi-square goodness-of-fit test.
+- [**outcome_plot_boxplot**](#causalis.shared.outcome_plot_boxplot) – Prettified boxplot of the outcome by treatment.
+- [**outcome_plot_dist**](#causalis.shared.outcome_plot_dist) – Plot the distribution of the outcome for each treatment on a single, pretty plot.
 
 #### `causalis.shared.SRMResult`
 
 ```python
-SRMResult(chi2, df, p_value, expected, observed, alpha, is_srm, warning=None)
+SRMResult(chi2, p_value, expected, observed, alpha, is_srm, warning=None)
 ```
 
 Result of a Sample Ratio Mismatch (SRM) check.
@@ -9230,13 +11507,12 @@ Result of a Sample Ratio Mismatch (SRM) check.
 **Attributes:**
 
 - [**chi2**](#causalis.shared.SRMResult.chi2) (<code>[float](#float)</code>) – The calculated chi-square statistic.
-- [**df**](#causalis.shared.SRMResult.df) (<code>[int](#int)</code>) – Degrees of freedom used in the test.
-- [**p_value**](#causalis.shared.SRMResult.p_value) (<code>[float](#float)</code>) – The p-value of the test.
-- [**expected**](#causalis.shared.SRMResult.expected) (<code>[Dict](#typing.Dict)\[[Hashable](#typing.Hashable), [float](#float)\]</code>) – Expected counts for each variant.
-- [**observed**](#causalis.shared.SRMResult.observed) (<code>[Dict](#typing.Dict)\[[Hashable](#typing.Hashable), [int](#int)\]</code>) – Observed counts for each variant.
+- [**p_value**](#causalis.shared.SRMResult.p_value) (<code>[float](#float)</code>) – The p-value of the test, rounded to 5 decimals.
+- [**expected**](#causalis.shared.SRMResult.expected) (<code>[dict](#dict)\[[Hashable](#typing.Hashable), [float](#float)\]</code>) – Expected counts for each variant.
+- [**observed**](#causalis.shared.SRMResult.observed) (<code>[dict](#dict)\[[Hashable](#typing.Hashable), [int](#int)\]</code>) – Observed counts for each variant.
 - [**alpha**](#causalis.shared.SRMResult.alpha) (<code>[float](#float)</code>) – Significance level used for the check.
-- [**is_srm**](#causalis.shared.SRMResult.is_srm) (<code>[bool](#bool)</code>) – True if an SRM was detected (p_value < alpha), False otherwise.
-- [**warning**](#causalis.shared.SRMResult.warning) (<code>([str](#str), [optional](#optional))</code>) – Warning message if the test assumptions might be violated (e.g., small expected counts).
+- [**is_srm**](#causalis.shared.SRMResult.is_srm) (<code>[bool](#bool)</code>) – True if an SRM was detected (chi-square p-value < alpha), False otherwise.
+- [**warning**](#causalis.shared.SRMResult.warning) (<code>[str](#str) or None</code>) – Warning message if the test assumptions might be violated (e.g., small expected counts).
 
 ##### `causalis.shared.SRMResult.alpha`
 
@@ -9248,12 +11524,6 @@ alpha: float
 
 ```python
 chi2: float
-```
-
-##### `causalis.shared.SRMResult.df`
-
-```python
-df: int
 ```
 
 ##### `causalis.shared.SRMResult.expected`
@@ -9292,21 +11562,15 @@ warning: str | None = None
 check_srm(assignments, target_allocation, alpha=0.001, min_expected=5.0, strict_variants=True)
 ```
 
-Check Sample Ratio Mismatch (SRM) for an RCT via chi-square goodness-of-fit test.
+Check Sample Ratio Mismatch (SRM) for an RCT via a chi-square goodness-of-fit test.
 
 **Parameters:**
 
-- **assignments** (<code>[Iterable](#typing.Iterable)\[[Hashable](#typing.Hashable)\] or [Series](#pandas.Series) or [CausalData](#causalis.dgp.causaldata.CausalData)</code>) – Iterable of assigned variant labels for each unit (user_id, session_id, etc.).
-  E.g. Series of ["control", "treatment", ...].
-  If CausalData is provided, the treatment column is used.
-- **target_allocation** (<code>[Dict](#typing.Dict)\[[Hashable](#typing.Hashable), [Number](#causalis.shared.srm.Number)\]</code>) – Mapping {variant: p} describing intended allocation as PROBABILITIES.
-- Each p must be > 0.
-- Sum of all p must be 1.0 (within numerical tolerance).
-
-Examples:
-{"control": 0.5, "treatment": 0.5}
-{"A": 0.2, "B": 0.3, "C": 0.5}
-
+- **assignments** (<code>[Iterable](#typing.Iterable)\[[Hashable](#typing.Hashable)\] or [Series](#pandas.Series) or [CausalData](#causalis.dgp.causaldata.CausalData) or [Mapping](#collections.abc.Mapping)\[[Hashable](#typing.Hashable), [Number](#causalis.shared.srm.Number)\]</code>) – Observed variant assignments. If iterable or Series, elements are labels per
+  unit (user_id, session_id, etc.). If CausalData is provided, the treatment
+  column is used. If a mapping is provided, it is treated as
+  `{variant: observed_count}` with non-negative integer counts.
+- **target_allocation** (<code>[dict](#dict)\[[Hashable](#typing.Hashable), [Number](#causalis.shared.srm.Number)\]</code>) – Mapping `{variant: p}` describing intended allocation as probabilities.
 - **alpha** (<code>[float](#float)</code>) – Significance level. Use strict values like 1e-3 or 1e-4 in production.
 - **min_expected** (<code>[float](#float)</code>) – If any expected count < min_expected, a warning is attached.
 - **strict_variants** (<code>[bool](#bool)</code>) – - True: fail if observed variants differ from target keys.
@@ -9320,6 +11584,31 @@ Examples:
 
 - <code>[ValueError](#ValueError)</code> – If inputs are invalid or empty.
 - <code>[ImportError](#ImportError)</code> – If scipy is required but not installed.
+
+<details class="note" open markdown="1">
+<summary>Notes</summary>
+
+- Target allocation probabilities must sum to 1 within numerical tolerance.
+- `is_srm` is computed using the unrounded p-value; the returned
+  `p_value` is rounded to 5 decimals.
+- Missing assignments are dropped and reported via `warning`.
+- Requires SciPy for p-value computation.
+
+</details>
+
+**Examples:**
+
+```pycon
+>>> assignments = ["control"] * 50 + ["treatment"] * 50
+>>> check_srm(assignments, {"control": 0.5, "treatment": 0.5}, alpha=1e-3)
+SRMResult(status=no SRM, p_value=1.00000, chi2=0.0000)
+```
+
+```pycon
+>>> counts = {"control": 70, "treatment": 30}
+>>> check_srm(counts, {"control": 0.5, "treatment": 0.5})
+SRMResult(status=SRM DETECTED, p_value=0.00006, chi2=16.0000)
+```
 
 #### `causalis.shared.confounders_balance`
 
@@ -9355,18 +11644,10 @@ encoding categorical variables if present) with:
 
 - <code>[DataFrame](#pandas.DataFrame)</code> – Balance table sorted by |smd| (descending).
 
-#### `causalis.shared.outcome_plots`
-
-**Functions:**
-
-- [**outcome_boxplot**](#causalis.shared.outcome_plots.outcome_boxplot) – Prettified boxplot of the outcome by treatment.
-- [**outcome_hist**](#causalis.shared.outcome_plots.outcome_hist) – Plot the distribution of the outcome for each treatment on a single, pretty plot.
-- [**outcome_plots**](#causalis.shared.outcome_plots.outcome_plots) – Plot the distribution of the outcome for every treatment on one plot,
-
-##### `causalis.shared.outcome_plots.outcome_boxplot`
+#### `causalis.shared.outcome_plot_boxplot`
 
 ```python
-outcome_boxplot(data, treatment=None, outcome=None, figsize=(9, 5.5), dpi=220, font_scale=1.15, showfliers=True, patch_artist=True, save=None, save_dpi=None, transparent=False)
+outcome_plot_boxplot(data, treatment=None, outcome=None, figsize=(9, 5.5), dpi=220, font_scale=1.15, showfliers=True, patch_artist=True, palette=None, save=None, save_dpi=None, transparent=False)
 ```
 
 Prettified boxplot of the outcome by treatment.
@@ -9391,6 +11672,7 @@ Prettified boxplot of the outcome by treatment.
 - **font_scale** (<code>[float](#float)</code>) – Scaling factor for all font sizes in the plot.
 - **showfliers** (<code>[bool](#bool)</code>) – Whether to show outliers (fliers).
 - **patch_artist** (<code>[bool](#bool)</code>) – Whether to fill boxes with color.
+- **palette** (<code>[list](#list) or [dict](#dict)</code>) – Color palette for treatments (list in treatment order or dict {treatment: color}).
 - **save** (<code>[str](#str)</code>) – Path to save the figure (e.g., "boxplot.png").
 - **save_dpi** (<code>[int](#int)</code>) – DPI for the saved figure. Defaults to 300 for raster formats.
 - **transparent** (<code>[bool](#bool)</code>) – Whether to save the figure with a transparent background.
@@ -9399,10 +11681,10 @@ Prettified boxplot of the outcome by treatment.
 
 - <code>[Figure](#matplotlib.figure.Figure)</code> – The generated figure object.
 
-##### `causalis.shared.outcome_plots.outcome_hist`
+#### `causalis.shared.outcome_plot_dist`
 
 ```python
-outcome_hist(data, treatment=None, outcome=None, bins='fd', density=True, alpha=0.45, sharex=True, kde=True, clip=(0.01, 0.99), figsize=(9, 5.5), dpi=220, font_scale=1.15, save=None, save_dpi=None, transparent=False)
+outcome_plot_dist(data, treatment=None, outcome=None, bins='fd', density=True, alpha=0.45, sharex=True, kde=True, clip=(0.01, 0.99), figsize=(9, 5.5), dpi=220, font_scale=1.15, palette=None, save=None, save_dpi=None, transparent=False)
 ```
 
 Plot the distribution of the outcome for each treatment on a single, pretty plot.
@@ -9414,6 +11696,7 @@ Plot the distribution of the outcome for each treatment on a single, pretty plot
 - Default Matplotlib colors; KDE & mean lines match their histogram colors
 - Numeric outcomes: shared x-range (optional), optional KDE, quantile clipping
 - Categorical outcomes: normalized grouped bars by treatment
+- Binary outcomes: proportion bars with percent labels (no KDE)
 - Optional hi-res export (PNG/SVG/PDF)
 
 </details>
@@ -9432,6 +11715,95 @@ Plot the distribution of the outcome for each treatment on a single, pretty plot
 - **figsize** (<code>[tuple](#tuple)</code>) – Figure size in inches (width, height).
 - **dpi** (<code>[int](#int)</code>) – Dots per inch for the figure.
 - **font_scale** (<code>[float](#float)</code>) – Scaling factor for all font sizes in the plot.
+- **palette** (<code>[list](#list) or [dict](#dict)</code>) – Color palette for treatments (list in treatment order or dict {treatment: color}).
+- **save** (<code>[str](#str)</code>) – Path to save the figure (e.g., "outcome.png").
+- **save_dpi** (<code>[int](#int)</code>) – DPI for the saved figure. Defaults to 300 for raster formats.
+- **transparent** (<code>[bool](#bool)</code>) – Whether to save the figure with a transparent background.
+
+**Returns:**
+
+- <code>[Figure](#matplotlib.figure.Figure)</code> – The generated figure object.
+
+#### `causalis.shared.outcome_plots`
+
+**Functions:**
+
+- [**outcome_plot_boxplot**](#causalis.shared.outcome_plots.outcome_plot_boxplot) – Prettified boxplot of the outcome by treatment.
+- [**outcome_plot_dist**](#causalis.shared.outcome_plots.outcome_plot_dist) – Plot the distribution of the outcome for each treatment on a single, pretty plot.
+- [**outcome_plots**](#causalis.shared.outcome_plots.outcome_plots) – Plot the distribution of the outcome for every treatment on one plot,
+
+##### `causalis.shared.outcome_plots.outcome_plot_boxplot`
+
+```python
+outcome_plot_boxplot(data, treatment=None, outcome=None, figsize=(9, 5.5), dpi=220, font_scale=1.15, showfliers=True, patch_artist=True, palette=None, save=None, save_dpi=None, transparent=False)
+```
+
+Prettified boxplot of the outcome by treatment.
+
+<details class="features" open markdown="1">
+<summary>Features</summary>
+
+- High-DPI figure, scalable fonts
+- Soft modern color styling (default Matplotlib palette)
+- Optional outliers, gentle transparency
+- Optional save to PNG/SVG/PDF
+
+</details>
+
+**Parameters:**
+
+- **data** (<code>[CausalData](#causalis.dgp.causaldata.CausalData)</code>) – The causal dataset containing the dataframe and metadata.
+- **treatment** (<code>[str](#str)</code>) – Treatment column name. Defaults to the one in `data_contracts`.
+- **outcome** (<code>[str](#str)</code>) – Outcome column name. Defaults to the one in `data_contracts`.
+- **figsize** (<code>[tuple](#tuple)</code>) – Figure size in inches (width, height).
+- **dpi** (<code>[int](#int)</code>) – Dots per inch for the figure.
+- **font_scale** (<code>[float](#float)</code>) – Scaling factor for all font sizes in the plot.
+- **showfliers** (<code>[bool](#bool)</code>) – Whether to show outliers (fliers).
+- **patch_artist** (<code>[bool](#bool)</code>) – Whether to fill boxes with color.
+- **palette** (<code>[list](#list) or [dict](#dict)</code>) – Color palette for treatments (list in treatment order or dict {treatment: color}).
+- **save** (<code>[str](#str)</code>) – Path to save the figure (e.g., "boxplot.png").
+- **save_dpi** (<code>[int](#int)</code>) – DPI for the saved figure. Defaults to 300 for raster formats.
+- **transparent** (<code>[bool](#bool)</code>) – Whether to save the figure with a transparent background.
+
+**Returns:**
+
+- <code>[Figure](#matplotlib.figure.Figure)</code> – The generated figure object.
+
+##### `causalis.shared.outcome_plots.outcome_plot_dist`
+
+```python
+outcome_plot_dist(data, treatment=None, outcome=None, bins='fd', density=True, alpha=0.45, sharex=True, kde=True, clip=(0.01, 0.99), figsize=(9, 5.5), dpi=220, font_scale=1.15, palette=None, save=None, save_dpi=None, transparent=False)
+```
+
+Plot the distribution of the outcome for each treatment on a single, pretty plot.
+
+<details class="features" open markdown="1">
+<summary>Features</summary>
+
+- High-DPI canvas + scalable fonts
+- Default Matplotlib colors; KDE & mean lines match their histogram colors
+- Numeric outcomes: shared x-range (optional), optional KDE, quantile clipping
+- Categorical outcomes: normalized grouped bars by treatment
+- Binary outcomes: proportion bars with percent labels (no KDE)
+- Optional hi-res export (PNG/SVG/PDF)
+
+</details>
+
+**Parameters:**
+
+- **data** (<code>[CausalData](#causalis.dgp.causaldata.CausalData)</code>) – The causal dataset containing the dataframe and metadata.
+- **treatment** (<code>[str](#str)</code>) – Treatment column name. Defaults to the one in `data_contracts`.
+- **outcome** (<code>[str](#str)</code>) – Outcome column name. Defaults to the one in `data_contracts`.
+- **bins** (<code>[str](#str) or [int](#int)</code>) – Number of bins for histograms (e.g., "fd", "auto", or an integer).
+- **density** (<code>[bool](#bool)</code>) – Whether to normalize histograms to form a density.
+- **alpha** (<code>[float](#float)</code>) – Transparency for overlaid histograms and bars.
+- **sharex** (<code>[bool](#bool)</code>) – If True, use the same x-limits across treatments for numeric outcomes.
+- **kde** (<code>[bool](#bool)</code>) – Whether to overlay a smooth density (KDE) for numeric outcomes.
+- **clip** (<code>[tuple](#tuple)</code>) – Quantiles to trim tails for nicer view of numeric outcomes.
+- **figsize** (<code>[tuple](#tuple)</code>) – Figure size in inches (width, height).
+- **dpi** (<code>[int](#int)</code>) – Dots per inch for the figure.
+- **font_scale** (<code>[float](#float)</code>) – Scaling factor for all font sizes in the plot.
+- **palette** (<code>[list](#list) or [dict](#dict)</code>) – Color palette for treatments (list in treatment order or dict {treatment: color}).
 - **save** (<code>[str](#str)</code>) – Path to save the figure (e.g., "outcome.png").
 - **save_dpi** (<code>[int](#int)</code>) – DPI for the saved figure. Defaults to 300 for raster formats.
 - **transparent** (<code>[bool](#bool)</code>) – Whether to save the figure with a transparent background.
@@ -9443,7 +11815,7 @@ Plot the distribution of the outcome for each treatment on a single, pretty plot
 ##### `causalis.shared.outcome_plots.outcome_plots`
 
 ```python
-outcome_plots(data, treatment=None, outcome=None, bins=30, density=True, alpha=0.5, figsize=(7, 4), sharex=True)
+outcome_plots(data, treatment=None, outcome=None, bins=30, density=True, alpha=0.5, figsize=(7, 4), sharex=True, palette=None)
 ```
 
 Plot the distribution of the outcome for every treatment on one plot,
@@ -9459,6 +11831,7 @@ and also produce a boxplot by treatment to visualize outliers.
 - **alpha** (<code>[float](#float)</code>) – Transparency for overlaid histograms.
 - **figsize** (<code>[tuple](#tuple)</code>) – Figure size for the plots (width, height).
 - **sharex** (<code>[bool](#bool)</code>) – If True and the outcome is numeric, use the same x-limits across treatments.
+- **palette** (<code>[list](#list) or [dict](#dict)</code>) – Color palette for treatments (list in treatment order or dict {treatment: color}).
 
 **Returns:**
 
@@ -9530,12 +11903,12 @@ Design module for experimental rct_design utilities.
 
 - [**assign_variants_df**](#causalis.shared.rct_design.assign_variants_df) – Deterministically assign variants for each row in df based on id_col.
 - [**calculate_mde**](#causalis.shared.rct_design.calculate_mde) – Calculate the Minimum Detectable Effect (MDE) for conversion or continuous data_contracts.
-- [**check_srm**](#causalis.shared.rct_design.check_srm) – Check Sample Ratio Mismatch (SRM) for an RCT via chi-square goodness-of-fit test.
+- [**check_srm**](#causalis.shared.rct_design.check_srm) – Check Sample Ratio Mismatch (SRM) for an RCT via a chi-square goodness-of-fit test.
 
 ##### `causalis.shared.rct_design.SRMResult`
 
 ```python
-SRMResult(chi2, df, p_value, expected, observed, alpha, is_srm, warning=None)
+SRMResult(chi2, p_value, expected, observed, alpha, is_srm, warning=None)
 ```
 
 Result of a Sample Ratio Mismatch (SRM) check.
@@ -9543,13 +11916,12 @@ Result of a Sample Ratio Mismatch (SRM) check.
 **Attributes:**
 
 - [**chi2**](#causalis.shared.rct_design.SRMResult.chi2) (<code>[float](#float)</code>) – The calculated chi-square statistic.
-- [**df**](#causalis.shared.rct_design.SRMResult.df) (<code>[int](#int)</code>) – Degrees of freedom used in the test.
-- [**p_value**](#causalis.shared.rct_design.SRMResult.p_value) (<code>[float](#float)</code>) – The p-value of the test.
-- [**expected**](#causalis.shared.rct_design.SRMResult.expected) (<code>[Dict](#typing.Dict)\[[Hashable](#typing.Hashable), [float](#float)\]</code>) – Expected counts for each variant.
-- [**observed**](#causalis.shared.rct_design.SRMResult.observed) (<code>[Dict](#typing.Dict)\[[Hashable](#typing.Hashable), [int](#int)\]</code>) – Observed counts for each variant.
+- [**p_value**](#causalis.shared.rct_design.SRMResult.p_value) (<code>[float](#float)</code>) – The p-value of the test, rounded to 5 decimals.
+- [**expected**](#causalis.shared.rct_design.SRMResult.expected) (<code>[dict](#dict)\[[Hashable](#typing.Hashable), [float](#float)\]</code>) – Expected counts for each variant.
+- [**observed**](#causalis.shared.rct_design.SRMResult.observed) (<code>[dict](#dict)\[[Hashable](#typing.Hashable), [int](#int)\]</code>) – Observed counts for each variant.
 - [**alpha**](#causalis.shared.rct_design.SRMResult.alpha) (<code>[float](#float)</code>) – Significance level used for the check.
-- [**is_srm**](#causalis.shared.rct_design.SRMResult.is_srm) (<code>[bool](#bool)</code>) – True if an SRM was detected (p_value < alpha), False otherwise.
-- [**warning**](#causalis.shared.rct_design.SRMResult.warning) (<code>([str](#str), [optional](#optional))</code>) – Warning message if the test assumptions might be violated (e.g., small expected counts).
+- [**is_srm**](#causalis.shared.rct_design.SRMResult.is_srm) (<code>[bool](#bool)</code>) – True if an SRM was detected (chi-square p-value < alpha), False otherwise.
+- [**warning**](#causalis.shared.rct_design.SRMResult.warning) (<code>[str](#str) or None</code>) – Warning message if the test assumptions might be violated (e.g., small expected counts).
 
 ###### `causalis.shared.rct_design.SRMResult.alpha`
 
@@ -9561,12 +11933,6 @@ alpha: float
 
 ```python
 chi2: float
-```
-
-###### `causalis.shared.rct_design.SRMResult.df`
-
-```python
-df: int
 ```
 
 ###### `causalis.shared.rct_design.SRMResult.expected`
@@ -9694,21 +12060,15 @@ where:
 check_srm(assignments, target_allocation, alpha=0.001, min_expected=5.0, strict_variants=True)
 ```
 
-Check Sample Ratio Mismatch (SRM) for an RCT via chi-square goodness-of-fit test.
+Check Sample Ratio Mismatch (SRM) for an RCT via a chi-square goodness-of-fit test.
 
 **Parameters:**
 
-- **assignments** (<code>[Iterable](#typing.Iterable)\[[Hashable](#typing.Hashable)\] or [Series](#pandas.Series) or [CausalData](#causalis.dgp.causaldata.CausalData)</code>) – Iterable of assigned variant labels for each unit (user_id, session_id, etc.).
-  E.g. Series of ["control", "treatment", ...].
-  If CausalData is provided, the treatment column is used.
-- **target_allocation** (<code>[Dict](#typing.Dict)\[[Hashable](#typing.Hashable), [Number](#causalis.shared.srm.Number)\]</code>) – Mapping {variant: p} describing intended allocation as PROBABILITIES.
-- Each p must be > 0.
-- Sum of all p must be 1.0 (within numerical tolerance).
-
-Examples:
-{"control": 0.5, "treatment": 0.5}
-{"A": 0.2, "B": 0.3, "C": 0.5}
-
+- **assignments** (<code>[Iterable](#typing.Iterable)\[[Hashable](#typing.Hashable)\] or [Series](#pandas.Series) or [CausalData](#causalis.dgp.causaldata.CausalData) or [Mapping](#collections.abc.Mapping)\[[Hashable](#typing.Hashable), [Number](#causalis.shared.srm.Number)\]</code>) – Observed variant assignments. If iterable or Series, elements are labels per
+  unit (user_id, session_id, etc.). If CausalData is provided, the treatment
+  column is used. If a mapping is provided, it is treated as
+  `{variant: observed_count}` with non-negative integer counts.
+- **target_allocation** (<code>[dict](#dict)\[[Hashable](#typing.Hashable), [Number](#causalis.shared.srm.Number)\]</code>) – Mapping `{variant: p}` describing intended allocation as probabilities.
 - **alpha** (<code>[float](#float)</code>) – Significance level. Use strict values like 1e-3 or 1e-4 in production.
 - **min_expected** (<code>[float](#float)</code>) – If any expected count < min_expected, a warning is attached.
 - **strict_variants** (<code>[bool](#bool)</code>) – - True: fail if observed variants differ from target keys.
@@ -9722,6 +12082,31 @@ Examples:
 
 - <code>[ValueError](#ValueError)</code> – If inputs are invalid or empty.
 - <code>[ImportError](#ImportError)</code> – If scipy is required but not installed.
+
+<details class="note" open markdown="1">
+<summary>Notes</summary>
+
+- Target allocation probabilities must sum to 1 within numerical tolerance.
+- `is_srm` is computed using the unrounded p-value; the returned
+  `p_value` is rounded to 5 decimals.
+- Missing assignments are dropped and reported via `warning`.
+- Requires SciPy for p-value computation.
+
+</details>
+
+**Examples:**
+
+```pycon
+>>> assignments = ["control"] * 50 + ["treatment"] * 50
+>>> check_srm(assignments, {"control": 0.5, "treatment": 0.5}, alpha=1e-3)
+SRMResult(status=no SRM, p_value=1.00000, chi2=0.0000)
+```
+
+```pycon
+>>> counts = {"control": 70, "treatment": 30}
+>>> check_srm(counts, {"control": 0.5, "treatment": 0.5})
+SRMResult(status=SRM DETECTED, p_value=0.00006, chi2=16.0000)
+```
 
 ##### `causalis.shared.rct_design.mde`
 
@@ -9838,8 +12223,9 @@ Deterministically assign variants for each row in df based on id_col.
 
 Sample Ratio Mismatch (SRM) utilities for randomized experiments.
 
-This module implements a chi-square goodness-of-fit SRM check mirroring the
-reference implementation demonstrated in docs/cases/rct_design.ipynb.
+This module provides a chi-square goodness-of-fit SRM check for randomized
+experiments. It accepts observed assignments as labels or aggregated counts
+and returns a compact result object with diagnostics.
 
 **Classes:**
 
@@ -9847,12 +12233,12 @@ reference implementation demonstrated in docs/cases/rct_design.ipynb.
 
 **Functions:**
 
-- [**check_srm**](#causalis.shared.srm.check_srm) – Check Sample Ratio Mismatch (SRM) for an RCT via chi-square goodness-of-fit test.
+- [**check_srm**](#causalis.shared.srm.check_srm) – Check Sample Ratio Mismatch (SRM) for an RCT via a chi-square goodness-of-fit test.
 
 ##### `causalis.shared.srm.SRMResult`
 
 ```python
-SRMResult(chi2, df, p_value, expected, observed, alpha, is_srm, warning=None)
+SRMResult(chi2, p_value, expected, observed, alpha, is_srm, warning=None)
 ```
 
 Result of a Sample Ratio Mismatch (SRM) check.
@@ -9860,13 +12246,12 @@ Result of a Sample Ratio Mismatch (SRM) check.
 **Attributes:**
 
 - [**chi2**](#causalis.shared.srm.SRMResult.chi2) (<code>[float](#float)</code>) – The calculated chi-square statistic.
-- [**df**](#causalis.shared.srm.SRMResult.df) (<code>[int](#int)</code>) – Degrees of freedom used in the test.
-- [**p_value**](#causalis.shared.srm.SRMResult.p_value) (<code>[float](#float)</code>) – The p-value of the test.
-- [**expected**](#causalis.shared.srm.SRMResult.expected) (<code>[Dict](#typing.Dict)\[[Hashable](#typing.Hashable), [float](#float)\]</code>) – Expected counts for each variant.
-- [**observed**](#causalis.shared.srm.SRMResult.observed) (<code>[Dict](#typing.Dict)\[[Hashable](#typing.Hashable), [int](#int)\]</code>) – Observed counts for each variant.
+- [**p_value**](#causalis.shared.srm.SRMResult.p_value) (<code>[float](#float)</code>) – The p-value of the test, rounded to 5 decimals.
+- [**expected**](#causalis.shared.srm.SRMResult.expected) (<code>[dict](#dict)\[[Hashable](#typing.Hashable), [float](#float)\]</code>) – Expected counts for each variant.
+- [**observed**](#causalis.shared.srm.SRMResult.observed) (<code>[dict](#dict)\[[Hashable](#typing.Hashable), [int](#int)\]</code>) – Observed counts for each variant.
 - [**alpha**](#causalis.shared.srm.SRMResult.alpha) (<code>[float](#float)</code>) – Significance level used for the check.
-- [**is_srm**](#causalis.shared.srm.SRMResult.is_srm) (<code>[bool](#bool)</code>) – True if an SRM was detected (p_value < alpha), False otherwise.
-- [**warning**](#causalis.shared.srm.SRMResult.warning) (<code>([str](#str), [optional](#optional))</code>) – Warning message if the test assumptions might be violated (e.g., small expected counts).
+- [**is_srm**](#causalis.shared.srm.SRMResult.is_srm) (<code>[bool](#bool)</code>) – True if an SRM was detected (chi-square p-value < alpha), False otherwise.
+- [**warning**](#causalis.shared.srm.SRMResult.warning) (<code>[str](#str) or None</code>) – Warning message if the test assumptions might be violated (e.g., small expected counts).
 
 ###### `causalis.shared.srm.SRMResult.alpha`
 
@@ -9878,12 +12263,6 @@ alpha: float
 
 ```python
 chi2: float
-```
-
-###### `causalis.shared.srm.SRMResult.df`
-
-```python
-df: int
 ```
 
 ###### `causalis.shared.srm.SRMResult.expected`
@@ -9922,21 +12301,15 @@ warning: str | None = None
 check_srm(assignments, target_allocation, alpha=0.001, min_expected=5.0, strict_variants=True)
 ```
 
-Check Sample Ratio Mismatch (SRM) for an RCT via chi-square goodness-of-fit test.
+Check Sample Ratio Mismatch (SRM) for an RCT via a chi-square goodness-of-fit test.
 
 **Parameters:**
 
-- **assignments** (<code>[Iterable](#typing.Iterable)\[[Hashable](#typing.Hashable)\] or [Series](#pandas.Series) or [CausalData](#causalis.dgp.causaldata.CausalData)</code>) – Iterable of assigned variant labels for each unit (user_id, session_id, etc.).
-  E.g. Series of ["control", "treatment", ...].
-  If CausalData is provided, the treatment column is used.
-- **target_allocation** (<code>[Dict](#typing.Dict)\[[Hashable](#typing.Hashable), [Number](#causalis.shared.srm.Number)\]</code>) – Mapping {variant: p} describing intended allocation as PROBABILITIES.
-- Each p must be > 0.
-- Sum of all p must be 1.0 (within numerical tolerance).
-
-Examples:
-{"control": 0.5, "treatment": 0.5}
-{"A": 0.2, "B": 0.3, "C": 0.5}
-
+- **assignments** (<code>[Iterable](#typing.Iterable)\[[Hashable](#typing.Hashable)\] or [Series](#pandas.Series) or [CausalData](#causalis.dgp.causaldata.CausalData) or [Mapping](#collections.abc.Mapping)\[[Hashable](#typing.Hashable), [Number](#causalis.shared.srm.Number)\]</code>) – Observed variant assignments. If iterable or Series, elements are labels per
+  unit (user_id, session_id, etc.). If CausalData is provided, the treatment
+  column is used. If a mapping is provided, it is treated as
+  `{variant: observed_count}` with non-negative integer counts.
+- **target_allocation** (<code>[dict](#dict)\[[Hashable](#typing.Hashable), [Number](#causalis.shared.srm.Number)\]</code>) – Mapping `{variant: p}` describing intended allocation as probabilities.
 - **alpha** (<code>[float](#float)</code>) – Significance level. Use strict values like 1e-3 or 1e-4 in production.
 - **min_expected** (<code>[float](#float)</code>) – If any expected count < min_expected, a warning is attached.
 - **strict_variants** (<code>[bool](#bool)</code>) – - True: fail if observed variants differ from target keys.
@@ -9950,3 +12323,28 @@ Examples:
 
 - <code>[ValueError](#ValueError)</code> – If inputs are invalid or empty.
 - <code>[ImportError](#ImportError)</code> – If scipy is required but not installed.
+
+<details class="note" open markdown="1">
+<summary>Notes</summary>
+
+- Target allocation probabilities must sum to 1 within numerical tolerance.
+- `is_srm` is computed using the unrounded p-value; the returned
+  `p_value` is rounded to 5 decimals.
+- Missing assignments are dropped and reported via `warning`.
+- Requires SciPy for p-value computation.
+
+</details>
+
+**Examples:**
+
+```pycon
+>>> assignments = ["control"] * 50 + ["treatment"] * 50
+>>> check_srm(assignments, {"control": 0.5, "treatment": 0.5}, alpha=1e-3)
+SRMResult(status=no SRM, p_value=1.00000, chi2=0.0000)
+```
+
+```pycon
+>>> counts = {"control": 70, "treatment": 30}
+>>> check_srm(counts, {"control": 0.5, "treatment": 0.5})
+SRMResult(status=SRM DETECTED, p_value=0.00006, chi2=16.0000)
+```
