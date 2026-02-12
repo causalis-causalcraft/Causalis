@@ -1,26 +1,4 @@
 
-# Core causal assumptions (for ATE)
-
-1. **Random assignment (unconfoundedness by design)**
-    
-    - Treatment assignment is independent of potential outcomes (and baseline covariates), because of the randomization procedure.
-    - In notation: $(Y(1), Y(0)) \perp D$.
-        
-2. **SUTVA (Stable Unit Treatment Value Assumption)**
-    
-    - **No interference:** one unit’s outcome does not depend on other units’ treatment assignments.
-    - **No hidden versions:** “treatment” and “control” are well-defined (no multiple, meaningfully different versions bundled together).
-    
-3. **Positivity / overlap**
-    
-    - Every unit has a non-zero probability of being assigned to each arm (given the randomization scheme).
-    - Typically: $0<P(D=1)<1$ (and within each randomization stratum if stratified).
-    
-4. **Consistency**
-    
-    - Observed outcome equals the potential outcome under the treatment actually received:
-    - If $D=1$ observed $Y=Y(1)$; if $T=0$, observed $Y=Y(0)$
-
 # Estimand: Average Treatment Effect (ATE)  
 The model assumes random assignment of treatment $D \in \{0, 1\}$. The ATE ($\tau$) is defined as:  
 $$\tau = E[Y | D=1] - E[Y | D=0]$$  
