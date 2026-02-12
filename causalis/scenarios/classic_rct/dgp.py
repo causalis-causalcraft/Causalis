@@ -178,12 +178,11 @@ def classic_rct_gamma_26(
         else:
             user_ids = [uuid.uuid4().hex[:5] for _ in range(len(df))]
         df.insert(0, "user_id", user_ids)
-    df = df.rename(columns={"y": "revenue"})
 
     if not return_causal_data:
         return df
 
-    exclude = {"revenue", "d", "m", "m_obs", "tau_link", "g0", "g1", "cate", "user_id"}
+    exclude = {"y", "d", "m", "m_obs", "tau_link", "g0", "g1", "cate", "user_id"}
     confounders = [
         c for c in df.columns
         if c not in exclude and pd.api.types.is_numeric_dtype(df[c])
@@ -192,7 +191,7 @@ def classic_rct_gamma_26(
     return CausalData(
         df=df,
         treatment="d",
-        outcome="revenue",
+        outcome="y",
         confounders=confounders,
         user_id="user_id"
     )

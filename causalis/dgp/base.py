@@ -8,7 +8,7 @@ from scipy.stats import norm, gamma as st_gamma, beta as st_beta, poisson as st_
 
 def _deterministic_ids(rng: np.random.Generator, n: int) -> List[str]:
     """
-    Return deterministic 5-character hex strings using the provided RNG.
+    Return deterministic unique hex strings using the provided RNG.
 
     Parameters
     ----------
@@ -20,9 +20,13 @@ def _deterministic_ids(rng: np.random.Generator, n: int) -> List[str]:
     Returns
     -------
     list of str
-        A list of 5-character hex strings.
+        A list of unique hex strings, padded to at least 5 characters.
     """
-    return [rng.bytes(16).hex()[:5] for _ in range(n)]
+    if n <= 0:
+        return []
+    width = max(5, len(format(n - 1, "x")))
+    order = rng.permutation(n)
+    return [format(i, f"0{width}x") for i in order]
 
 
 def _add_ancillary_info(
