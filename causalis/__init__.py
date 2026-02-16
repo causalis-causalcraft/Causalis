@@ -31,7 +31,7 @@ except Exception:
     design = None  # type: ignore
 
 __version__ = "0.1.2"
-__all__ = ["data_contracts", "dgp", "scenarios", "shared", "design"]
+__all__ = ["data_contracts", "dgp", "scenarios", "shared"]
 
 # Lazily import heavy optional subpackages
 from typing import TYPE_CHECKING

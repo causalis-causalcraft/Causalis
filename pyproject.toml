@@ -46,3 +46,10 @@ include = ["causalis", "causalis.*"]
 
 [tool.griffe2md]
 docstring_style = "numpy"
+sections = ["modules", "classes", "functions"]
+summary = { modules = true, classes = true, functions = true, attributes = false }
+show_signature_annotations = true
+show_docstring_examples = true
+show_root_full_path = false
+show_object_full_path = false
+inherited_members = false
