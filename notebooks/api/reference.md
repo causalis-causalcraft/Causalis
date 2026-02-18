@@ -19,6 +19,7 @@ Causalis: A Python package for causal inference.
 - [**causaldata_instrumental**](#causalis.data_contracts.causaldata_instrumental) –
 - [**multicausal_estimate**](#causalis.data_contracts.multicausal_estimate) –
 - [**multicausaldata**](#causalis.data_contracts.multicausaldata) – Causalis Dataclass for storing Cross-sectional DataFrame and column metadata for causal inference with multiple treatments.
+- [**regression_checks**](#causalis.data_contracts.regression_checks) –
 
 **Classes:**
 
@@ -28,6 +29,7 @@ Causalis: A Python package for causal inference.
 - [**CausalEstimate**](#causalis.data_contracts.CausalEstimate) – Result container for causal effect estimates.
 - [**DiagnosticData**](#causalis.data_contracts.DiagnosticData) – Base class for all diagnostic data_contracts.
 - [**MultiCausalData**](#causalis.data_contracts.MultiCausalData) – Data contract for cross-sectional causal data with multiple binary treatment columns.
+- [**RegressionChecks**](#causalis.data_contracts.RegressionChecks) – Lightweight OLS/regression health checks for CUPED diagnostics.
 - [**UnconfoundednessDiagnosticData**](#causalis.data_contracts.UnconfoundednessDiagnosticData) – Fields common to all models assuming unconfoundedness.
 
 **Functions:**
@@ -974,6 +976,168 @@ Return the treatment columns as a pandas DataFrame.
 user_id_name: Optional[str] = Field(alias='user_id', default=None)
 ```
 
+#### `RegressionChecks`
+
+Bases: <code>[BaseModel](#pydantic.BaseModel)</code>
+
+Lightweight OLS/regression health checks for CUPED diagnostics.
+
+##### `ate_adj`
+
+```python
+ate_adj: float
+```
+
+##### `ate_adj_winsor`
+
+```python
+ate_adj_winsor: Optional[float] = None
+```
+
+##### `ate_adj_winsor_gap`
+
+```python
+ate_adj_winsor_gap: Optional[float] = None
+```
+
+##### `ate_gap`
+
+```python
+ate_gap: float
+```
+
+##### `ate_gap_over_se_naive`
+
+```python
+ate_gap_over_se_naive: Optional[float] = None
+```
+
+##### `ate_naive`
+
+```python
+ate_naive: float
+```
+
+##### `condition_number`
+
+```python
+condition_number: float
+```
+
+##### `cooks_cutoff`
+
+```python
+cooks_cutoff: float
+```
+
+##### `full_rank`
+
+```python
+full_rank: bool
+```
+
+##### `k`
+
+```python
+k: int
+```
+
+##### `leverage_cutoff`
+
+```python
+leverage_cutoff: float
+```
+
+##### `max_abs_std_resid`
+
+```python
+max_abs_std_resid: float
+```
+
+##### `max_cooks`
+
+```python
+max_cooks: float
+```
+
+##### `max_leverage`
+
+```python
+max_leverage: float
+```
+
+##### `min_one_minus_h`
+
+```python
+min_one_minus_h: float
+```
+
+##### `n_high_cooks`
+
+```python
+n_high_cooks: int
+```
+
+##### `n_high_leverage`
+
+```python
+n_high_leverage: int
+```
+
+##### `n_std_resid_gt_3`
+
+```python
+n_std_resid_gt_3: int
+```
+
+##### `n_std_resid_gt_4`
+
+```python
+n_std_resid_gt_4: int
+```
+
+##### `n_tiny_one_minus_h`
+
+```python
+n_tiny_one_minus_h: int
+```
+
+##### `near_duplicate_pairs`
+
+```python
+near_duplicate_pairs: List[Tuple[str, str, float]] = Field(default_factory=list)
+```
+
+##### `p_main_covariates`
+
+```python
+p_main_covariates: int
+```
+
+##### `rank`
+
+```python
+rank: int
+```
+
+##### `resid_scale_mad`
+
+```python
+resid_scale_mad: float
+```
+
+##### `vif`
+
+```python
+vif: Optional[Dict[str, float]] = None
+```
+
+##### `winsor_q`
+
+```python
+winsor_q: Optional[float] = None
+```
+
 #### `UnconfoundednessDiagnosticData`
 
 Bases: <code>[DiagnosticData](#causalis.data_contracts.causal_diagnostic_data.DiagnosticData)</code>
@@ -1092,7 +1256,7 @@ y: Optional[np.ndarray] = None
 
 **Classes:**
 
-- [**CUPEDDiagnosticData**](#causalis.data_contracts.causal_diagnostic_data.CUPEDDiagnosticData) – Diagnostic data_contracts for CUPED / ANCOVA models.
+- [**CUPEDDiagnosticData**](#causalis.data_contracts.causal_diagnostic_data.CUPEDDiagnosticData) – Diagnostic data_contracts for CUPED-style (Lin-interacted OLS) adjustment.
 - [**DiagnosticData**](#causalis.data_contracts.causal_diagnostic_data.DiagnosticData) – Base class for all diagnostic data_contracts.
 - [**DiffInMeansDiagnosticData**](#causalis.data_contracts.causal_diagnostic_data.DiffInMeansDiagnosticData) – Diagnostic data_contracts for Difference-in-Means model.
 - [**MultiUnconfoundednessDiagnosticData**](#causalis.data_contracts.causal_diagnostic_data.MultiUnconfoundednessDiagnosticData) – Fields common to all models assuming unconfoundedness with multi_uncofoundedness.
@@ -1102,7 +1266,7 @@ y: Optional[np.ndarray] = None
 
 Bases: <code>[DiagnosticData](#causalis.data_contracts.causal_diagnostic_data.DiagnosticData)</code>
 
-Diagnostic data_contracts for CUPED / ANCOVA models.
+Diagnostic data_contracts for CUPED-style (Lin-interacted OLS) adjustment.
 
 ###### `adj_type`
 
@@ -1122,6 +1286,12 @@ ate_naive: float
 beta_covariates: np.ndarray
 ```
 
+###### `covariate_outcome_corr`
+
+```python
+covariate_outcome_corr: Optional[np.ndarray] = None
+```
+
 ###### `covariates`
 
 ```python
@@ -1134,16 +1304,34 @@ covariates: List[str]
 gamma_interactions: np.ndarray
 ```
 
+###### `r2_adj`
+
+```python
+r2_adj: float
+```
+
+###### `r2_naive`
+
+```python
+r2_naive: float
+```
+
+###### `regression_checks`
+
+```python
+regression_checks: Optional[RegressionChecks] = None
+```
+
 ###### `se_naive`
 
 ```python
 se_naive: float
 ```
 
-###### `variance_reduction_pct`
+###### `se_reduction_pct_same_cov`
 
 ```python
-variance_reduction_pct: float
+se_reduction_pct_same_cov: float
 ```
 
 ##### `DiagnosticData`
@@ -2469,6 +2657,174 @@ Generate an observational dataset with linear effects of confounders and a const
 **Returns:**
 
 - <code>[DataFrame](#pandas.DataFrame)</code> – Synthetic observational dataset.
+
+#### `regression_checks`
+
+**Classes:**
+
+- [**RegressionChecks**](#causalis.data_contracts.regression_checks.RegressionChecks) – Lightweight OLS/regression health checks for CUPED diagnostics.
+
+##### `RegressionChecks`
+
+Bases: <code>[BaseModel](#pydantic.BaseModel)</code>
+
+Lightweight OLS/regression health checks for CUPED diagnostics.
+
+###### `ate_adj`
+
+```python
+ate_adj: float
+```
+
+###### `ate_adj_winsor`
+
+```python
+ate_adj_winsor: Optional[float] = None
+```
+
+###### `ate_adj_winsor_gap`
+
+```python
+ate_adj_winsor_gap: Optional[float] = None
+```
+
+###### `ate_gap`
+
+```python
+ate_gap: float
+```
+
+###### `ate_gap_over_se_naive`
+
+```python
+ate_gap_over_se_naive: Optional[float] = None
+```
+
+###### `ate_naive`
+
+```python
+ate_naive: float
+```
+
+###### `condition_number`
+
+```python
+condition_number: float
+```
+
+###### `cooks_cutoff`
+
+```python
+cooks_cutoff: float
+```
+
+###### `full_rank`
+
+```python
+full_rank: bool
+```
+
+###### `k`
+
+```python
+k: int
+```
+
+###### `leverage_cutoff`
+
+```python
+leverage_cutoff: float
+```
+
+###### `max_abs_std_resid`
+
+```python
+max_abs_std_resid: float
+```
+
+###### `max_cooks`
+
+```python
+max_cooks: float
+```
+
+###### `max_leverage`
+
+```python
+max_leverage: float
+```
+
+###### `min_one_minus_h`
+
+```python
+min_one_minus_h: float
+```
+
+###### `n_high_cooks`
+
+```python
+n_high_cooks: int
+```
+
+###### `n_high_leverage`
+
+```python
+n_high_leverage: int
+```
+
+###### `n_std_resid_gt_3`
+
+```python
+n_std_resid_gt_3: int
+```
+
+###### `n_std_resid_gt_4`
+
+```python
+n_std_resid_gt_4: int
+```
+
+###### `n_tiny_one_minus_h`
+
+```python
+n_tiny_one_minus_h: int
+```
+
+###### `near_duplicate_pairs`
+
+```python
+near_duplicate_pairs: List[Tuple[str, str, float]] = Field(default_factory=list)
+```
+
+###### `p_main_covariates`
+
+```python
+p_main_covariates: int
+```
+
+###### `rank`
+
+```python
+rank: int
+```
+
+###### `resid_scale_mad`
+
+```python
+resid_scale_mad: float
+```
+
+###### `vif`
+
+```python
+vif: Optional[Dict[str, float]] = None
+```
+
+###### `winsor_q`
+
+```python
+winsor_q: Optional[float] = None
+```
 
 ### `causalis.dgp`
 
@@ -6820,22 +7176,26 @@ If control_mean is near 0, relative stats are undefined/unstable and return inf/
 
 **Classes:**
 
-- [**CUPEDModel**](#causalis.scenarios.cuped.CUPEDModel) – CUPED estimator for ATE/ITT in randomized experiments.
+- [**CUPEDModel**](#causalis.scenarios.cuped.CUPEDModel) – CUPED-style regression adjustment estimator for ATE/ITT in randomized experiments.
 
 **Functions:**
 
 - [**cuped_forest_plot**](#causalis.scenarios.cuped.cuped_forest_plot) – Forest plot of absolute estimates and CIs for CUPED vs non-CUPED.
+- [**regression_assumptions_table_from_data**](#causalis.scenarios.cuped.regression_assumptions_table_from_data) – Fit CUPED on `CausalData` and return the assumptions flag table.
+- [**regression_assumptions_table_from_estimate**](#causalis.scenarios.cuped.regression_assumptions_table_from_estimate) – Build assumption table from CUPED `CausalEstimate` and transform it.
+- [**style_regression_assumptions_table**](#causalis.scenarios.cuped.style_regression_assumptions_table) – Return pandas Styler with colored flag cells for notebook display.
 
 ##### `CUPEDModel`
 
 ```python
-CUPEDModel(cov_type: str = 'HC3', alpha: float = 0.05, strict_binary_treatment: bool = True, use_t: bool = True) -> None
+CUPEDModel(cov_type: str = 'HC2', alpha: float = 0.05, strict_binary_treatment: bool = True, use_t: Optional[bool] = None, use_t_auto_n_threshold: int = 5000, relative_ci_method: Literal['delta_nocov', 'bootstrap'] = 'delta_nocov', relative_ci_bootstrap_draws: int = 1000, relative_ci_bootstrap_seed: Optional[int] = None, covariate_variance_min: float = 1e-12, condition_number_warn_threshold: float = 100000000.0, run_regression_checks: bool = True, check_action: Literal['ignore', 'raise'] = 'ignore', raise_on_yellow: bool = False, corr_near_one_tol: float = 1e-10, vif_warn_threshold: float = 20.0, winsor_q: Optional[float] = 0.01, tiny_one_minus_h_tol: float = 1e-08) -> None
 ```
 
-CUPED estimator for ATE/ITT in randomized experiments.
+CUPED-style regression adjustment estimator for ATE/ITT in randomized experiments.
 
-Fits an outcome regression with pre-treatment covariates (always centered)
-using the Lin (2013) fully interacted adjustment:
+Fits an outcome regression with pre-treatment covariates (always centered
+over the full sample, never within treatment groups)
+implemented as Lin (2013) fully interacted OLS:
 
 ```
 Y ~ 1 + D + X^c + D * X^c
@@ -6844,6 +7204,7 @@ Y ~ 1 + D + X^c + D * X^c
 The reported effect is the coefficient on D, with robust covariance as requested.
 This specification ensures the coefficient on D is the ATE/ITT even if the
 treatment effect is heterogeneous with respect to covariates.
+This is broader than canonical single-theta CUPED (`Y - theta*(X - mean(X))`).
 
 **Parameters:**
 
@@ -6851,13 +7212,36 @@ treatment effect is heterogeneous with respect to covariates.
   Note: for cluster-randomized designs, use cluster-robust SEs (not implemented here).
 - **alpha** (<code>[float](#float)</code>) – Significance level for confidence intervals.
 - **strict_binary_treatment** (<code>[bool](#bool)</code>) – If True, require treatment to be binary {0,1}.
-- **use_t** (<code>[bool](#bool)</code>) – Passed to statsmodels `.fit(..., use_t=use_t)`. If False, inference is based on
-  normal approximation (common asymptotic choice for robust covariances).
+- **use_t** (<code>[bool](#bool) | None</code>) – If bool, passed to statsmodels `.fit(..., use_t=use_t)` directly.
+  If None, automatic policy is used: for robust HC\* covariances,
+  `use_t=True` when `n < use_t_auto_n_threshold`, else `False`.
+  For non-robust covariance, `use_t=True`.
+- **use_t_auto_n_threshold** (<code>[int](#int)</code>) – Sample-size threshold for automatic `use_t` selection when `use_t=None`
+  and covariance is HC\* robust.
+- **relative_ci_method** (<code>('delta_nocov', 'bootstrap')</code>) – Method for relative CI of `100 * tau / mu_c`.
+- "delta_nocov": delta method using robust `Var(tau)` and `Var(mu_c)` while
+  setting `Cov(tau, mu_c)=0` (safe fallback without unsupported hybrid IF covariance).
+- "bootstrap": percentile bootstrap CI on the relative effect.
+- **relative_ci_bootstrap_draws** (<code>[int](#int)</code>) – Number of bootstrap resamples used when `relative_ci_method="bootstrap"`.
+- **relative_ci_bootstrap_seed** (<code>[int](#int) | None</code>) – RNG seed used for bootstrap relative CI.
+- **covariate_variance_min** (<code>[float](#float)</code>) – Minimum variance threshold for retaining a CUPED covariate. Covariates with
+  variance less than or equal to this threshold are dropped before fitting.
+- **condition_number_warn_threshold** (<code>[float](#float)</code>) – Trigger diagnostics signal when the design matrix condition number exceeds this threshold.
+- **run_regression_checks** (<code>[bool](#bool)</code>) – Whether to compute regression diagnostics payload during `fit()`.
+- **check_action** (<code>('ignore', 'raise')</code>) – Action used when a diagnostics threshold is violated.
+- **raise_on_yellow** (<code>[bool](#bool)</code>) – When `check_action="raise"`, also raise on YELLOW assumption flags.
+- **corr_near_one_tol** (<code>[float](#float)</code>) – Correlation tolerance used to mark near-duplicate centered covariates.
+- **vif_warn_threshold** (<code>[float](#float)</code>) – VIF threshold that triggers a diagnostics signal.
+- **winsor_q** (<code>[float](#float) | None</code>) – Quantile used for winsor sensitivity refit. Set `None` to disable.
+- **tiny_one_minus_h_tol** (<code>[float](#float)</code>) – Threshold for flagging near-degenerate `1 - leverage` terms in HC2/HC3.
 
 <details class="note" open markdown="1">
 <summary>Notes</summary>
 
 - Validity requires covariates be pre-treatment. Post-treatment covariates can bias estimates.
+- Covariates are globally centered over the full sample only. This centering
+  convention is required so the treatment coefficient in the Lin specification
+  remains the ATE/ITT.
 - The Lin (2013) specification is recommended as a robust regression-adjustment default
   in RCTs.
 
@@ -6865,8 +7249,9 @@ treatment effect is heterogeneous with respect to covariates.
 
 **Functions:**
 
+- [**assumptions_table**](#causalis.scenarios.cuped.CUPEDModel.assumptions_table) – Return fitted regression assumptions table (GREEN/YELLOW/RED) when available.
 - [**estimate**](#causalis.scenarios.cuped.CUPEDModel.estimate) – Return the adjusted ATE/ITT estimate and inference.
-- [**fit**](#causalis.scenarios.cuped.CUPEDModel.fit) – Fit CUPED/ANCOVA (or Lin-interacted) on a CausalData object.
+- [**fit**](#causalis.scenarios.cuped.CUPEDModel.fit) – Fit CUPED-style regression adjustment (Lin-interacted OLS) on a CausalData object.
 - [**summary_dict**](#causalis.scenarios.cuped.CUPEDModel.summary_dict) – Convenience JSON/logging output.
 
 ###### `adjustment`
@@ -6881,16 +7266,54 @@ adjustment: Literal['lin'] = 'lin'
 alpha = float(alpha)
 ```
 
+###### `assumptions_table`
+
+```python
+assumptions_table() -> Optional[pd.DataFrame]
+```
+
+Return fitted regression assumptions table (GREEN/YELLOW/RED) when available.
+
 ###### `center_covariates`
 
 ```python
 center_covariates = True
 ```
 
+###### `centering_scope`
+
+```python
+centering_scope: Literal['global'] = 'global'
+```
+
+###### `check_action`
+
+```python
+check_action: Literal['ignore', 'raise'] = check_action
+```
+
+###### `condition_number_warn_threshold`
+
+```python
+condition_number_warn_threshold = float(condition_number_warn_threshold)
+```
+
+###### `corr_near_one_tol`
+
+```python
+corr_near_one_tol = float(corr_near_one_tol)
+```
+
 ###### `cov_type`
 
 ```python
 cov_type = str(cov_type)
+```
+
+###### `covariate_variance_min`
+
+```python
+covariate_variance_min = float(covariate_variance_min)
 ```
 
 ###### `estimate`
@@ -6913,16 +7336,18 @@ Return the adjusted ATE/ITT estimate and inference.
 ###### `fit`
 
 ```python
-fit(data: CausalData, covariates: Optional[Sequence[str]] = None) -> CUPEDModel
+fit(data: CausalData, covariates: Optional[Sequence[str]] = None, run_checks: Optional[bool] = None) -> CUPEDModel
 ```
 
-Fit CUPED/ANCOVA (or Lin-interacted) on a CausalData object.
+Fit CUPED-style regression adjustment (Lin-interacted OLS) on a CausalData object.
 
 **Parameters:**
 
 - **data** (<code>[CausalData](#causalis.dgp.causaldata.CausalData)</code>) – Validated dataset with columns: outcome (post), treatment, and confounders (pre covariates).
-- **covariates** (<code>list of str, required</code>) – Explicit subset of `data_contracts.confounders_names` to use as CUPED covariates.
+- **covariates** (<code>([Sequence](#typing.Sequence)\[[str](#str)\], [required](#required))</code>) – Explicit subset of `data_contracts.confounders_names` to use as CUPED covariates.
   Pass `[]` for an unadjusted (naive) fit.
+- **run_checks** (<code>[bool](#bool) | None</code>) – Override whether regression checks are computed in this fit call.
+  If `None`, uses `self.run_regression_checks`.
 
 **Returns:**
 
@@ -6930,9 +7355,40 @@ Fit CUPED/ANCOVA (or Lin-interacted) on a CausalData object.
 
 **Raises:**
 
-- <code>[ValueError](#ValueError)</code> – If `covariates` is omitted, not a list, contains columns missing from the
+- <code>[ValueError](#ValueError)</code> – If `covariates` is omitted, not a sequence of strings, contains columns missing from the
   DataFrame, contains columns outside `data_contracts.confounders_names`,
-  or treatment is not binary when `strict_binary_treatment=True`.
+  treatment is not binary when `strict_binary_treatment=True`,
+  or the design matrix is rank deficient.
+
+###### `raise_on_yellow`
+
+```python
+raise_on_yellow = bool(raise_on_yellow)
+```
+
+###### `relative_ci_bootstrap_draws`
+
+```python
+relative_ci_bootstrap_draws = int(relative_ci_bootstrap_draws)
+```
+
+###### `relative_ci_bootstrap_seed`
+
+```python
+relative_ci_bootstrap_seed = relative_ci_bootstrap_seed
+```
+
+###### `relative_ci_method`
+
+```python
+relative_ci_method: Literal['delta_nocov', 'bootstrap'] = relative_ci_method
+```
+
+###### `run_regression_checks`
+
+```python
+run_regression_checks = bool(run_regression_checks)
+```
 
 ###### `strict_binary_treatment`
 
@@ -6956,10 +7412,34 @@ Convenience JSON/logging output.
 
 - <code>[dict](#dict)</code> – Dictionary with estimates, inference, and diagnostics.
 
+###### `tiny_one_minus_h_tol`
+
+```python
+tiny_one_minus_h_tol = float(tiny_one_minus_h_tol)
+```
+
 ###### `use_t`
 
 ```python
-use_t = bool(use_t)
+use_t = None if use_t is None else bool(use_t)
+```
+
+###### `use_t_auto_n_threshold`
+
+```python
+use_t_auto_n_threshold = int(use_t_auto_n_threshold)
+```
+
+###### `vif_warn_threshold`
+
+```python
+vif_warn_threshold = float(vif_warn_threshold)
+```
+
+###### `winsor_q`
+
+```python
+winsor_q = None
 ```
 
 ##### `cuped_forest_plot`
@@ -7046,10 +7526,128 @@ Wrapper for generate_cuped_binary().
 **Modules:**
 
 - [**forest_plot**](#causalis.scenarios.cuped.diagnostics.forest_plot) –
+- [**regression_checks**](#causalis.scenarios.cuped.diagnostics.regression_checks) –
 
 **Functions:**
 
+- [**assumption_ate_gap**](#causalis.scenarios.cuped.diagnostics.assumption_ate_gap) – Check adjusted-vs-naive ATE gap relative to naive SE.
+- [**assumption_condition_number**](#causalis.scenarios.cuped.diagnostics.assumption_condition_number) – Check global collinearity via condition number.
+- [**assumption_cooks**](#causalis.scenarios.cuped.diagnostics.assumption_cooks) – Check Cook's distance influence diagnostics.
+- [**assumption_design_rank**](#causalis.scenarios.cuped.diagnostics.assumption_design_rank) – Check that the design matrix is full rank.
+- [**assumption_hc23_stability**](#causalis.scenarios.cuped.diagnostics.assumption_hc23_stability) – Check HC2/HC3 stability when leverage terms approach one.
+- [**assumption_leverage**](#causalis.scenarios.cuped.diagnostics.assumption_leverage) – Check leverage concentration.
+- [**assumption_near_duplicates**](#causalis.scenarios.cuped.diagnostics.assumption_near_duplicates) – Check near-duplicate centered covariate pairs.
+- [**assumption_residual_tails**](#causalis.scenarios.cuped.diagnostics.assumption_residual_tails) – Check residual extremes using max standardized residual only.
+- [**assumption_vif**](#causalis.scenarios.cuped.diagnostics.assumption_vif) – Check VIF from centered main-effect covariates.
+- [**assumption_winsor_sensitivity**](#causalis.scenarios.cuped.diagnostics.assumption_winsor_sensitivity) – Check sensitivity of adjusted ATE to winsorized-outcome refit.
 - [**cuped_forest_plot**](#causalis.scenarios.cuped.diagnostics.cuped_forest_plot) – Forest plot of absolute estimates and CIs for CUPED vs non-CUPED.
+- [**design_matrix_checks**](#causalis.scenarios.cuped.diagnostics.design_matrix_checks) – Return rank/conditioning diagnostics for a numeric design matrix.
+- [**overall_assumption_flag**](#causalis.scenarios.cuped.diagnostics.overall_assumption_flag) – Return overall GREEN/YELLOW/RED status from an assumptions table.
+- [**regression_assumption_rows_from_checks**](#causalis.scenarios.cuped.diagnostics.regression_assumption_rows_from_checks) – Run all CUPED regression assumption tests and return row payloads.
+- [**regression_assumptions_table_from_checks**](#causalis.scenarios.cuped.diagnostics.regression_assumptions_table_from_checks) – Return a table of GREEN/YELLOW/RED assumption flags from checks payload.
+- [**regression_assumptions_table_from_data**](#causalis.scenarios.cuped.diagnostics.regression_assumptions_table_from_data) – Fit CUPED on `CausalData` and return the assumptions flag table.
+- [**regression_assumptions_table_from_diagnostic_data**](#causalis.scenarios.cuped.diagnostics.regression_assumptions_table_from_diagnostic_data) – Build assumption table from `CUPEDDiagnosticData` payload.
+- [**regression_assumptions_table_from_estimate**](#causalis.scenarios.cuped.diagnostics.regression_assumptions_table_from_estimate) – Build assumption table from CUPED `CausalEstimate` and transform it.
+- [**run_regression_checks**](#causalis.scenarios.cuped.diagnostics.run_regression_checks) – Build a compact payload with design, residual, and influence diagnostics.
+- [**style_regression_assumptions_table**](#causalis.scenarios.cuped.diagnostics.style_regression_assumptions_table) – Return pandas Styler with colored flag cells for notebook display.
+
+###### `FLAG_GREEN`
+
+```python
+FLAG_GREEN = 'GREEN'
+```
+
+###### `FLAG_RED`
+
+```python
+FLAG_RED = 'RED'
+```
+
+###### `FLAG_YELLOW`
+
+```python
+FLAG_YELLOW = 'YELLOW'
+```
+
+###### `assumption_ate_gap`
+
+```python
+assumption_ate_gap(checks: RegressionChecks, yellow_threshold: float = 2.0, red_threshold: float = 2.5) -> Dict[str, Any]
+```
+
+Check adjusted-vs-naive ATE gap relative to naive SE.
+
+###### `assumption_condition_number`
+
+```python
+assumption_condition_number(checks: RegressionChecks, warn_threshold: float = 100000000.0, red_multiplier: float = 100.0) -> Dict[str, Any]
+```
+
+Check global collinearity via condition number.
+
+###### `assumption_cooks`
+
+```python
+assumption_cooks(checks: RegressionChecks, yellow_threshold: float = 0.1, red_threshold: float = 1.0) -> Dict[str, Any]
+```
+
+Check Cook's distance influence diagnostics.
+
+###### `assumption_design_rank`
+
+```python
+assumption_design_rank(checks: RegressionChecks) -> Dict[str, Any]
+```
+
+Check that the design matrix is full rank.
+
+###### `assumption_hc23_stability`
+
+```python
+assumption_hc23_stability(checks: RegressionChecks, cov_type: str, tiny_one_minus_h_tol: float = 1e-08) -> Dict[str, Any]
+```
+
+Check HC2/HC3 stability when leverage terms approach one.
+
+###### `assumption_leverage`
+
+```python
+assumption_leverage(checks: RegressionChecks, yellow_multiplier: float = 5.0, red_multiplier: float = 10.0, red_floor: float = 0.5) -> Dict[str, Any]
+```
+
+Check leverage concentration.
+
+###### `assumption_near_duplicates`
+
+```python
+assumption_near_duplicates(checks: RegressionChecks, red_pairs_threshold: int = 3) -> Dict[str, Any]
+```
+
+Check near-duplicate centered covariate pairs.
+
+###### `assumption_residual_tails`
+
+```python
+assumption_residual_tails(checks: RegressionChecks, yellow_abs_std_resid: float = 7.0, red_abs_std_resid: float = 10.0) -> Dict[str, Any]
+```
+
+Check residual extremes using max standardized residual only.
+
+###### `assumption_vif`
+
+```python
+assumption_vif(checks: RegressionChecks, warn_threshold: float = 20.0, red_multiplier: float = 2.0) -> Dict[str, Any]
+```
+
+Check VIF from centered main-effect covariates.
+
+###### `assumption_winsor_sensitivity`
+
+```python
+assumption_winsor_sensitivity(checks: RegressionChecks, winsor_reference_se: Optional[float] = None, yellow_sigma: float = 1.0, red_sigma: float = 2.0, yellow_ratio: float = 0.1, red_ratio: float = 0.25) -> Dict[str, Any]
+```
+
+Check sensitivity of adjusted ATE to winsorized-outcome refit.
 
 ###### `cuped_forest_plot`
 
@@ -7065,6 +7663,14 @@ Forest plot of absolute estimates and CIs for CUPED vs non-CUPED.
 - **estimate_without_cuped** (<code>[CausalEstimate](#causalis.data_contracts.causal_estimate.CausalEstimate)</code>) – Effect estimated without CUPED adjustment. If omitted, the function
   uses `estimate_with_cuped.diagnostic_data.ate_naive` and
   `estimate_with_cuped.diagnostic_data.se_naive` to build a normal-approx CI.
+
+###### `design_matrix_checks`
+
+```python
+design_matrix_checks(design: pd.DataFrame) -> tuple[int, int, bool, float]
+```
+
+Return rank/conditioning diagnostics for a numeric design matrix.
 
 ###### `forest_plot`
 
@@ -7087,22 +7693,329 @@ Forest plot of absolute estimates and CIs for CUPED vs non-CUPED.
   uses `estimate_with_cuped.diagnostic_data.ate_naive` and
   `estimate_with_cuped.diagnostic_data.se_naive` to build a normal-approx CI.
 
+###### `overall_assumption_flag`
+
+```python
+overall_assumption_flag(table: pd.DataFrame) -> str
+```
+
+Return overall GREEN/YELLOW/RED status from an assumptions table.
+
+###### `regression_assumption_rows_from_checks`
+
+```python
+regression_assumption_rows_from_checks(checks: RegressionChecks, cov_type: str = 'HC2', condition_number_warn_threshold: float = 100000000.0, vif_warn_threshold: float = 20.0, tiny_one_minus_h_tol: float = 1e-08, winsor_reference_se: Optional[float] = None) -> list[Dict[str, Any]]
+```
+
+Run all CUPED regression assumption tests and return row payloads.
+
+###### `regression_assumptions_table_from_checks`
+
+```python
+regression_assumptions_table_from_checks(checks: RegressionChecks, cov_type: str = 'HC2', condition_number_warn_threshold: float = 100000000.0, vif_warn_threshold: float = 20.0, tiny_one_minus_h_tol: float = 1e-08, winsor_reference_se: Optional[float] = None) -> pd.DataFrame
+```
+
+Return a table of GREEN/YELLOW/RED assumption flags from checks payload.
+
+###### `regression_assumptions_table_from_data`
+
+```python
+regression_assumptions_table_from_data(data: CausalData, covariates: Sequence[str], model_kwargs: Optional[Dict[str, Any]] = None, fit_kwargs: Optional[Dict[str, Any]] = None) -> pd.DataFrame
+```
+
+Fit CUPED on `CausalData` and return the assumptions flag table.
+
+###### `regression_assumptions_table_from_diagnostic_data`
+
+```python
+regression_assumptions_table_from_diagnostic_data(diagnostic_data: CUPEDDiagnosticData, cov_type: str = 'HC2', condition_number_warn_threshold: float = 100000000.0, vif_warn_threshold: float = 20.0, tiny_one_minus_h_tol: float = 1e-08, winsor_reference_se: Optional[float] = None) -> pd.DataFrame
+```
+
+Build assumption table from `CUPEDDiagnosticData` payload.
+
+###### `regression_assumptions_table_from_estimate`
+
+```python
+regression_assumptions_table_from_estimate(estimate: CausalEstimate, style_regression_assumptions_table: Optional[Callable[[pd.DataFrame], Any]] = None, cov_type: Optional[str] = None, condition_number_warn_threshold: float = 100000000.0, vif_warn_threshold: float = 20.0, tiny_one_minus_h_tol: float = 1e-08) -> Any
+```
+
+Build assumption table from CUPED `CausalEstimate` and transform it.
+
+###### `regression_checks`
+
+**Functions:**
+
+- [**assumption_ate_gap**](#causalis.scenarios.cuped.diagnostics.regression_checks.assumption_ate_gap) – Check adjusted-vs-naive ATE gap relative to naive SE.
+- [**assumption_condition_number**](#causalis.scenarios.cuped.diagnostics.regression_checks.assumption_condition_number) – Check global collinearity via condition number.
+- [**assumption_cooks**](#causalis.scenarios.cuped.diagnostics.regression_checks.assumption_cooks) – Check Cook's distance influence diagnostics.
+- [**assumption_design_rank**](#causalis.scenarios.cuped.diagnostics.regression_checks.assumption_design_rank) – Check that the design matrix is full rank.
+- [**assumption_hc23_stability**](#causalis.scenarios.cuped.diagnostics.regression_checks.assumption_hc23_stability) – Check HC2/HC3 stability when leverage terms approach one.
+- [**assumption_leverage**](#causalis.scenarios.cuped.diagnostics.regression_checks.assumption_leverage) – Check leverage concentration.
+- [**assumption_near_duplicates**](#causalis.scenarios.cuped.diagnostics.regression_checks.assumption_near_duplicates) – Check near-duplicate centered covariate pairs.
+- [**assumption_residual_tails**](#causalis.scenarios.cuped.diagnostics.regression_checks.assumption_residual_tails) – Check residual extremes using max standardized residual only.
+- [**assumption_vif**](#causalis.scenarios.cuped.diagnostics.regression_checks.assumption_vif) – Check VIF from centered main-effect covariates.
+- [**assumption_winsor_sensitivity**](#causalis.scenarios.cuped.diagnostics.regression_checks.assumption_winsor_sensitivity) – Check sensitivity of adjusted ATE to winsorized-outcome refit.
+- [**design_matrix_checks**](#causalis.scenarios.cuped.diagnostics.regression_checks.design_matrix_checks) – Return rank/conditioning diagnostics for a numeric design matrix.
+- [**leverage_and_cooks**](#causalis.scenarios.cuped.diagnostics.regression_checks.leverage_and_cooks) – Compute leverage, Cook's distance, and internally studentized residuals.
+- [**near_duplicate_corr_pairs**](#causalis.scenarios.cuped.diagnostics.regression_checks.near_duplicate_corr_pairs) – Find pairs with absolute correlation very close to one.
+- [**overall_assumption_flag**](#causalis.scenarios.cuped.diagnostics.regression_checks.overall_assumption_flag) – Return overall GREEN/YELLOW/RED status from an assumptions table.
+- [**regression_assumption_rows_from_checks**](#causalis.scenarios.cuped.diagnostics.regression_checks.regression_assumption_rows_from_checks) – Run all CUPED regression assumption tests and return row payloads.
+- [**regression_assumptions_table_from_checks**](#causalis.scenarios.cuped.diagnostics.regression_checks.regression_assumptions_table_from_checks) – Return a table of GREEN/YELLOW/RED assumption flags from checks payload.
+- [**regression_assumptions_table_from_data**](#causalis.scenarios.cuped.diagnostics.regression_checks.regression_assumptions_table_from_data) – Fit CUPED on `CausalData` and return the assumptions flag table.
+- [**regression_assumptions_table_from_diagnostic_data**](#causalis.scenarios.cuped.diagnostics.regression_checks.regression_assumptions_table_from_diagnostic_data) – Build assumption table from `CUPEDDiagnosticData` payload.
+- [**regression_assumptions_table_from_estimate**](#causalis.scenarios.cuped.diagnostics.regression_checks.regression_assumptions_table_from_estimate) – Build assumption table from CUPED `CausalEstimate` and transform it.
+- [**run_regression_checks**](#causalis.scenarios.cuped.diagnostics.regression_checks.run_regression_checks) – Build a compact payload with design, residual, and influence diagnostics.
+- [**style_regression_assumptions_table**](#causalis.scenarios.cuped.diagnostics.regression_checks.style_regression_assumptions_table) – Return pandas Styler with colored flag cells for notebook display.
+- [**vif_from_corr**](#causalis.scenarios.cuped.diagnostics.regression_checks.vif_from_corr) – Approximate VIF from inverse correlation matrix of standardized covariates.
+- [**winsor_fit_tau**](#causalis.scenarios.cuped.diagnostics.regression_checks.winsor_fit_tau) – Refit OLS on winsorized outcome and return treatment coefficient.
+
+####### `FLAG_COLOR`
+
+```python
+FLAG_COLOR = {FLAG_GREEN: '#2e7d32', FLAG_YELLOW: '#f9a825', FLAG_RED: '#c62828'}
+```
+
+####### `FLAG_GREEN`
+
+```python
+FLAG_GREEN = 'GREEN'
+```
+
+####### `FLAG_LEVEL`
+
+```python
+FLAG_LEVEL = {FLAG_GREEN: 0, FLAG_YELLOW: 1, FLAG_RED: 2}
+```
+
+####### `FLAG_RED`
+
+```python
+FLAG_RED = 'RED'
+```
+
+####### `FLAG_YELLOW`
+
+```python
+FLAG_YELLOW = 'YELLOW'
+```
+
+####### `assumption_ate_gap`
+
+```python
+assumption_ate_gap(checks: RegressionChecks, yellow_threshold: float = 2.0, red_threshold: float = 2.5) -> Dict[str, Any]
+```
+
+Check adjusted-vs-naive ATE gap relative to naive SE.
+
+####### `assumption_condition_number`
+
+```python
+assumption_condition_number(checks: RegressionChecks, warn_threshold: float = 100000000.0, red_multiplier: float = 100.0) -> Dict[str, Any]
+```
+
+Check global collinearity via condition number.
+
+####### `assumption_cooks`
+
+```python
+assumption_cooks(checks: RegressionChecks, yellow_threshold: float = 0.1, red_threshold: float = 1.0) -> Dict[str, Any]
+```
+
+Check Cook's distance influence diagnostics.
+
+####### `assumption_design_rank`
+
+```python
+assumption_design_rank(checks: RegressionChecks) -> Dict[str, Any]
+```
+
+Check that the design matrix is full rank.
+
+####### `assumption_hc23_stability`
+
+```python
+assumption_hc23_stability(checks: RegressionChecks, cov_type: str, tiny_one_minus_h_tol: float = 1e-08) -> Dict[str, Any]
+```
+
+Check HC2/HC3 stability when leverage terms approach one.
+
+####### `assumption_leverage`
+
+```python
+assumption_leverage(checks: RegressionChecks, yellow_multiplier: float = 5.0, red_multiplier: float = 10.0, red_floor: float = 0.5) -> Dict[str, Any]
+```
+
+Check leverage concentration.
+
+####### `assumption_near_duplicates`
+
+```python
+assumption_near_duplicates(checks: RegressionChecks, red_pairs_threshold: int = 3) -> Dict[str, Any]
+```
+
+Check near-duplicate centered covariate pairs.
+
+####### `assumption_residual_tails`
+
+```python
+assumption_residual_tails(checks: RegressionChecks, yellow_abs_std_resid: float = 7.0, red_abs_std_resid: float = 10.0) -> Dict[str, Any]
+```
+
+Check residual extremes using max standardized residual only.
+
+####### `assumption_vif`
+
+```python
+assumption_vif(checks: RegressionChecks, warn_threshold: float = 20.0, red_multiplier: float = 2.0) -> Dict[str, Any]
+```
+
+Check VIF from centered main-effect covariates.
+
+####### `assumption_winsor_sensitivity`
+
+```python
+assumption_winsor_sensitivity(checks: RegressionChecks, winsor_reference_se: Optional[float] = None, yellow_sigma: float = 1.0, red_sigma: float = 2.0, yellow_ratio: float = 0.1, red_ratio: float = 0.25) -> Dict[str, Any]
+```
+
+Check sensitivity of adjusted ATE to winsorized-outcome refit.
+
+####### `design_matrix_checks`
+
+```python
+design_matrix_checks(design: pd.DataFrame) -> tuple[int, int, bool, float]
+```
+
+Return rank/conditioning diagnostics for a numeric design matrix.
+
+####### `leverage_and_cooks`
+
+```python
+leverage_and_cooks(y: np.ndarray, z: np.ndarray, params: np.ndarray) -> tuple[np.ndarray, np.ndarray, np.ndarray]
+```
+
+Compute leverage, Cook's distance, and internally studentized residuals.
+
+####### `near_duplicate_corr_pairs`
+
+```python
+near_duplicate_corr_pairs(x: pd.DataFrame, tol: float, max_pairs: int = 50) -> list[tuple[str, str, float]]
+```
+
+Find pairs with absolute correlation very close to one.
+
+####### `overall_assumption_flag`
+
+```python
+overall_assumption_flag(table: pd.DataFrame) -> str
+```
+
+Return overall GREEN/YELLOW/RED status from an assumptions table.
+
+####### `regression_assumption_rows_from_checks`
+
+```python
+regression_assumption_rows_from_checks(checks: RegressionChecks, cov_type: str = 'HC2', condition_number_warn_threshold: float = 100000000.0, vif_warn_threshold: float = 20.0, tiny_one_minus_h_tol: float = 1e-08, winsor_reference_se: Optional[float] = None) -> list[Dict[str, Any]]
+```
+
+Run all CUPED regression assumption tests and return row payloads.
+
+####### `regression_assumptions_table_from_checks`
+
+```python
+regression_assumptions_table_from_checks(checks: RegressionChecks, cov_type: str = 'HC2', condition_number_warn_threshold: float = 100000000.0, vif_warn_threshold: float = 20.0, tiny_one_minus_h_tol: float = 1e-08, winsor_reference_se: Optional[float] = None) -> pd.DataFrame
+```
+
+Return a table of GREEN/YELLOW/RED assumption flags from checks payload.
+
+####### `regression_assumptions_table_from_data`
+
+```python
+regression_assumptions_table_from_data(data: CausalData, covariates: Sequence[str], model_kwargs: Optional[Dict[str, Any]] = None, fit_kwargs: Optional[Dict[str, Any]] = None) -> pd.DataFrame
+```
+
+Fit CUPED on `CausalData` and return the assumptions flag table.
+
+####### `regression_assumptions_table_from_diagnostic_data`
+
+```python
+regression_assumptions_table_from_diagnostic_data(diagnostic_data: CUPEDDiagnosticData, cov_type: str = 'HC2', condition_number_warn_threshold: float = 100000000.0, vif_warn_threshold: float = 20.0, tiny_one_minus_h_tol: float = 1e-08, winsor_reference_se: Optional[float] = None) -> pd.DataFrame
+```
+
+Build assumption table from `CUPEDDiagnosticData` payload.
+
+####### `regression_assumptions_table_from_estimate`
+
+```python
+regression_assumptions_table_from_estimate(estimate: CausalEstimate, style_regression_assumptions_table: Optional[Callable[[pd.DataFrame], Any]] = None, cov_type: Optional[str] = None, condition_number_warn_threshold: float = 100000000.0, vif_warn_threshold: float = 20.0, tiny_one_minus_h_tol: float = 1e-08) -> Any
+```
+
+Build assumption table from CUPED `CausalEstimate` and transform it.
+
+####### `run_regression_checks`
+
+```python
+run_regression_checks(y: pd.Series, design: pd.DataFrame, result: Any, result_naive: Any, cov_type: str, use_t_fit: bool, corr_near_one_tol: float, tiny_one_minus_h_tol: float, winsor_q: Optional[float]) -> RegressionChecks
+```
+
+Build a compact payload with design, residual, and influence diagnostics.
+
+####### `style_regression_assumptions_table`
+
+```python
+style_regression_assumptions_table(table: pd.DataFrame)
+```
+
+Return pandas Styler with colored flag cells for notebook display.
+
+####### `vif_from_corr`
+
+```python
+vif_from_corr(x: pd.DataFrame) -> Optional[Dict[str, float]]
+```
+
+Approximate VIF from inverse correlation matrix of standardized covariates.
+
+####### `winsor_fit_tau`
+
+```python
+winsor_fit_tau(y: pd.Series, design: pd.DataFrame, cov_type: str, use_t_fit: bool, winsor_q: Optional[float]) -> Optional[float]
+```
+
+Refit OLS on winsorized outcome and return treatment coefficient.
+
+###### `run_regression_checks`
+
+```python
+run_regression_checks(y: pd.Series, design: pd.DataFrame, result: Any, result_naive: Any, cov_type: str, use_t_fit: bool, corr_near_one_tol: float, tiny_one_minus_h_tol: float, winsor_q: Optional[float]) -> RegressionChecks
+```
+
+Build a compact payload with design, residual, and influence diagnostics.
+
+###### `style_regression_assumptions_table`
+
+```python
+style_regression_assumptions_table(table: pd.DataFrame)
+```
+
+Return pandas Styler with colored flag cells for notebook display.
+
 ##### `model`
 
 **Classes:**
 
-- [**CUPEDModel**](#causalis.scenarios.cuped.model.CUPEDModel) – CUPED estimator for ATE/ITT in randomized experiments.
+- [**CUPEDModel**](#causalis.scenarios.cuped.model.CUPEDModel) – CUPED-style regression adjustment estimator for ATE/ITT in randomized experiments.
 
 ###### `CUPEDModel`
 
 ```python
-CUPEDModel(cov_type: str = 'HC3', alpha: float = 0.05, strict_binary_treatment: bool = True, use_t: bool = True) -> None
+CUPEDModel(cov_type: str = 'HC2', alpha: float = 0.05, strict_binary_treatment: bool = True, use_t: Optional[bool] = None, use_t_auto_n_threshold: int = 5000, relative_ci_method: Literal['delta_nocov', 'bootstrap'] = 'delta_nocov', relative_ci_bootstrap_draws: int = 1000, relative_ci_bootstrap_seed: Optional[int] = None, covariate_variance_min: float = 1e-12, condition_number_warn_threshold: float = 100000000.0, run_regression_checks: bool = True, check_action: Literal['ignore', 'raise'] = 'ignore', raise_on_yellow: bool = False, corr_near_one_tol: float = 1e-10, vif_warn_threshold: float = 20.0, winsor_q: Optional[float] = 0.01, tiny_one_minus_h_tol: float = 1e-08) -> None
 ```
 
-CUPED estimator for ATE/ITT in randomized experiments.
+CUPED-style regression adjustment estimator for ATE/ITT in randomized experiments.
 
-Fits an outcome regression with pre-treatment covariates (always centered)
-using the Lin (2013) fully interacted adjustment:
+Fits an outcome regression with pre-treatment covariates (always centered
+over the full sample, never within treatment groups)
+implemented as Lin (2013) fully interacted OLS:
 
 ```
 Y ~ 1 + D + X^c + D * X^c
@@ -7111,6 +8024,7 @@ Y ~ 1 + D + X^c + D * X^c
 The reported effect is the coefficient on D, with robust covariance as requested.
 This specification ensures the coefficient on D is the ATE/ITT even if the
 treatment effect is heterogeneous with respect to covariates.
+This is broader than canonical single-theta CUPED (`Y - theta*(X - mean(X))`).
 
 **Parameters:**
 
@@ -7118,13 +8032,36 @@ treatment effect is heterogeneous with respect to covariates.
   Note: for cluster-randomized designs, use cluster-robust SEs (not implemented here).
 - **alpha** (<code>[float](#float)</code>) – Significance level for confidence intervals.
 - **strict_binary_treatment** (<code>[bool](#bool)</code>) – If True, require treatment to be binary {0,1}.
-- **use_t** (<code>[bool](#bool)</code>) – Passed to statsmodels `.fit(..., use_t=use_t)`. If False, inference is based on
-  normal approximation (common asymptotic choice for robust covariances).
+- **use_t** (<code>[bool](#bool) | None</code>) – If bool, passed to statsmodels `.fit(..., use_t=use_t)` directly.
+  If None, automatic policy is used: for robust HC\* covariances,
+  `use_t=True` when `n < use_t_auto_n_threshold`, else `False`.
+  For non-robust covariance, `use_t=True`.
+- **use_t_auto_n_threshold** (<code>[int](#int)</code>) – Sample-size threshold for automatic `use_t` selection when `use_t=None`
+  and covariance is HC\* robust.
+- **relative_ci_method** (<code>('delta_nocov', 'bootstrap')</code>) – Method for relative CI of `100 * tau / mu_c`.
+- "delta_nocov": delta method using robust `Var(tau)` and `Var(mu_c)` while
+  setting `Cov(tau, mu_c)=0` (safe fallback without unsupported hybrid IF covariance).
+- "bootstrap": percentile bootstrap CI on the relative effect.
+- **relative_ci_bootstrap_draws** (<code>[int](#int)</code>) – Number of bootstrap resamples used when `relative_ci_method="bootstrap"`.
+- **relative_ci_bootstrap_seed** (<code>[int](#int) | None</code>) – RNG seed used for bootstrap relative CI.
+- **covariate_variance_min** (<code>[float](#float)</code>) – Minimum variance threshold for retaining a CUPED covariate. Covariates with
+  variance less than or equal to this threshold are dropped before fitting.
+- **condition_number_warn_threshold** (<code>[float](#float)</code>) – Trigger diagnostics signal when the design matrix condition number exceeds this threshold.
+- **run_regression_checks** (<code>[bool](#bool)</code>) – Whether to compute regression diagnostics payload during `fit()`.
+- **check_action** (<code>('ignore', 'raise')</code>) – Action used when a diagnostics threshold is violated.
+- **raise_on_yellow** (<code>[bool](#bool)</code>) – When `check_action="raise"`, also raise on YELLOW assumption flags.
+- **corr_near_one_tol** (<code>[float](#float)</code>) – Correlation tolerance used to mark near-duplicate centered covariates.
+- **vif_warn_threshold** (<code>[float](#float)</code>) – VIF threshold that triggers a diagnostics signal.
+- **winsor_q** (<code>[float](#float) | None</code>) – Quantile used for winsor sensitivity refit. Set `None` to disable.
+- **tiny_one_minus_h_tol** (<code>[float](#float)</code>) – Threshold for flagging near-degenerate `1 - leverage` terms in HC2/HC3.
 
 <details class="note" open markdown="1">
 <summary>Notes</summary>
 
 - Validity requires covariates be pre-treatment. Post-treatment covariates can bias estimates.
+- Covariates are globally centered over the full sample only. This centering
+  convention is required so the treatment coefficient in the Lin specification
+  remains the ATE/ITT.
 - The Lin (2013) specification is recommended as a robust regression-adjustment default
   in RCTs.
 
@@ -7132,8 +8069,9 @@ treatment effect is heterogeneous with respect to covariates.
 
 **Functions:**
 
+- [**assumptions_table**](#causalis.scenarios.cuped.model.CUPEDModel.assumptions_table) – Return fitted regression assumptions table (GREEN/YELLOW/RED) when available.
 - [**estimate**](#causalis.scenarios.cuped.model.CUPEDModel.estimate) – Return the adjusted ATE/ITT estimate and inference.
-- [**fit**](#causalis.scenarios.cuped.model.CUPEDModel.fit) – Fit CUPED/ANCOVA (or Lin-interacted) on a CausalData object.
+- [**fit**](#causalis.scenarios.cuped.model.CUPEDModel.fit) – Fit CUPED-style regression adjustment (Lin-interacted OLS) on a CausalData object.
 - [**summary_dict**](#causalis.scenarios.cuped.model.CUPEDModel.summary_dict) – Convenience JSON/logging output.
 
 ####### `adjustment`
@@ -7148,16 +8086,54 @@ adjustment: Literal['lin'] = 'lin'
 alpha = float(alpha)
 ```
 
+####### `assumptions_table`
+
+```python
+assumptions_table() -> Optional[pd.DataFrame]
+```
+
+Return fitted regression assumptions table (GREEN/YELLOW/RED) when available.
+
 ####### `center_covariates`
 
 ```python
 center_covariates = True
 ```
 
+####### `centering_scope`
+
+```python
+centering_scope: Literal['global'] = 'global'
+```
+
+####### `check_action`
+
+```python
+check_action: Literal['ignore', 'raise'] = check_action
+```
+
+####### `condition_number_warn_threshold`
+
+```python
+condition_number_warn_threshold = float(condition_number_warn_threshold)
+```
+
+####### `corr_near_one_tol`
+
+```python
+corr_near_one_tol = float(corr_near_one_tol)
+```
+
 ####### `cov_type`
 
 ```python
 cov_type = str(cov_type)
+```
+
+####### `covariate_variance_min`
+
+```python
+covariate_variance_min = float(covariate_variance_min)
 ```
 
 ####### `estimate`
@@ -7180,16 +8156,18 @@ Return the adjusted ATE/ITT estimate and inference.
 ####### `fit`
 
 ```python
-fit(data: CausalData, covariates: Optional[Sequence[str]] = None) -> CUPEDModel
+fit(data: CausalData, covariates: Optional[Sequence[str]] = None, run_checks: Optional[bool] = None) -> CUPEDModel
 ```
 
-Fit CUPED/ANCOVA (or Lin-interacted) on a CausalData object.
+Fit CUPED-style regression adjustment (Lin-interacted OLS) on a CausalData object.
 
 **Parameters:**
 
 - **data** (<code>[CausalData](#causalis.dgp.causaldata.CausalData)</code>) – Validated dataset with columns: outcome (post), treatment, and confounders (pre covariates).
-- **covariates** (<code>list of str, required</code>) – Explicit subset of `data_contracts.confounders_names` to use as CUPED covariates.
+- **covariates** (<code>([Sequence](#typing.Sequence)\[[str](#str)\], [required](#required))</code>) – Explicit subset of `data_contracts.confounders_names` to use as CUPED covariates.
   Pass `[]` for an unadjusted (naive) fit.
+- **run_checks** (<code>[bool](#bool) | None</code>) – Override whether regression checks are computed in this fit call.
+  If `None`, uses `self.run_regression_checks`.
 
 **Returns:**
 
@@ -7197,9 +8175,40 @@ Fit CUPED/ANCOVA (or Lin-interacted) on a CausalData object.
 
 **Raises:**
 
-- <code>[ValueError](#ValueError)</code> – If `covariates` is omitted, not a list, contains columns missing from the
+- <code>[ValueError](#ValueError)</code> – If `covariates` is omitted, not a sequence of strings, contains columns missing from the
   DataFrame, contains columns outside `data_contracts.confounders_names`,
-  or treatment is not binary when `strict_binary_treatment=True`.
+  treatment is not binary when `strict_binary_treatment=True`,
+  or the design matrix is rank deficient.
+
+####### `raise_on_yellow`
+
+```python
+raise_on_yellow = bool(raise_on_yellow)
+```
+
+####### `relative_ci_bootstrap_draws`
+
+```python
+relative_ci_bootstrap_draws = int(relative_ci_bootstrap_draws)
+```
+
+####### `relative_ci_bootstrap_seed`
+
+```python
+relative_ci_bootstrap_seed = relative_ci_bootstrap_seed
+```
+
+####### `relative_ci_method`
+
+```python
+relative_ci_method: Literal['delta_nocov', 'bootstrap'] = relative_ci_method
+```
+
+####### `run_regression_checks`
+
+```python
+run_regression_checks = bool(run_regression_checks)
+```
 
 ####### `strict_binary_treatment`
 
@@ -7223,11 +8232,59 @@ Convenience JSON/logging output.
 
 - <code>[dict](#dict)</code> – Dictionary with estimates, inference, and diagnostics.
 
+####### `tiny_one_minus_h_tol`
+
+```python
+tiny_one_minus_h_tol = float(tiny_one_minus_h_tol)
+```
+
 ####### `use_t`
 
 ```python
-use_t = bool(use_t)
+use_t = None if use_t is None else bool(use_t)
 ```
+
+####### `use_t_auto_n_threshold`
+
+```python
+use_t_auto_n_threshold = int(use_t_auto_n_threshold)
+```
+
+####### `vif_warn_threshold`
+
+```python
+vif_warn_threshold = float(vif_warn_threshold)
+```
+
+####### `winsor_q`
+
+```python
+winsor_q = None
+```
+
+##### `regression_assumptions_table_from_data`
+
+```python
+regression_assumptions_table_from_data(data: CausalData, covariates: Sequence[str], model_kwargs: Optional[Dict[str, Any]] = None, fit_kwargs: Optional[Dict[str, Any]] = None) -> pd.DataFrame
+```
+
+Fit CUPED on `CausalData` and return the assumptions flag table.
+
+##### `regression_assumptions_table_from_estimate`
+
+```python
+regression_assumptions_table_from_estimate(estimate: CausalEstimate, style_regression_assumptions_table: Optional[Callable[[pd.DataFrame], Any]] = None, cov_type: Optional[str] = None, condition_number_warn_threshold: float = 100000000.0, vif_warn_threshold: float = 20.0, tiny_one_minus_h_tol: float = 1e-08) -> Any
+```
+
+Build assumption table from CUPED `CausalEstimate` and transform it.
+
+##### `style_regression_assumptions_table`
+
+```python
+style_regression_assumptions_table(table: pd.DataFrame)
+```
+
+Return pandas Styler with colored flag cells for notebook display.
 
 #### `multi_uncofoundedness`
 
@@ -8694,14 +9751,13 @@ weights = weights
 Refutation and robustness utilities for Causalis.
 
 Importing this package exposes the public functions from all refutation
-submodules (overlap, score, uncofoundedness, sutva) so you can access
+submodules (overlap, score, uncofoundedness) so you can access
 commonly used helpers directly via `causalis.refutation`.
 
 **Modules:**
 
 - [**overlap**](#causalis.scenarios.unconfoundedness.refutation.overlap) –
 - [**score**](#causalis.scenarios.unconfoundedness.refutation.score) –
-- [**sutva**](#causalis.scenarios.unconfoundedness.refutation.sutva) –
 - [**uncofoundedness**](#causalis.scenarios.unconfoundedness.refutation.uncofoundedness) –
 
 **Classes:**
@@ -8733,7 +9789,6 @@ commonly used helpers directly via `causalis.refutation`.
 - [**overlap_report_from_result**](#causalis.scenarios.unconfoundedness.refutation.overlap_report_from_result) – High-level helper that takes `IRM` result or model and returns a positivity/overlap report as a dict.
 - [**plot_m_overlap**](#causalis.scenarios.unconfoundedness.refutation.plot_m_overlap) – Overlap plot for m(x)=P(D=1|X) with high-res rendering.
 - [**positivity_overlap_checks**](#causalis.scenarios.unconfoundedness.refutation.positivity_overlap_checks) – Run positivity/overlap diagnostics for DML-IRM (ATE & ATT).
-- [**print_sutva_questions**](#causalis.scenarios.unconfoundedness.refutation.print_sutva_questions) – Print the SUTVA validation questions.
 - [**refute_irm_orthogonality**](#causalis.scenarios.unconfoundedness.refutation.refute_irm_orthogonality) – Comprehensive AIPW orthogonality diagnostics for IRM models.
 - [**refute_placebo_outcome**](#causalis.scenarios.unconfoundedness.refutation.refute_placebo_outcome) – Generate random outcome variables while keeping treatment
 - [**refute_placebo_treatment**](#causalis.scenarios.unconfoundedness.refutation.refute_placebo_treatment) – Generate random binary treatment variables while keeping outcome and
@@ -8916,12 +9971,6 @@ user_id_name: Optional[str] = Field(alias='user_id', default=None)
 
 ```python
 DEFAULT_THRESHOLDS = dict(edge_mass_warn_001=0.02, edge_mass_strong_001=0.05, edge_mass_warn_002=0.05, edge_mass_strong_002=0.1, ks_warn=0.3, ks_strong=0.4, auc_warn=0.8, auc_strong=0.9, ipw_relerr_warn=0.05, ipw_relerr_strong=0.1, ess_ratio_warn=0.3, ess_ratio_strong=0.15, clip_share_warn=0.02, clip_share_strong=0.05, tail_vs_med_warn=10.0)
-```
-
-###### `QUESTIONS`
-
-```python
-QUESTIONS: Iterable[str] = ('1.) Are your clients independent (i)?', '2.) Do you measure confounders, treatment, and outcome in the same intervals?', '3.) Do you measure confounders before treatment and outcome after?', '4.) Do you have a consistent label of treatment, such as if a person does not receive a treatment, he has a label 0?')
 ```
 
 ###### `ResultLike`
@@ -9912,16 +10961,6 @@ positivity_overlap_checks(m_hat: np.ndarray, D: np.ndarray, *, m_clipped_from: O
 Run positivity/overlap diagnostics for DML-IRM (ATE & ATT).
 Inputs are cross-fitted m̂ and treatment D (0/1). Returns a structured report with GREEN/YELLOW/RED flags.
 
-###### `print_sutva_questions`
-
-```python
-print_sutva_questions() -> None
-```
-
-Print the SUTVA validation questions.
-
-Just prints questions, nothing more.
-
 ###### `refute_irm_orthogonality`
 
 ```python
@@ -10644,59 +11683,6 @@ Returns a DataFrame containing r2_y, r2_d, rho and the change in estimates.
 - r2_y, r2_d, rho: residual-based benchmarking strengths
 - theta_long, theta_short, delta: effect estimates and their change (long - short)
 
-###### `sutva`
-
-**Modules:**
-
-- [**sutva_validation**](#causalis.scenarios.unconfoundedness.refutation.sutva.sutva_validation) – SUTVA validation helper.
-
-**Functions:**
-
-- [**print_sutva_questions**](#causalis.scenarios.unconfoundedness.refutation.sutva.print_sutva_questions) – Print the SUTVA validation questions.
-
-####### `QUESTIONS`
-
-```python
-QUESTIONS: Iterable[str] = ('1.) Are your clients independent (i)?', '2.) Do you measure confounders, treatment, and outcome in the same intervals?', '3.) Do you measure confounders before treatment and outcome after?', '4.) Do you have a consistent label of treatment, such as if a person does not receive a treatment, he has a label 0?')
-```
-
-####### `print_sutva_questions`
-
-```python
-print_sutva_questions() -> None
-```
-
-Print the SUTVA validation questions.
-
-Just prints questions, nothing more.
-
-####### `sutva_validation`
-
-SUTVA validation helper.
-
-This module provides a simple function to print four SUTVA-related
-questions for the user to consider. It has no side effects on import.
-
-**Functions:**
-
-- [**print_sutva_questions**](#causalis.scenarios.unconfoundedness.refutation.sutva.sutva_validation.print_sutva_questions) – Print the SUTVA validation questions.
-
-######## `QUESTIONS`
-
-```python
-QUESTIONS: Iterable[str] = ('1.) Are your clients independent (i)?', '2.) Do you measure confounders, treatment, and outcome in the same intervals?', '3.) Do you measure confounders before treatment and outcome after?', '4.) Do you have a consistent label of treatment, such as if a person does not receive a treatment, he has a label 0?')
-```
-
-######## `print_sutva_questions`
-
-```python
-print_sutva_questions() -> None
-```
-
-Print the SUTVA validation questions.
-
-Just prints questions, nothing more.
-
 ###### `trim_sensitivity_curve_ate`
 
 ```python
@@ -11120,6 +12106,7 @@ variances in the two groups.
 - [**outcome_stats**](#causalis.shared.outcome_stats) – Outcome shared grouped by treatment for CausalData.
 - [**rct_design**](#causalis.shared.rct_design) – Design module for experimental rct_design utilities.
 - [**srm**](#causalis.shared.srm) – Sample Ratio Mismatch (SRM) utilities for randomized experiments.
+- [**sutva_validation**](#causalis.shared.sutva_validation) – SUTVA validation helper.
 
 **Classes:**
 
@@ -11130,6 +12117,13 @@ variances in the two groups.
 - [**check_srm**](#causalis.shared.check_srm) – Check Sample Ratio Mismatch (SRM) for an RCT via a chi-square goodness-of-fit test.
 - [**outcome_plot_boxplot**](#causalis.shared.outcome_plot_boxplot) – Prettified boxplot of the outcome by treatment.
 - [**outcome_plot_dist**](#causalis.shared.outcome_plot_dist) – Plot the distribution of the outcome for each treatment on a single, pretty plot.
+- [**print_sutva_questions**](#causalis.shared.print_sutva_questions) – Print the SUTVA validation questions.
+
+#### `QUESTIONS`
+
+```python
+QUESTIONS: Iterable[str] = ('1.) Are your clients independent (i). Outcome of ones do not depend on others?', '2.) Are all clients have full window to measure metrics?', '3.) Do you measure confounders before treatment and outcome after?', '4.) Do you have a consistent label of treatment, such as if a person does not receive a treatment, he has a label 0?')
+```
 
 #### `SRMResult`
 
@@ -11558,6 +12552,16 @@ data_contracts in a clean DataFrame format suitable for reporting.
 0          0   3000  5.123456  2.345678  0.123456  2.345678  3.456789  5.123456  6.789012  7.890123  9.876543
 1          1   2000  6.789012  2.456789  0.234567  3.456789  4.567890  6.789012  8.901234  9.012345  10.987654
 ```
+
+#### `print_sutva_questions`
+
+```python
+print_sutva_questions() -> None
+```
+
+Print the SUTVA validation questions.
+
+Just prints questions, nothing more.
 
 #### `rct_design`
 
@@ -12021,3 +13025,30 @@ SRMResult(status=no SRM, p_value=1.00000, chi2=0.0000)
 >>> check_srm(counts, {"control": 0.5, "treatment": 0.5})
 SRMResult(status=SRM DETECTED, p_value=0.00006, chi2=16.0000)
 ```
+
+#### `sutva_validation`
+
+SUTVA validation helper.
+
+This module provides a simple function to print four SUTVA-related
+questions for the user to consider. It has no side effects on import.
+
+**Functions:**
+
+- [**print_sutva_questions**](#causalis.shared.sutva_validation.print_sutva_questions) – Print the SUTVA validation questions.
+
+##### `QUESTIONS`
+
+```python
+QUESTIONS: Iterable[str] = ('1.) Are your clients independent (i). Outcome of ones do not depend on others?', '2.) Are all clients have full window to measure metrics?', '3.) Do you measure confounders before treatment and outcome after?', '4.) Do you have a consistent label of treatment, such as if a person does not receive a treatment, he has a label 0?')
+```
+
+##### `print_sutva_questions`
+
+```python
+print_sutva_questions() -> None
+```
+
+Print the SUTVA validation questions.
+
+Just prints questions, nothing more.
