@@ -685,17 +685,23 @@ def _add_tweedie_pre(
     best_w = 1.0
     best_sigma = 0.0
     best_achieved = -1.0
+    best_pre_base: Optional[np.ndarray] = None
+    best_noise: Optional[np.ndarray] = None
     
     # Candidates for w_shared
     w_candidates = [1.0, 0.5, 2.0, 0.0, 4.0]
     
     for w in w_candidates:
         y_pre_w = sample_pre_base(w)
+        # Calibrate and materialize using the same noise realization to avoid
+        # target-correlation drift from re-sampling later.
+        noise_w = rng.normal(size=n)
         sigma, achieved = calibrate_sigma_for_target_corr(
             y_pre_base=y_pre_w[ctrl],
             y_post=y_post[ctrl],
             rng=rng,
-            spec=pre_spec
+            spec=pre_spec,
+            noise=noise_w[ctrl]
         )
         
         # If we hit the target (within tolerance), we prioritize smaller sigma 
@@ -706,6 +712,8 @@ def _add_tweedie_pre(
             best_w = w
             best_sigma = sigma
             best_achieved = achieved
+            best_pre_base = y_pre_w
+            best_noise = noise_w
             break
             
         # Otherwise, keep track of the one that gets closest to the target
@@ -713,11 +721,14 @@ def _add_tweedie_pre(
             best_w = w
             best_sigma = sigma
             best_achieved = achieved
+            best_pre_base = y_pre_w
+            best_noise = noise_w
 
-    # Generate final y_pre using the best w and calibrated sigma
-    y_pre_final_base = sample_pre_base(best_w)
-    noise = rng.normal(size=n)
-    df[pre_name] = y_pre_final_base + best_sigma * noise
+    # Materialize exactly from the calibrated draw to preserve target behavior.
+    if best_pre_base is None or best_noise is None:
+        best_pre_base = sample_pre_base(best_w)
+        best_noise = rng.normal(size=n)
+    df[pre_name] = best_pre_base + best_sigma * best_noise
     return df
 
 
@@ -730,7 +741,7 @@ def make_cuped_tweedie(
     pre_spec: Optional[PreCorrSpec] = None,
     include_oracle: bool = False,
     return_causal_data: bool = True,
-    theta_log: float = 0.1
+    theta_log: float = 0.2
 ) -> Union[pd.DataFrame, CausalData]:
     """
     Tweedie-like DGP with mixed marginals and structured HTE.
@@ -755,7 +766,7 @@ def make_cuped_tweedie(
         Whether to include oracle ground-truth columns like 'cate', 'propensity', etc.
     return_causal_data : bool, default=True
         Whether to return a CausalData object.
-    theta_log : float, default=0.1
+    theta_log : float, default=0.2
         The log-uplift theta parameter for the treatment effect.
 
     Returns
@@ -833,6 +844,9 @@ def make_cuped_tweedie(
             A=A,
             pre_spec=pre_spec
         )
+        if include_oracle:
+            # Expose the shared latent used to construct both y and y_pre for downstream diagnostics.
+            df["_latent_A"] = A
     else:
         df = gen.generate(n)
 
@@ -840,6 +854,191 @@ def make_cuped_tweedie(
         return df
 
     # Re-infer confounders including y_pre
+    exclude = {"y", "d", "m", "m_obs", "tau_link", "g0", "g1", "cate", "user_id", "_latent_A"}
+    confounder_cols = [
+        c for c in df.columns
+        if c not in exclude and pd.api.types.is_numeric_dtype(df[c])
+    ]
+    return CausalData(
+        df=df,
+        treatment="d",
+        outcome="y",
+        confounders=confounder_cols
+    )
+
+
+def generate_cuped_binary(
+    n: int = 10000,
+    seed: int = 42,
+    add_pre: bool = True,
+    pre_name: str = "y_pre",
+    pre_target_corr: float = 0.65,
+    pre_spec: Optional[PreCorrSpec] = None,
+    include_oracle: bool = True,
+    return_causal_data: bool = True,
+    theta_logit: float = 0.38
+) -> Union[pd.DataFrame, CausalData]:
+    """
+    Binary CUPED-oriented DGP with richer confounders and structured HTE.
+
+    Designed for CUPED benchmarking with randomized treatment and a calibrated
+    pre-period covariate while preserving exact oracle cate under include_oracle.
+
+    Parameters
+    ----------
+    n : int, default=10000
+        Number of samples to generate.
+    seed : int, default=42
+        Random seed.
+    add_pre : bool, default=True
+        Whether to add a pre-period covariate.
+    pre_name : str, default="y_pre"
+        Name of the pre-period covariate column.
+    pre_target_corr : float, default=0.65
+        Target correlation between y_pre and post-outcome y in the control group.
+    pre_spec : PreCorrSpec, optional
+        Detailed specification for pre-period calibration.
+        If provided, `pre_target_corr` is ignored in favor of `pre_spec.target_corr`.
+    include_oracle : bool, default=True
+        Whether to include oracle columns like m, g0, g1, cate.
+    return_causal_data : bool, default=True
+        Whether to return a CausalData object.
+    theta_logit : float, default=0.38
+        Baseline log-odds uplift scale for heterogeneous treatment effects.
+
+    Returns
+    -------
+    pd.DataFrame or CausalData
+    """
+    confounder_specs = [
+        {"name": "tenure_months",     "dist": "lognormal", "mu": 2.5, "sigma": 0.5},
+        {"name": "spend_last_month",  "dist": "lognormal", "mu": 4.0, "sigma": 0.8},
+        {"name": "discount_rate",     "dist": "beta",      "mean": 0.1, "kappa": 20},
+        {"name": "support_tickets",   "dist": "poisson",   "lam": 1.8},
+        {"name": "email_open_rate",   "dist": "beta",      "mean": 0.45, "kappa": 14},
+        {"name": "referral_count",    "dist": "poisson",   "lam": 0.8},
+        {"name": "plan_tier",         "dist": "categorical",
+         "categories": ["free", "plus", "pro"],
+         "probs": [0.55, 0.30, 0.15]},
+        {"name": "region",            "dist": "categorical",
+         "categories": ["na", "eu"],
+         "probs": [0.80, 0.20]},
+    ]
+
+    # Get expanded column names once so tau/g_y can reliably index one-hot columns.
+    tmp_gen = CausalDatasetGenerator(
+        confounder_specs=confounder_specs,
+        seed=seed
+    )
+    _, names = tmp_gen._sample_X(1)
+    col_map = {name: i for i, name in enumerate(names)}
+
+    def _col(X: np.ndarray, name: str) -> np.ndarray:
+        idx = col_map.get(name)
+        if idx is None:
+            return np.zeros(X.shape[0], dtype=float)
+        return X[:, idx]
+
+    def baseline_logit_fn(X: np.ndarray) -> np.ndarray:
+        # Keep baseline effects moderate to preserve overlap in binary outcomes.
+        tenure_log = np.log1p(_col(X, "tenure_months"))
+        spend_log = np.log1p(_col(X, "spend_last_month"))
+        discount = _col(X, "discount_rate")
+        tickets_log = np.log1p(_col(X, "support_tickets"))
+        open_rate = _col(X, "email_open_rate")
+        referral_log = np.log1p(_col(X, "referral_count"))
+        plan_plus = _col(X, "plan_tier_plus")
+        plan_pro = _col(X, "plan_tier_pro")
+        region_eu = _col(X, "region_eu")
+
+        return (
+            0.18 * (tenure_log - 2.4)
+            + 0.14 * (spend_log - 4.0)
+            - 0.95 * discount
+            - 0.10 * tickets_log
+            + 0.35 * open_rate
+            + 0.08 * referral_log
+            + 0.15 * plan_plus
+            + 0.28 * plan_pro
+            + 0.05 * region_eu
+        )
+
+    def tau_fn(X: np.ndarray) -> np.ndarray:
+        tenure = _col(X, "tenure_months")
+        spend_log = np.log1p(_col(X, "spend_last_month"))
+        open_rate = _col(X, "email_open_rate")
+        tickets = _col(X, "support_tickets")
+        referrals = _col(X, "referral_count")
+        plan_plus = _col(X, "plan_tier_plus")
+        plan_pro = _col(X, "plan_tier_pro")
+        region_eu = _col(X, "region_eu")
+
+        g_t = 1.0 / (1.0 + np.exp(-0.20 * (tenure - 10.0)))
+        g_sp = 1.0 / (1.0 + np.exp(-0.55 * (spend_log - 4.0)))
+        g_o = 0.85 + 0.35 * open_rate
+        # Heterogeneous modifiers: high support friction dampens effect,
+        # while organic referral behavior amplifies it.
+        g_ticket = 1.0 / (1.0 + np.exp(0.45 * (tickets - 2.5)))
+        g_ref = 0.90 + 0.18 * np.tanh(0.8 * referrals)
+        seg = 1.0 + 0.12 * plan_plus + 0.26 * plan_pro + 0.06 * region_eu
+
+        tau_raw = theta_logit * g_t * g_sp * g_o * g_ticket * g_ref * seg
+        return np.clip(tau_raw, 0.0, 2.0 * theta_logit)
+
+    alpha_y = -1.4
+    # Shared latent prognostic signal makes y_pre materially informative for CUPED
+    # while preserving randomization-based identification (u_strength_d stays 0).
+    shared_strength = 1.2 if add_pre else 0.0
+
+    gen = CausalDatasetGenerator(
+        outcome_type="binary",
+        alpha_y=alpha_y,
+        alpha_d=_logit(0.5),
+        g_y=baseline_logit_fn,
+        tau=tau_fn,
+        confounder_specs=confounder_specs,
+        u_strength_d=0.0,
+        u_strength_y=shared_strength,
+        include_oracle=include_oracle,
+        seed=seed
+    )
+
+    if add_pre:
+        rng = np.random.default_rng(seed)
+        A = rng.normal(size=n)
+        df = gen.generate(n, U=A)
+
+        def base_builder(df_in: pd.DataFrame) -> np.ndarray:
+            X = df_in[names].to_numpy(dtype=float)
+            # Probability-scale baseline aligned with binary outcome is more reliable
+            # for variance reduction than raw logit score.
+            lin0 = (
+                float(alpha_y)
+                + np.asarray(baseline_logit_fn(X), dtype=float).reshape(-1)
+                + float(shared_strength) * A
+            )
+            p0 = np.asarray(_sigmoid(np.clip(lin0, -20.0, 20.0)), dtype=float).reshape(-1)
+            return p0 - float(p0.mean())
+
+        spec = pre_spec or PreCorrSpec(
+            target_corr=pre_target_corr,
+            transform="none"
+        )
+        df = add_preperiod_covariate(
+            df=df,
+            y_col="y",
+            d_col="d",
+            pre_name=pre_name,
+            base_builder=base_builder,
+            spec=spec,
+            rng=rng
+        )
+    else:
+        df = gen.generate(n)
+
+    if not return_causal_data:
+        return df
+
     exclude = {"y", "d", "m", "m_obs", "tau_link", "g0", "g1", "cate", "user_id"}
     confounder_cols = [
         c for c in df.columns

@@ -11,6 +11,8 @@ from causalis.dgp import (
     make_gold_linear, obs_linear_26_dataset,
     generate_classic_rct_26,
     classic_rct_gamma_26,
+    generate_cuped_binary,
+    make_cuped_binary_26,
     CausalDatasetGenerator
 )
 
@@ -28,5 +30,7 @@ __all__ = [
     "make_gold_linear", "obs_linear_26_dataset",
     "generate_classic_rct_26",
     "classic_rct_gamma_26",
+    "generate_cuped_binary",
+    "make_cuped_binary_26",
     "CausalDatasetGenerator",
 ]

@@ -44,3 +44,50 @@ def test_g_columns_marginalize_over_u_for_binary_when_u_strength_y_nonzero():
     g1_theory = g1_fn(np.empty((0,), dtype=float))
     assert abs(df["g0"].mean() - g0_theory) < 1e-6
     assert abs(df["g1"].mean() - g1_theory) < 1e-6
+
+
+def test_tweedie_g_columns_marginalize_over_u_when_latent_u_enters_zi_and_y():
+    theta = 0.4
+    tau_zi = 0.25
+    alpha_y = 1.1
+    alpha_zi = -0.3
+    u_strength_y = 0.8
+    u_strength_zi = 0.6
+
+    gen = CausalDatasetGenerator(
+        theta=theta,
+        tau_zi=lambda X: np.full(X.shape[0], tau_zi, dtype=float),
+        beta_y=None,
+        beta_d=None,
+        alpha_y=alpha_y,
+        alpha_zi=alpha_zi,
+        outcome_type="tweedie",
+        pos_dist="gamma",
+        gamma_shape=2.0,
+        k=0,
+        u_strength_d=0.0,
+        u_strength_y=u_strength_y,
+        u_strength_zi=u_strength_zi,
+        include_oracle=True,
+        seed=321,
+    )
+    df = gen.generate(2000)
+
+    # No X, so oracle columns should be row-constant.
+    assert np.allclose(df["g0"].to_numpy(), df["g0"].iloc[0])
+    assert np.allclose(df["g1"].to_numpy(), df["g1"].iloc[0])
+
+    gh_x, gh_w = np.polynomial.hermite.hermgauss(21)
+    gh_w = gh_w / np.sqrt(np.pi)
+    uq = np.sqrt(2.0) * gh_x
+
+    zi0 = alpha_zi + u_strength_zi * uq
+    zi1 = alpha_zi + tau_zi + u_strength_zi * uq
+    loc0 = alpha_y + u_strength_y * uq
+    loc1 = alpha_y + theta + u_strength_y * uq
+
+    g0_ref = float(np.sum(_sigmoid(zi0) * np.exp(np.clip(loc0, -20.0, 20.0)) * gh_w))
+    g1_ref = float(np.sum(_sigmoid(zi1) * np.exp(np.clip(loc1, -20.0, 20.0)) * gh_w))
+
+    assert abs(df["g0"].mean() - g0_ref) < 1e-10
+    assert abs(df["g1"].mean() - g1_ref) < 1e-10

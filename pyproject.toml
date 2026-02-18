@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "causalis"
-version = "0.1.5"
+version = "0.1.6"
 description = "A Python toolkit for causal inference and experimentation"
 readme = "README.md"
 authors = [
@@ -13,14 +13,13 @@ authors = [
 license = {text = "MIT"}
 classifiers = [
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
 ]
-requires-python = ">=3.9"
+requires-python = ">=3.10,<3.13"
 dependencies = [
     "numpy",
     "pandas",

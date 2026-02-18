@@ -95,3 +95,5 @@ Thumbs.db
 /content/
 /notebooks/research/some_testing/
 /some_testing/
+/.venv
+/.venv39

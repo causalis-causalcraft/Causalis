@@ -36,7 +36,9 @@ Causalis: A Python package for causal inference.
 - [**classic_rct_gamma_26**](#causalis.data_contracts.classic_rct_gamma_26) – A pre-configured classic RCT dataset with a gamma outcome.
 - [**generate_classic_rct**](#causalis.data_contracts.generate_classic_rct) – Generate a classic RCT dataset with three binary confounders:
 - [**generate_classic_rct_26**](#causalis.data_contracts.generate_classic_rct_26) – A pre-configured classic RCT dataset with 3 binary confounders.
+- [**generate_cuped_binary**](#causalis.data_contracts.generate_cuped_binary) – Binary CUPED-oriented DGP with richer confounders and structured HTE.
 - [**generate_rct**](#causalis.data_contracts.generate_rct) – Generate an RCT dataset with randomized treatment assignment.
+- [**make_cuped_binary_26**](#causalis.data_contracts.make_cuped_binary_26) – Binary CUPED benchmark with richer confounders and structured HTE.
 - [**make_gold_linear**](#causalis.data_contracts.make_gold_linear) – A standard linear benchmark with moderate confounding.
 - [**obs_linear_26_dataset**](#causalis.data_contracts.obs_linear_26_dataset) – A pre-configured observational linear dataset with 5 standard confounders.
 - [**obs_linear_effect**](#causalis.data_contracts.obs_linear_effect) – Generate an observational dataset with linear effects of confounders and a constant treatment effect.
@@ -1946,6 +1948,34 @@ deterministic `user_id` column.
 
 - <code>[CausalData](#causalis.dgp.causaldata.CausalData) or [DataFrame](#pandas.DataFrame)</code> –
 
+#### `generate_cuped_binary`
+
+```python
+generate_cuped_binary(n: int = 10000, seed: int = 42, add_pre: bool = True, pre_name: str = 'y_pre', pre_target_corr: float = 0.65, pre_spec: Optional[PreCorrSpec] = None, include_oracle: bool = True, return_causal_data: bool = True, theta_logit: float = 0.38) -> Union[pd.DataFrame, CausalData]
+```
+
+Binary CUPED-oriented DGP with richer confounders and structured HTE.
+
+Designed for CUPED benchmarking with randomized treatment and a calibrated
+pre-period covariate while preserving exact oracle cate under include_oracle.
+
+**Parameters:**
+
+- **n** (<code>[int](#int)</code>) – Number of samples to generate.
+- **seed** (<code>[int](#int)</code>) – Random seed.
+- **add_pre** (<code>[bool](#bool)</code>) – Whether to add a pre-period covariate.
+- **pre_name** (<code>[str](#str)</code>) – Name of the pre-period covariate column.
+- **pre_target_corr** (<code>[float](#float)</code>) – Target correlation between y_pre and post-outcome y in the control group.
+- **pre_spec** (<code>[PreCorrSpec](#causalis.dgp.causaldata.preperiod.PreCorrSpec)</code>) – Detailed specification for pre-period calibration.
+  If provided, `pre_target_corr` is ignored in favor of `pre_spec.target_corr`.
+- **include_oracle** (<code>[bool](#bool)</code>) – Whether to include oracle columns like m, g0, g1, cate.
+- **return_causal_data** (<code>[bool](#bool)</code>) – Whether to return a CausalData object.
+- **theta_logit** (<code>[float](#float)</code>) – Baseline log-odds uplift scale for heterogeneous treatment effects.
+
+**Returns:**
+
+- <code>[DataFrame](#pandas.DataFrame) or [CausalData](#causalis.dgp.causaldata.CausalData)</code> –
+
 #### `generate_rct`
 
 ```python
@@ -1992,6 +2022,32 @@ avoiding outcome leakage and post-treatment adjustment issues.
 **Returns:**
 
 - <code>[DataFrame](#pandas.DataFrame) or [CausalData](#causalis.dgp.causaldata.CausalData)</code> – Synthetic RCT dataset.
+
+#### `make_cuped_binary_26`
+
+```python
+make_cuped_binary_26(n: int = 10000, seed: int = 42, add_pre: bool = True, pre_name: str = 'y_pre', pre_target_corr: float = 0.65, pre_spec: Optional[PreCorrSpec] = None, include_oracle: bool = True, return_causal_data: bool = True, theta_logit: float = 0.38) -> Union[pd.DataFrame, CausalData]
+```
+
+Binary CUPED benchmark with richer confounders and structured HTE.
+Includes a calibrated pre-period covariate 'y_pre' by default.
+Wrapper for generate_cuped_binary().
+
+**Parameters:**
+
+- **n** (<code>[int](#int)</code>) – Number of samples to generate.
+- **seed** (<code>[int](#int)</code>) – Random seed.
+- **add_pre** (<code>[bool](#bool)</code>) – Whether to add a pre-period covariate 'y_pre'.
+- **pre_name** (<code>[str](#str)</code>) – Name of the pre-period covariate column.
+- **pre_target_corr** (<code>[float](#float)</code>) – Target correlation between y_pre and post-outcome y in the control group.
+- **pre_spec** (<code>[PreCorrSpec](#causalis.dgp.causaldata.preperiod.PreCorrSpec)</code>) – Detailed specification for pre-period calibration (transform, method, etc.).
+- **include_oracle** (<code>[bool](#bool)</code>) – Whether to include oracle columns like 'cate', 'g0', and 'g1'.
+- **return_causal_data** (<code>[bool](#bool)</code>) – Whether to return a CausalData object.
+- **theta_logit** (<code>[float](#float)</code>) – Baseline log-odds uplift scale for heterogeneous treatment effects.
+
+**Returns:**
+
+- <code>[DataFrame](#pandas.DataFrame) or [CausalData](#causalis.dgp.causaldata.CausalData)</code> –
 
 #### `make_gold_linear`
 
@@ -2433,10 +2489,12 @@ Generate an observational dataset with linear effects of confounders and a const
 - [**classic_rct_gamma_26**](#causalis.dgp.classic_rct_gamma_26) – A pre-configured classic RCT dataset with a gamma outcome.
 - [**generate_classic_rct**](#causalis.dgp.generate_classic_rct) – Generate a classic RCT dataset with three binary confounders:
 - [**generate_classic_rct_26**](#causalis.dgp.generate_classic_rct_26) – A pre-configured classic RCT dataset with 3 binary confounders.
+- [**generate_cuped_binary**](#causalis.dgp.generate_cuped_binary) – Binary CUPED-oriented DGP with richer confounders and structured HTE.
+- [**generate_cuped_tweedie_26**](#causalis.dgp.generate_cuped_tweedie_26) – Gold standard Tweedie-like DGP with mixed marginals and structured HTE.
 - [**generate_iv_data**](#causalis.dgp.generate_iv_data) – Generate synthetic dataset with instrumental variables.
 - [**generate_rct**](#causalis.dgp.generate_rct) – Generate an RCT dataset with randomized treatment assignment.
+- [**make_cuped_binary_26**](#causalis.dgp.make_cuped_binary_26) – Binary CUPED benchmark with richer confounders and structured HTE.
 - [**make_cuped_tweedie**](#causalis.dgp.make_cuped_tweedie) – Tweedie-like DGP with mixed marginals and structured HTE.
-- [**make_cuped_tweedie_26**](#causalis.dgp.make_cuped_tweedie_26) – Gold standard Tweedie-like DGP with mixed marginals and structured HTE.
 - [**make_gold_linear**](#causalis.dgp.make_gold_linear) – A standard linear benchmark with moderate confounding.
 - [**obs_linear_26_dataset**](#causalis.dgp.obs_linear_26_dataset) – A pre-configured observational linear dataset with 5 standard confounders.
 - [**obs_linear_effect**](#causalis.dgp.obs_linear_effect) – Generate an observational dataset with linear effects of confounders and a constant treatment effect.
@@ -2789,11 +2847,13 @@ Uses rank -> normal scores -> Pearson correlation approach.
 - [**classic_rct_gamma_26**](#causalis.dgp.causaldata.classic_rct_gamma_26) – A pre-configured classic RCT dataset with a gamma outcome.
 - [**generate_classic_rct**](#causalis.dgp.causaldata.generate_classic_rct) – Generate a classic RCT dataset with three binary confounders:
 - [**generate_classic_rct_26**](#causalis.dgp.causaldata.generate_classic_rct_26) – A pre-configured classic RCT dataset with 3 binary confounders.
+- [**generate_cuped_binary**](#causalis.dgp.causaldata.generate_cuped_binary) – Binary CUPED-oriented DGP with richer confounders and structured HTE.
+- [**generate_cuped_tweedie_26**](#causalis.dgp.causaldata.generate_cuped_tweedie_26) – Gold standard Tweedie-like DGP with mixed marginals and structured HTE.
 - [**generate_obs_hte_26**](#causalis.dgp.causaldata.generate_obs_hte_26) – Observational dataset with nonlinear outcome model, nonlinear treatment assignment,
 - [**generate_obs_hte_26_rich**](#causalis.dgp.causaldata.generate_obs_hte_26_rich) – Observational dataset with richer confounding, nonlinear outcome model,
 - [**generate_rct**](#causalis.dgp.causaldata.generate_rct) – Generate an RCT dataset with randomized treatment assignment.
+- [**make_cuped_binary_26**](#causalis.dgp.causaldata.make_cuped_binary_26) – Binary CUPED benchmark with richer confounders and structured HTE.
 - [**make_cuped_tweedie**](#causalis.dgp.causaldata.make_cuped_tweedie) – Tweedie-like DGP with mixed marginals and structured HTE.
-- [**make_cuped_tweedie_26**](#causalis.dgp.causaldata.make_cuped_tweedie_26) – Gold standard Tweedie-like DGP with mixed marginals and structured HTE.
 - [**make_gold_linear**](#causalis.dgp.causaldata.make_gold_linear) – A standard linear benchmark with moderate confounding.
 - [**obs_linear_26_dataset**](#causalis.dgp.causaldata.obs_linear_26_dataset) – A pre-configured observational linear dataset with 5 standard confounders.
 - [**obs_linear_effect**](#causalis.dgp.causaldata.obs_linear_effect) – Generate an observational dataset with linear effects of confounders and a constant treatment effect.
@@ -3666,6 +3726,7 @@ Includes deterministic `user_id` and ancillary columns.
 
 - [**classic_rct_gamma**](#causalis.dgp.causaldata.functional.classic_rct_gamma) – Generate a classic RCT dataset with three binary confounders and a gamma outcome.
 - [**generate_classic_rct**](#causalis.dgp.causaldata.functional.generate_classic_rct) – Generate a classic RCT dataset with three binary confounders:
+- [**generate_cuped_binary**](#causalis.dgp.causaldata.functional.generate_cuped_binary) – Binary CUPED-oriented DGP with richer confounders and structured HTE.
 - [**generate_rct**](#causalis.dgp.causaldata.functional.generate_rct) – Generate an RCT dataset with randomized treatment assignment.
 - [**make_cuped_tweedie**](#causalis.dgp.causaldata.functional.make_cuped_tweedie) – Tweedie-like DGP with mixed marginals and structured HTE.
 - [**make_gold_linear**](#causalis.dgp.causaldata.functional.make_gold_linear) – A standard linear benchmark with moderate confounding.
@@ -3736,6 +3797,34 @@ platform_ios, country_usa, and source_paid.
 
 - <code>[DataFrame](#pandas.DataFrame) or [CausalData](#causalis.dgp.causaldata.CausalData)</code> – Synthetic classic RCT dataset.
 
+###### `generate_cuped_binary`
+
+```python
+generate_cuped_binary(n: int = 10000, seed: int = 42, add_pre: bool = True, pre_name: str = 'y_pre', pre_target_corr: float = 0.65, pre_spec: Optional[PreCorrSpec] = None, include_oracle: bool = True, return_causal_data: bool = True, theta_logit: float = 0.38) -> Union[pd.DataFrame, CausalData]
+```
+
+Binary CUPED-oriented DGP with richer confounders and structured HTE.
+
+Designed for CUPED benchmarking with randomized treatment and a calibrated
+pre-period covariate while preserving exact oracle cate under include_oracle.
+
+**Parameters:**
+
+- **n** (<code>[int](#int)</code>) – Number of samples to generate.
+- **seed** (<code>[int](#int)</code>) – Random seed.
+- **add_pre** (<code>[bool](#bool)</code>) – Whether to add a pre-period covariate.
+- **pre_name** (<code>[str](#str)</code>) – Name of the pre-period covariate column.
+- **pre_target_corr** (<code>[float](#float)</code>) – Target correlation between y_pre and post-outcome y in the control group.
+- **pre_spec** (<code>[PreCorrSpec](#causalis.dgp.causaldata.preperiod.PreCorrSpec)</code>) – Detailed specification for pre-period calibration.
+  If provided, `pre_target_corr` is ignored in favor of `pre_spec.target_corr`.
+- **include_oracle** (<code>[bool](#bool)</code>) – Whether to include oracle columns like m, g0, g1, cate.
+- **return_causal_data** (<code>[bool](#bool)</code>) – Whether to return a CausalData object.
+- **theta_logit** (<code>[float](#float)</code>) – Baseline log-odds uplift scale for heterogeneous treatment effects.
+
+**Returns:**
+
+- <code>[DataFrame](#pandas.DataFrame) or [CausalData](#causalis.dgp.causaldata.CausalData)</code> –
+
 ###### `generate_rct`
 
 ```python
@@ -3786,7 +3875,7 @@ avoiding outcome leakage and post-treatment adjustment issues.
 ###### `make_cuped_tweedie`
 
 ```python
-make_cuped_tweedie(n: int = 10000, seed: int = 42, add_pre: bool = True, pre_name: str = 'y_pre', pre_target_corr: float = 0.6, pre_spec: Optional[PreCorrSpec] = None, include_oracle: bool = False, return_causal_data: bool = True, theta_log: float = 0.1) -> Union[pd.DataFrame, CausalData]
+make_cuped_tweedie(n: int = 10000, seed: int = 42, add_pre: bool = True, pre_name: str = 'y_pre', pre_target_corr: float = 0.6, pre_spec: Optional[PreCorrSpec] = None, include_oracle: bool = False, return_causal_data: bool = True, theta_log: float = 0.2) -> Union[pd.DataFrame, CausalData]
 ```
 
 Tweedie-like DGP with mixed marginals and structured HTE.
@@ -3909,6 +3998,65 @@ deterministic `user_id` column.
 
 - <code>[CausalData](#causalis.dgp.causaldata.CausalData) or [DataFrame](#pandas.DataFrame)</code> –
 
+##### `generate_cuped_binary`
+
+```python
+generate_cuped_binary(n: int = 10000, seed: int = 42, add_pre: bool = True, pre_name: str = 'y_pre', pre_target_corr: float = 0.65, pre_spec: Optional[PreCorrSpec] = None, include_oracle: bool = True, return_causal_data: bool = True, theta_logit: float = 0.38) -> Union[pd.DataFrame, CausalData]
+```
+
+Binary CUPED-oriented DGP with richer confounders and structured HTE.
+
+Designed for CUPED benchmarking with randomized treatment and a calibrated
+pre-period covariate while preserving exact oracle cate under include_oracle.
+
+**Parameters:**
+
+- **n** (<code>[int](#int)</code>) – Number of samples to generate.
+- **seed** (<code>[int](#int)</code>) – Random seed.
+- **add_pre** (<code>[bool](#bool)</code>) – Whether to add a pre-period covariate.
+- **pre_name** (<code>[str](#str)</code>) – Name of the pre-period covariate column.
+- **pre_target_corr** (<code>[float](#float)</code>) – Target correlation between y_pre and post-outcome y in the control group.
+- **pre_spec** (<code>[PreCorrSpec](#causalis.dgp.causaldata.preperiod.PreCorrSpec)</code>) – Detailed specification for pre-period calibration.
+  If provided, `pre_target_corr` is ignored in favor of `pre_spec.target_corr`.
+- **include_oracle** (<code>[bool](#bool)</code>) – Whether to include oracle columns like m, g0, g1, cate.
+- **return_causal_data** (<code>[bool](#bool)</code>) – Whether to return a CausalData object.
+- **theta_logit** (<code>[float](#float)</code>) – Baseline log-odds uplift scale for heterogeneous treatment effects.
+
+**Returns:**
+
+- <code>[DataFrame](#pandas.DataFrame) or [CausalData](#causalis.dgp.causaldata.CausalData)</code> –
+
+##### `generate_cuped_tweedie_26`
+
+```python
+generate_cuped_tweedie_26(n: int = 20000, seed: int = 42, add_pre: bool = True, pre_name: str = 'y_pre', pre_name_2: Optional[str] = None, pre_target_corr: float = 0.82, pre_target_corr_2: Optional[float] = None, pre_spec: Optional[PreCorrSpec] = None, include_oracle: bool = False, return_causal_data: bool = True, theta_log: float = 0.38) -> Union[pd.DataFrame, CausalData]
+```
+
+Gold standard Tweedie-like DGP with mixed marginals and structured HTE.
+Features many zeros and a heavy right tail.
+Includes two pre-period covariates by default: 'y_pre' and 'y_pre_2'.
+Wrapper for make_tweedie().
+
+**Parameters:**
+
+- **n** (<code>[int](#int)</code>) – Number of samples to generate.
+- **seed** (<code>[int](#int)</code>) – Random seed.
+- **add_pre** (<code>[bool](#bool)</code>) – Whether to add pre-period covariates.
+- **pre_name** (<code>[str](#str)</code>) – Name of the first pre-period covariate column.
+- **pre_name_2** (<code>[str](#str)</code>) – Name of the second pre-period covariate column.
+  Defaults to `f"{pre_name}_2"`.
+- **pre_target_corr** (<code>[float](#float)</code>) – Target correlation between the first pre covariate and post-outcome y in control group.
+- **pre_target_corr_2** (<code>[float](#float)</code>) – Target correlation for the second pre covariate. Defaults to a
+  moderate value based on `pre_target_corr` to reduce collinearity.
+- **pre_spec** (<code>[PreCorrSpec](#causalis.dgp.causaldata.preperiod.PreCorrSpec)</code>) – Detailed specification for pre-period calibration (transform, method, etc.).
+- **include_oracle** (<code>[bool](#bool)</code>) – Whether to include oracle ground-truth columns like 'cate', 'propensity', etc.
+- **return_causal_data** (<code>[bool](#bool)</code>) – Whether to return a CausalData object.
+- **theta_log** (<code>[float](#float)</code>) – The log-uplift theta parameter for the treatment effect.
+
+**Returns:**
+
+- <code>[DataFrame](#pandas.DataFrame) or [CausalData](#causalis.dgp.causaldata.CausalData)</code> –
+
 ##### `generate_obs_hte_26`
 
 ```python
@@ -3990,10 +4138,36 @@ avoiding outcome leakage and post-treatment adjustment issues.
 
 - <code>[DataFrame](#pandas.DataFrame) or [CausalData](#causalis.dgp.causaldata.CausalData)</code> – Synthetic RCT dataset.
 
+##### `make_cuped_binary_26`
+
+```python
+make_cuped_binary_26(n: int = 10000, seed: int = 42, add_pre: bool = True, pre_name: str = 'y_pre', pre_target_corr: float = 0.65, pre_spec: Optional[PreCorrSpec] = None, include_oracle: bool = True, return_causal_data: bool = True, theta_logit: float = 0.38) -> Union[pd.DataFrame, CausalData]
+```
+
+Binary CUPED benchmark with richer confounders and structured HTE.
+Includes a calibrated pre-period covariate 'y_pre' by default.
+Wrapper for generate_cuped_binary().
+
+**Parameters:**
+
+- **n** (<code>[int](#int)</code>) – Number of samples to generate.
+- **seed** (<code>[int](#int)</code>) – Random seed.
+- **add_pre** (<code>[bool](#bool)</code>) – Whether to add a pre-period covariate 'y_pre'.
+- **pre_name** (<code>[str](#str)</code>) – Name of the pre-period covariate column.
+- **pre_target_corr** (<code>[float](#float)</code>) – Target correlation between y_pre and post-outcome y in the control group.
+- **pre_spec** (<code>[PreCorrSpec](#causalis.dgp.causaldata.preperiod.PreCorrSpec)</code>) – Detailed specification for pre-period calibration (transform, method, etc.).
+- **include_oracle** (<code>[bool](#bool)</code>) – Whether to include oracle columns like 'cate', 'g0', and 'g1'.
+- **return_causal_data** (<code>[bool](#bool)</code>) – Whether to return a CausalData object.
+- **theta_logit** (<code>[float](#float)</code>) – Baseline log-odds uplift scale for heterogeneous treatment effects.
+
+**Returns:**
+
+- <code>[DataFrame](#pandas.DataFrame) or [CausalData](#causalis.dgp.causaldata.CausalData)</code> –
+
 ##### `make_cuped_tweedie`
 
 ```python
-make_cuped_tweedie(n: int = 10000, seed: int = 42, add_pre: bool = True, pre_name: str = 'y_pre', pre_target_corr: float = 0.6, pre_spec: Optional[PreCorrSpec] = None, include_oracle: bool = False, return_causal_data: bool = True, theta_log: float = 0.1) -> Union[pd.DataFrame, CausalData]
+make_cuped_tweedie(n: int = 10000, seed: int = 42, add_pre: bool = True, pre_name: str = 'y_pre', pre_target_corr: float = 0.6, pre_spec: Optional[PreCorrSpec] = None, include_oracle: bool = False, return_causal_data: bool = True, theta_log: float = 0.2) -> Union[pd.DataFrame, CausalData]
 ```
 
 Tweedie-like DGP with mixed marginals and structured HTE.
@@ -4008,33 +4182,6 @@ Features many zeros and a heavy right tail. Suitable for CUPED benchmarking.
 - **pre_target_corr** (<code>[float](#float)</code>) – Target correlation between y_pre and post-outcome y in control group.
 - **pre_spec** (<code>[PreCorrSpec](#causalis.dgp.causaldata.preperiod.PreCorrSpec)</code>) – Detailed specification for pre-period calibration (transform, method, etc.).
   If provided, `pre_target_corr` is ignored in favor of `pre_spec.target_corr`.
-- **include_oracle** (<code>[bool](#bool)</code>) – Whether to include oracle ground-truth columns like 'cate', 'propensity', etc.
-- **return_causal_data** (<code>[bool](#bool)</code>) – Whether to return a CausalData object.
-- **theta_log** (<code>[float](#float)</code>) – The log-uplift theta parameter for the treatment effect.
-
-**Returns:**
-
-- <code>[DataFrame](#pandas.DataFrame) or [CausalData](#causalis.dgp.causaldata.CausalData)</code> –
-
-##### `make_cuped_tweedie_26`
-
-```python
-make_cuped_tweedie_26(n: int = 100000, seed: int = 42, add_pre: bool = True, pre_name: str = 'y_pre', pre_target_corr: float = 0.6, pre_spec: Optional[PreCorrSpec] = None, include_oracle: bool = False, return_causal_data: bool = True, theta_log: float = 0.2) -> Union[pd.DataFrame, CausalData]
-```
-
-Gold standard Tweedie-like DGP with mixed marginals and structured HTE.
-Features many zeros and a heavy right tail.
-Includes a pre-period covariate 'y_pre' by default, making it suitable for CUPED benchmarks.
-Wrapper for make_tweedie().
-
-**Parameters:**
-
-- **n** (<code>[int](#int)</code>) – Number of samples to generate.
-- **seed** (<code>[int](#int)</code>) – Random seed.
-- **add_pre** (<code>[bool](#bool)</code>) – Whether to add a pre-period covariate 'y_pre'.
-- **pre_name** (<code>[str](#str)</code>) – Name of the pre-period covariate column.
-- **pre_target_corr** (<code>[float](#float)</code>) – Target correlation between y_pre and post-outcome y in control group.
-- **pre_spec** (<code>[PreCorrSpec](#causalis.dgp.causaldata.preperiod.PreCorrSpec)</code>) – Detailed specification for pre-period calibration (transform, method, etc.).
 - **include_oracle** (<code>[bool](#bool)</code>) – Whether to include oracle ground-truth columns like 'cate', 'propensity', etc.
 - **return_causal_data** (<code>[bool](#bool)</code>) – Whether to return a CausalData object.
 - **theta_log** (<code>[float](#float)</code>) – The log-uplift theta parameter for the treatment effect.
@@ -4478,6 +4625,65 @@ deterministic `user_id` column.
 
 - <code>[CausalData](#causalis.dgp.causaldata.CausalData) or [DataFrame](#pandas.DataFrame)</code> –
 
+#### `generate_cuped_binary`
+
+```python
+generate_cuped_binary(n: int = 10000, seed: int = 42, add_pre: bool = True, pre_name: str = 'y_pre', pre_target_corr: float = 0.65, pre_spec: Optional[PreCorrSpec] = None, include_oracle: bool = True, return_causal_data: bool = True, theta_logit: float = 0.38) -> Union[pd.DataFrame, CausalData]
+```
+
+Binary CUPED-oriented DGP with richer confounders and structured HTE.
+
+Designed for CUPED benchmarking with randomized treatment and a calibrated
+pre-period covariate while preserving exact oracle cate under include_oracle.
+
+**Parameters:**
+
+- **n** (<code>[int](#int)</code>) – Number of samples to generate.
+- **seed** (<code>[int](#int)</code>) – Random seed.
+- **add_pre** (<code>[bool](#bool)</code>) – Whether to add a pre-period covariate.
+- **pre_name** (<code>[str](#str)</code>) – Name of the pre-period covariate column.
+- **pre_target_corr** (<code>[float](#float)</code>) – Target correlation between y_pre and post-outcome y in the control group.
+- **pre_spec** (<code>[PreCorrSpec](#causalis.dgp.causaldata.preperiod.PreCorrSpec)</code>) – Detailed specification for pre-period calibration.
+  If provided, `pre_target_corr` is ignored in favor of `pre_spec.target_corr`.
+- **include_oracle** (<code>[bool](#bool)</code>) – Whether to include oracle columns like m, g0, g1, cate.
+- **return_causal_data** (<code>[bool](#bool)</code>) – Whether to return a CausalData object.
+- **theta_logit** (<code>[float](#float)</code>) – Baseline log-odds uplift scale for heterogeneous treatment effects.
+
+**Returns:**
+
+- <code>[DataFrame](#pandas.DataFrame) or [CausalData](#causalis.dgp.causaldata.CausalData)</code> –
+
+#### `generate_cuped_tweedie_26`
+
+```python
+generate_cuped_tweedie_26(n: int = 20000, seed: int = 42, add_pre: bool = True, pre_name: str = 'y_pre', pre_name_2: Optional[str] = None, pre_target_corr: float = 0.82, pre_target_corr_2: Optional[float] = None, pre_spec: Optional[PreCorrSpec] = None, include_oracle: bool = False, return_causal_data: bool = True, theta_log: float = 0.38) -> Union[pd.DataFrame, CausalData]
+```
+
+Gold standard Tweedie-like DGP with mixed marginals and structured HTE.
+Features many zeros and a heavy right tail.
+Includes two pre-period covariates by default: 'y_pre' and 'y_pre_2'.
+Wrapper for make_tweedie().
+
+**Parameters:**
+
+- **n** (<code>[int](#int)</code>) – Number of samples to generate.
+- **seed** (<code>[int](#int)</code>) – Random seed.
+- **add_pre** (<code>[bool](#bool)</code>) – Whether to add pre-period covariates.
+- **pre_name** (<code>[str](#str)</code>) – Name of the first pre-period covariate column.
+- **pre_name_2** (<code>[str](#str)</code>) – Name of the second pre-period covariate column.
+  Defaults to `f"{pre_name}_2"`.
+- **pre_target_corr** (<code>[float](#float)</code>) – Target correlation between the first pre covariate and post-outcome y in control group.
+- **pre_target_corr_2** (<code>[float](#float)</code>) – Target correlation for the second pre covariate. Defaults to a
+  moderate value based on `pre_target_corr` to reduce collinearity.
+- **pre_spec** (<code>[PreCorrSpec](#causalis.dgp.causaldata.preperiod.PreCorrSpec)</code>) – Detailed specification for pre-period calibration (transform, method, etc.).
+- **include_oracle** (<code>[bool](#bool)</code>) – Whether to include oracle ground-truth columns like 'cate', 'propensity', etc.
+- **return_causal_data** (<code>[bool](#bool)</code>) – Whether to return a CausalData object.
+- **theta_log** (<code>[float](#float)</code>) – The log-uplift theta parameter for the treatment effect.
+
+**Returns:**
+
+- <code>[DataFrame](#pandas.DataFrame) or [CausalData](#causalis.dgp.causaldata.CausalData)</code> –
+
 #### `generate_iv_data`
 
 ```python
@@ -4543,10 +4749,36 @@ avoiding outcome leakage and post-treatment adjustment issues.
 
 - <code>[DataFrame](#pandas.DataFrame) or [CausalData](#causalis.dgp.causaldata.CausalData)</code> – Synthetic RCT dataset.
 
+#### `make_cuped_binary_26`
+
+```python
+make_cuped_binary_26(n: int = 10000, seed: int = 42, add_pre: bool = True, pre_name: str = 'y_pre', pre_target_corr: float = 0.65, pre_spec: Optional[PreCorrSpec] = None, include_oracle: bool = True, return_causal_data: bool = True, theta_logit: float = 0.38) -> Union[pd.DataFrame, CausalData]
+```
+
+Binary CUPED benchmark with richer confounders and structured HTE.
+Includes a calibrated pre-period covariate 'y_pre' by default.
+Wrapper for generate_cuped_binary().
+
+**Parameters:**
+
+- **n** (<code>[int](#int)</code>) – Number of samples to generate.
+- **seed** (<code>[int](#int)</code>) – Random seed.
+- **add_pre** (<code>[bool](#bool)</code>) – Whether to add a pre-period covariate 'y_pre'.
+- **pre_name** (<code>[str](#str)</code>) – Name of the pre-period covariate column.
+- **pre_target_corr** (<code>[float](#float)</code>) – Target correlation between y_pre and post-outcome y in the control group.
+- **pre_spec** (<code>[PreCorrSpec](#causalis.dgp.causaldata.preperiod.PreCorrSpec)</code>) – Detailed specification for pre-period calibration (transform, method, etc.).
+- **include_oracle** (<code>[bool](#bool)</code>) – Whether to include oracle columns like 'cate', 'g0', and 'g1'.
+- **return_causal_data** (<code>[bool](#bool)</code>) – Whether to return a CausalData object.
+- **theta_logit** (<code>[float](#float)</code>) – Baseline log-odds uplift scale for heterogeneous treatment effects.
+
+**Returns:**
+
+- <code>[DataFrame](#pandas.DataFrame) or [CausalData](#causalis.dgp.causaldata.CausalData)</code> –
+
 #### `make_cuped_tweedie`
 
 ```python
-make_cuped_tweedie(n: int = 10000, seed: int = 42, add_pre: bool = True, pre_name: str = 'y_pre', pre_target_corr: float = 0.6, pre_spec: Optional[PreCorrSpec] = None, include_oracle: bool = False, return_causal_data: bool = True, theta_log: float = 0.1) -> Union[pd.DataFrame, CausalData]
+make_cuped_tweedie(n: int = 10000, seed: int = 42, add_pre: bool = True, pre_name: str = 'y_pre', pre_target_corr: float = 0.6, pre_spec: Optional[PreCorrSpec] = None, include_oracle: bool = False, return_causal_data: bool = True, theta_log: float = 0.2) -> Union[pd.DataFrame, CausalData]
 ```
 
 Tweedie-like DGP with mixed marginals and structured HTE.
@@ -4561,33 +4793,6 @@ Features many zeros and a heavy right tail. Suitable for CUPED benchmarking.
 - **pre_target_corr** (<code>[float](#float)</code>) – Target correlation between y_pre and post-outcome y in control group.
 - **pre_spec** (<code>[PreCorrSpec](#causalis.dgp.causaldata.preperiod.PreCorrSpec)</code>) – Detailed specification for pre-period calibration (transform, method, etc.).
   If provided, `pre_target_corr` is ignored in favor of `pre_spec.target_corr`.
-- **include_oracle** (<code>[bool](#bool)</code>) – Whether to include oracle ground-truth columns like 'cate', 'propensity', etc.
-- **return_causal_data** (<code>[bool](#bool)</code>) – Whether to return a CausalData object.
-- **theta_log** (<code>[float](#float)</code>) – The log-uplift theta parameter for the treatment effect.
-
-**Returns:**
-
-- <code>[DataFrame](#pandas.DataFrame) or [CausalData](#causalis.dgp.causaldata.CausalData)</code> –
-
-#### `make_cuped_tweedie_26`
-
-```python
-make_cuped_tweedie_26(n: int = 100000, seed: int = 42, add_pre: bool = True, pre_name: str = 'y_pre', pre_target_corr: float = 0.6, pre_spec: Optional[PreCorrSpec] = None, include_oracle: bool = False, return_causal_data: bool = True, theta_log: float = 0.2) -> Union[pd.DataFrame, CausalData]
-```
-
-Gold standard Tweedie-like DGP with mixed marginals and structured HTE.
-Features many zeros and a heavy right tail.
-Includes a pre-period covariate 'y_pre' by default, making it suitable for CUPED benchmarks.
-Wrapper for make_tweedie().
-
-**Parameters:**
-
-- **n** (<code>[int](#int)</code>) – Number of samples to generate.
-- **seed** (<code>[int](#int)</code>) – Random seed.
-- **add_pre** (<code>[bool](#bool)</code>) – Whether to add a pre-period covariate 'y_pre'.
-- **pre_name** (<code>[str](#str)</code>) – Name of the pre-period covariate column.
-- **pre_target_corr** (<code>[float](#float)</code>) – Target correlation between y_pre and post-outcome y in control group.
-- **pre_spec** (<code>[PreCorrSpec](#causalis.dgp.causaldata.preperiod.PreCorrSpec)</code>) – Detailed specification for pre-period calibration (transform, method, etc.).
 - **include_oracle** (<code>[bool](#bool)</code>) – Whether to include oracle ground-truth columns like 'cate', 'propensity', etc.
 - **return_causal_data** (<code>[bool](#bool)</code>) – Whether to return a CausalData object.
 - **theta_log** (<code>[float](#float)</code>) – The log-uplift theta parameter for the treatment effect.
@@ -6610,11 +6815,16 @@ If control_mean is near 0, relative stats are undefined/unstable and return inf/
 **Modules:**
 
 - [**dgp**](#causalis.scenarios.cuped.dgp) –
+- [**diagnostics**](#causalis.scenarios.cuped.diagnostics) –
 - [**model**](#causalis.scenarios.cuped.model) –
 
 **Classes:**
 
 - [**CUPEDModel**](#causalis.scenarios.cuped.CUPEDModel) – CUPED estimator for ATE/ITT in randomized experiments.
+
+**Functions:**
+
+- [**cuped_forest_plot**](#causalis.scenarios.cuped.cuped_forest_plot) – Forest plot of absolute estimates and CIs for CUPED vs non-CUPED.
 
 ##### `CUPEDModel`
 
@@ -6711,8 +6921,8 @@ Fit CUPED/ANCOVA (or Lin-interacted) on a CausalData object.
 **Parameters:**
 
 - **data** (<code>[CausalData](#causalis.dgp.causaldata.CausalData)</code>) – Validated dataset with columns: outcome (post), treatment, and confounders (pre covariates).
-- **covariates** (<code>sequence of str</code>) – Subset of `data_contracts.confounders_names` to use as CUPED covariates.
-  If None, uses all confounders from the object.
+- **covariates** (<code>list of str, required</code>) – Explicit subset of `data_contracts.confounders_names` to use as CUPED covariates.
+  Pass `[]` for an unadjusted (naive) fit.
 
 **Returns:**
 
@@ -6720,7 +6930,8 @@ Fit CUPED/ANCOVA (or Lin-interacted) on a CausalData object.
 
 **Raises:**
 
-- <code>[ValueError](#ValueError)</code> – If requested covariates are missing, not in `data_contracts.confounders_names`,
+- <code>[ValueError](#ValueError)</code> – If `covariates` is omitted, not a list, contains columns missing from the
+  DataFrame, contains columns outside `data_contracts.confounders_names`,
   or treatment is not binary when `strict_binary_treatment=True`.
 
 ###### `strict_binary_treatment`
@@ -6751,30 +6962,50 @@ Convenience JSON/logging output.
 use_t = bool(use_t)
 ```
 
+##### `cuped_forest_plot`
+
+```python
+cuped_forest_plot(estimate_with_cuped: CausalEstimate, estimate_without_cuped: Optional[CausalEstimate] = None, ax: Optional[plt.Axes] = None, figsize: Tuple[float, float] = (8.5, 3.8), dpi: int = 220, font_scale: float = 1.1, label_with_cuped: str = 'With CUPED', label_without_cuped: str = 'Without CUPED', color_with_cuped: str = 'C0', color_without_cuped: str = 'C1', save: Optional[str] = None, save_dpi: Optional[int] = None, transparent: bool = False) -> plt.Figure
+```
+
+Forest plot of absolute estimates and CIs for CUPED vs non-CUPED.
+
+**Parameters:**
+
+- **estimate_with_cuped** (<code>[CausalEstimate](#causalis.data_contracts.causal_estimate.CausalEstimate)</code>) – Effect estimated with CUPED adjustment.
+- **estimate_without_cuped** (<code>[CausalEstimate](#causalis.data_contracts.causal_estimate.CausalEstimate)</code>) – Effect estimated without CUPED adjustment. If omitted, the function
+  uses `estimate_with_cuped.diagnostic_data.ate_naive` and
+  `estimate_with_cuped.diagnostic_data.se_naive` to build a normal-approx CI.
+
 ##### `dgp`
 
 **Functions:**
 
-- [**make_cuped_tweedie_26**](#causalis.scenarios.cuped.dgp.make_cuped_tweedie_26) – Gold standard Tweedie-like DGP with mixed marginals and structured HTE.
+- [**generate_cuped_tweedie_26**](#causalis.scenarios.cuped.dgp.generate_cuped_tweedie_26) – Gold standard Tweedie-like DGP with mixed marginals and structured HTE.
+- [**make_cuped_binary_26**](#causalis.scenarios.cuped.dgp.make_cuped_binary_26) – Binary CUPED benchmark with richer confounders and structured HTE.
 
-###### `make_cuped_tweedie_26`
+###### `generate_cuped_tweedie_26`
 
 ```python
-make_cuped_tweedie_26(n: int = 100000, seed: int = 42, add_pre: bool = True, pre_name: str = 'y_pre', pre_target_corr: float = 0.6, pre_spec: Optional[PreCorrSpec] = None, include_oracle: bool = False, return_causal_data: bool = True, theta_log: float = 0.2) -> Union[pd.DataFrame, CausalData]
+generate_cuped_tweedie_26(n: int = 20000, seed: int = 42, add_pre: bool = True, pre_name: str = 'y_pre', pre_name_2: Optional[str] = None, pre_target_corr: float = 0.82, pre_target_corr_2: Optional[float] = None, pre_spec: Optional[PreCorrSpec] = None, include_oracle: bool = False, return_causal_data: bool = True, theta_log: float = 0.38) -> Union[pd.DataFrame, CausalData]
 ```
 
 Gold standard Tweedie-like DGP with mixed marginals and structured HTE.
 Features many zeros and a heavy right tail.
-Includes a pre-period covariate 'y_pre' by default, making it suitable for CUPED benchmarks.
+Includes two pre-period covariates by default: 'y_pre' and 'y_pre_2'.
 Wrapper for make_tweedie().
 
 **Parameters:**
 
 - **n** (<code>[int](#int)</code>) – Number of samples to generate.
 - **seed** (<code>[int](#int)</code>) – Random seed.
-- **add_pre** (<code>[bool](#bool)</code>) – Whether to add a pre-period covariate 'y_pre'.
-- **pre_name** (<code>[str](#str)</code>) – Name of the pre-period covariate column.
-- **pre_target_corr** (<code>[float](#float)</code>) – Target correlation between y_pre and post-outcome y in control group.
+- **add_pre** (<code>[bool](#bool)</code>) – Whether to add pre-period covariates.
+- **pre_name** (<code>[str](#str)</code>) – Name of the first pre-period covariate column.
+- **pre_name_2** (<code>[str](#str)</code>) – Name of the second pre-period covariate column.
+  Defaults to `f"{pre_name}_2"`.
+- **pre_target_corr** (<code>[float](#float)</code>) – Target correlation between the first pre covariate and post-outcome y in control group.
+- **pre_target_corr_2** (<code>[float](#float)</code>) – Target correlation for the second pre covariate. Defaults to a
+  moderate value based on `pre_target_corr` to reduce collinearity.
 - **pre_spec** (<code>[PreCorrSpec](#causalis.dgp.causaldata.preperiod.PreCorrSpec)</code>) – Detailed specification for pre-period calibration (transform, method, etc.).
 - **include_oracle** (<code>[bool](#bool)</code>) – Whether to include oracle ground-truth columns like 'cate', 'propensity', etc.
 - **return_causal_data** (<code>[bool](#bool)</code>) – Whether to return a CausalData object.
@@ -6783,6 +7014,78 @@ Wrapper for make_tweedie().
 **Returns:**
 
 - <code>[DataFrame](#pandas.DataFrame) or [CausalData](#causalis.dgp.causaldata.CausalData)</code> –
+
+###### `make_cuped_binary_26`
+
+```python
+make_cuped_binary_26(n: int = 10000, seed: int = 42, add_pre: bool = True, pre_name: str = 'y_pre', pre_target_corr: float = 0.65, pre_spec: Optional[PreCorrSpec] = None, include_oracle: bool = True, return_causal_data: bool = True, theta_logit: float = 0.38) -> Union[pd.DataFrame, CausalData]
+```
+
+Binary CUPED benchmark with richer confounders and structured HTE.
+Includes a calibrated pre-period covariate 'y_pre' by default.
+Wrapper for generate_cuped_binary().
+
+**Parameters:**
+
+- **n** (<code>[int](#int)</code>) – Number of samples to generate.
+- **seed** (<code>[int](#int)</code>) – Random seed.
+- **add_pre** (<code>[bool](#bool)</code>) – Whether to add a pre-period covariate 'y_pre'.
+- **pre_name** (<code>[str](#str)</code>) – Name of the pre-period covariate column.
+- **pre_target_corr** (<code>[float](#float)</code>) – Target correlation between y_pre and post-outcome y in the control group.
+- **pre_spec** (<code>[PreCorrSpec](#causalis.dgp.causaldata.preperiod.PreCorrSpec)</code>) – Detailed specification for pre-period calibration (transform, method, etc.).
+- **include_oracle** (<code>[bool](#bool)</code>) – Whether to include oracle columns like 'cate', 'g0', and 'g1'.
+- **return_causal_data** (<code>[bool](#bool)</code>) – Whether to return a CausalData object.
+- **theta_logit** (<code>[float](#float)</code>) – Baseline log-odds uplift scale for heterogeneous treatment effects.
+
+**Returns:**
+
+- <code>[DataFrame](#pandas.DataFrame) or [CausalData](#causalis.dgp.causaldata.CausalData)</code> –
+
+##### `diagnostics`
+
+**Modules:**
+
+- [**forest_plot**](#causalis.scenarios.cuped.diagnostics.forest_plot) –
+
+**Functions:**
+
+- [**cuped_forest_plot**](#causalis.scenarios.cuped.diagnostics.cuped_forest_plot) – Forest plot of absolute estimates and CIs for CUPED vs non-CUPED.
+
+###### `cuped_forest_plot`
+
+```python
+cuped_forest_plot(estimate_with_cuped: CausalEstimate, estimate_without_cuped: Optional[CausalEstimate] = None, ax: Optional[plt.Axes] = None, figsize: Tuple[float, float] = (8.5, 3.8), dpi: int = 220, font_scale: float = 1.1, label_with_cuped: str = 'With CUPED', label_without_cuped: str = 'Without CUPED', color_with_cuped: str = 'C0', color_without_cuped: str = 'C1', save: Optional[str] = None, save_dpi: Optional[int] = None, transparent: bool = False) -> plt.Figure
+```
+
+Forest plot of absolute estimates and CIs for CUPED vs non-CUPED.
+
+**Parameters:**
+
+- **estimate_with_cuped** (<code>[CausalEstimate](#causalis.data_contracts.causal_estimate.CausalEstimate)</code>) – Effect estimated with CUPED adjustment.
+- **estimate_without_cuped** (<code>[CausalEstimate](#causalis.data_contracts.causal_estimate.CausalEstimate)</code>) – Effect estimated without CUPED adjustment. If omitted, the function
+  uses `estimate_with_cuped.diagnostic_data.ate_naive` and
+  `estimate_with_cuped.diagnostic_data.se_naive` to build a normal-approx CI.
+
+###### `forest_plot`
+
+**Functions:**
+
+- [**cuped_forest_plot**](#causalis.scenarios.cuped.diagnostics.forest_plot.cuped_forest_plot) – Forest plot of absolute estimates and CIs for CUPED vs non-CUPED.
+
+####### `cuped_forest_plot`
+
+```python
+cuped_forest_plot(estimate_with_cuped: CausalEstimate, estimate_without_cuped: Optional[CausalEstimate] = None, ax: Optional[plt.Axes] = None, figsize: Tuple[float, float] = (8.5, 3.8), dpi: int = 220, font_scale: float = 1.1, label_with_cuped: str = 'With CUPED', label_without_cuped: str = 'Without CUPED', color_with_cuped: str = 'C0', color_without_cuped: str = 'C1', save: Optional[str] = None, save_dpi: Optional[int] = None, transparent: bool = False) -> plt.Figure
+```
+
+Forest plot of absolute estimates and CIs for CUPED vs non-CUPED.
+
+**Parameters:**
+
+- **estimate_with_cuped** (<code>[CausalEstimate](#causalis.data_contracts.causal_estimate.CausalEstimate)</code>) – Effect estimated with CUPED adjustment.
+- **estimate_without_cuped** (<code>[CausalEstimate](#causalis.data_contracts.causal_estimate.CausalEstimate)</code>) – Effect estimated without CUPED adjustment. If omitted, the function
+  uses `estimate_with_cuped.diagnostic_data.ate_naive` and
+  `estimate_with_cuped.diagnostic_data.se_naive` to build a normal-approx CI.
 
 ##### `model`
 
@@ -6885,8 +7188,8 @@ Fit CUPED/ANCOVA (or Lin-interacted) on a CausalData object.
 **Parameters:**
 
 - **data** (<code>[CausalData](#causalis.dgp.causaldata.CausalData)</code>) – Validated dataset with columns: outcome (post), treatment, and confounders (pre covariates).
-- **covariates** (<code>sequence of str</code>) – Subset of `data_contracts.confounders_names` to use as CUPED covariates.
-  If None, uses all confounders from the object.
+- **covariates** (<code>list of str, required</code>) – Explicit subset of `data_contracts.confounders_names` to use as CUPED covariates.
+  Pass `[]` for an unadjusted (naive) fit.
 
 **Returns:**
 
@@ -6894,7 +7197,8 @@ Fit CUPED/ANCOVA (or Lin-interacted) on a CausalData object.
 
 **Raises:**
 
-- <code>[ValueError](#ValueError)</code> – If requested covariates are missing, not in `data_contracts.confounders_names`,
+- <code>[ValueError](#ValueError)</code> – If `covariates` is omitted, not a list, contains columns missing from the
+  DataFrame, contains columns outside `data_contracts.confounders_names`,
   or treatment is not binary when `strict_binary_treatment=True`.
 
 ####### `strict_binary_treatment`
