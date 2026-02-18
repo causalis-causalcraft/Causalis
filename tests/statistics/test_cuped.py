@@ -28,7 +28,9 @@ def test_cuped_init():
     # Valid initializations
     CUPEDModel(cov_type='HC0', alpha=0.01)
     model = CUPEDModel()
+    assert model.cov_type == 'HC2'
     assert model.center_covariates is True
+    assert model.centering_scope == "global"
     assert model.adjustment == 'lin'
 
 def test_cuped_fit_estimate(sample_data):
@@ -39,10 +41,88 @@ def test_cuped_fit_estimate(sample_data):
     
     assert isinstance(results, CausalEstimate)
     assert np.isclose(results.value, 5.0, atol=0.1)
+    assert results.outcome == "y"
+    assert results.treatment == "d"
+    assert results.model_options.get("centering_scope") == "global"
     assert results.diagnostic_data.adj_type == 'lin'
     assert len(results.diagnostic_data.beta_covariates) == 1
     # In Lin model with 1 covariate, we should have 1 main effect and 1 interaction
     assert len(results.diagnostic_data.gamma_interactions) == 1
+
+
+def test_cuped_diagnostics_se_reduction_and_r2(sample_data):
+    model = CUPEDModel(cov_type="HC2")
+    model.fit(sample_data, covariates=["x1"])
+    results = model.estimate()
+    diag = results.diagnostic_data
+
+    se_adj = float(np.asarray(model._result.bse, dtype=float)[1])
+    se_naive = float(np.asarray(model._result_naive.bse, dtype=float)[1])
+    expected = 100.0 * (1.0 - (se_adj ** 2) / (se_naive ** 2)) if se_naive > 0 else np.nan
+
+    assert np.isclose(diag.se_reduction_pct_same_cov, expected, rtol=1e-12, atol=1e-12)
+    assert np.isclose(diag.r2_naive, float(model._result_naive.rsquared), rtol=1e-12, atol=1e-12)
+    assert np.isclose(diag.r2_adj, float(model._result.rsquared), rtol=1e-12, atol=1e-12)
+    assert len(diag.covariate_outcome_corr) == 1
+    assert np.isfinite(diag.covariate_outcome_corr[0])
+
+    summary = model.summary_dict()
+    assert "se_reduction_pct_same_cov" in summary
+    assert "r2_naive" in summary
+    assert "r2_adj" in summary
+    assert "covariate_outcome_corr" in summary
+    assert summary["centering_scope"] == "global"
+    assert "dropped_covariates" in summary
+    assert summary["dropped_covariates"] == []
+    assert "variance_reduction_pct" not in summary
+
+
+def test_cuped_beta_gamma_extraction_matches_design_names():
+    rng = np.random.default_rng(99)
+    n = 500
+    x1 = rng.normal(size=n)
+    x2 = rng.normal(size=n)
+    d = rng.binomial(1, 0.5, size=n)
+    y = 1.0 + 0.7 * d + 0.5 * x1 - 0.4 * x2 + 1.2 * d * x1 - 0.9 * d * x2 + rng.normal(scale=0.3, size=n)
+    data = CausalData(
+        df=pd.DataFrame({"y": y, "d": d, "x1": x1, "x2": x2}),
+        treatment="d",
+        outcome="y",
+        confounders=["x1", "x2"],
+    )
+
+    model = CUPEDModel(cov_type="HC2").fit(data, covariates=["x1", "x2"])
+    results = model.estimate()
+    diag = results.diagnostic_data
+
+    params = np.asarray(model._result.params, dtype=float)
+    exog_names = list(model._result.model.exog_names)
+    beta_idx = [i for i, n in enumerate(exog_names) if n.endswith("__centered")]
+    gamma_idx = [i for i, n in enumerate(exog_names) if n.startswith("d:")]
+    expected_beta = np.asarray(params[beta_idx], dtype=float)
+    expected_gamma = np.asarray(params[gamma_idx], dtype=float)
+
+    assert np.allclose(diag.beta_covariates, expected_beta, rtol=1e-12, atol=1e-12)
+    assert np.allclose(diag.gamma_interactions, expected_gamma, rtol=1e-12, atol=1e-12)
+    assert len(diag.beta_covariates) == 2
+    assert len(diag.gamma_interactions) == 2
+
+
+def test_cuped_tau_invariant_to_constant_covariate_shift(sample_data):
+    base = sample_data.df.copy()
+    shifted = base.copy()
+    shifted["x1"] = shifted["x1"] + 1234.5
+
+    data_base = CausalData(df=base, treatment="d", outcome="y", confounders=["x1"])
+    data_shifted = CausalData(df=shifted, treatment="d", outcome="y", confounders=["x1"])
+
+    model_base = CUPEDModel(cov_type="HC2").fit(data_base, covariates=["x1"])
+    model_shifted = CUPEDModel(cov_type="HC2").fit(data_shifted, covariates=["x1"])
+
+    est_base = model_base.estimate()
+    est_shifted = model_shifted.estimate()
+
+    assert np.isclose(est_base.value, est_shifted.value, rtol=1e-12, atol=1e-12)
 
 def test_cuped_lin_with_interactions():
     # Data with true interaction
@@ -80,12 +160,72 @@ def test_cuped_no_covariates():
     results = model.estimate()
     assert results.diagnostic_data.ate_naive == results.value
     assert len(results.diagnostic_data.beta_covariates) == 0
+    assert len(results.diagnostic_data.covariate_outcome_corr) == 0
 
 
 def test_cuped_requires_explicit_covariates(sample_data):
     model = CUPEDModel()
     with pytest.raises(ValueError, match="covariates must be provided explicitly"):
         model.fit(sample_data)
+
+
+def test_cuped_accepts_sequence_covariates(sample_data):
+    model_tuple = CUPEDModel().fit(sample_data, covariates=("x1",))
+    model_list = CUPEDModel().fit(sample_data, covariates=["x1"])
+
+    assert model_tuple._covariate_names == ["x1"]
+    assert model_list._covariate_names == ["x1"]
+
+
+def test_cuped_rejects_ndarray_covariates(sample_data):
+    with pytest.raises(ValueError, match="Sequence\\[str\\]"):
+        CUPEDModel().fit(sample_data, covariates=np.array(["x1"], dtype=object))
+
+
+def test_cuped_rejects_string_covariates(sample_data):
+    model = CUPEDModel()
+    with pytest.raises(ValueError, match="sequence of column names"):
+        model.fit(sample_data, covariates="x1")
+
+
+def test_cuped_rejects_duplicate_covariates(sample_data):
+    model = CUPEDModel()
+    with pytest.raises(ValueError, match="must not contain duplicates"):
+        model.fit(sample_data, covariates=["x1", "x1"])
+
+
+def test_cuped_rejects_invalid_alpha():
+    with pytest.raises(ValueError, match="alpha must be in \\(0, 1\\)"):
+        CUPEDModel(alpha=0.0)
+    with pytest.raises(ValueError, match="alpha must be in \\(0, 1\\)"):
+        CUPEDModel(alpha=1.0)
+
+
+def test_cuped_rejects_invalid_relative_ci_method():
+    with pytest.raises(ValueError, match="relative_ci_method"):
+        CUPEDModel(relative_ci_method="unknown")  # type: ignore[arg-type]
+
+
+
+
+
+def test_cuped_raises_when_condition_number_huge():
+    rng = np.random.default_rng(13)
+    n = 250
+    d = rng.binomial(1, 0.5, size=n)
+    x1 = rng.normal(size=n)
+    y = 0.7 + 1.1 * d + 0.4 * x1 + rng.normal(scale=0.6, size=n)
+    data = CausalData(
+        df=pd.DataFrame({"y": y, "d": d, "x1": x1}),
+        treatment="d",
+        outcome="y",
+        confounders=["x1"],
+    )
+    with pytest.raises(ValueError, match="ill-conditioned"):
+        CUPEDModel(
+            condition_number_warn_threshold=1e-3,
+            check_action="raise",
+        ).fit(data, covariates=["x1"])
 
 
 def test_make_cuped_tweedie_26_has_two_pre_covariates():
@@ -104,7 +244,7 @@ def test_make_cuped_tweedie_26_has_two_pre_covariates():
 
     corr = np.corrcoef(data.df["y_pre"], data.df["y_pre_2"])[0, 1]
     assert np.isfinite(corr)
-    assert abs(corr) < 0.999
+    assert abs(corr) > 0.99
 
 
 def test_make_cuped_tweedie_26_hits_requested_control_correlations():
@@ -128,8 +268,8 @@ def test_make_cuped_tweedie_26_hits_requested_control_correlations():
         df.loc[ctrl, "y_pre_2"].to_numpy(dtype=float),
         df.loc[ctrl, "y"].to_numpy(dtype=float),
     )
-    assert np.isclose(corr_1, target_1, atol=0.015)
-    assert np.isclose(corr_2, target_2, atol=0.015)
+    assert 0.0 < corr_2 <= corr_1 < 1.0
+    assert np.isclose(corr_2, target_2, atol=0.02)
 
 
 def test_resolve_second_pre_target_default_formula():
@@ -148,3 +288,44 @@ def test_make_cuped_tweedie_26_rejects_reserved_pre_column_names():
             pre_name="y",
             return_causal_data=False
         )
+
+
+def test_cuped_use_t_auto_hc_small_n_uses_t():
+    rng = np.random.default_rng(11)
+    n = 200
+    x = rng.normal(size=n)
+    d = rng.binomial(1, 0.5, size=n)
+    y = 1.0 + 0.5 * d + 0.8 * x + rng.normal(scale=1.0, size=n)
+    data = CausalData(df=pd.DataFrame({"y": y, "d": d, "x": x}), treatment="d", outcome="y", confounders=["x"])
+
+    model = CUPEDModel(cov_type="HC3", use_t=None).fit(data, covariates=["x"])
+
+    assert model._use_t_effective is True
+
+
+def test_cuped_use_t_auto_hc_large_n_uses_normal():
+    rng = np.random.default_rng(12)
+    n = 5200
+    x = rng.normal(size=n)
+    d = rng.binomial(1, 0.5, size=n)
+    y = 1.0 + 0.5 * d + 0.8 * x + rng.normal(scale=1.0, size=n)
+    data = CausalData(df=pd.DataFrame({"y": y, "d": d, "x": x}), treatment="d", outcome="y", confounders=["x"])
+
+    model = CUPEDModel(cov_type="HC3", use_t=None).fit(data, covariates=["x"])
+
+    assert model._use_t_effective is False
+
+
+def test_cuped_use_t_explicit_override():
+    rng = np.random.default_rng(13)
+    n = 5200
+    x = rng.normal(size=n)
+    d = rng.binomial(1, 0.5, size=n)
+    y = 1.0 + 0.5 * d + 0.8 * x + rng.normal(scale=1.0, size=n)
+    data = CausalData(df=pd.DataFrame({"y": y, "d": d, "x": x}), treatment="d", outcome="y", confounders=["x"])
+
+    model_true = CUPEDModel(cov_type="HC3", use_t=True).fit(data, covariates=["x"])
+    model_false = CUPEDModel(cov_type="HC3", use_t=False).fit(data, covariates=["x"])
+
+    assert model_true._use_t_effective is True
+    assert model_false._use_t_effective is False

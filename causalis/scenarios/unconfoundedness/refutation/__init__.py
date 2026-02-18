@@ -2,11 +2,11 @@
 Refutation and robustness utilities for Causalis.
 
 Importing this package exposes the public functions from all refutation
-submodules (overlap, score, uncofoundedness, sutva) so you can access
+submodules (overlap, score, uncofoundedness) so you can access
 commonly used helpers directly via `causalis.refutation`.
 """
 
-from . import overlap, score, sutva, uncofoundedness
+from . import overlap, score, uncofoundedness
 
 # Re-export public API from subpackages
 # Overlap diagnostics (public API defined in overlap/__init__.py)
@@ -19,20 +19,12 @@ from .score.score_validation import *  # noqa: F401,F403
 from .uncofoundedness.uncofoundedness_validation import *  # noqa: F401,F403
 from .uncofoundedness.sensitivity import *  # noqa: F401,F403
 
-# SUTVA helper
-from .sutva.sutva_validation import *  # noqa: F401,F403
-
 # Best-effort __all__: include common high-level entry points for discoverability.
 # Note: wildcard imports above already populate the module namespace.
 try:
     from .overlap import __all__ as __all_overlap  # type: ignore
 except Exception:
     __all_overlap = []
-
-try:
-    from .sutva.sutva_validation import __all__ as __all_sutva  # type: ignore
-except Exception:
-    __all_sutva = []
 
 # score_validation and uncofoundedness modules don't define __all__; curate a minimal list
 __all_score = [
@@ -50,4 +42,4 @@ __all_unconf = [
     "sensitivity_benchmark",
 ]
 
-__all__ = ["overlap", "score", "sutva", "uncofoundedness"] + list(dict.fromkeys([*__all_overlap, *__all_sutva, *__all_score, *__all_unconf]))
+__all__ = ["overlap", "score", "uncofoundedness"] + list(dict.fromkeys([*__all_overlap, *__all_score, *__all_unconf]))

@@ -8,7 +8,3 @@ def test_refutation_namespace_exports():
     # Score-based refutations
     assert hasattr(ref, "refute_placebo_outcome")
     assert hasattr(ref, "refute_subset")
-
-
-    # SUTVA helper
-    assert hasattr(ref, "print_sutva_questions")
