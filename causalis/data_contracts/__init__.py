@@ -3,6 +3,7 @@ from .multicausaldata import MultiCausalData
 from .causaldata_instrumental import CausalDataInstrumental
 from .causal_estimate import CausalEstimate
 from .causal_diagnostic_data import DiagnosticData, UnconfoundednessDiagnosticData
+from .regression_checks import RegressionChecks
 from causalis.dgp import (
     generate_rct,
     generate_classic_rct,
@@ -23,6 +24,7 @@ __all__ = [
     "CausalEstimate",
     "DiagnosticData",
     "UnconfoundednessDiagnosticData",
+    "RegressionChecks",
     "generate_rct",
     "generate_classic_rct",
     "classic_rct_gamma",

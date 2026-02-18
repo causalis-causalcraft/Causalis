@@ -1,11 +1,12 @@
 from __future__ import annotations
 
-from typing import Optional, List, Union
-from typing import Any, Dict, Optional, List
+from typing import Any, Dict, List, Optional, Union
 
 import numpy as np
 import pandas as pd
 from pydantic import BaseModel, ConfigDict
+
+from causalis.data_contracts.regression_checks import RegressionChecks
 
 
 class DiagnosticData(BaseModel):
@@ -69,12 +70,16 @@ class DiffInMeansDiagnosticData(DiagnosticData):
 
 
 class CUPEDDiagnosticData(DiagnosticData):
-    """Diagnostic data_contracts for CUPED / ANCOVA models."""
+    """Diagnostic data_contracts for CUPED-style (Lin-interacted OLS) adjustment."""
 
     ate_naive: float
     se_naive: float
-    variance_reduction_pct: float
+    se_reduction_pct_same_cov: float
+    r2_naive: float
+    r2_adj: float
     beta_covariates: np.ndarray
     gamma_interactions: np.ndarray
+    covariate_outcome_corr: Optional[np.ndarray] = None
     covariates: List[str]
     adj_type: str
+    regression_checks: Optional[RegressionChecks] = None
