@@ -537,13 +537,16 @@ class CausalDatasetGenerator:
                 g0 = np.exp(np.clip(self._outcome_location(X, np.zeros(n), np.zeros(n), np.zeros(n)), -20, 20))
                 g1 = np.exp(np.clip(self._outcome_location(X, np.ones(n),  np.zeros(n), tau_x), -20, 20))
         elif self.outcome_type == "tweedie":
-            # Oracle g(d) = p_pos(d) * mu_pos(d)
-            # We assume u_strength_zi = u_strength_y = 0 for standard gold oracle
-            # If not 0, it would require double integration (complex); keeping it simple for now.
+            # Oracle g(d) on natural scale:
+            #   g(d) = E_U[sigmoid(zi(X,d,U)) * exp(loc(X,d,U))]
+            # where U ~ N(0,1). This is a one-dimensional integral and is computed
+            # via Gauss-Hermite when latent U enters either zi or y locations.
             Xf = np.asarray(X, dtype=float)
             base_zi = np.full(n, float(self.alpha_zi), dtype=float)
             if self.beta_zi is not None:
                 bz = np.asarray(self.beta_zi, dtype=float).reshape(-1)
+                if bz.shape[0] != Xf.shape[1]:
+                    raise ValueError("beta_zi incompatible with X")
                 base_zi += np.sum(Xf * bz, axis=1)
             if self.g_zi is not None:
                 base_zi += np.asarray(self.g_zi(Xf), dtype=float)
@@ -552,18 +555,37 @@ class CausalDatasetGenerator:
             if self.tau_zi is not None:
                 tau_zi_x = np.asarray(self.tau_zi(Xf), dtype=float).reshape(-1)
 
-            # p_pos for D=0 and D=1
-            p_pos0 = _sigmoid(base_zi)
-            p_pos1 = _sigmoid(base_zi + tau_zi_x)
-
-            # mu_pos for D=0 and D=1 (interpreting loc as log-mean)
+            # Base log-mean locations excluding U
             loc0 = self._outcome_location(X, np.zeros(n), np.zeros(n), np.zeros(n))
             loc1 = self._outcome_location(X, np.ones(n), np.zeros(n), tau_x)
-            mu_pos0 = np.exp(np.clip(loc0, -20, 20))
-            mu_pos1 = np.exp(np.clip(loc1, -20, 20))
 
-            g0 = p_pos0 * mu_pos0
-            g1 = p_pos1 * mu_pos1
+            uy = float(self.u_strength_y)
+            uzi = float(self.u_strength_zi)
+            if (uy != 0.0) or (uzi != 0.0):
+                gh_x, gh_w = np.polynomial.hermite.hermgauss(21)
+                gh_w = gh_w / np.sqrt(np.pi)
+                Uq = np.sqrt(2.0) * gh_x
+
+                zi0_u = base_zi[:, None] + uzi * Uq[None, :]
+                zi1_u = (base_zi + tau_zi_x)[:, None] + uzi * Uq[None, :]
+                loc0_u = loc0[:, None] + uy * Uq[None, :]
+                loc1_u = loc1[:, None] + uy * Uq[None, :]
+
+                p_pos0 = _sigmoid(zi0_u)
+                p_pos1 = _sigmoid(zi1_u)
+                mu_pos0 = np.exp(np.clip(loc0_u, -20, 20))
+                mu_pos1 = np.exp(np.clip(loc1_u, -20, 20))
+
+                g0 = np.sum(p_pos0 * mu_pos0 * gh_w[None, :], axis=1)
+                g1 = np.sum(p_pos1 * mu_pos1 * gh_w[None, :], axis=1)
+            else:
+                p_pos0 = _sigmoid(base_zi)
+                p_pos1 = _sigmoid(base_zi + tau_zi_x)
+                mu_pos0 = np.exp(np.clip(loc0, -20, 20))
+                mu_pos1 = np.exp(np.clip(loc1, -20, 20))
+
+                g0 = p_pos0 * mu_pos0
+                g1 = p_pos1 * mu_pos1
         else:
             raise ValueError("outcome_type must be 'continuous', 'binary', 'poisson', 'gamma' or 'tweedie'")
 

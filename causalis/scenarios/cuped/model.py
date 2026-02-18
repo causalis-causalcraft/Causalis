@@ -78,9 +78,9 @@ class CUPEDModel:
         ----------
         data : CausalData
             Validated dataset with columns: outcome (post), treatment, and confounders (pre covariates).
-        covariates : sequence of str, optional
-            Subset of `data_contracts.confounders_names` to use as CUPED covariates.
-            If None, uses all confounders from the object.
+        covariates : list of str, required
+            Explicit subset of `data_contracts.confounders_names` to use as CUPED covariates.
+            Pass `[]` for an unadjusted (naive) fit.
 
         Returns
         -------
@@ -90,7 +90,8 @@ class CUPEDModel:
         Raises
         ------
         ValueError
-            If requested covariates are missing, not in `data_contracts.confounders_names`,
+            If `covariates` is omitted, not a list, contains columns missing from the
+            DataFrame, contains columns outside `data_contracts.confounders_names`,
             or treatment is not binary when `strict_binary_treatment=True`.
         """
         df = data.df
@@ -99,19 +100,26 @@ class CUPEDModel:
 
         # Choose covariates used for adjustment
         if covariates is None:
-            x_names = list(data.confounders_names)
-        else:
-            covariates = list(covariates)
-            missing = [c for c in covariates if c not in df.columns]
-            if missing:
-                raise ValueError(f"CUPED covariates not found in data_contracts.df: {missing}")
-            not_in_contract = [c for c in covariates if c not in set(data.confounders_names)]
-            if not_in_contract:
-                raise ValueError(
-                    "CUPED covariates must be a subset of data_contracts.confounders_names; "
-                    f"not allowed: {not_in_contract}"
-                )
-            x_names = covariates
+            raise ValueError(
+                "covariates must be provided explicitly as a list of pre-treatment columns; "
+                "pass [] for naive (no CUPED covariates)."
+            )
+        if not isinstance(covariates, list):
+            raise ValueError(
+                "covariates must be a list of column names (list[str]); "
+                f"got {type(covariates).__name__}."
+            )
+
+        missing = [c for c in covariates if c not in df.columns]
+        if missing:
+            raise ValueError(f"CUPED covariates not found in data_contracts.df: {missing}")
+        not_in_contract = [c for c in covariates if c not in set(data.confounders_names)]
+        if not_in_contract:
+            raise ValueError(
+                "CUPED covariates must be a subset of data_contracts.confounders_names; "
+                f"not allowed: {not_in_contract}"
+            )
+        x_names = covariates
 
         y = df[y_name].to_numpy(dtype=float)
         d = df[t_name].to_numpy(dtype=float)
@@ -326,7 +334,10 @@ class CUPEDModel:
 
     def _require_fitted(self) -> None:
         if not self._is_fitted or self._result is None:
-            raise RuntimeError("CUPEDModel is not fitted. Call .fit(causaldata) first.")
+            raise RuntimeError(
+                "CUPEDModel is not fitted. "
+                "Call .fit(causaldata, covariates=[...]) first."
+            )
 
     def __repr__(self) -> str:
         status = "fitted" if self._is_fitted else "unfitted"
