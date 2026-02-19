@@ -38,13 +38,18 @@ def test_relative_ci_delta_method_matches_formula_with_weights():
     res = irm.fit().estimate(score="ATE", alpha=0.1)
 
     n = len(df)
-    w, _ = irm._get_weights(n=n, m_hat_adj=irm.m_hat_, d=irm._d, score="ATE")
-    mu_c = float(np.mean(w * irm.g0_hat_))
+    w, w_bar = irm._get_weights(n=n, m_hat_adj=irm.m_hat_, d=irm._d, score="ATE")
+    y = irm._y
+    d = irm._d
+    u0 = y - irm.g0_hat_
+    _, h0 = irm._normalize_ipw_terms(d, irm.m_hat_, score="ATE", warn=False)
+    psi_mu_c = w * irm.g0_hat_ + w_bar * (u0 * h0)
+    mu_c = float(np.mean(psi_mu_c))
     tau_rel_expected = 100.0 * irm.coef_[0] / mu_c
 
     assert np.isclose(res.value_relative, tau_rel_expected, rtol=1e-10, atol=1e-12)
 
-    IF_mu = w * irm.g0_hat_ - mu_c
+    IF_mu = psi_mu_c - mu_c
     IF_rel = 100.0 * (irm.psi_ / mu_c - (irm.coef_[0] * IF_mu) / (mu_c ** 2))
     var_rel = float(np.var(IF_rel, ddof=1)) / n
     se_rel = float(np.sqrt(max(var_rel, 0.0)))
@@ -92,8 +97,39 @@ def test_relative_ci_ordered_when_baseline_negative():
     )
     res = irm.fit().estimate(score="ATE", alpha=0.05)
 
-    w, _ = irm._get_weights(n=len(df), m_hat_adj=irm.m_hat_, d=irm._d, score="ATE")
-    mu_c = float(np.mean(w * irm.g0_hat_))
+    w, w_bar = irm._get_weights(n=len(df), m_hat_adj=irm.m_hat_, d=irm._d, score="ATE")
+    y = irm._y
+    d = irm._d
+    u0 = y - irm.g0_hat_
+    _, h0 = irm._normalize_ipw_terms(d, irm.m_hat_, score="ATE", warn=False)
+    psi_mu_c = w * irm.g0_hat_ + w_bar * (u0 * h0)
+    mu_c = float(np.mean(psi_mu_c))
 
     assert mu_c < 0.0
     assert res.ci_lower_relative <= res.ci_upper_relative
+
+
+def test_ate_hajek_and_weight_norm_mark_approximate_inference():
+    df = _make_linear_cd(n=650, seed=123, baseline=2.0, tau=0.5, noise=0.4)
+    rng = np.random.default_rng(123)
+    weights = 0.5 + rng.random(len(df))
+    cd = CausalData(df=df, treatment="d", outcome="y", confounders=["x1", "x2"])
+
+    irm = IRM(
+        data=cd,
+        ml_g=LinearRegression(),
+        ml_m=LogisticRegression(max_iter=2000),
+        n_folds=3,
+        normalize_ipw=True,
+        weights=weights,
+        random_state=123,
+    )
+
+    with pytest.warns(RuntimeWarning) as rec:
+        res = irm.fit().estimate(score="ATE")
+
+    messages = [str(w.message) for w in rec]
+    assert any("Hájek" in msg for msg in messages)
+    assert any("normalized by sample mean" in msg for msg in messages)
+    assert res.model_options["se_approx_hajek"] is True
+    assert res.model_options["se_approx_weight_norm"] is True
