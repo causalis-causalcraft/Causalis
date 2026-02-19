@@ -950,11 +950,19 @@ def overlap_report_from_result(
                 if "normalize_ipw" in dd:
                     detected_hajek = bool(dd["normalize_ipw"]) or detected_hajek
             if "model" in res and hasattr(res["model"], "normalize_ipw"):
-                detected_hajek = bool(getattr(res["model"], "normalize_ipw")) or detected_hajek
+                detected_hajek = bool(
+                    getattr(
+                        res["model"],
+                        "normalize_ipw_effective_",
+                        getattr(res["model"], "normalize_ipw"),
+                    )
+                ) or detected_hajek
         else:
             # Model instance path
             if hasattr(res, "normalize_ipw"):
-                detected_hajek = bool(getattr(res, "normalize_ipw")) or detected_hajek
+                detected_hajek = bool(
+                    getattr(res, "normalize_ipw_effective_", getattr(res, "normalize_ipw"))
+                ) or detected_hajek
     except Exception:
         # be permissive; fall back to the explicit flag
         detected_hajek = bool(use_hajek)
@@ -1035,10 +1043,18 @@ def run_overlap_diagnostics(
                 dd = res.get("diagnostic_data", {})
                 detected_hajek = bool(dd.get("normalize_ipw", False))
                 if not detected_hajek and "model" in res and hasattr(res["model"], "normalize_ipw"):
-                    detected_hajek = bool(getattr(res["model"], "normalize_ipw"))
+                    detected_hajek = bool(
+                        getattr(
+                            res["model"],
+                            "normalize_ipw_effective_",
+                            getattr(res["model"], "normalize_ipw"),
+                        )
+                    )
             else:
                 if hasattr(res, "normalize_ipw"):
-                    detected_hajek = bool(getattr(res, "normalize_ipw"))
+                    detected_hajek = bool(
+                        getattr(res, "normalize_ipw_effective_", getattr(res, "normalize_ipw"))
+                    )
         except Exception:
             detected_hajek = False
         if use_hajek is None:

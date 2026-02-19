@@ -366,7 +366,13 @@ def _extract_balance_inputs_from_result(
     # score & normalization
     sc = getattr(model, "score", None) or getattr(model, "_score", "ATE")
     score = "ATTE" if "ATT" in str(sc).upper() else "ATE"
-    used_norm = bool(getattr(model, "normalize_ipw", False))
+    used_norm = bool(
+        getattr(
+            model,
+            "normalize_ipw_effective_",
+            getattr(model, "normalize_ipw", False),
+        )
+    )
     return X, m, d, score, used_norm, names
 
 
@@ -582,4 +588,3 @@ def run_uncofoundedness_diagnostics(
         report["summary"] = pd.DataFrame(bal_rows)
 
     return report
-

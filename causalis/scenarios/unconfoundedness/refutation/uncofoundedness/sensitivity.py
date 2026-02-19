@@ -843,7 +843,11 @@ def sensitivity_benchmark(
         ml_m=model.ml_m,
         n_folds=getattr(model, 'n_folds', 4),
         n_rep=getattr(model, 'n_rep', 1),
-        normalize_ipw=getattr(model, 'normalize_ipw', False),
+        normalize_ipw=getattr(
+            model,
+            'normalize_ipw_effective_',
+            getattr(model, 'normalize_ipw', False),
+        ),
         trimming_rule=getattr(model, 'trimming_rule', 'truncate'),
         trimming_threshold=getattr(model, 'trimming_threshold', 1e-2),
         weights=getattr(model, 'weights', None),

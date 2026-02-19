@@ -11,7 +11,7 @@ import warnings
 from datetime import datetime
 from typing import Any, Dict, Optional, Tuple, List
 
-from sklearn.base import is_classifier, clone, BaseEstimator
+from sklearn.base import clone, BaseEstimator
 from sklearn.model_selection import StratifiedKFold
 from sklearn.utils.validation import check_is_fitted
 from scipy.stats import norm
@@ -25,98 +25,12 @@ from causalis.dgp.causaldata import CausalData
 from causalis.data_contracts.causal_estimate import CausalEstimate
 from causalis.data_contracts.causal_diagnostic_data import UnconfoundednessDiagnosticData
 from causalis.scenarios.cate.blp import BLP
-
-
-
-
-def _is_binary(values: np.ndarray) -> bool:
-    """Check if an array contains only binary values (0 and 1).
-
-    Parameters
-    ----------
-    values : np.ndarray
-        The array to check.
-
-    Returns
-    -------
-    bool
-        True if the array is binary, False otherwise.
-    """
-    uniq = np.unique(values)
-    return np.array_equal(np.sort(uniq), np.array([0, 1])) or np.array_equal(np.sort(uniq), np.array([0.0, 1.0]))
-
-
-def _safe_is_classifier(estimator) -> bool:
-    """Safely check if an estimator is a classifier.
-
-    Parameters
-    ----------
-    estimator : estimator
-        The estimator to check.
-
-    Returns
-    -------
-    bool
-        True if the estimator is a classifier, False otherwise.
-    """
-    try:
-        return is_classifier(estimator)
-    except (AttributeError, TypeError):
-        return getattr(estimator, "_estimator_type", None) == "classifier"
-
-
-def _predict_prob_or_value(model, X: np.ndarray, is_propensity: bool = False) -> np.ndarray:
-    """Predict probabilities or values using a model.
-
-    Parameters
-    ----------
-    model : estimator
-        The fitted model to use for prediction.
-    X : np.ndarray
-        The input features.
-    is_propensity : bool, default False
-        Whether the prediction is for a propensity score. If True, values are clipped to [0, 1].
-
-    Returns
-    -------
-    np.ndarray
-        The predicted values or probabilities.
-    """
-    if _safe_is_classifier(model) and hasattr(model, "predict_proba"):
-        proba = model.predict_proba(X)
-        if proba.ndim == 1 or proba.shape[1] == 1:
-            res = proba.ravel()
-        else:
-            res = proba[:, 1]
-    else:
-        res = model.predict(X)
-
-    res = np.asarray(res, dtype=float).ravel()
-    if is_propensity:
-        if np.any((res < -1e-12) | (res > 1.0 + 1e-12)):
-            warnings.warn("Propensity model produced values outside [0, 1]. "
-                          "Consider using a classifier or a model with a logistic link.", RuntimeWarning)
-        res = np.clip(res, 0.0, 1.0)
-    return res
-
-
-def _clip_propensity(p: np.ndarray, thr: float) -> np.ndarray:
-    """Clip propensity scores to be within [thr, 1 - thr].
-
-    Parameters
-    ----------
-    p : np.ndarray
-        The propensity scores to clip.
-    thr : float
-        The threshold for clipping.
-
-    Returns
-    -------
-    np.ndarray
-        The clipped propensity scores.
-    """
-    thr = float(thr)
-    return np.clip(p, thr, 1.0 - thr)
+from causalis.scenarios.unconfoundedness._math import (
+    _clip_propensity,
+    _is_binary,
+    _predict_prob_or_value,
+    _safe_is_classifier,
+)
 
 
 # IRMResults removed, functionality replaced by CausalEstimate
@@ -138,7 +52,8 @@ class IRM(BaseEstimator):
     n_rep : int, default 1
         Number of repetitions of sample splitting. Currently only 1 is supported.
     normalize_ipw : bool, default False
-        Whether to normalize IPW terms within the score.
+        Whether to normalize IPW terms within the score. Applied to ATE only.
+        For ATTE, normalization is ignored to preserve the canonical ATTE EIF.
     trimming_rule : {"truncate"}, default "truncate"
         Trimming approach for propensity scores.
     trimming_threshold : float, default 1e-2
@@ -183,6 +98,7 @@ class IRM(BaseEstimator):
         self.weights = weights
         self.relative_baseline_min = float(relative_baseline_min)
         self.random_state = random_state
+        self.normalize_ipw_effective_ = bool(normalize_ipw)
 
         # Initialize default learners if not provided
         if HAS_CATBOOST:
@@ -219,11 +135,13 @@ class IRM(BaseEstimator):
         
         # If ml_g is still None and HAS_CATBOOST is True, it means data was not provided.
         # It will be initialized in fit().
+        if not np.isfinite(self.trimming_threshold) or not (0.0 <= self.trimming_threshold < 0.5):
+            raise ValueError("trimming_threshold must be finite and in [0, 0.5).")
         if self.relative_baseline_min < 0.0:
             raise ValueError("relative_baseline_min must be non-negative.")
 
     # --------- Helpers ---------
-    def _check_data(self) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+    def _check_data(self) -> Tuple[np.ndarray, np.ndarray, np.ndarray, bool]:
         """Check and prepare data for IRM.
 
         Ensures treatment is binary, confounders are present, and returns relevant arrays.
@@ -257,6 +175,148 @@ class IRM(BaseEstimator):
         y_is_binary = _is_binary(y)
         return X, y, d, y_is_binary
 
+    def _initialize_default_learners_for_fit(self, y_is_binary: bool) -> None:
+        """Initialize default learners if missing and CatBoost is available."""
+        if not HAS_CATBOOST:
+            return
+        if self.ml_m is None:
+            self.ml_m = CatBoostClassifier(
+                thread_count=-1,
+                verbose=False,
+                allow_writing_files=False,
+                random_seed=self.random_state,
+            )
+        if self.ml_g is None:
+            if y_is_binary:
+                self.ml_g = CatBoostClassifier(
+                    thread_count=-1,
+                    verbose=False,
+                    allow_writing_files=False,
+                    random_seed=self.random_state,
+                )
+            else:
+                self.ml_g = CatBoostRegressor(
+                    thread_count=-1,
+                    verbose=False,
+                    allow_writing_files=False,
+                    random_seed=self.random_state,
+                )
+
+    def _ensure_learners_available(self) -> None:
+        """Ensure nuisance learners are configured."""
+        if self.ml_g is None or self.ml_m is None:
+            raise ValueError("ml_g and ml_m must be provided (either as defaults or in __init__).")
+
+    def _validate_fit_config(self, y_is_binary: bool) -> None:
+        """Validate IRM fit-time configuration."""
+        # Enforce valid propensity model: must expose predict_proba when classifier
+        if _safe_is_classifier(self.ml_m) and not hasattr(self.ml_m, "predict_proba"):
+            raise ValueError("ml_m must support predict_proba() to produce valid propensity probabilities.")
+        # For binary outcomes, require probabilistic outcome models when using classifiers
+        if y_is_binary and _safe_is_classifier(self.ml_g) and not hasattr(self.ml_g, "predict_proba"):
+            raise ValueError("Binary outcome: ml_g is a classifier but does not expose predict_proba(). Use a probabilistic classifier or calibrate it.")
+
+        if self.n_rep != 1:
+            raise NotImplementedError("IRM currently supports n_rep=1 only.")
+        if self.n_folds < 2:
+            raise ValueError("n_folds must be at least 2")
+        if self.trimming_rule not in {"truncate"}:
+            raise ValueError("Only trimming_rule='truncate' is supported")
+        if not np.isfinite(self.trimming_threshold) or not (0.0 <= self.trimming_threshold < 0.5):
+            raise ValueError("trimming_threshold must be finite and in [0, 0.5).")
+
+    def _fit_outcome_nuisance_for_treatment(
+        self,
+        *,
+        treatment_value: int,
+        X_tr: np.ndarray,
+        y_tr: np.ndarray,
+        d_tr: np.ndarray,
+        X_te: np.ndarray,
+        y_is_binary: bool,
+        empty_group_error: str,
+    ) -> np.ndarray:
+        """Fit one outcome nuisance model (g0 or g1) and predict on test fold."""
+        model_g = clone(self.ml_g)
+        mask = (d_tr == treatment_value)
+        if not np.any(mask):
+            raise RuntimeError(empty_group_error)
+        X_g, y_g = X_tr[mask], y_tr[mask]
+        model_g.fit(X_g, y_g)
+        pred = _predict_prob_or_value(model_g, X_te, is_propensity=False)
+        if y_is_binary:
+            pred = np.clip(pred, 1e-12, 1 - 1e-12)
+        return pred
+
+    def _cross_fit_nuisances(
+        self,
+        X: np.ndarray,
+        y: np.ndarray,
+        d: np.ndarray,
+        y_is_binary: bool,
+    ) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+        """Run cross-fitting and return nuisance predictions and fold ids."""
+        n = X.shape[0]
+        g0_hat = np.full(n, np.nan, dtype=float)
+        g1_hat = np.full(n, np.nan, dtype=float)
+        m_hat = np.full(n, np.nan, dtype=float)
+        folds = np.full(n, -1, dtype=int)
+
+        skf = StratifiedKFold(n_splits=self.n_folds, shuffle=True, random_state=self.random_state)
+        for i, (train_idx, test_idx) in enumerate(skf.split(X, d)):
+            folds[test_idx] = i
+            X_tr, y_tr, d_tr = X[train_idx], y[train_idx], d[train_idx]
+            X_te = X[test_idx]
+
+            g0_hat[test_idx] = self._fit_outcome_nuisance_for_treatment(
+                treatment_value=0,
+                X_tr=X_tr,
+                y_tr=y_tr,
+                d_tr=d_tr,
+                X_te=X_te,
+                y_is_binary=y_is_binary,
+                empty_group_error=(
+                    "IRM: A CV fold has no controls in the training split. "
+                    "This violates the IRM nuisance definition. "
+                    "Consider reducing n_folds or increasing sample size."
+                ),
+            )
+
+            g1_hat[test_idx] = self._fit_outcome_nuisance_for_treatment(
+                treatment_value=1,
+                X_tr=X_tr,
+                y_tr=y_tr,
+                d_tr=d_tr,
+                X_te=X_te,
+                y_is_binary=y_is_binary,
+                empty_group_error=(
+                    "IRM: A CV fold has no treated units in the training split. "
+                    "This violates the IRM nuisance definition. "
+                    "Consider reducing n_folds or increasing sample size."
+                ),
+            )
+
+            model_m = clone(self.ml_m)
+            model_m.fit(X_tr, d_tr)
+            m_hat[test_idx] = _predict_prob_or_value(model_m, X_te, is_propensity=True)
+
+        return g0_hat, g1_hat, m_hat, folds
+
+    def _store_cross_fitted_predictions(
+        self,
+        g0_hat: np.ndarray,
+        g1_hat: np.ndarray,
+        m_hat: np.ndarray,
+        folds: np.ndarray,
+    ) -> None:
+        """Validate and store cross-fitted nuisance predictions."""
+        if np.any(np.isnan(m_hat)) or np.any(np.isnan(g0_hat)) or np.any(np.isnan(g1_hat)):
+            raise RuntimeError("Cross-fitted predictions contain NaN values.")
+        self.folds_ = folds
+        self.g0_hat_ = g0_hat
+        self.g1_hat_ = g1_hat
+        self.m_hat_ = _clip_propensity(m_hat, self.trimming_threshold)
+
     def _get_weights(self, n: int, m_hat_adj: Optional[np.ndarray], d: np.ndarray, score: Optional[str] = None) -> Tuple[np.ndarray, np.ndarray]:
         """Compute weights for the IRM score.
 
@@ -285,26 +345,54 @@ class IRM(BaseEstimator):
         if self.weights is not None and score != "ATE":
             raise ValueError(f"weights are only supported for score='ATE', but got score='{score}'")
 
+        def _to_1d(arr: Any, *, name: str) -> np.ndarray:
+            vec = np.asarray(arr, dtype=float)
+            if vec.ndim == 1:
+                pass
+            elif vec.ndim == 2 and 1 in vec.shape:
+                vec = vec.reshape(-1)
+            else:
+                raise ValueError(f"{name} must be 1D with shape (n,), got shape {vec.shape}.")
+            if vec.shape[0] != n:
+                raise ValueError(f"{name} must have shape (n,) with n={n}, got shape {vec.shape}.")
+            if not np.all(np.isfinite(vec)):
+                raise ValueError(f"{name} must contain only finite values.")
+            return vec
+
         # Standard ATE
-        if score in {"ATE", "CATE"}:
+        if score == "ATE":
             if self.weights is None:
                 w = np.ones(n, dtype=float)
             elif isinstance(self.weights, np.ndarray):
-                if self.weights.shape[0] != n:
-                    raise ValueError("weights array must have shape (n,)")
-                w = np.asarray(self.weights, dtype=float)
+                w = _to_1d(self.weights, name="weights")
             elif isinstance(self.weights, dict):
-                w = np.asarray(self.weights.get("weights"), dtype=float)
-                if w.shape[0] != n:
-                    raise ValueError("weights['weights'] must have shape (n,)")
+                if "weights" not in self.weights:
+                    raise ValueError("weights dict must contain key 'weights'.")
+                w = _to_1d(self.weights["weights"], name="weights['weights']")
             else:
                 raise TypeError("weights must be None, np.ndarray, or dict")
+            # By default, use w as its own conditional expectation proxy in EIF terms.
             w_bar = w
             if isinstance(self.weights, dict) and "weights_bar" in self.weights:
-                w_bar = np.asarray(self.weights["weights_bar"], dtype=float)
-                if w_bar.ndim == 2:
-                    # choose first repetition for now
-                    w_bar = w_bar[:, 0]
+                w_bar_arr = np.asarray(self.weights["weights_bar"], dtype=float)
+                if w_bar_arr.ndim == 2:
+                    if w_bar_arr.shape[0] == n and w_bar_arr.shape[1] >= 1:
+                        if w_bar_arr.shape[1] > 1:
+                            warnings.warn(
+                                "weights['weights_bar'] has multiple columns; using the first column.",
+                                RuntimeWarning,
+                            )
+                        w_bar = w_bar_arr[:, 0]
+                    elif w_bar_arr.shape == (1, n):
+                        w_bar = w_bar_arr.reshape(-1)
+                    else:
+                        raise ValueError(
+                            "weights['weights_bar'] must be shape (n,), (n,1), (1,n), or (n,r) for r>=1."
+                        )
+                else:
+                    w_bar = _to_1d(w_bar_arr, name="weights['weights_bar']")
+                if not np.all(np.isfinite(w_bar)):
+                    raise ValueError("weights['weights_bar'] must contain only finite values.")
         # ATTE requires m_hat
         elif score == "ATTE":
             if m_hat_adj is None:
@@ -312,17 +400,37 @@ class IRM(BaseEstimator):
             w = d.astype(float)
             w_bar = m_hat_adj.astype(float)
         else:
-            raise ValueError("score must be 'ATE', 'ATTE' or 'CATE'")
+            raise ValueError("score must be 'ATE' or 'ATTE'")
 
-        # Central weight normalization to ensure mean(w) == 1.
-        # This ensures that both estimation and sensitivity components use the same scale.
+        # Normalize by E_n[w] so effect, orthogonal score, and sensitivity pieces
+        # all use the same weight scale.
         mean_w = float(np.mean(w))
-        if mean_w > 1e-12:
-            w = w / mean_w
-            w_bar = w_bar / mean_w
+        if not np.isfinite(mean_w) or mean_w <= 1e-12:
+            raise ValueError("weights must have a strictly positive finite mean.")
+        w = w / mean_w
+        w_bar = w_bar / mean_w
         return w, w_bar
 
-    def _normalize_ipw_terms(self, d: np.ndarray, m_hat: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
+    def _use_normalized_ipw(self, score: Optional[str] = None, *, warn: bool = False) -> bool:
+        """Return whether Hájek normalization is active for a given score."""
+        score_u = (self.score if score is None else str(score)).upper()
+        if self.normalize_ipw and score_u == "ATTE":
+            if warn:
+                warnings.warn(
+                    "normalize_ipw=True is ignored for ATTE to preserve the canonical ATTE EIF.",
+                    RuntimeWarning,
+                )
+            return False
+        return bool(self.normalize_ipw)
+
+    def _normalize_ipw_terms(
+        self,
+        d: np.ndarray,
+        m_hat: np.ndarray,
+        score: Optional[str] = None,
+        *,
+        warn: bool = True,
+    ) -> Tuple[np.ndarray, np.ndarray]:
         """Compute and optionally normalize IPW terms.
 
         Parameters
@@ -339,10 +447,11 @@ class IRM(BaseEstimator):
         h0 : np.ndarray
             IPW term for control units ((1 - d) / (1 - m_hat)).
         """
-        # Compute IPW terms and optionally normalize to mean 1
+        # Horvitz-Thompson terms (unnormalized).
         h1 = d / m_hat
         h0 = (1 - d) / (1 - m_hat)
-        if self.normalize_ipw:
+        if self._use_normalized_ipw(score=score, warn=warn):
+            # Hájek normalization: force empirical means of treated/control IPW terms to 1.
             h1_mean = np.mean(h1)
             h0_mean = np.mean(h0)
             # Avoid division by zero
@@ -371,168 +480,94 @@ class IRM(BaseEstimator):
         X, y, d, y_is_binary = self._check_data()
 
         # Initialize default learners if not provided and data is now available
-        if HAS_CATBOOST:
-            if self.ml_m is None:
-                self.ml_m = CatBoostClassifier(
-                    thread_count=-1,
-                    verbose=False,
-                    allow_writing_files=False,
-                    random_seed=self.random_state,
-                )
-            if self.ml_g is None:
-                if y_is_binary:
-                    self.ml_g = CatBoostClassifier(
-                        thread_count=-1,
-                        verbose=False,
-                        allow_writing_files=False,
-                        random_seed=self.random_state,
-                    )
-                else:
-                    self.ml_g = CatBoostRegressor(
-                        thread_count=-1,
-                        verbose=False,
-                        allow_writing_files=False,
-                        random_seed=self.random_state,
-                    )
+        self._initialize_default_learners_for_fit(y_is_binary=y_is_binary)
+        self._ensure_learners_available()
 
-        if self.ml_g is None or self.ml_m is None:
-            raise ValueError("ml_g and ml_m must be provided (either as defaults or in __init__).")
         # Cache for sensitivity analysis and effect calculation
         self._y = y.copy()
         self._d = d.copy()
-        n = X.shape[0]
+        self._validate_fit_config(y_is_binary=y_is_binary)
 
-        # Enforce valid propensity model: must expose predict_proba when classifier
-        if _safe_is_classifier(self.ml_m) and not hasattr(self.ml_m, "predict_proba"):
-            raise ValueError("ml_m must support predict_proba() to produce valid propensity probabilities.")
-        # For binary outcomes, require probabilistic outcome models when using classifiers
-        if y_is_binary and _safe_is_classifier(self.ml_g) and not hasattr(self.ml_g, "predict_proba"):
-            raise ValueError("Binary outcome: ml_g is a classifier but does not expose predict_proba(). Use a probabilistic classifier or calibrate it.")
-
-        if self.n_rep != 1:
-            raise NotImplementedError("IRM currently supports n_rep=1 only.")
-        if self.n_folds < 2:
-            raise ValueError("n_folds must be at least 2")
-        if self.trimming_rule not in {"truncate"}:
-            raise ValueError("Only trimming_rule='truncate' is supported")
-
-        g0_hat = np.full(n, np.nan, dtype=float)
-        g1_hat = np.full(n, np.nan, dtype=float)
-        m_hat = np.full(n, np.nan, dtype=float)
-        folds = np.full(n, -1, dtype=int)
-
-        skf = StratifiedKFold(n_splits=self.n_folds, shuffle=True, random_state=self.random_state)
-        for i, (train_idx, test_idx) in enumerate(skf.split(X, d)):
-            folds[test_idx] = i
-            # Outcome models trained on respective treatment groups in the train fold
-            X_tr, y_tr, d_tr = X[train_idx], y[train_idx], d[train_idx]
-            X_te = X[test_idx]
-
-            # g0
-            model_g0 = clone(self.ml_g)
-            mask0 = (d_tr == 0)
-            if not np.any(mask0):
-                raise RuntimeError("IRM: A CV fold has no controls in the training split. "
-                                   "This violates the IRM nuisance definition. "
-                                   "Consider reducing n_folds or increasing sample size.")
-            else:
-                X_g0, y_g0 = X_tr[mask0], y_tr[mask0]
-            model_g0.fit(X_g0, y_g0)
-            if y_is_binary and _safe_is_classifier(model_g0) and hasattr(model_g0, "predict_proba"):
-                pred_g0 = model_g0.predict_proba(X_te)
-                pred_g0 = pred_g0[:, 1] if pred_g0.ndim == 2 else pred_g0.ravel()
-            else:
-                pred_g0 = model_g0.predict(X_te)
-            pred_g0 = np.asarray(pred_g0, dtype=float).ravel()
-            if y_is_binary:
-                pred_g0 = np.clip(pred_g0, 1e-12, 1 - 1e-12)
-            g0_hat[test_idx] = pred_g0
-
-            # g1
-            model_g1 = clone(self.ml_g)
-            mask1 = (d_tr == 1)
-            if not np.any(mask1):
-                raise RuntimeError("IRM: A CV fold has no treated units in the training split. "
-                                   "This violates the IRM nuisance definition. "
-                                   "Consider reducing n_folds or increasing sample size.")
-            else:
-                X_g1, y_g1 = X_tr[mask1], y_tr[mask1]
-            model_g1.fit(X_g1, y_g1)
-            if y_is_binary and _safe_is_classifier(model_g1) and hasattr(model_g1, "predict_proba"):
-                pred_g1 = model_g1.predict_proba(X_te)
-                pred_g1 = pred_g1[:, 1] if pred_g1.ndim == 2 else pred_g1.ravel()
-            else:
-                pred_g1 = model_g1.predict(X_te)
-            pred_g1 = np.asarray(pred_g1, dtype=float).ravel()
-            if y_is_binary:
-                pred_g1 = np.clip(pred_g1, 1e-12, 1 - 1e-12)
-            g1_hat[test_idx] = pred_g1
-
-            # m
-            model_m = clone(self.ml_m)
-            model_m.fit(X_tr, d_tr)
-            m_pred = _predict_prob_or_value(model_m, X_te, is_propensity=True)
-            m_hat[test_idx] = m_pred
-
-        # Trimming/clipping propensity
-        if np.any(np.isnan(m_hat)) or np.any(np.isnan(g0_hat)) or np.any(np.isnan(g1_hat)):
-            raise RuntimeError("Cross-fitted predictions contain NaN values.")
-        m_hat = _clip_propensity(m_hat, self.trimming_threshold)
-        self.folds_ = folds
-
-        self.g0_hat_ = g0_hat
-        self.g1_hat_ = g1_hat
-        self.m_hat_ = m_hat
+        g0_hat, g1_hat, m_hat, folds = self._cross_fit_nuisances(X=X, y=y, d=d, y_is_binary=y_is_binary)
+        self._store_cross_fitted_predictions(g0_hat=g0_hat, g1_hat=g1_hat, m_hat=m_hat, folds=folds)
 
         return self
 
-    def estimate(
-        self, score: str = "ATE", alpha: float = 0.05, diagnostic_data: bool = True
-    ) -> CausalEstimate:
-        """Compute treatment effects using stored nuisance predictions.
+    def _validate_estimate_request(self, score: str, alpha: float) -> str:
+        """Validate estimate() arguments and return normalized score."""
+        if not (0.0 < alpha < 1.0):
+            raise ValueError("alpha must be in (0,1)")
+        score_u = str(score).upper()
+        if score_u == "CATE":
+            raise NotImplementedError(
+                "score='CATE' is not supported by IRM.estimate(); use causalis.scenarios.cate.cate.cate_esimand."
+            )
+        if score_u not in {"ATE", "ATTE"}:
+            raise ValueError("score must be 'ATE' or 'ATTE'")
+        return score_u
 
-        Parameters
-        ----------
-        score : {"ATE", "ATTE", "CATE"}, default "ATE"
-            Target estimand.
-        alpha : float, default 0.05
-            Significance level for intervals.
-        diagnostic_data : bool, default True
-            Whether to include diagnostic data_contracts in the result.
+    def _estimate_inference_approx_flags(self, score: str, normalize_ipw_effective: bool) -> Dict[str, bool]:
+        """Return flags for inference paths that use ratio-style approximations."""
+        return {
+            "se_approx_hajek": bool(score == "ATE" and normalize_ipw_effective),
+            "se_approx_weight_norm": bool(score == "ATE" and self.weights is not None),
+        }
 
-        Returns
-        -------
-        CausalEstimate
-            Result container for the estimated effect.
-        """
-        check_is_fitted(self, attributes=["g0_hat_", "g1_hat_", "m_hat_"])
-        score = score.upper()
-        self.score = score
+    def _warn_if_inference_is_approximate(self, approx_flags: Dict[str, bool]) -> None:
+        """Emit warnings when inference relies on ratio-normalization approximations."""
+        if approx_flags.get("se_approx_hajek", False):
+            warnings.warn(
+                "normalize_ipw=True (Hájek) uses approximate SE/IF; "
+                "denominator variability is treated as fixed.",
+                RuntimeWarning,
+            )
+        if approx_flags.get("se_approx_weight_norm", False):
+            warnings.warn(
+                "ATE custom weights are normalized by sample mean; "
+                "SE/IF treats this normalization as fixed (approximate).",
+                RuntimeWarning,
+            )
 
-        y, d = self._y, self._d
+    def _compute_psi_terms(
+        self,
+        *,
+        y: np.ndarray,
+        d: np.ndarray,
+        g0_hat: np.ndarray,
+        g1_hat: np.ndarray,
+        m_hat: np.ndarray,
+        score: str,
+    ) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+        """Compute score ingredients (weights and psi_a/psi_b terms)."""
         n = len(y)
-        g0_hat, g1_hat, m_hat = self.g0_hat_, self.g1_hat_, self.m_hat_
-
-        # Score elements
         u0 = y - g0_hat
         u1 = y - g1_hat
-        h1, h0 = self._normalize_ipw_terms(d, m_hat)
-
-        # weights
+        h1, h0 = self._normalize_ipw_terms(d, m_hat, score=score)
         w, w_bar = self._get_weights(n, m_hat, d, score=score)
-
-        # psi elements
+        # Orthogonal score part for the target moment E[psi_a * theta + psi_b] = 0.
         psi_b = w * (g1_hat - g0_hat) + w_bar * (u1 * h1 - u0 * h0)
 
-        # Jacobian E[psi_a] and point estimate
         if score == "ATE":
+            # ATE moment derivative w.r.t. theta is constant -1.
             psi_a = -np.ones(n)
         elif score == "ATTE":
+            # ATT(E) derivative is weighted by the target-treatment indicator weight.
             psi_a = -w
         else:
-            # For CATE or custom scores, we use -w as well
-            psi_a = -w
+            raise ValueError("score must be 'ATE' or 'ATTE'")
 
+        return w, w_bar, psi_a, psi_b
+
+    def _solve_moment_equation(
+        self,
+        *,
+        psi_a: np.ndarray,
+        psi_b: np.ndarray,
+        alpha: float,
+    ) -> Tuple[float, np.ndarray, float, float, float, float, float, float]:
+        """Solve the moment equation and compute inference statistics."""
+        n = len(psi_a)
+        # Jacobian (Neyman score derivative) for the one-dimensional moment.
         J = float(np.mean(psi_a))
 
         if abs(J) < 1e-16:
@@ -540,10 +575,10 @@ class IRM(BaseEstimator):
             IF = np.zeros(n)
             se = np.nan
         else:
+            # Closed-form root of E_n[psi_a * theta + psi_b] = 0.
             theta_hat = -float(np.mean(psi_b) / J)
-            # Moment residual psi = psi_b + psi_a * theta_hat
             psi_res = psi_b + psi_a * theta_hat
-            # Influence function IF = -psi_res / J
+            # Estimated influence function and its plug-in sandwich variance.
             IF = -psi_res / J
             var = float(np.var(IF, ddof=1)) / n
             se = float(np.sqrt(max(var, 0.0)))
@@ -551,18 +586,50 @@ class IRM(BaseEstimator):
         t_stat = theta_hat / se if se > 0 else np.nan
         pval = 2 * (1 - norm.cdf(abs(t_stat))) if np.isfinite(t_stat) else np.nan
         z = norm.ppf(1 - alpha / 2.0)
-        ci_low, ci_high = theta_hat - z * se, theta_hat + z * se
+        ci_low = theta_hat - z * se
+        ci_high = theta_hat + z * se
 
-        # Cache for sensitivity and other diagnostics
+        return theta_hat, IF, se, t_stat, pval, ci_low, ci_high, z
+
+    def _cache_estimate_core(
+        self,
+        *,
+        theta_hat: float,
+        se: float,
+        IF: np.ndarray,
+        psi_a: np.ndarray,
+        psi_b: np.ndarray,
+    ) -> None:
+        """Cache core estimate quantities used by diagnostics/sensitivity."""
         self.coef_ = np.array([theta_hat])
         self.se_ = np.array([se])
-        self.psi_ = IF  # Store the influence function used for inference
+        self.psi_ = IF
         self.psi_a_ = psi_a
         self.psi_b_ = psi_b
 
-        # Baseline mean for relative effect (weighted to match estimand)
-        mu_c = float(np.mean(w * g0_hat))
-        mu_c_var = float(np.var(w * g0_hat, ddof=1)) / n if n > 1 else 0.0
+    def _compute_relative_effect_stats(
+        self,
+        *,
+        theta_hat: float,
+        IF: np.ndarray,
+        y: np.ndarray,
+        d: np.ndarray,
+        w: np.ndarray,
+        w_bar: np.ndarray,
+        g0_hat: np.ndarray,
+        m_hat: np.ndarray,
+        score: str,
+        z: float,
+    ) -> Tuple[float, float, float, float, float]:
+        """Compute relative effect and delta-method interval."""
+        n = len(w)
+        u0 = y - g0_hat
+        _, h0 = self._normalize_ipw_terms(d, m_hat, score=score, warn=False)
+        # Orthogonal signal for baseline E[w * Y(0)].
+        psi_mu_c = w * g0_hat + w_bar * (u0 * h0)
+
+        mu_c = float(np.mean(psi_mu_c))
+        mu_c_var = float(np.var(psi_mu_c, ddof=1)) / n if n > 1 else 0.0
         mu_c_se = float(np.sqrt(max(mu_c_var, 0.0)))
         tau_rel = np.nan
         ci_low_rel = np.nan
@@ -574,9 +641,9 @@ class IRM(BaseEstimator):
 
         if np.isfinite(mu_c) and not (baseline_too_small or baseline_low_signal):
             tau_rel = 100.0 * theta_hat / mu_c
-            # Delta method for relative effect: tau_rel = 100 * theta / mu_c
-            IF_mu = w * g0_hat - mu_c
+            IF_mu = psi_mu_c - mu_c
             with np.errstate(divide="ignore", invalid="ignore"):
+                # Delta-method IF for tau_rel = 100 * theta / mu_c.
                 IF_rel = 100.0 * (IF / mu_c - (theta_hat * IF_mu) / (mu_c ** 2))
             var_rel = float(np.var(IF_rel, ddof=1)) / n
             se_rel = float(np.sqrt(max(var_rel, 0.0)))
@@ -598,47 +665,88 @@ class IRM(BaseEstimator):
                 "Relative estimates are set to NaN.",
                 RuntimeWarning,
             )
-        self.mu_c_ = mu_c
-        self.se_relative_ = np.array([se_rel])
-        self.confint_relative_ = np.array([[ci_low_rel, ci_high_rel]])
 
+        return mu_c, tau_rel, ci_low_rel, ci_high_rel, se_rel
+
+    def _build_estimate_diagnostic_data(
+        self,
+        *,
+        diagnostic_data: bool,
+        y: np.ndarray,
+        d: np.ndarray,
+        g0_hat: np.ndarray,
+        g1_hat: np.ndarray,
+        m_hat: np.ndarray,
+        w: np.ndarray,
+        w_bar: np.ndarray,
+        IF: np.ndarray,
+        psi_b: np.ndarray,
+        score: str,
+        normalize_ipw_effective: bool,
+    ) -> Optional[UnconfoundednessDiagnosticData]:
+        """Build optional diagnostics payload for CausalEstimate."""
+        if not diagnostic_data:
+            return None
+
+        sens_elements = self._sensitivity_element_est(
+            y=y, d=d, g0=g0_hat, g1=g1_hat, m_hat=m_hat, w=w, w_bar=w_bar, psi=IF
+        )
+
+        diag = UnconfoundednessDiagnosticData(
+            m_hat=m_hat,
+            d=d,
+            y=y,
+            x=self.data.get_df()[list(self.data.confounders)].to_numpy(dtype=float),
+            g0_hat=g0_hat,
+            g1_hat=g1_hat,
+            psi_b=psi_b,
+            folds=self.folds_,
+            trimming_threshold=self.trimming_threshold,
+            normalize_ipw=normalize_ipw_effective,
+            score=score,
+            **sens_elements
+        )
+        diag._model = self
+        return diag
+
+    def _build_causal_estimate(
+        self,
+        *,
+        score: str,
+        alpha: float,
+        theta_hat: float,
+        se: float,
+        t_stat: float,
+        pval: float,
+        ci_low: float,
+        ci_high: float,
+        tau_rel: float,
+        ci_low_rel: float,
+        ci_high_rel: float,
+        y: np.ndarray,
+        d: np.ndarray,
+        normalize_ipw_effective: bool,
+        approx_flags: Dict[str, bool],
+        diag: Optional[UnconfoundednessDiagnosticData],
+    ) -> CausalEstimate:
+        """Build the CausalEstimate object."""
         treatment_mean = float(np.mean(y[d == 1])) if np.any(d == 1) else np.nan
         control_mean = float(np.mean(y[d == 0])) if np.any(d == 0) else np.nan
 
-        diag = None
-        if diagnostic_data:
-            # Calculate sensitivity elements
-            sens_elements = self._sensitivity_element_est(
-                y=y, d=d, g0=g0_hat, g1=g1_hat, m_hat=m_hat, w=w, w_bar=w_bar, psi=IF
-            )
-
-            diag = UnconfoundednessDiagnosticData(
-                m_hat=m_hat,
-                d=d,
-                y=y,
-                x=self.data.get_df()[list(self.data.confounders)].to_numpy(dtype=float),
-                g0_hat=g0_hat,
-                g1_hat=g1_hat,
-                psi_b=psi_b,
-                folds=self.folds_,
-                trimming_threshold=self.trimming_threshold,
-                score=score,
-                **sens_elements
-            )
-            diag._model = self
-
-        results = CausalEstimate(
+        return CausalEstimate(
             estimand=score,
             model="IRM",
             model_options={
                 "n_folds": self.n_folds,
                 "n_rep": self.n_rep,
-                "normalize_ipw": self.normalize_ipw,
+                "normalize_ipw": normalize_ipw_effective,
                 "trimming_rule": self.trimming_rule,
                 "trimming_threshold": self.trimming_threshold,
                 "random_state": self.random_state,
                 "std_error": se,
                 "t_stat": t_stat,
+                "se_approx_hajek": bool(approx_flags.get("se_approx_hajek", False)),
+                "se_approx_weight_norm": bool(approx_flags.get("se_approx_weight_norm", False)),
             },
             value=theta_hat,
             ci_upper_absolute=ci_high,
@@ -660,16 +768,114 @@ class IRM(BaseEstimator):
             diagnostic_data=diag,
         )
 
-        # Update internal state
-        self.psi_a_ = psi_a
-        self.psi_b_ = psi_b
-        self.psi_ = IF
+    def _update_estimate_state(
+        self,
+        *,
+        theta_hat: float,
+        se: float,
+        t_stat: float,
+        pval: float,
+        ci_low: float,
+        ci_high: float,
+        results: CausalEstimate,
+    ) -> None:
+        """Finalize and cache estimate state used by public accessors."""
         self.coef_ = np.array([theta_hat])
         self.se_ = np.array([se])
         self.t_stat_ = np.array([t_stat])
         self.pval_ = np.array([pval])
         self.confint_ = np.array([[ci_low, ci_high]])
         self.summary_ = results.summary()
+
+    def estimate(
+        self, score: str = "ATE", alpha: float = 0.05, diagnostic_data: bool = True
+    ) -> CausalEstimate:
+        """Compute treatment effects using stored nuisance predictions.
+
+        Parameters
+        ----------
+        score : {"ATE", "ATTE"}, default "ATE"
+            Target estimand.
+        alpha : float, default 0.05
+            Significance level for intervals.
+        diagnostic_data : bool, default True
+            Whether to include diagnostic data_contracts in the result.
+
+        Returns
+        -------
+        CausalEstimate
+            Result container for the estimated effect.
+        """
+        check_is_fitted(self, attributes=["g0_hat_", "g1_hat_", "m_hat_"])
+        score = self._validate_estimate_request(score=score, alpha=alpha)
+        self.score = score
+        # For ATTE we intentionally disable Hájek even if normalize_ipw=True.
+        normalize_ipw_effective = self._use_normalized_ipw(score=score, warn=False)
+        self.normalize_ipw_effective_ = normalize_ipw_effective
+        # Track known finite-sample approximation paths in inference metadata.
+        approx_flags = self._estimate_inference_approx_flags(score=score, normalize_ipw_effective=normalize_ipw_effective)
+        self._warn_if_inference_is_approximate(approx_flags)
+
+        y, d = self._y, self._d
+        g0_hat, g1_hat, m_hat = self.g0_hat_, self.g1_hat_, self.m_hat_
+
+        w, w_bar, psi_a, psi_b = self._compute_psi_terms(
+            y=y, d=d, g0_hat=g0_hat, g1_hat=g1_hat, m_hat=m_hat, score=score
+        )
+        theta_hat, IF, se, t_stat, pval, ci_low, ci_high, z = self._solve_moment_equation(
+            psi_a=psi_a, psi_b=psi_b, alpha=alpha
+        )
+        self._cache_estimate_core(theta_hat=theta_hat, se=se, IF=IF, psi_a=psi_a, psi_b=psi_b)
+
+        mu_c, tau_rel, ci_low_rel, ci_high_rel, se_rel = self._compute_relative_effect_stats(
+            theta_hat=theta_hat, IF=IF, y=y, d=d, w=w, w_bar=w_bar, g0_hat=g0_hat, m_hat=m_hat, score=score, z=z
+        )
+        self.mu_c_ = mu_c
+        self.se_relative_ = np.array([se_rel])
+        self.confint_relative_ = np.array([[ci_low_rel, ci_high_rel]])
+
+        diag = self._build_estimate_diagnostic_data(
+            diagnostic_data=diagnostic_data,
+            y=y,
+            d=d,
+            g0_hat=g0_hat,
+            g1_hat=g1_hat,
+            m_hat=m_hat,
+            w=w,
+            w_bar=w_bar,
+            IF=IF,
+            psi_b=psi_b,
+            score=score,
+            normalize_ipw_effective=normalize_ipw_effective,
+        )
+
+        results = self._build_causal_estimate(
+            score=score,
+            alpha=alpha,
+            theta_hat=theta_hat,
+            se=se,
+            t_stat=t_stat,
+            pval=pval,
+            ci_low=ci_low,
+            ci_high=ci_high,
+            tau_rel=tau_rel,
+            ci_low_rel=ci_low_rel,
+            ci_high_rel=ci_high_rel,
+            y=y,
+            d=d,
+            normalize_ipw_effective=normalize_ipw_effective,
+            approx_flags=approx_flags,
+            diag=diag,
+        )
+        self._update_estimate_state(
+            theta_hat=theta_hat,
+            se=se,
+            t_stat=t_stat,
+            pval=pval,
+            ci_low=ci_low,
+            ci_high=ci_high,
+            results=results,
+        )
 
         return results
 
@@ -867,17 +1073,17 @@ class IRM(BaseEstimator):
         if psi is None:
             psi = self.psi_
 
-        # sigma^2
+        # Residual variance component used in sensitivity bounds.
         sigma2_score_element = np.square(y - d * g1 - (1.0 - d) * g0)
         sigma2 = float(np.mean(sigma2_score_element))
         psi_sigma2 = sigma2_score_element - sigma2
 
-        # Riesz representer and m_alpha
+        # Riesz representer building blocks from propensity terms.
         with np.errstate(divide='ignore', invalid='ignore'):
             inv_m = 1.0 / m_hat
             inv_1m = 1.0 / (1.0 - m_hat)
         # If IPW terms are normalized in the score, mirror that normalization here.
-        if self.normalize_ipw:
+        if self._use_normalized_ipw(score=getattr(self, "score", "ATE"), warn=False):
             h1_raw = d * inv_m
             h0_raw = (1.0 - d) * inv_1m
             c1 = float(np.mean(h1_raw))
@@ -888,9 +1094,11 @@ class IRM(BaseEstimator):
                 c0 = 1.0
             inv_m = inv_m / c1
             inv_1m = inv_1m / c0
+        # rr is the Riesz representer; m_alpha enters the nu^2 sensitivity term.
         m_alpha = (w_bar ** 2) * (inv_m + inv_1m)
         rr = w_bar * (d * inv_m - (1.0 - d) * inv_1m)
 
+        # nu^2 component from the score decomposition in the sensitivity bound.
         nu2_score_element = 2.0 * m_alpha - np.square(rr)
         nu2 = float(np.mean(nu2_score_element))
         psi_nu2 = nu2_score_element - nu2

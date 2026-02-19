@@ -85,7 +85,8 @@ def test_uncofoundedness_balance_att(normalize_ipw):
     out = validate_uncofoundedness_balance(res)
 
     assert out['score'] == 'ATTE'
-    assert out['normalized'] == normalize_ipw
+    # ATTE uses canonical EIF; normalize_ipw is intentionally ignored for this estimand.
+    assert out['normalized'] is False
     smd = out['smd']
     assert isinstance(smd, pd.Series)
     assert list(smd.index) == confs

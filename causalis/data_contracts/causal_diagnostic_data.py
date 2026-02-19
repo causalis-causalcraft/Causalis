@@ -27,6 +27,7 @@ class UnconfoundednessDiagnosticData(DiagnosticData):
     psi_b: Optional[np.ndarray] = None  # Orthogonal signal (for DML)
     folds: Optional[np.ndarray] = None  # Cross-fitting folds
     trimming_threshold: float = 0.0
+    normalize_ipw: Optional[bool] = None
 
     # Sensitivity elements (DoubleML-style)
     sigma2: Optional[float] = None
@@ -51,6 +52,7 @@ class MultiUnconfoundednessDiagnosticData(DiagnosticData):
     psi_b: Optional[np.ndarray] = None  # Orthogonal signal (for DML)
     folds: Optional[np.ndarray] = None  # Cross-fitting folds
     trimming_threshold: float = 0.0
+    normalize_ipw: Optional[bool] = None
 
     # Sensitivity elements (DoubleML-style)
     sigma2: Union[float, np.ndarray] = None

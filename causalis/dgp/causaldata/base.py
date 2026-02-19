@@ -38,7 +38,7 @@ class CausalDatasetGenerator:
     - m: true propensity P(T=1 | X) marginalized over U
     - m_obs: realized propensity P(T=1 | X, U)
     - tau_link: tau(X) on the structural (link) scale
-    - g0: E[Y | X, T=0] on the natural outcome scale marginalized over U
+    - g0: E[Y | X, T=0] on the natural outcome scale marginalized over U .,9 
     - g1: E[Y | X, T=1] on the natural outcome scale marginalized over U
     - cate: g1 - g0 (conditional average treatment effect on the natural outcome scale)
 
@@ -182,6 +182,7 @@ class CausalDatasetGenerator:
 
         # If specs are provided and copula is requested, use Gaussian copula
         if getattr(self, "use_copula", False):
+            # Copula returns both realized columns and their names (after any one-hot expansion).
             X, names = _gaussian_copula(self.rng, n, self.confounder_specs, getattr(self, "copula_corr", None))
             self.k = X.shape[1]
             return X, names
@@ -365,6 +366,7 @@ class CausalDatasetGenerator:
         float
             Calibrated alpha_d.
         """
+        # Wide initial bracket on the log-odds intercept.
         lo, hi = -50.0, 50.0
         # Define function whose root we seek
         def f(a: float) -> float:
@@ -382,7 +384,7 @@ class CausalDatasetGenerator:
             else:
                 # Fall back to the closer endpoint
                 return lo if abs(flo) < abs(fhi) else hi
-        # Standard bisection with tighter tolerance and bounded iterations
+        # Standard monotone-root bisection on mean(sigmoid(alpha + score)) - target.
         for _ in range(80):
             mid = 0.5 * (lo + hi)
             fm = f(mid)
@@ -420,12 +422,14 @@ class CausalDatasetGenerator:
 
         # Treatment assignment
         if self.target_d_rate is not None:
+            # Recalibrate alpha_d on the sampled X each call so realized prevalence tracks target.
             self.alpha_d = self._calibrate_alpha_d(X, U, self.target_d_rate)
         logits_t = self.alpha_d + self._treatment_score(X, U)
         m_obs = _sigmoid(logits_t)  # realized propensity including U
 
         # Marginal m(x) = E[D|X] (integrate out U if it affects treatment)
         if float(self.u_strength_d) != 0.0:
+            # Gauss-Hermite computes E[sigmoid(base + u_strength_d * U)] for U~N(0,1).
             gh_x, gh_w = np.polynomial.hermite.hermgauss(21)
             gh_w = gh_w / np.sqrt(np.pi)
             base = self.alpha_d + self._treatment_score(X, np.zeros(n))
@@ -438,6 +442,7 @@ class CausalDatasetGenerator:
         D = self.rng.binomial(1, m_obs).astype(float)
 
         # Treatment effect (constant or heterogeneous)
+        # tau_x is always on the structural link scale used by the selected outcome family.
         tau_x = (self.tau(X) if self.tau is not None else np.full(n, self.theta)).astype(float)
 
         # Outcome generation
@@ -462,7 +467,7 @@ class CausalDatasetGenerator:
             scale = mu / max(k, 1e-12)
             Y = self.rng.gamma(shape=k, scale=scale, size=n).astype(float)
         elif self.outcome_type == "tweedie":
-            # 1) nonzero probability
+            # 1) Zero/positive part: logit P(Y>0 | X,D,U).
             Xf = np.asarray(X, dtype=float)
             base_zi = np.full(n, float(self.alpha_zi), dtype=float)
             if self.beta_zi is not None:
@@ -482,7 +487,7 @@ class CausalDatasetGenerator:
             p_pos = _sigmoid(base_zi + D * tau_zi_x)
             is_pos = self.rng.binomial(1, p_pos, size=n).astype(float)
 
-            # 2) positive mean on log scale (reuse your loc as log-mean)
+            # 2) Positive-part mean: loc is interpreted as log E[Y | Y>0, X,D,U].
             # IMPORTANT: interpret alpha_y / beta_y / g_y as log-mean components for tweedie
             loc_pos = np.clip(loc, -20, 20)
             mu_pos = np.exp(loc_pos)
@@ -513,6 +518,7 @@ class CausalDatasetGenerator:
 
         elif self.outcome_type == "binary":
             if float(self.u_strength_y) != 0.0:
+                # Oracle risk under treatment/control integrates latent U out on probability scale.
                 gh_x, gh_w = np.polynomial.hermite.hermgauss(21)
                 gh_w = gh_w / np.sqrt(np.pi)
                 base0 = self._outcome_location(X, np.zeros(n), np.zeros(n), np.zeros(n))
@@ -526,6 +532,7 @@ class CausalDatasetGenerator:
 
         elif self.outcome_type in {"poisson", "gamma"}:
             if float(self.u_strength_y) != 0.0:
+                # Oracle mean integrates exp(link) over U; clipping keeps exponentials stable.
                 gh_x, gh_w = np.polynomial.hermite.hermgauss(21)
                 gh_w = gh_w / np.sqrt(np.pi)
                 base0 = self._outcome_location(X, np.zeros(n), np.zeros(n), np.zeros(n))
@@ -571,6 +578,7 @@ class CausalDatasetGenerator:
                 loc0_u = loc0[:, None] + uy * Uq[None, :]
                 loc1_u = loc1[:, None] + uy * Uq[None, :]
 
+                # Product-of-means form comes from two-part construction: P(Y>0)*E[Y|Y>0].
                 p_pos0 = _sigmoid(zi0_u)
                 p_pos1 = _sigmoid(zi1_u)
                 mu_pos0 = np.exp(np.clip(loc0_u, -20, 20))

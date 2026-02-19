@@ -215,6 +215,8 @@ def generate_rct(
             outcome_params = {"shape": 2.0, "scale": {"A": 1.0, "B": 1.1}}
 
     # Map to natural-scale means
+    # Keep a single natural-scale representation first, then convert once to
+    # CausalDatasetGenerator link-scale parameters below.
     if ttype == "binary":
         pA = float(outcome_params["p"]["A"]); pB = float(outcome_params["p"]["B"])
         if not (0.0 < pA < 1.0 and 0.0 < pB < 1.0):
@@ -240,6 +242,9 @@ def generate_rct(
             raise ValueError("For Poisson/Gamma outcomes, implied means must be > 0.")
 
     # Convert to class parameters
+    # CausalDatasetGenerator expects:
+    # - alpha_y/theta on outcome link scale
+    # - outcome_type="continuous" for normal outcomes.
     if ttype == "binary":
         alpha_y = _logit(mu0_nat)
         theta = _logit(mu1_nat) - _logit(mu0_nat)
@@ -262,6 +267,7 @@ def generate_rct(
         sigma_y = 1.0
 
     # Instantiate the unified generator with randomized treatment
+    # RCT property is encoded by beta_d=None, g_d=None, u_strength_d=0 and fixed alpha_d=logit(split).
     gen_kwargs = dict(
         theta=theta,
         tau=None,
@@ -290,6 +296,8 @@ def generate_rct(
     df = gen.generate(n)
 
     if add_pre:
+        # Build a baseline signal from exactly the same outcome-baseline components
+        # used by the generator (beta_y + g_y), excluding treatment effects.
         exclude = {"y","d","m","m_obs","tau_link","g0","g1","cate"}
         x_cols = [c for c in df.columns if c not in exclude]
         
@@ -305,6 +313,7 @@ def generate_rct(
 
         spec = PreCorrSpec(
             target_corr=pre_corr,
+            # For skewed/nonnegative outcomes, calibrate correlation in transformed space.
             transform="none" if outcome_type_cls == "continuous" else "log1p"
         )
         
@@ -647,7 +656,7 @@ def _add_tweedie_pre(
     ctrl = (df["d"].to_numpy() == 0)
     y_post = df["y"].to_numpy()
 
-    # Shared components from the generator
+    # Reuse generator structural components so pre-period signal mirrors post-period DGP.
     alpha_zi = gen.alpha_zi
     beta_zi = gen.beta_zi
     g_zi = gen.g_zi
@@ -657,7 +666,7 @@ def _add_tweedie_pre(
     k = gen.gamma_shape
 
     def sample_pre_base(w_shared: float) -> np.ndarray:
-        # Predictors
+        # Shared latent driver A enters both zero-inflation and positive-part location.
         base_zi = np.full(n, float(alpha_zi))
         if beta_zi is not None:
             base_zi += X @ beta_zi
@@ -724,7 +733,7 @@ def _add_tweedie_pre(
             best_pre_base = y_pre_w
             best_noise = noise_w
 
-    # Materialize exactly from the calibrated draw to preserve target behavior.
+    # Materialize from the exact calibrated base/noise pair to avoid drift in achieved corr.
     if best_pre_base is None or best_noise is None:
         best_pre_base = sample_pre_base(best_w)
         best_noise = rng.normal(size=n)
