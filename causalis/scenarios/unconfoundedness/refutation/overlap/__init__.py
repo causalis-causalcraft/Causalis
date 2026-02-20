@@ -1,36 +1,11 @@
 from __future__ import annotations
 
-# Re-export public API from diagnostics module
-from .overlap_validation import (
-    DEFAULT_THRESHOLDS,
-    positivity_overlap_checks,
-    overlap_report_from_result,
-    run_overlap_diagnostics,
-    att_overlap_tests,
-    edge_mass,
-    ks_distance,
-    auc_for_m,
-    ess_per_group,
-    att_weight_sum_identity,
-)
-from .overlap_validation import (
-    calibration_report_m,
-    ece_binary,
-)
+from .overlap_validation import run_overlap_diagnostics
 from .overlap_plot import plot_m_overlap
+from .reliability_plot import plot_propensity_reliability
 
 __all__ = [
-    "DEFAULT_THRESHOLDS",
-    "positivity_overlap_checks",
-    "overlap_report_from_result",
     "run_overlap_diagnostics",
-    "att_overlap_tests",
-    "edge_mass",
-    "ks_distance",
-    "auc_for_m",
-    "ess_per_group",
-    "att_weight_sum_identity",
-    "calibration_report_m",
-    "ece_binary",
     "plot_m_overlap",
+    "plot_propensity_reliability",
 ]

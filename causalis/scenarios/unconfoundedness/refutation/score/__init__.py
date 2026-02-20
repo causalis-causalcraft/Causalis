@@ -1,17 +1,15 @@
 from .score_validation import (
-    refute_placebo_outcome,
-    refute_placebo_treatment,
-    refute_subset,
-    refute_irm_orthogonality,
-    influence_summary,
-    run_score_diagnostics
+    run_score_diagnostics,
+)
+from .influence_plot import (
+    plot_influence_instability,
+)
+from .residual_plots import (
+    plot_residual_diagnostics,
 )
 
 __all__ = [
-    "refute_placebo_outcome",
-    "refute_placebo_treatment",
-    "refute_subset",
-    "refute_irm_orthogonality",
-    "influence_summary",
-    "run_score_diagnostics"
+    "run_score_diagnostics",
+    "plot_influence_instability",
+    "plot_residual_diagnostics",
 ]

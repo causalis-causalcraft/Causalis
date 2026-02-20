@@ -19,11 +19,14 @@ class UnconfoundednessDiagnosticData(DiagnosticData):
     """Fields common to all models assuming unconfoundedness."""
 
     m_hat: np.ndarray  # Propensity scores
+    m_hat_raw: Optional[np.ndarray] = None  # Raw (pre-clipping) propensity scores when available
     d: np.ndarray  # Treatment indicators
     y: Optional[np.ndarray] = None  # Outcomes
     x: Optional[np.ndarray] = None  # Confounders (for balance checks)
     g0_hat: Optional[np.ndarray] = None  # Estimated outcome under control
     g1_hat: Optional[np.ndarray] = None  # Estimated outcome under treatment
+    w: Optional[np.ndarray] = None  # Score target weights used in estimation
+    w_bar: Optional[np.ndarray] = None  # Representer weights used in estimation
     psi_b: Optional[np.ndarray] = None  # Orthogonal signal (for DML)
     folds: Optional[np.ndarray] = None  # Cross-fitting folds
     trimming_threshold: float = 0.0
@@ -39,10 +42,12 @@ class UnconfoundednessDiagnosticData(DiagnosticData):
     psi: Optional[np.ndarray] = None
     score: Optional[str] = None  # ATE or ATTE
     sensitivity_analysis: Optional[Dict[str, Any]] = None
+    score_plot_cache: Optional[Dict[str, Any]] = None
+    residual_plot_cache: Optional[Dict[str, Any]] = None
 
 
 class MultiUnconfoundednessDiagnosticData(DiagnosticData):
-    """Fields common to all models assuming unconfoundedness with multi_uncofoundedness."""
+    """Fields common to all models assuming unconfoundedness with multi_unconfoundedness."""
 
     m_hat: np.ndarray  # Propensity scores
     d: np.ndarray  # Treatments indicators

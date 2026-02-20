@@ -2,22 +2,22 @@
 Refutation and robustness utilities for Causalis.
 
 Importing this package exposes the public functions from all refutation
-submodules (overlap, score, uncofoundedness) so you can access
+submodules (overlap, score, unconfoundedness) so you can access
 commonly used helpers directly via `causalis.refutation`.
 """
 
-from . import overlap, score, uncofoundedness
+from . import overlap, score, unconfoundedness
 
 # Re-export public API from subpackages
 # Overlap diagnostics (public API defined in overlap/__init__.py)
 from .overlap import *  # noqa: F401,F403
 
 # Score-based refutations and diagnostics
-from .score.score_validation import *  # noqa: F401,F403
+from .score import *  # noqa: F401,F403
 
-# Uncofoundedness sensitivity and balance checks
-from .uncofoundedness.uncofoundedness_validation import *  # noqa: F401,F403
-from .uncofoundedness.sensitivity import *  # noqa: F401,F403
+# Unconfoundedness sensitivity and balance checks
+from .unconfoundedness.unconfoundedness_validation import *  # noqa: F401,F403
+from .unconfoundedness.sensitivity import *  # noqa: F401,F403
 
 # Best-effort __all__: include common high-level entry points for discoverability.
 # Note: wildcard imports above already populate the module namespace.
@@ -26,20 +26,18 @@ try:
 except Exception:
     __all_overlap = []
 
-# score_validation and uncofoundedness modules don't define __all__; curate a minimal list
+# score_validation and unconfoundedness APIs exposed for discoverability.
 __all_score = [
-    "refute_placebo_outcome",
-    "refute_placebo_treatment",
-    "refute_subset",
-    "refute_irm_orthogonality",
-    "influence_summary",
+    "run_score_diagnostics",
+    "plot_influence_instability",
+    "plot_residual_diagnostics",
 ]
 
 __all_unconf = [
     "sensitivity_analysis",
     "get_sensitivity_summary",
-    "validate_uncofoundedness_balance",
+    "run_unconfoundedness_diagnostics",
     "sensitivity_benchmark",
 ]
 
-__all__ = ["overlap", "score", "uncofoundedness"] + list(dict.fromkeys([*__all_overlap, *__all_score, *__all_unconf]))
+__all__ = ["overlap", "score", "unconfoundedness"] + list(dict.fromkeys([*__all_overlap, *__all_score, *__all_unconf]))

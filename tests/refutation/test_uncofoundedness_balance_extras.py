@@ -6,7 +6,9 @@ from sklearn.linear_model import LinearRegression, LogisticRegression
 from causalis.dgp.causaldata import CausalData
 from causalis.dgp import generate_rct
 from causalis.scenarios.unconfoundedness.model import IRM
-from causalis.scenarios.unconfoundedness.refutation.uncofoundedness.uncofoundedness_validation import validate_uncofoundedness_balance
+from causalis.scenarios.unconfoundedness.refutation.unconfoundedness.unconfoundedness_validation import (
+    run_unconfoundedness_diagnostics,
+)
 
 
 def test_uncofoundedness_balance_extras_outputs():
@@ -27,7 +29,7 @@ def test_uncofoundedness_balance_extras_outputs():
         random_state=11,
     ).fit().estimate(alpha=0.10, diagnostic_data=True)
 
-    out = validate_uncofoundedness_balance(res)
+    out = run_unconfoundedness_diagnostics(data, res)["balance"]
     # New fields should be present and of correct types
     assert 'smd_max' in out
     assert 'worst_features' in out

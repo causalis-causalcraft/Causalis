@@ -3,7 +3,7 @@ from sklearn.ensemble import RandomForestRegressor, RandomForestClassifier
 from causalis.dgp.causaldata import CausalData
 from causalis.dgp import generate_rct
 from causalis.scenarios.unconfoundedness.model import IRM
-from causalis.scenarios.unconfoundedness.refutation.uncofoundedness.sensitivity import sensitivity_analysis, get_sensitivity_summary
+from causalis.scenarios.unconfoundedness.refutation.unconfoundedness.sensitivity import sensitivity_analysis, get_sensitivity_summary
 
 
 def _make_cd(n=600, random_state=3, outcome_type="normal"):

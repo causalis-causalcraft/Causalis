@@ -545,7 +545,7 @@ def run_uncofoundedness_diagnostics(
     return_summary: bool = True,
 ) -> _Dict[str, _Any]:
     """
-    Multi-treatment uncofoundedness diagnostics focused on balance (SMD), ATE only.
+    Multi-treatment unconfoundedness diagnostics focused on balance (SMD), ATE only.
 
     Pairwise comparisons: baseline treatment 0 vs k (k=1..K-1)
 

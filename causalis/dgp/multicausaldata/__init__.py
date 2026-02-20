@@ -3,7 +3,7 @@ from .base import MultiCausalDatasetGenerator
 from .functional import generate_multitreatment
 def generate_multitreatment_irm_26(*args, **kwargs):
     # Lazy import to avoid circular dependency at module import time.
-    from causalis.scenarios.multi_uncofoundedness.dgp import (
+    from causalis.scenarios.multi_unconfoundedness.dgp import (
         generate_multitreatment_irm_26 as _generate_multitreatment_irm_26,
     )
 

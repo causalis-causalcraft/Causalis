@@ -1,50 +1,90 @@
 import numpy as np
 
-from causalis.scenarios.unconfoundedness.refutation import (
-    positivity_overlap_checks,
-    edge_mass,
-    ks_distance,
-    auc_for_m,
-    ess_per_group,
-    att_weight_sum_identity,
-)
+from causalis.scenarios.unconfoundedness.refutation.overlap.overlap_validation import run_overlap_diagnostics
+from tests.refutation._overlap_test_utils import make_overlap_data_and_estimate
 
 
-def test_split_functions_basic():
+def test_overlap_metrics_have_valid_ranges():
     rng = np.random.default_rng(0)
     n = 500
-    m = rng.beta(2, 2, size=n)
-    D = rng.binomial(1, m)
+    m = np.clip(rng.beta(2.0, 2.0, size=n), 1e-6, 1.0 - 1e-6)
+    d = rng.binomial(1, m)
+    data, estimate = make_overlap_data_and_estimate(m_hat=m, d=d)
 
-    # Edge mass
-    em = edge_mass(m, eps=(0.01, 0.02))
-    assert 0.0 <= em[0.01]["share_below"] <= 1.0
-    assert 0.0 <= em[0.02]["share_above"] <= 1.0
+    report = run_overlap_diagnostics(data, estimate)
 
-    # KS and AUC
-    ks = ks_distance(m, D)
-    auc = auc_for_m(m, D)
-    assert (np.isnan(ks) or 0.0 <= ks <= 1.0)
-    assert (np.isnan(auc) or 0.0 <= auc <= 1.0)
+    edge = report["edge_mass"]
+    assert 0.0 <= edge["share_below_001"] <= 1.0
+    assert 0.0 <= edge["share_above_001"] <= 1.0
+    assert 0.0 <= edge["share_below_002"] <= 1.0
+    assert 0.0 <= edge["share_above_002"] <= 1.0
 
-    # ESS
-    ess = ess_per_group(m, D)
+    if np.isfinite(report["ks"]):
+        assert 0.0 <= report["ks"] <= 1.0
+    if np.isfinite(report["auc"]):
+        assert 0.0 <= report["auc"] <= 1.0
+
+    ess = report["ate_ess"]
     assert set(["ess_w1", "ess_w0", "ess_ratio_w1", "ess_ratio_w0"]).issubset(ess.keys())
 
-    # ATT identity
-    att_id = att_weight_sum_identity(m, D)
-    assert set(["lhs_sum", "rhs_sum", "rel_err"]).issubset(att_id.keys())
 
-
-def test_positivity_overlap_checks_returns_dict_and_flags():
-    # Make nearly separable data_contracts to trigger strong flags
+def test_nearly_separable_propensity_triggers_strong_flags():
     rng = np.random.default_rng(1)
     n = 400
     x = rng.standard_normal(n)
-    D = (x > 0).astype(int)
-    m = 1 / (1 + np.exp(-5 * x))
-    rep = positivity_overlap_checks(m_hat=m, D=D, m_clipped_from=(1e-3, 1 - 1e-3))
-    assert isinstance(rep, dict)
-    assert "flags" in rep and isinstance(rep["flags"], dict)
-    red_any = any(v == "RED" for k, v in rep["flags"].items() if k in {"auc", "ks", "edge_mass_001", "edge_mass_002"})
+    d = (x > 0.0).astype(int)
+    m = 1.0 / (1.0 + np.exp(-5.0 * x))
+    data, estimate = make_overlap_data_and_estimate(m_hat=m, d=d, trimming_threshold=0.01)
+
+    report = run_overlap_diagnostics(data, estimate)
+
+    red_any = any(
+        report["flags"].get(key) == "RED"
+        for key in ["auc", "ks", "edge_mass_001", "edge_mass_002"]
+    )
     assert red_any
+
+
+def test_extreme_treated_weight_triggers_tails_red_flag():
+    n_treated = 200
+    n_control = 200
+    d = np.concatenate([np.ones(n_treated, dtype=int), np.zeros(n_control, dtype=int)])
+    m_treated = np.full(n_treated, 0.5, dtype=float)
+    m_treated[-1] = 1e-6
+    m_control = np.full(n_control, 0.5, dtype=float)
+    m = np.concatenate([m_treated, m_control])
+
+    data, estimate = make_overlap_data_and_estimate(m_hat=m, d=d)
+    report = run_overlap_diagnostics(data, estimate)
+
+    assert report["flags"]["tails_w1"] == "RED"
+    assert report["flags"]["tails_w0"] in {"GREEN", "YELLOW", "RED", "NA"}
+
+    tails_w1 = report["ate_tails"]["w1"]
+    med = float(tails_w1["median"])
+    assert med > 0.0
+    assert float(tails_w1["q999"]) / med > 100.0
+    assert float(tails_w1["max"]) / med > 100.0
+
+
+def test_att_identity_relerr_and_flag_are_reported():
+    n_treated = 200
+    n_control = 200
+    d = np.concatenate([np.ones(n_treated, dtype=int), np.zeros(n_control, dtype=int)])
+    m_treated = np.full(n_treated, 0.5, dtype=float)
+    m_control = np.full(n_control, 0.9, dtype=float)
+    m = np.concatenate([m_treated, m_control])
+
+    data, estimate = make_overlap_data_and_estimate(m_hat=m, d=d)
+    report = run_overlap_diagnostics(data, estimate)
+
+    assert "att_weights" in report
+    assert report["att_weights"]["rhs_sum"] == float(n_treated)
+    assert report["att_weights"]["lhs_sum"] > report["att_weights"]["rhs_sum"]
+    assert report["att_weights"]["rel_err"] > 0.10
+    assert report["flags"]["att_identity"] == "RED"
+
+    row = report["summary"].loc[report["summary"]["metric"] == "ATT_identity_relerr"]
+    assert not row.empty
+    assert float(row["value"].iloc[0]) > 0.10
+    assert row["flag"].iloc[0] == "RED"

@@ -2,9 +2,11 @@ def test_refutation_namespace_exports():
     import causalis.scenarios.unconfoundedness.refutation as ref
 
     # Overlap exports
-    assert hasattr(ref, "positivity_overlap_checks")
-    assert hasattr(ref, "calibration_report_m")
+    assert hasattr(ref, "run_overlap_diagnostics")
+    assert hasattr(ref, "plot_m_overlap")
+    assert hasattr(ref, "plot_propensity_reliability")
 
-    # Score-based refutations
-    assert hasattr(ref, "refute_placebo_outcome")
-    assert hasattr(ref, "refute_subset")
+    # Score diagnostics
+    assert hasattr(ref, "run_score_diagnostics")
+    assert hasattr(ref, "plot_influence_instability")
+    assert hasattr(ref, "plot_residual_diagnostics")

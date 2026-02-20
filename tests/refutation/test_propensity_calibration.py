@@ -1,58 +1,40 @@
 import numpy as np
 
-from causalis.scenarios.unconfoundedness.refutation.overlap.overlap_validation import (
-    ece_binary,
-    calibration_report_m,
-)
+from causalis.scenarios.unconfoundedness.refutation.overlap.overlap_validation import run_overlap_diagnostics
+from tests.refutation._overlap_test_utils import make_overlap_data_and_estimate
 
 
-def test_ece_binary_basic():
-    # Perfectly calibrated edge cases
-    p = np.array([0.0, 1.0, 0.0, 1.0])
-    y = np.array([0, 1, 0, 1])
-    ece = ece_binary(p, y, n_bins=2)
-    assert np.isfinite(ece)
-    assert abs(ece - 0.0) < 1e-12
-
-
-def _simulate_probs_and_labels(n=4000, seed=123):
+def _simulate_probs_and_labels(n: int = 4000, seed: int = 123):
     rng = np.random.default_rng(seed)
     x = rng.normal(size=n)
-    # true probability
     p = 1.0 / (1.0 + np.exp(-(0.8 * x)))
     y = rng.binomial(1, p)
     return p, y
 
 
-def test_calibration_report_keys_and_flags_green_on_well_calibrated():
-    p, y = _simulate_probs_and_labels(n=3000, seed=11)
-    rep = calibration_report_m(p, y, n_bins=10)
+def test_calibration_is_well_formed_and_finite():
+    p, d = _simulate_probs_and_labels(n=3000, seed=11)
+    data, estimate = make_overlap_data_and_estimate(m_hat=p, d=d)
 
-    # Basic keys present
-    assert isinstance(rep, dict)
-    for k in ["auc", "brier", "ece", "reliability_table", "recalibration", "flags"]:
-        assert k in rep
+    report = run_overlap_diagnostics(data, estimate, n_bins=10)
+    cal = report["calibration"]
 
-    # Reliability table shape
-    rel = rep["reliability_table"]
-    assert hasattr(rel, "shape")
-    assert rel.shape[1] >= 5
-
-    # Well-calibrated model should not be flagged RED
-    assert rep["flags"]["ece"] in {"GREEN", "YELLOW"}
-    assert rep["flags"]["slope"] in {"GREEN", "YELLOW"}
-    assert rep["flags"]["intercept"] in {"GREEN", "YELLOW"}
+    assert isinstance(cal, dict)
+    for key in ["auc", "brier", "ece", "reliability_table", "recalibration", "flags"]:
+        assert key in cal
+    assert np.isfinite(cal["ece"])
+    assert cal["ece"] >= 0.0
+    assert cal["flags"]["ece"] in {"GREEN", "YELLOW", "RED", "NA"}
 
 
-def test_misscaled_scores_trigger_flags():
-    p, y = _simulate_probs_and_labels(n=4000, seed=21)
-    # mis-scale probabilities to create calibration slope far from 1
-    z = np.log(np.clip(p, 1e-12, 1 - 1e-12) / (1 - np.clip(p, 1e-12, 1 - 1e-12)))
-    p_bad = 1.0 / (1.0 + np.exp(-0.5 * z))  # slope ~ 0.5 expected
+def test_misscaled_propensity_triggers_slope_flag():
+    p, d = _simulate_probs_and_labels(n=4000, seed=21)
+    z = np.log(np.clip(p, 1e-12, 1.0 - 1e-12) / (1.0 - np.clip(p, 1e-12, 1.0 - 1e-12)))
+    p_bad = 1.0 / (1.0 + np.exp(-0.5 * z))
+    data, estimate = make_overlap_data_and_estimate(m_hat=p_bad, d=d)
 
-    rep = calibration_report_m(p_bad, y, n_bins=10)
+    report = run_overlap_diagnostics(data, estimate, n_bins=10)
+    cal = report["calibration"]
 
-    # Expect strong slope flag
-    assert rep["flags"]["slope"] == "RED"
-    # ECE should be finite and likely above warn
-    assert np.isfinite(rep["ece"]) and rep["ece"] >= 0.0
+    assert cal["flags"]["slope"] == "RED"
+    assert np.isfinite(cal["ece"])

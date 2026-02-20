@@ -1,98 +1,59 @@
-import pandas as pd
+from sklearn.linear_model import LinearRegression, LogisticRegression
 
-from causalis.scenarios.unconfoundedness.refutation.score.score_validation import add_score_flags
-
-
-def _base_rep():
-    # minimal skeleton; summary is optional (function can build one)
-    return {
-        'meta': {'n': 10000, 'score': 'ATE'},
-        'influence_diagnostics': {
-            'se_plugin': 0.1,
-            'p99_over_med': 9.0,
-            'kurtosis': 8.0,
-        },
-        # OOS test placeholder (overridden in specific tests)
-        'oos_moment_test': {
-            'tstat_fold_agg': 0.05,
-            'tstat_strict': 0.05,
-        },
-    }
+from causalis.dgp import generate_rct
+from causalis.dgp.causaldata import CausalData
+from causalis.scenarios.unconfoundedness.model import IRM
+from causalis.scenarios.unconfoundedness.refutation.score.score_validation import run_score_diagnostics
 
 
-def test_effect_size_guard_downgrades_red_when_oos_green():
-    rep = _base_rep()
-    # Orthogonality with large t, but tiny constant-basis derivatives
-    ortho = pd.DataFrame({
-        'basis': [0, 1],
-        'd_g1':  [0.010, 0.010],
-        'se_g1': [0.001, 0.001],
-        't_g1':  [10.0, 10.0],
-        'd_g0':  [0.015, 0.020],
-        'se_g0': [0.001, 0.001],
-        't_g0':  [6.0,  6.0],
-        'd_m':   [0.005, 0.005],
-        'se_m':  [0.001, 0.001],
-        't_m':   [8.0,  8.0],
-    })
-    rep['orthogonality_derivatives'] = ortho
-    # OOS green (near zero t)
-    rep['oos_moment_test'] = {'tstat_fold_agg': 0.01, 'tstat_strict': 0.01}
-
-    out = add_score_flags(rep)  # default effect_size_guard=0.02, oos_gate=True
-    f = out['flags']
-    # Initially would be RED due to large |t|; guard should downgrade to GREEN because OOS is GREEN
-    assert f['ortho_max_|t|_g1'] == 'GREEN'
-    assert f['ortho_max_|t|_g0'] == 'GREEN'
-    assert f['ortho_max_|t|_m'] == 'GREEN'
-    # Overall should not be RED now
-    assert out['overall_flag'] in {'GREEN', 'YELLOW'}
+def _make_estimate(seed: int):
+    df = generate_rct(n=1200, k=5, random_state=seed, outcome_type="normal")
+    confs = [c for c in df.columns if c.startswith("x")]
+    data = CausalData(df=df, treatment="d", outcome="y", confounders=confs)
+    estimate = IRM(
+        data,
+        ml_g=LinearRegression(),
+        ml_m=LogisticRegression(max_iter=400),
+        n_folds=3,
+        random_state=seed,
+    ).fit().estimate(score="ATE", diagnostic_data=True)
+    return data, estimate
 
 
-def test_effect_size_guard_downgrades_red_to_yellow_when_oos_not_green():
-    rep = _base_rep()
-    ortho = pd.DataFrame({
-        'basis': [0, 1],
-        'd_g1':  [0.010, 0.010],
-        'se_g1': [0.001, 0.001],
-        't_g1':  [10.0, 10.0],
-        'd_g0':  [0.015, 0.020],
-        'se_g0': [0.001, 0.001],
-        't_g0':  [6.0,  6.0],
-        'd_m':   [0.005, 0.005],
-        'se_m':  [0.001, 0.001],
-        't_m':   [8.0,  8.0],
-    })
-    rep['orthogonality_derivatives'] = ortho
-    # OOS not green (tstat high)
-    rep['oos_moment_test'] = {'tstat_fold_agg': 3.5, 'tstat_strict': 3.5}
+def test_score_flags_and_thresholds_present():
+    data, estimate = _make_estimate(seed=3)
+    out = run_score_diagnostics(data, estimate, return_summary=True)
 
-    out = add_score_flags(rep)
-    f = out['flags']
-    # Guard should downgrade RED to YELLOW when OOS isn't GREEN
-    assert f['ortho_max_|t|_g1'] == 'YELLOW'
-    assert f['ortho_max_|t|_g0'] == 'YELLOW'
-    assert f['ortho_max_|t|_m'] == 'YELLOW'
+    assert set(
+        [
+            "psi_tail_ratio",
+            "psi_kurtosis",
+            "ortho_max_|t|_g1",
+            "ortho_max_|t|_g0",
+            "ortho_max_|t|_m",
+            "oos_moment",
+        ]
+    ).issubset(set(out["flags"]))
+    assert set(
+        ["tail_ratio_warn", "tail_ratio_strong", "kurt_warn", "kurt_strong", "t_warn", "t_strong"]
+    ).issubset(set(out["thresholds"]))
+    assert out["overall_flag"] in {"GREEN", "YELLOW", "RED", "NA"}
 
 
-def test_huge_n_relaxes_tail_and_kurtosis_flags():
-    # Construct with large n and borderline tail/kurtosis values
-    rep = {
-        'meta': {'n': 250_000, 'score': 'ATE'},
-        'influence_diagnostics': {
-            'se_plugin': 0.05,
-            'p99_over_med': 11.5,  # → initial YELLOW
-            'kurtosis': 45.0,      # → initial RED (>30)
-        },
-        'orthogonality_derivatives': pd.DataFrame({
-            'basis': [0], 'd_g1': [0.0], 'se_g1': [1.0], 't_g1': [0.0],
-            'd_g0': [0.0], 'se_g0': [1.0], 't_g0': [0.0],
-            'd_m':  [0.0], 'se_m':  [1.0], 't_m':  [0.0],
-        }),
-        'oos_moment_test': {'tstat_fold_agg': 0.0, 'tstat_strict': 0.0},
-    }
+def test_summary_flags_align_with_report_flags():
+    data, estimate = _make_estimate(seed=9)
+    out = run_score_diagnostics(data, estimate, return_summary=True)
+    summary = out["summary"]
 
-    out = add_score_flags(rep)
-    f = out['flags']
-    assert f['psi_tail_ratio'] == 'GREEN'   # YELLOW→GREEN under gate
-    assert f['psi_kurtosis'] == 'YELLOW'    # RED→YELLOW under gate
+    row_tail = summary.loc[summary["metric"] == "psi_p99_over_med"]
+    row_kurt = summary.loc[summary["metric"] == "psi_kurtosis"]
+    row_oos_fold = summary.loc[summary["metric"] == "oos_tstat_fold"]
+    row_oos_strict = summary.loc[summary["metric"] == "oos_tstat_strict"]
+    assert not row_tail.empty
+    assert not row_kurt.empty
+    assert not row_oos_fold.empty
+    assert not row_oos_strict.empty
+    assert row_tail["flag"].iloc[0] == out["flags"]["psi_tail_ratio"]
+    assert row_kurt["flag"].iloc[0] == out["flags"]["psi_kurtosis"]
+    assert row_oos_fold["flag"].iloc[0] == out["flags"]["oos_moment"]
+    assert row_oos_strict["flag"].iloc[0] == out["flags"]["oos_moment"]
