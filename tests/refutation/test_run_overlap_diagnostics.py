@@ -2,61 +2,47 @@ import numpy as np
 import pandas as pd
 
 from causalis.scenarios.unconfoundedness.refutation.overlap.overlap_validation import run_overlap_diagnostics
+from tests.refutation._overlap_test_utils import make_overlap_data_and_estimate
 
 
-def test_run_overlap_diagnostics_with_arrays_returns_summary_and_meta():
+def test_run_overlap_diagnostics_returns_summary_and_meta():
     rng = np.random.default_rng(42)
     n = 300
-    # moderately overlapping propensities
-    m = np.clip(rng.beta(2, 2, size=n), 1e-6, 1-1e-6)
-    D = rng.integers(0, 2, size=n)
+    m = np.clip(rng.beta(2.0, 2.0, size=n), 1e-6, 1.0 - 1e-6)
+    d = rng.integers(0, 2, size=n)
+    data, estimate = make_overlap_data_and_estimate(
+        m_hat=m,
+        d=d,
+        normalize_ipw=True,
+        trimming_threshold=0.10,
+    )
 
-    rep = run_overlap_diagnostics(m_hat=m, D=D)
+    report = run_overlap_diagnostics(data, estimate)
 
-    assert isinstance(rep, dict)
-    assert rep.get("n") == n
-    assert "flags" in rep and isinstance(rep["flags"], dict)
-
-    # Summary DataFrame exists by default
-    assert "summary" in rep
-    assert isinstance(rep["summary"], pd.DataFrame)
-    # Check a couple of expected metrics exist
-    mets = set(rep["summary"]["metric"].tolist())
-    assert {"KS", "AUC", "ESS_treated_ratio", "ESS_control_ratio"}.issubset(mets)
-
-    # Meta includes use_hajek (default False here) and thresholds
-    assert "meta" in rep and isinstance(rep["meta"], dict)
-    assert rep["meta"].get("use_hajek") in (False, True)
-    assert isinstance(rep["meta"].get("thresholds"), dict)
+    assert isinstance(report, dict)
+    assert report["n"] == n
+    assert "flags" in report and isinstance(report["flags"], dict)
+    assert "summary" in report and isinstance(report["summary"], pd.DataFrame)
+    assert "ate_tails" in report and isinstance(report["ate_tails"], dict)
+    assert "att_weights" in report and isinstance(report["att_weights"], dict)
+    assert report["meta"]["use_hajek"] is True
+    assert report["meta"]["n_bins"] == 10
+    assert {"tails_w1_q99/med", "tails_w0_q99/med", "ATT_identity_relerr"}.issubset(set(report["summary"]["metric"]))
 
 
-def test_run_overlap_diagnostics_with_result_autodetects_hajek_and_clipping():
-    rng = np.random.default_rng(0)
-    n = 500
-    m = rng.uniform(0.0, 1.0, size=n)
-    D = rng.integers(0, 2, size=n)
+def test_run_overlap_diagnostics_falls_back_to_data_when_diag_d_missing():
+    rng = np.random.default_rng(7)
+    n = 250
+    m = np.clip(rng.uniform(0.01, 0.99, size=n), 1e-6, 1.0 - 1e-6)
+    d = rng.integers(0, 2, size=n)
+    data, estimate = make_overlap_data_and_estimate(
+        m_hat=m,
+        d=d,
+        include_d_in_diag=False,
+    )
 
-    res = {
-        "diagnostic_data": {
-            "m_hat": m,
-            "d": D,
-            "trimming_threshold": 0.10,
-            "normalize_ipw": True,
-        }
-    }
+    report = run_overlap_diagnostics(data, estimate)
 
-    rep = run_overlap_diagnostics(res=res)
-
-    # Hájek should be auto-detected from the result
-    assert rep["meta"].get("use_hajek") is True
-
-    # Clipping audit should be populated (not NA since thr provided)
-    clip = rep.get("clipping", {})
-    assert np.isfinite(clip.get("m_clip_lower", np.nan))
-    assert np.isfinite(clip.get("m_clip_upper", np.nan))
-
-    # Flags should include clip_m not marked as NA
-    assert rep["flags"].get("clip_m") in {"GREEN", "YELLOW", "RED"}
-
-    # Summary exists
-    assert isinstance(rep.get("summary"), pd.DataFrame)
+    assert report["n"] == n
+    assert report["n_treated"] == int(np.sum(d))
+    assert isinstance(report.get("summary"), pd.DataFrame)

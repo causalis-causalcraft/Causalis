@@ -1,89 +1,39 @@
 import numpy as np
-import pandas as pd
-from sklearn.linear_model import LogisticRegression, LinearRegression
 
-from causalis.scenarios.unconfoundedness.refutation import att_overlap_tests
-from causalis.dgp.causaldata import CausalData
-from causalis.scenarios.unconfoundedness.model import IRM
+from causalis.scenarios.unconfoundedness.refutation import run_overlap_diagnostics
+from tests.refutation._overlap_test_utils import make_overlap_data_and_estimate
 
 
-def test_att_overlap_tests_structure_and_basic_flags_random():
+def test_run_overlap_diagnostics_structure_and_basic_flags():
     rng = np.random.default_rng(123)
     n = 500
-    # Simulate m in (0.05, 0.95) and D ~ Bernoulli(m)
-    m = rng.uniform(0.05, 0.95, size=n)
-    D = rng.binomial(1, m)
+    m = np.clip(rng.uniform(0.05, 0.95, size=n), 1e-6, 1.0 - 1e-6)
+    d = rng.binomial(1, m)
+    data, estimate = make_overlap_data_and_estimate(
+        m_hat=m,
+        d=d,
+        normalize_ipw=True,
+        trimming_threshold=0.05,
+    )
 
-    res = {"diagnostic_data": {"m_hat": m, "d": D}}
-    out = att_overlap_tests(res)
+    out = run_overlap_diagnostics(data, estimate)
 
-    # Structure
     assert isinstance(out, dict)
-    assert "edge_mass" in out and "ks" in out and "auc" in out and "ess" in out and "att_weight_identity" in out
-    assert isinstance(out["edge_mass"].get("eps"), dict)
-    # KS should be defined (not NaN) as both arms present
-    assert out["ks"]["value"] == out["ks"]["value"]  # not NaN
-    assert isinstance(out["ks"]["warn"], bool)
-    # AUC within [0,1]
-    assert 0.0 <= out["auc"]["value"] <= 1.0
-    assert out["auc"]["flag"] in {"GREEN", "YELLOW", "RED", "NA"}
-
-    # ESS entries
-    tr = out["ess"]["treated"]
-    ct = out["ess"]["control"]
-    for side in (tr, ct):
-        assert set(["ess", "n", "ratio", "flag"]).issubset(side.keys())
-        assert side["n"] > 0
-        assert 0.0 <= side["ratio"] <= 1.0
-        assert side["flag"] in {"GREEN", "YELLOW", "RED", "NA"}
-
-    # ATT identity: lhs approx rhs
-    lhs = out["att_weight_identity"]["lhs_sum"]
-    rhs = out["att_weight_identity"]["rhs_sum"]
-    rel_err = out["att_weight_identity"]["rel_err"]
-    assert abs(lhs - rhs) / max(rhs, 1e-12) - rel_err < 1e-12
-    # Most random cases should be within 10%
-    assert rel_err < 0.10
+    assert "edge_mass" in out
+    assert "ks" in out
+    assert "auc" in out
+    assert "ate_ess" in out
+    assert "flags" in out
+    assert out["flags"]["auc"] in {"GREEN", "YELLOW", "RED", "NA"}
 
 
-def test_att_overlap_tests_accepts_dml_att_result():
-    # Small synthetic dataset with overlap
-    rng = np.random.default_rng(202)
-    n = 300
-    X0 = rng.normal(size=n)
-    X1 = rng.normal(size=n)
-    logits = 0.8 * X0 - 0.4 * X1
-    m_true = 1 / (1 + np.exp(-logits))
-    D = rng.binomial(1, m_true)
-    Y = 1.5 * D + X0 + rng.normal(scale=1.0, size=n)
-    df = pd.DataFrame({"x0": X0, "x1": X1, "D": D, "Y": Y})
+def test_run_overlap_diagnostics_marks_flip_for_att_style_anti_prediction():
+    n = 200
+    d = np.array([1, 0] * (n // 2))
+    m = np.clip(1.0 - d, 1e-6, 1.0 - 1e-6)
+    data, estimate = make_overlap_data_and_estimate(m_hat=m, d=d)
 
-    data = CausalData(df=df, treatment="D", outcome="Y", confounders=["x0", "x1"])
-    ml_g = LinearRegression()
-    ml_m = LogisticRegression(max_iter=2000)
+    out = run_overlap_diagnostics(data, estimate)
 
-    est = IRM(
-        data,
-        ml_g=ml_g,
-        ml_m=ml_m,
-        n_folds=4,
-        trimming_threshold=1e-3,
-        random_state=7,
-    ).fit()
-    results = est.estimate(score="ATTE")
-
-    res = {
-        "model": est,
-        "diagnostic_data": {
-            "m_hat": results.diagnostic_data.m_hat,
-            "d": results.diagnostic_data.d,
-        }
-    }
-
-    out = att_overlap_tests(res)
-    # Sanity checks
-    assert isinstance(out, dict)
-    assert out["auc"]["flag"] in {"GREEN", "YELLOW", "RED", "NA"}
-    assert isinstance(out["ks"]["warn"], bool)
-    # Identity should not be wildly off
-    assert out["att_weight_identity"]["rel_err"] < 0.20
+    assert out["flags"]["auc"] == "RED"
+    assert out["flags"].get("auc_flip_suspected") == "YELLOW"

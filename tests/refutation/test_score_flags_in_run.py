@@ -1,32 +1,34 @@
-import numpy as np
 import pandas as pd
 
+from sklearn.linear_model import LinearRegression, LogisticRegression
+
+from causalis.dgp import generate_rct
+from causalis.dgp.causaldata import CausalData
+from causalis.scenarios.unconfoundedness.model import IRM
 from causalis.scenarios.unconfoundedness.refutation.score.score_validation import run_score_diagnostics
 
 
-def _make_synth(seed=0, n=180):
-    rng = np.random.default_rng(seed)
-    X = rng.normal(size=(n, 3))
-    beta0 = np.array([0.5, -0.3, 0.2])
-    tau = 1.1
-    g0 = X @ beta0
-    g1 = g0 + tau
-    logits = X @ np.array([0.4, -0.15, 0.08])
-    m = 1 / (1 + np.exp(-logits))
-    d = rng.binomial(1, m).astype(float)
-    y = g0 + d * tau + rng.normal(scale=1.0, size=n)
-    # AIPW plug-in theta using true nuisances for stability
-    m_clip = np.clip(m, 1e-3, 1-1e-3)
-    theta_terms = (g1 - g0) + d * (y - g1) / m_clip - (1 - d) * (y - g0) / (1 - m_clip)
-    theta = float(theta_terms.mean())
-    return y, d, g0, g1, m, theta
+def _make_data(n: int = 800, k: int = 4, seed: int = 202) -> CausalData:
+    df = generate_rct(n=n, k=k, random_state=seed, outcome_type="normal")
+    confs = [column for column in df.columns if column.startswith("x")]
+    return CausalData(df=df, treatment="d", outcome="y", confounders=confs)
 
 
 def test_run_score_diagnostics_has_flags_by_default():
-    y, d, g0, g1, m, theta = _make_synth(seed=202, n=160)
-    rep = run_score_diagnostics(y=y, d=d, g0=g0, g1=g1, m=m, theta=theta, score='ATE', return_summary=True)
-    assert 'flags' in rep, 'run_score_diagnostics should include flags by default'
-    assert 'overall_flag' in rep
-    assert rep['overall_flag'] in {"GREEN","YELLOW","RED","NA"}
-    assert 'summary' in rep and isinstance(rep['summary'], pd.DataFrame)
-    assert 'flag' in rep['summary'].columns
+    data = _make_data()
+    estimate = IRM(
+        data,
+        ml_g=LinearRegression(),
+        ml_m=LogisticRegression(max_iter=400),
+        n_folds=3,
+        normalize_ipw=True,
+        trimming_threshold=1e-3,
+        random_state=17,
+    ).fit().estimate(score="ATE", diagnostic_data=True)
+
+    report = run_score_diagnostics(data, estimate, return_summary=True)
+    assert "flags" in report
+    assert "overall_flag" in report
+    assert report["overall_flag"] in {"GREEN", "YELLOW", "RED", "NA"}
+    assert "summary" in report and isinstance(report["summary"], pd.DataFrame)
+    assert "flag" in report["summary"].columns

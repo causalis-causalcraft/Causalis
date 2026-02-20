@@ -24,13 +24,3 @@ def test_inference_subpackages_functions():
     gate = importlib.import_module('causalis.scenarios.cate.gate')
     assert hasattr(gate, 'gate_esimand')
 
-
-def test_refutation_exports():
-    ref = importlib.import_module('causalis.scenarios.unconfoundedness.refutation')
-    for name in [
-        'refute_placebo_outcome',
-        'refute_placebo_treatment',
-        'refute_subset',
-        'refute_irm_orthogonality',
-    ]:
-        assert hasattr(ref, name), f"causalis.refutation missing expected export: {name}"

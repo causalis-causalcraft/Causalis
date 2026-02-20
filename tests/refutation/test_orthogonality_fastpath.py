@@ -1,57 +1,37 @@
 import numpy as np
-import pandas as pd
 
-from causalis.data_contracts import CausalData
+from sklearn.linear_model import LinearRegression, LogisticRegression
+
+from causalis.dgp import generate_rct
+from causalis.dgp.causaldata import CausalData
 from causalis.scenarios.unconfoundedness.model import IRM
-from causalis.scenarios.unconfoundedness.refutation.score.score_validation import (
-    refute_irm_orthogonality,
-    oos_moment_check_from_psi,
-)
+from causalis.scenarios.unconfoundedness.refutation.score.score_validation import run_score_diagnostics
 
 
-def _make_data(n=300, seed=123):
-    rng = np.random.default_rng(seed)
-    x1 = rng.normal(size=n)
-    x2 = rng.normal(size=n)
-    lin = 0.7 * x1 - 0.3 * x2
-    p = 1.0 / (1.0 + np.exp(-lin))
-    d = rng.binomial(1, p)
-    y = 1.5 * d + x1 - 0.5 * x2 + rng.normal(scale=1.0, size=n)
-    df = pd.DataFrame({"y": y, "d": d, "x1": x1, "x2": x2})
-    return CausalData(df=df, treatment="d", outcome="y", confounders=["x1", "x2"])
+def _make_data(n: int = 300, seed: int = 123) -> CausalData:
+    df = generate_rct(n=n, k=2, random_state=seed, outcome_type="normal")
+    confs = [c for c in df.columns if c.startswith("x")]
+    return CausalData(df=df, treatment="d", outcome="y", confounders=confs)
 
 
-def test_fastpath_oos_equals_helper():
-    # Fit IRM once to get psi components and folds
+def _make_estimate(data: CausalData):
+    return IRM(
+        data,
+        ml_g=LinearRegression(),
+        ml_m=LogisticRegression(max_iter=500),
+        n_folds=3,
+        random_state=777,
+    ).fit().estimate(score="ATE", diagnostic_data=True)
+
+
+def test_score_diagnostics_is_deterministic_for_fixed_estimate():
     data = _make_data(n=240, seed=777)
+    estimate = _make_estimate(data)
 
-    def dml_ate_wrapper(data, **kwargs):
-        est = IRM(data, **kwargs).fit()
-        res = est.estimate()
-        return {
-            "coefficient": float(est.coef[0]),
-            "std_error": float(est.se[0]),
-            "model": est,
-            "diagnostic_data": res.diagnostic_data
-        }
+    out1 = run_score_diagnostics(data, estimate, trimming_threshold=0.01, n_basis_funcs=3, return_summary=True)
+    out2 = run_score_diagnostics(data, estimate, trimming_threshold=0.01, n_basis_funcs=3, return_summary=True)
 
-    res = dml_ate_wrapper(data, n_folds=3, random_state=777)
-    model = res["model"]
-
-    # Build fold indices from cross-fitting folds
-    folds = np.asarray(getattr(model, "folds_"))
-    K = int(folds.max() + 1)
-    fold_indices = [np.where(folds == k)[0] for k in range(K)]
-
-    # Helper-computed t-stats from cached psi
-    df_fast, t_fold_fast, t_strict_fast = oos_moment_check_from_psi(
-        np.asarray(model.psi_a_), np.asarray(model.psi_b_), fold_indices, strict=True
-    )
-
-    # Function output should match helper (fast path is used under the hood)
-    out = refute_irm_orthogonality(dml_ate_wrapper, data, n_folds_oos=3, strict_oos=True)
-    t_fold_fn = out["oos_moment_test"]["tstat_fold_agg"]
-    t_strict_fn = out["oos_moment_test"]["tstat_strict"]
-
-    assert abs(t_fold_fn - t_fold_fast) < 1e-10
-    assert abs(t_strict_fn - t_strict_fast) < 1e-10
+    assert out1["params"] == out2["params"]
+    assert np.isclose(out1["influence_diagnostics"]["se_plugin"], out2["influence_diagnostics"]["se_plugin"])
+    assert np.isclose(out1["influence_diagnostics"]["p99_over_med"], out2["influence_diagnostics"]["p99_over_med"])
+    assert np.isclose(out1["influence_diagnostics"]["kurtosis"], out2["influence_diagnostics"]["kurtosis"])

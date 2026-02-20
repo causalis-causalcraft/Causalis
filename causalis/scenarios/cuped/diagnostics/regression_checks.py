@@ -790,6 +790,28 @@ def _approx_se_from_estimate(estimate: CausalEstimate) -> Optional[float]:
     return float(se) if np.isfinite(se) and se > 0.0 else None
 
 
+def _validate_estimate_matches_data(data: CausalData, estimate: CausalEstimate) -> None:
+    """Validate that a CUPED estimate aligns with provided causal data metadata."""
+    if str(estimate.treatment) != str(data.treatment_name):
+        raise ValueError(
+            "estimate.treatment must match data.treatment_name "
+            f"({estimate.treatment!r} != {data.treatment_name!r})."
+        )
+
+    if str(estimate.outcome) != str(data.outcome_name):
+        raise ValueError(
+            "estimate.outcome must match data.outcome_name "
+            f"({estimate.outcome!r} != {data.outcome_name!r})."
+        )
+
+    missing_confounders = [name for name in estimate.confounders if name not in data.df.columns]
+    if missing_confounders:
+        raise ValueError(
+            "estimate.confounders are missing in data.df: "
+            + ", ".join(sorted(map(str, missing_confounders)))
+        )
+
+
 def regression_assumptions_table_from_diagnostic_data(
     diagnostic_data: CUPEDDiagnosticData,
     cov_type: str = "HC2",
@@ -816,15 +838,42 @@ def regression_assumptions_table_from_diagnostic_data(
 
 
 def regression_assumptions_table_from_estimate(
-    estimate: CausalEstimate,
+    data_or_estimate: CausalData | CausalEstimate,
+    estimate: Optional[CausalEstimate] = None,
     style_regression_assumptions_table: Optional[Callable[[pd.DataFrame], Any]] = None,
     cov_type: Optional[str] = None,
     condition_number_warn_threshold: float = 1e8,
     vif_warn_threshold: float = 20.0,
     tiny_one_minus_h_tol: float = 1e-8,
 ) -> Any:
-    """Build assumption table from CUPED ``CausalEstimate`` and transform it."""
-    diagnostic_data = estimate.diagnostic_data
+    """
+    Build assumptions table from a CUPED estimate.
+
+    Supports both call styles:
+    1) ``regression_assumptions_table_from_estimate(estimate, ...)``
+    2) ``regression_assumptions_table_from_estimate(data, estimate, ...)``
+    """
+    data: Optional[CausalData]
+    estimate_eff: CausalEstimate
+
+    if estimate is None:
+        if not isinstance(data_or_estimate, CausalEstimate):
+            raise TypeError(
+                "Expected CausalEstimate when `estimate` is omitted. "
+                "Use either (estimate, ...) or (data, estimate, ...)."
+            )
+        data = None
+        estimate_eff = data_or_estimate
+    else:
+        if not isinstance(data_or_estimate, CausalData):
+            raise TypeError(
+                "Expected CausalData as first argument when `estimate` is provided."
+            )
+        data = data_or_estimate
+        estimate_eff = estimate
+        _validate_estimate_matches_data(data=data, estimate=estimate_eff)
+
+    diagnostic_data = estimate_eff.diagnostic_data
     if not isinstance(diagnostic_data, CUPEDDiagnosticData):
         raise ValueError(
             "estimate.diagnostic_data must be CUPEDDiagnosticData with regression checks."
@@ -832,9 +881,9 @@ def regression_assumptions_table_from_estimate(
 
     cov_type_eff = cov_type
     if cov_type_eff is None:
-        cov_type_eff = str(estimate.model_options.get("cov_type", "HC2"))
+        cov_type_eff = str(estimate_eff.model_options.get("cov_type", "HC2"))
 
-    se_ref = _approx_se_from_estimate(estimate)
+    se_ref = _approx_se_from_estimate(estimate_eff)
     table = regression_assumptions_table_from_diagnostic_data(
         diagnostic_data=diagnostic_data,
         cov_type=str(cov_type_eff),
@@ -869,6 +918,7 @@ def regression_assumptions_table_from_data(
     )
     estimate = model.estimate(diagnostic_data=True)
     return regression_assumptions_table_from_estimate(
+        data_or_estimate=data,
         estimate=estimate,
         cov_type=model.cov_type,
     )

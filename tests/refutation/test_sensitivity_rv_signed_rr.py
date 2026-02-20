@@ -3,7 +3,7 @@ import math
 import numpy as np
 import pytest
 
-from causalis.scenarios.unconfoundedness.refutation.uncofoundedness.sensitivity import compute_bias_aware_ci
+from causalis.scenarios.unconfoundedness.refutation.unconfoundedness.sensitivity import compute_bias_aware_ci
 
 
 class _DummyIRM:

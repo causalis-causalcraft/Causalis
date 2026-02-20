@@ -24,6 +24,21 @@ def test_regression_assumptions_table_from_estimate_has_expected_columns():
     data = _make_data()
     estimate = CUPEDModel(check_action="ignore").fit(data, covariates=["x1", "x2"]).estimate()
     table = regression_assumptions_table_from_estimate(
+        data,
+        estimate,
+        style_regression_assumptions_table=lambda t: t,
+    )
+
+    expected_cols = {"test_id", "test", "flag", "value", "threshold", "message"}
+    assert expected_cols.issubset(set(table.columns))
+    assert len(table) >= 8
+    assert set(table["flag"].unique()).issubset({"GREEN", "YELLOW", "RED"})
+
+
+def test_regression_assumptions_table_from_estimate_keeps_estimate_only_call():
+    data = _make_data()
+    estimate = CUPEDModel(check_action="ignore").fit(data, covariates=["x1", "x2"]).estimate()
+    table = regression_assumptions_table_from_estimate(
         estimate,
         style_regression_assumptions_table=lambda t: t,
     )
@@ -39,6 +54,27 @@ def test_regression_assumptions_table_from_data_runs_end_to_end():
     table = regression_assumptions_table_from_data(data=data, covariates=["x1", "x2"])
     assert len(table) >= 8
     assert "Design rank" in set(table["test"].tolist())
+
+
+def test_regression_assumptions_table_from_estimate_validates_data_alignment():
+    data = _make_data()
+    estimate = CUPEDModel(check_action="ignore").fit(data, covariates=["x1", "x2"]).estimate()
+
+    bad_df = data.df.copy()
+    bad_df["d_other"] = bad_df["d"]
+    bad_data = CausalData(
+        df=bad_df,
+        treatment="d_other",
+        outcome="y",
+        confounders=["x1", "x2"],
+    )
+
+    with pytest.raises(ValueError, match="estimate.treatment must match"):
+        regression_assumptions_table_from_estimate(
+            bad_data,
+            estimate,
+            style_regression_assumptions_table=lambda t: t,
+        )
 
 
 def test_regression_assumptions_rank_deficiency_raises():

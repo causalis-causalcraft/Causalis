@@ -5,6 +5,7 @@ from sklearn.linear_model import LinearRegression, LogisticRegression
 from causalis.dgp import generate_rct
 from causalis.dgp.causaldata import CausalData
 from causalis.scenarios.unconfoundedness.model import IRM
+from causalis.scenarios.unconfoundedness.refutation.overlap.overlap_validation import run_overlap_diagnostics
 from causalis.scenarios.unconfoundedness.refutation.score.score_validation import run_score_diagnostics
 
 
@@ -27,29 +28,47 @@ def _make_estimate(data: CausalData):
     return model.estimate(score="ATE", alpha=0.10, diagnostic_data=True)
 
 
-def test_run_score_diagnostics_with_causal_estimate_and_data():
-    data = _make_data(seed=7)
+def test_overlap_single_api_with_causal_estimate():
+    data = _make_data(seed=17)
     estimate = _make_estimate(data)
 
-    report = run_score_diagnostics(data, estimate, return_summary=True)
-    assert "influence_diagnostics" in report
-    assert "orthogonality_derivatives" in report
-    assert "oos_moment_test" in report
+    report = run_overlap_diagnostics(data, estimate)
     assert "summary" in report
-    assert isinstance(report["summary"], pd.DataFrame)
-    assert report["meta"]["n"] == int(data.get_df().shape[0])
-    assert report["params"]["score"] == "ATE"
+    assert "ks" in report
+    assert "auc" in report
 
 
-def test_run_score_diagnostics_falls_back_to_causal_data_when_y_d_missing():
-    data = _make_data(seed=11)
+def test_overlap_single_api_with_causal_estimate_and_causal_data_fallback():
+    data = _make_data(seed=29)
     estimate = _make_estimate(data)
 
+    # Fallback path: when `d` is missing in diagnostic_data, it is read from CausalData.
+    diag_without_d = estimate.diagnostic_data.model_copy(update={"d": None})
+    estimate_without_d = estimate.model_copy(update={"diagnostic_data": diag_without_d})
+
+    report = run_overlap_diagnostics(data, estimate_without_d)
+    assert report["n"] == int(data.get_df().shape[0])
+    assert "summary" in report
+
+
+def test_score_single_api_with_causal_estimate():
+    data = _make_data(seed=41)
+    estimate = _make_estimate(data)
+
+    report = run_score_diagnostics(data, estimate)
+    assert "summary" in report
+    assert "orthogonality_derivatives" in report
+
+
+def test_score_single_api_with_causal_estimate_and_causal_data_fallback():
+    data = _make_data(seed=53)
+    estimate = _make_estimate(data)
+
+    # Fallback path: y and d missing in diagnostic_data, take them from provided CausalData.
     diag_without_yd = estimate.diagnostic_data.model_copy(update={"y": None, "d": None})
     estimate_without_yd = estimate.model_copy(update={"diagnostic_data": diag_without_yd})
 
-    report = run_score_diagnostics(data, estimate_without_yd, return_summary=True)
-    assert "oos_moment_test" in report
+    report = run_score_diagnostics(data, estimate_without_yd)
     assert "summary" in report
     assert isinstance(report["summary"], pd.DataFrame)
     assert report["meta"]["n"] == int(data.get_df().shape[0])

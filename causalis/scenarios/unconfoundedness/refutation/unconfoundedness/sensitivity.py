@@ -2,7 +2,7 @@
 Sensitivity functions refactored into a dedicated module.
 
 This module centralizes bias-aware sensitivity helpers and the public
-entry points used by refutation utilities for uncofoundedness.
+entry points used by refutation utilities for unconfoundedness.
 """
 from __future__ import annotations
 
@@ -13,7 +13,12 @@ import pandas as pd
 
 from causalis.data_contracts.causal_diagnostic_data import UnconfoundednessDiagnosticData
 
-__all__ = ["sensitivity_analysis", "sensitivity_benchmark", "get_sensitivity_summary"]
+__all__ = [
+    "sensitivity_analysis",
+    "sensitivity_benchmark",
+    "get_sensitivity_summary",
+    "interpret_sensitivity_analysis",
+]
 
 # ---------------- Internals ----------------
 
@@ -249,8 +254,10 @@ def _pull_theta_se_ci(effect_estimation: Any, alpha: float) -> tuple[float, floa
         opts = getattr(effect_estimation, "model_options", {})
         se = float(opts.get("std_error", 0.0))
         if se == 0.0 and hasattr(effect_estimation, "ci_upper_absolute"):
-            # Fallback: back-calculate SE from CI if missing
-            z = float(_norm.ppf(1 - getattr(effect_estimation, "alpha", 0.05) / 2.0))
+            # Fallback: back-calculate SE from CI if missing.
+            # CI on CausalEstimate is tied to estimate.alpha, not the requested alpha.
+            alpha_ci = float(getattr(effect_estimation, "alpha", alpha))
+            z = float(_norm.ppf(1 - alpha_ci / 2.0))
             se = (float(effect_estimation.ci_upper_absolute) - theta) / z if z > 0 else 0.0
         ci = (float(effect_estimation.ci_lower_absolute), float(effect_estimation.ci_upper_absolute))
         return theta, se, ci
@@ -318,9 +325,9 @@ def compute_bias_aware_ci(
     Returns a dict with:
       - theta, se, alpha, z
       - sampling_ci
-      - theta_bounds_cofounding = [theta_lower, theta_upper] = theta ± max_bias
-      - bias_aware_ci = [theta - (max_bias + z*se), theta + (max_bias + z*se)]
-      - max_bias and components (sigma2, nu2)
+      - theta_bounds_cofounding = [theta_lower, theta_upper] = theta ± bound_width
+      - bias_aware_ci = [theta - (bound_width + z*se), theta + (bound_width + z*se)]
+      - max_bias_base, max_bias, bound_width and components (sigma2, nu2)
 
     Parameters
     ----------
@@ -393,6 +400,7 @@ def compute_bias_aware_ci(
         elems = model._sensitivity_element_est()
 
     # Default: no cofounding info → bias_aware = sampling CI
+    max_bias_base = 0.0
     max_bias = 0.0
     sigma2 = np.nan; nu2 = np.nan
     rv = np.nan; rva = np.nan
@@ -414,7 +422,8 @@ def compute_bias_aware_ci(
                 nu2, psi_nu2 = _combine_nu2_local(
                     m_alpha, rr, r2_y, r2_d, rho, use_signed_rr=True
                 )
-                max_bias = np.sqrt(max(sigma2 * nu2, 0.0))
+                max_bias_base = np.sqrt(max(sigma2 * nu2, 0.0))
+                max_bias = max_bias_base
                 bound_width = max_bias
                 correction_scale = 1.0
                 # RV/RVa are not defined under the signed-rr quadratic form
@@ -427,7 +436,8 @@ def compute_bias_aware_ci(
             # Bias component: |rho| * sqrt(sigma2 * nu2) * sqrt(cf_y * r2_d / (1 - r2_d))
             cf_y = r2_y / (1.0 - r2_y)
             bias_factor = np.sqrt(cf_y * r2_d / (1.0 - r2_d))
-            max_bias = np.sqrt(max(sigma2 * nu2, 0.0)) * bias_factor
+            max_bias_base = np.sqrt(max(sigma2 * nu2, 0.0))
+            max_bias = max_bias_base * bias_factor
             bound_width = abs(rho) * max_bias
             correction_scale = abs(rho) * bias_factor
 
@@ -435,7 +445,7 @@ def compute_bias_aware_ci(
             # RV is the confounding strength that makes the bound include H0:
             # |theta - H0| = |rho| * sqrt(sigma2 * nu2) * RV / (1 - RV)
             delta_theta = abs(theta - H0)
-            denom_rv = abs(rho) * np.sqrt(max(sigma2 * nu2, 0.0))
+            denom_rv = abs(rho) * max_bias_base
             if denom_rv > 1e-16 and delta_theta > 0:
                 D = delta_theta / denom_rv
                 rv = D / (1.0 + D)
@@ -446,8 +456,10 @@ def compute_bias_aware_ci(
             if denom_rv > 1e-16 and delta_theta_a > 0:
                 Da = delta_theta_a / denom_rv
                 rva = Da / (1.0 + Da)
-            else:
+            elif delta_theta_a == 0:
                 rva = 0.0
+            else:
+                rva = np.nan
     else:
         # No cofounding info: keep max_bias=0; RV/RVa undefined unless delta=0
         delta_theta = abs(theta - H0)
@@ -501,7 +513,9 @@ def compute_bias_aware_ci(
         sampling_ci=tuple(map(float, sampling_ci)),
         theta_bounds_cofounding=(float(theta_lower), float(theta_upper)),
         bias_aware_ci=tuple(map(float, bias_aware_ci)),
+        max_bias_base=float(max_bias_base),
         max_bias=float(max_bias),
+        bound_width=float(bound_width),
         sigma2=float(sigma2),
         nu2=float(nu2),
         rv=float(rv),
@@ -532,6 +546,8 @@ def format_bias_aware_summary(res: Dict[str, Any], label: str | None = None) -> 
     theta = res['theta']; se = res['se']
     alpha = res['alpha']; z = res['z']
     cf = res['params']
+    bound_width = float(res.get('bound_width', res.get('max_bias', 0.0)))
+    max_bias_base = float(res.get('max_bias_base', np.nan))
 
     lines = []
     lines.append("================== Bias-aware Interval ==================")
@@ -544,6 +560,9 @@ def format_bias_aware_summary(res: Dict[str, Any], label: str | None = None) -> 
     lines.append("------------------ Components        ------------------")
     lines.append(f"{'':>6} {'theta':>11} {'se':>11} {'z':>8} {'max_bias':>12} {'sigma2':>12} {'nu2':>12}")
     lines.append(f"{lbl} {theta:11.6f} {se:11.6f} {z:8.4f} {res['max_bias']:12.6f} {res['sigma2']:12.6f} {res['nu2']:12.6f}")
+    lines.append(f"Bound width (theta +/-): {bound_width:.6f}")
+    if np.isfinite(max_bias_base):
+        lines.append(f"Base sqrt(sigma2*nu2): {max_bias_base:.6f}")
     lines.append("")
     lines.append("------------------ Intervals         ------------------")
     lines.append(f"{'':>6} {'Sampling CI lower':>18} {'Conf. θ lower':>16} {'Bias-aware lower':>18} {'Bias-aware upper':>18} {'Conf. θ upper':>16} {'Sampling CI upper':>20}")
@@ -715,22 +734,37 @@ def get_sensitivity_summary(
 
     res = effect_dict.get('bias_aware')
 
-    # Build a sampling-only placeholder if needed (alpha fixed at 0.05 here)
+    # Build a sampling-only placeholder if needed.
     if not isinstance(res, dict) or not res:
-        theta, se, ci = _pull_theta_se_ci(effect_estimation, alpha=0.05)
+        alpha_fallback = getattr(effect_estimation, "alpha", None)
+        if alpha_fallback is None and isinstance(effect_estimation, dict):
+            alpha_fallback = effect_estimation.get("alpha")
+        try:
+            alpha_fallback = float(alpha_fallback)
+        except (TypeError, ValueError):
+            alpha_fallback = 0.05
+        if not (0.0 < alpha_fallback < 1.0):
+            alpha_fallback = 0.05
+
+        theta, se, ci = _pull_theta_se_ci(effect_estimation, alpha=alpha_fallback)
         from scipy.stats import norm
-        z = float(norm.ppf(1 - 0.05 / 2.0))
+        z = float(norm.ppf(1 - alpha_fallback / 2.0))
         res = dict(
             theta=float(theta),
             se=float(se),
-            alpha=0.05,
+            alpha=float(alpha_fallback),
             z=z,
+            H0=0.0,
             sampling_ci=(float(ci[0]), float(ci[1])),
             theta_bounds_cofounding=(float(theta), float(theta)),  # max_bias = 0
             bias_aware_ci=(float(theta - z * se), float(theta + z * se)),
+            max_bias_base=0.0,
             max_bias=0.0,
+            bound_width=0.0,
             sigma2=np.nan,
             nu2=np.nan,
+            rv=np.nan,
+            rva=np.nan,
             params=dict(r2_y=0.0, r2_d=0.0, rho=0.0, use_signed_rr=False),
         )
 
@@ -757,7 +791,8 @@ def sensitivity_benchmark(
     benchmarking_set : list[str]
         List of confounder names to be used for benchmarking (to be removed in the short model).
     fit_args : dict, optional
-        Additional keyword arguments for the IRM.fit() method of the short model.
+        Legacy name for additional keyword arguments passed to `IRM.estimate(...)`
+        on the short model. If `score` is omitted, the long-model score is reused.
 
     Returns
     -------
@@ -854,14 +889,14 @@ def sensitivity_benchmark(
         random_state=getattr(model, 'random_state', None),
     )
 
-    # Fit short model
-    if fit_args is None:
-        irm_short.fit()
-    else:
-        irm_short.fit(**fit_args)
+    # Fit short model (IRM.fit does not accept kwargs).
+    irm_short.fit()
 
-    # Estimate using the same score as the long model
-    irm_short.estimate(score=getattr(model, 'score', 'ATE'))
+    # Estimate using long-model score unless explicitly overridden in fit_args.
+    estimate_args: Dict[str, Any] = dict(fit_args or {})
+    if "score" not in estimate_args:
+        estimate_args["score"] = getattr(model, 'score', 'ATE')
+    irm_short.estimate(**estimate_args)
 
     # Long model stats
     theta_long = float(model.coef_[0])
@@ -1076,3 +1111,110 @@ def sensitivity_analysis(
                 pass
 
     return res
+
+
+def interpret_sensitivity_analysis(
+    effect_estimation: Dict[str, Any] | Any,
+    *,
+    r2_y: float,
+    r2_d: float,
+    rho: float = 1.0,
+    H0: float = 0.0,
+    alpha: float = 0.05,
+    use_signed_rr: bool = False,
+) -> Dict[str, Any]:
+    """Run sensitivity analysis and return a structured interpretation.
+
+    Parameters
+    ----------
+    effect_estimation : Dict[str, Any] or Any
+        The effect estimation object.
+    r2_y : float
+        Sensitivity parameter for outcome residual confounding strength.
+    r2_d : float
+        Sensitivity parameter for treatment residual confounding strength.
+    rho : float, default 1.0
+        Correlation parameter for unobserved confounding.
+    H0 : float, default 0.0
+        Null hypothesis used for significance checks.
+    alpha : float, default 0.05
+        Significance level.
+    use_signed_rr : bool, default False
+        Whether to use signed rr in the quadratic sensitivity combination.
+
+    Returns
+    -------
+    Dict[str, Any]
+        Dictionary with:
+          - raw: the output of ``sensitivity_analysis(...)``
+          - interpretation: machine-readable interpretation fields
+          - summary: compact human-readable interpretation
+    """
+    res = sensitivity_analysis(
+        effect_estimation,
+        r2_y=r2_y,
+        r2_d=r2_d,
+        rho=rho,
+        H0=H0,
+        alpha=alpha,
+        use_signed_rr=use_signed_rr,
+    )
+
+    def _ci_excludes_h0(ci: tuple[float, float], h0: float) -> bool:
+        lo, hi = float(ci[0]), float(ci[1])
+        if not (np.isfinite(lo) and np.isfinite(hi)):
+            return False
+        return (lo > h0) or (hi < h0)
+
+    theta = float(res.get("theta", np.nan))
+    se = float(res.get("se", np.nan))
+    sampling_ci = tuple(map(float, res.get("sampling_ci", (np.nan, np.nan))))
+    bias_aware_ci = tuple(map(float, res.get("bias_aware_ci", (np.nan, np.nan))))
+    confounding_bounds = tuple(map(float, res.get("theta_bounds_cofounding", (np.nan, np.nan))))
+    rv = float(res.get("rv", np.nan))
+    rva = float(res.get("rva", np.nan))
+
+    if theta > H0:
+        direction = "positive"
+    elif theta < H0:
+        direction = "negative"
+    else:
+        direction = "null"
+
+    significant_no_confounding = _ci_excludes_h0(sampling_ci, H0)
+    significant_with_assumed_confounding = _ci_excludes_h0(bias_aware_ci, H0)
+
+    if not np.isfinite(rv):
+        robustness_level = "not_available"
+    elif rv < 0.02:
+        robustness_level = "low"
+    elif rv < 0.05:
+        robustness_level = "moderate"
+    else:
+        robustness_level = "high"
+
+    rv_str = "nan" if not np.isfinite(rv) else f"{rv:.4f}"
+    rva_str = "nan" if not np.isfinite(rva) else f"{rva:.4f}"
+    summary = (
+        f"Effect estimate theta={theta:.4f} ({direction}), se={se:.4f}. "
+        f"Sampling CI [{sampling_ci[0]:.4f}, {sampling_ci[1]:.4f}] "
+        f"{'excludes' if significant_no_confounding else 'includes'} H0={H0:.4f}. "
+        f"Under specified confounding, theta bounds are "
+        f"[{confounding_bounds[0]:.4f}, {confounding_bounds[1]:.4f}] and bias-aware CI is "
+        f"[{bias_aware_ci[0]:.4f}, {bias_aware_ci[1]:.4f}], which "
+        f"{'excludes' if significant_with_assumed_confounding else 'includes'} H0. "
+        f"RV={rv_str}, RVa={rva_str}, robustness={robustness_level}."
+    )
+
+    return {
+        "raw": res,
+        "interpretation": {
+            "direction": direction,
+            "significant_no_confounding": significant_no_confounding,
+            "significant_with_assumed_confounding": significant_with_assumed_confounding,
+            "robustness_level": robustness_level,
+            "rv": rv,
+            "rva": rva,
+        },
+        "summary": summary,
+    }

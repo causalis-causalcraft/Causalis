@@ -1,50 +1,33 @@
 import numpy as np
-import pandas as pd
 
-from causalis.data_contracts import CausalData
+from sklearn.linear_model import LinearRegression, LogisticRegression
+
+from causalis.dgp import generate_rct
+from causalis.dgp.causaldata import CausalData
 from causalis.scenarios.unconfoundedness.model import IRM
-from causalis.scenarios.unconfoundedness.refutation.score.score_validation import trim_sensitivity_curve_ate
+from causalis.scenarios.unconfoundedness.refutation.score.score_validation import run_score_diagnostics
 
 
-def _make_data(n=300, seed=321):
-    rng = np.random.default_rng(seed)
-    x1 = rng.normal(size=n)
-    x2 = rng.normal(size=n)
-    lin = 0.6 * x1 - 0.4 * x2
-    p = 1.0 / (1.0 + np.exp(-lin))
-    d = rng.binomial(1, p)
-    y = 2.0 * d + x1 - 0.5 * x2 + rng.normal(scale=1.0, size=n)
-    df = pd.DataFrame({"y": y, "d": d, "x1": x1, "x2": x2})
-    return CausalData(df=df, treatment="d", outcome="y", confounders=["x1", "x2"])
+def _make_data(n: int = 300, seed: int = 321) -> CausalData:
+    df = generate_rct(n=n, k=3, random_state=seed, outcome_type="normal")
+    confs = [c for c in df.columns if c.startswith("x")]
+    return CausalData(df=df, treatment="d", outcome="y", confounders=confs)
 
 
-def test_trim_sensitivity_curve_ate_basic_and_matches_model_at_default_eps():
+def test_score_diagnostics_trimming_threshold_is_respected_in_params():
     data = _make_data(n=240, seed=777)
-    # Fit with default settings (ATE, normalize_ipw=False, trimming_threshold=1e-2)
-    model = IRM(data, n_folds=3, random_state=777).fit()
-    res = model.estimate()
-    dd = res.diagnostic_data
+    estimate = IRM(
+        data,
+        ml_g=LinearRegression(),
+        ml_m=LogisticRegression(max_iter=400),
+        n_folds=3,
+        random_state=777,
+    ).fit().estimate(score="ATE", diagnostic_data=True)
 
-    m = dd.m_hat
-    d = dd.d
-    y = dd.y
-    g0 = dd.g0_hat
-    g1 = dd.g1_hat
-    eps0 = float(dd.trimming_threshold)
+    report_lo = run_score_diagnostics(data, estimate, trimming_threshold=1e-6)
+    report_hi = run_score_diagnostics(data, estimate, trimming_threshold=0.10)
 
-    grid = (0.0, eps0, 0.02)
-    df = trim_sensitivity_curve_ate(m, d, y, g0, g1, eps_grid=grid)
-
-    # Columns and length
-    assert isinstance(df, pd.DataFrame)
-    assert set(["trim_eps", "n", "pct_clipped", "theta", "se"]).issubset(df.columns)
-    assert len(df) == len(grid)
-
-    # Monotone non-decreasing pct_clipped as eps increases
-    df_sorted = df.sort_values("trim_eps")
-    pct = df_sorted["pct_clipped"].to_numpy()
-    assert np.all(np.diff(pct) >= -1e-12)
-
-    # At eps equal to the model's trimming threshold, theta should match the model's coefficient
-    theta_at_eps0 = float(df.loc[np.isclose(df["trim_eps"], eps0), "theta"].iloc[0])
-    assert abs(theta_at_eps0 - float(res.value)) < 1e-8
+    assert report_lo["params"]["trimming_threshold"] == 1e-6
+    assert report_hi["params"]["trimming_threshold"] == 0.10
+    assert np.isfinite(float(report_lo["influence_diagnostics"]["se_plugin"]))
+    assert np.isfinite(float(report_hi["influence_diagnostics"]["se_plugin"]))

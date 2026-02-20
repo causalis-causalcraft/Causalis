@@ -4,13 +4,10 @@ import pandas as pd
 from causalis.dgp.causaldata import CausalData
 from causalis.scenarios.unconfoundedness import IRM
 from causalis.scenarios.unconfoundedness.refutation.overlap.overlap_validation import run_overlap_diagnostics
-from causalis.scenarios.unconfoundedness.refutation.score.score_validation import (
-    run_score_diagnostics, 
-    refute_placebo_outcome, 
-    refute_placebo_treatment, 
-    refute_subset
+from causalis.scenarios.unconfoundedness.refutation.score.score_validation import run_score_diagnostics
+from causalis.scenarios.unconfoundedness.refutation.unconfoundedness.unconfoundedness_validation import (
+    run_unconfoundedness_diagnostics,
 )
-from causalis.scenarios.unconfoundedness.refutation.uncofoundedness.uncofoundedness_validation import run_uncofoundedness_diagnostics, validate_uncofoundedness_balance
 
 @pytest.fixture
 def sample_causal_data():
@@ -33,7 +30,7 @@ def test_overlap_diagnostics_with_causal_estimate(sample_causal_data):
     result = model.estimate(score='ATE')
     
     # This should work with CausalEstimate
-    report = run_overlap_diagnostics(res=result)
+    report = run_overlap_diagnostics(sample_causal_data, result)
     assert "summary" in report
     assert "ks" in report
     assert "auc" in report
@@ -43,7 +40,7 @@ def test_score_diagnostics_with_causal_estimate(sample_causal_data):
     result = model.estimate(score='ATE')
     
     # This should work with CausalEstimate
-    report = run_score_diagnostics(res=result)
+    report = run_score_diagnostics(sample_causal_data, result)
     assert "summary" in report
     assert "orthogonality_derivatives" in report
 
@@ -52,37 +49,28 @@ def test_unconfoundedness_diagnostics_with_causal_estimate(sample_causal_data):
     result = model.estimate(score='ATE')
     
     # This should work with CausalEstimate
-    report = run_uncofoundedness_diagnostics(res=result)
+    report = run_unconfoundedness_diagnostics(sample_causal_data, result)
     assert "summary" in report
     assert "balance" in report
     assert "overall_flag" in report
 
-def test_validate_uncofoundedness_balance_with_causal_estimate(sample_causal_data):
+def test_unconfoundedness_diagnostics_returns_balance_outputs(sample_causal_data):
     model = IRM().fit(sample_causal_data)
     result = model.estimate(score='ATE')
     
     # This should work with CausalEstimate
-    report = validate_uncofoundedness_balance(result)
-    assert "smd" in report
-    assert "smd_unweighted" in report
-    assert "pass" in report
+    report = run_unconfoundedness_diagnostics(sample_causal_data, result)
+    assert "smd" in report["balance"]
+    assert "smd_unweighted" in report["balance"]
+    assert "pass" in report["balance"]
 
-def test_placebo_refutations_with_causal_estimate(sample_causal_data):
-    # This tests if refute_* functions work when the model.estimate returns CausalEstimate
-    # We pass the estimate method (or a lambda) as the inference_fn
-    model = IRM()
-    
-    def inference_fn(data, **kwargs):
-        return model.fit(data).estimate(**kwargs)
-    
-    res_y = refute_placebo_outcome(inference_fn, sample_causal_data, random_state=42)
-    assert "theta" in res_y
-    assert "p_value" in res_y
-    
-    res_t = refute_placebo_treatment(inference_fn, sample_causal_data, random_state=42)
-    assert "theta" in res_t
-    assert "p_value" in res_t
-    
-    res_s = refute_subset(inference_fn, sample_causal_data, fraction=0.7, random_state=42)
-    assert "theta" in res_s
-    assert "p_value" in res_s
+def test_score_diagnostics_with_missing_y_d_falls_back_to_causal_data(sample_causal_data):
+    model = IRM().fit(sample_causal_data)
+    result = model.estimate(score='ATE', diagnostic_data=True)
+
+    diag_without_yd = result.diagnostic_data.model_copy(update={"y": None, "d": None})
+    estimate_without_yd = result.model_copy(update={"diagnostic_data": diag_without_yd})
+
+    report = run_score_diagnostics(sample_causal_data, estimate_without_yd)
+    assert "summary" in report
+    assert report["meta"]["n"] == int(sample_causal_data.get_df().shape[0])

@@ -25,7 +25,7 @@ from causalis.dgp.causaldata import CausalData
 from causalis.data_contracts.causal_estimate import CausalEstimate
 from causalis.data_contracts.causal_diagnostic_data import UnconfoundednessDiagnosticData
 from causalis.scenarios.cate.blp import BLP
-from causalis.scenarios.unconfoundedness._math import (
+from causalis.scenarios.unconfoundedness._utils import (
     _clip_propensity,
     _is_binary,
     _predict_prob_or_value,
@@ -315,6 +315,7 @@ class IRM(BaseEstimator):
         self.folds_ = folds
         self.g0_hat_ = g0_hat
         self.g1_hat_ = g1_hat
+        self.m_hat_raw_ = np.asarray(m_hat, dtype=float).copy()
         self.m_hat_ = _clip_propensity(m_hat, self.trimming_threshold)
 
     def _get_weights(self, n: int, m_hat_adj: Optional[np.ndarray], d: np.ndarray, score: Optional[str] = None) -> Tuple[np.ndarray, np.ndarray]:
@@ -692,22 +693,95 @@ class IRM(BaseEstimator):
             y=y, d=d, g0=g0_hat, g1=g1_hat, m_hat=m_hat, w=w, w_bar=w_bar, psi=IF
         )
 
+        score_plot_cache = self._build_score_plot_cache(
+            d=d,
+            m_hat=m_hat,
+            psi=IF,
+            score=score,
+            normalize_ipw_effective=normalize_ipw_effective,
+        )
+        residual_plot_cache = self._build_residual_plot_cache(
+            y=y,
+            d=d,
+            g0_hat=g0_hat,
+            g1_hat=g1_hat,
+            m_hat=m_hat,
+        )
+
         diag = UnconfoundednessDiagnosticData(
             m_hat=m_hat,
+            m_hat_raw=getattr(self, "m_hat_raw_", None),
             d=d,
             y=y,
             x=self.data.get_df()[list(self.data.confounders)].to_numpy(dtype=float),
             g0_hat=g0_hat,
             g1_hat=g1_hat,
+            w=w,
+            w_bar=w_bar,
             psi_b=psi_b,
             folds=self.folds_,
             trimming_threshold=self.trimming_threshold,
             normalize_ipw=normalize_ipw_effective,
             score=score,
+            score_plot_cache=score_plot_cache,
+            residual_plot_cache=residual_plot_cache,
             **sens_elements
         )
         diag._model = self
         return diag
+
+    def _build_score_plot_cache(
+        self,
+        *,
+        d: np.ndarray,
+        m_hat: np.ndarray,
+        psi: np.ndarray,
+        score: str,
+        normalize_ipw_effective: bool,
+    ) -> Dict[str, Any]:
+        """Build cached arrays used by score influence plots."""
+        m_clipped = np.clip(m_hat, self.trimming_threshold, 1.0 - self.trimming_threshold)
+        if score == "ATE":
+            ipw_t, ipw_c = self._normalize_ipw_terms(d, m_clipped, score=score, warn=False)
+            ipw_t_label = r"$D/m$"
+            ipw_c_label = r"$(1-D)/(1-m)$"
+        else:
+            p_treated = float(np.mean(d))
+            ipw_t = d / (p_treated + 1e-12)
+            ipw_c = ((1.0 - d) * (m_clipped / (1.0 - m_clipped))) / (p_treated + 1e-12)
+            ipw_t_label = r"$D/\mathbb{E}[D]$"
+            ipw_c_label = r"$(1-D)\cdot m/(1-m)/\mathbb{E}[D]$"
+
+        return {
+            "score": str(score),
+            "trimming_threshold": float(self.trimming_threshold),
+            "normalize_ipw": bool(normalize_ipw_effective),
+            "d": np.asarray(d, dtype=float).ravel(),
+            "m_clipped": np.asarray(m_clipped, dtype=float).ravel(),
+            "psi": np.asarray(psi, dtype=float).ravel(),
+            "ipw_t": np.asarray(ipw_t, dtype=float).ravel(),
+            "ipw_c": np.asarray(ipw_c, dtype=float).ravel(),
+            "ipw_t_label": ipw_t_label,
+            "ipw_c_label": ipw_c_label,
+        }
+
+    def _build_residual_plot_cache(
+        self,
+        *,
+        y: np.ndarray,
+        d: np.ndarray,
+        g0_hat: np.ndarray,
+        g1_hat: np.ndarray,
+        m_hat: np.ndarray,
+    ) -> Dict[str, np.ndarray]:
+        """Build cached arrays used by residual diagnostic plots."""
+        return {
+            "y": np.asarray(y, dtype=float).ravel(),
+            "d": np.asarray(d, dtype=float).ravel(),
+            "g0": np.asarray(g0_hat, dtype=float).ravel(),
+            "g1": np.asarray(g1_hat, dtype=float).ravel(),
+            "m": np.asarray(m_hat, dtype=float).ravel(),
+        }
 
     def _build_causal_estimate(
         self,
@@ -891,6 +965,7 @@ class IRM(BaseEstimator):
         check_is_fitted(self, attributes=["m_hat_", "g0_hat_", "g1_hat_"])
         return {
             "m_hat": self.m_hat_,
+            "m_hat_raw": getattr(self, "m_hat_raw_", None),
             "g0_hat": self.g0_hat_,
             "g1_hat": self.g1_hat_,
             "folds": self.folds_,
@@ -1129,7 +1204,7 @@ class IRM(BaseEstimator):
         alpha : float, default 0.05
             Significance level for CI bounds.
         """
-        from causalis.scenarios.unconfoundedness.refutation.uncofoundedness.sensitivity import (
+        from causalis.scenarios.unconfoundedness.refutation.unconfoundedness.sensitivity import (
             sensitivity_analysis as sa_fn,
             get_sensitivity_summary
         )

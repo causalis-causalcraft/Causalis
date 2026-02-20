@@ -1,11 +1,37 @@
-from typing import Tuple, Optional, Any
+from typing import Tuple, Optional, Any, Union
 import numpy as np
 import matplotlib as mpl
 import matplotlib.pyplot as plt
+from causalis.data_contracts.causal_estimate import CausalEstimate
 from causalis.data_contracts.causal_diagnostic_data import UnconfoundednessDiagnosticData
 
+
+def _resolve_overlap_diag(
+    diag: Union[UnconfoundednessDiagnosticData, CausalEstimate, dict]
+) -> UnconfoundednessDiagnosticData:
+    if isinstance(diag, UnconfoundednessDiagnosticData):
+        resolved = diag
+    elif isinstance(diag, CausalEstimate):
+        resolved = diag.diagnostic_data
+    elif isinstance(diag, dict):
+        resolved = diag.get("diagnostic_data", None)
+    else:
+        resolved = getattr(diag, "diagnostic_data", None)
+
+    if resolved is None:
+        raise ValueError(
+            "plot_m_overlap expects UnconfoundednessDiagnosticData or CausalEstimate "
+            "with diagnostic_data. Call estimate(..., diagnostic_data=True)."
+        )
+
+    if not hasattr(resolved, "m_hat") or not hasattr(resolved, "d"):
+        raise ValueError("diagnostic_data must include both `m_hat` and `d`.")
+
+    return resolved
+
+
 def plot_m_overlap(
-    diag: UnconfoundednessDiagnosticData,
+    diag: Union[UnconfoundednessDiagnosticData, CausalEstimate, dict],
     clip: Tuple[float, float] = (0.01, 0.99),
     bins: Any = "fd",
     kde: bool = True,
@@ -28,8 +54,8 @@ def plot_m_overlap(
 
     Parameters
     ----------
-    diag : UnconfoundednessDiagnosticData
-        Diagnostic data containing m_hat and d.
+    diag : UnconfoundednessDiagnosticData or CausalEstimate
+        Diagnostic data directly, or an estimate containing diagnostic_data with m_hat and d.
     clip : tuple, default (0.01, 0.99)
         Quantiles to clip for KDE range.
     bins : str or int, default "fd"
@@ -98,8 +124,9 @@ def plot_m_overlap(
         return fallback
 
     # ------- Data -----------------------------------------------------------
-    d = np.asarray(diag.d).astype(int)
-    m = np.asarray(diag.m_hat, dtype=float)
+    diag_resolved = _resolve_overlap_diag(diag)
+    d = np.asarray(diag_resolved.d).astype(int)
+    m = np.asarray(diag_resolved.m_hat, dtype=float)
     mask = np.isfinite(m) & np.isfinite(d)
     d, m = d[mask], m[mask]
     mt = m[d == 1]
@@ -156,7 +183,7 @@ def plot_m_overlap(
             else:
                 lo, hi = 0.0, 1.0
 
-            xs = np.linspace(0.0, 1.0, 800)
+            xs = np.linspace(lo, hi, 800)
             h_t = _silverman_bandwidth(mtp)
             h_c = _silverman_bandwidth(mcp)
             yt = _kde_reflect(mtp, xs, h_t)
