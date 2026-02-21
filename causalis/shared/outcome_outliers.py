@@ -6,10 +6,11 @@ import numpy as np
 import pandas as pd
 
 from causalis.dgp.causaldata import CausalData
+from causalis.dgp.multicausaldata import MultiCausalData
 
 
 def outcome_outliers(
-    data: CausalData,
+    data: CausalData | MultiCausalData,
     treatment: Optional[str] = None,
     outcome: Optional[str] = None,
     *,
@@ -24,10 +25,11 @@ def outcome_outliers(
 
     Parameters
     ----------
-    data : CausalData
+    data : CausalData or MultiCausalData
         Causal dataset containing the dataframe and metadata.
     treatment : str, optional
-        Treatment column name. Defaults to `data.treatment`.
+        Treatment column name. For MultiCausalData, if not provided, one-hot
+        treatment columns are converted to assigned treatment labels.
     outcome : str, optional
         Outcome column name. Defaults to `data.outcome`.
     method : {"iqr", "zscore"}, default "iqr"
@@ -53,17 +55,41 @@ def outcome_outliers(
     -----
     Bounds are computed within each treatment group.
     """
-    if not isinstance(data, CausalData):
-        raise ValueError("data must be a CausalData object.")
-    df = data.df
+    if not isinstance(data, (CausalData, MultiCausalData)):
+        raise ValueError("data must be a CausalData or MultiCausalData object.")
+    raw_df = data.df
+    df = raw_df
 
-    t_attr = getattr(data, "treatment", None)
-    t_col_default = t_attr.name if isinstance(t_attr, pd.Series) else t_attr
     y_attr = getattr(data, "outcome", None)
     y_col_default = y_attr.name if isinstance(y_attr, pd.Series) else y_attr
 
-    t_col = treatment or t_col_default
     y_col = outcome or y_col_default
+    t_col: Optional[str]
+
+    if isinstance(data, MultiCausalData) and treatment is None:
+        t_cols = list(data.treatment_names)
+        if y_col not in df.columns or not all(col in df.columns for col in t_cols):
+            raise ValueError("Specified treatment/outcome columns not found in DataFrame.")
+
+        assigned_idx = df[t_cols].to_numpy(dtype=int, copy=False).argmax(axis=1)
+        assigned_treatment = pd.Categorical.from_codes(
+            assigned_idx,
+            categories=t_cols,
+            ordered=True,
+        )
+
+        t_col = "treatment"
+        while t_col in df.columns or t_col == y_col:
+            t_col = "_" + t_col
+
+        df = pd.DataFrame({t_col: assigned_treatment, y_col: df[y_col]})
+    else:
+        if isinstance(data, MultiCausalData):
+            t_col_default = None
+        else:
+            t_attr = getattr(data, "treatment", None)
+            t_col_default = t_attr.name if isinstance(t_attr, pd.Series) else t_attr
+        t_col = treatment or t_col_default
 
     if not t_col or not y_col:
         raise ValueError("treatment and outcome column names must be provided.")
@@ -90,7 +116,7 @@ def outcome_outliers(
     rows = []
     flagged_rows = []
 
-    for tr, g in df_valid.groupby(t_col, sort=False):
+    for tr, g in df_valid.groupby(t_col, sort=False, observed=True):
         y = g[y_col].to_numpy(dtype=float)
         n = y.size
 
@@ -136,7 +162,7 @@ def outcome_outliers(
 
         if return_rows and outlier_count:
             flagged_index = g.index[mask]
-            flagged_rows.append(df.loc[flagged_index])
+            flagged_rows.append(raw_df.loc[flagged_index])
 
     summary = pd.DataFrame(rows)
 
@@ -144,7 +170,7 @@ def outcome_outliers(
         if flagged_rows:
             outliers_df = pd.concat(flagged_rows, axis=0)
         else:
-            outliers_df = df.head(0).copy()
+            outliers_df = raw_df.head(0).copy()
         return summary, outliers_df
 
     return summary

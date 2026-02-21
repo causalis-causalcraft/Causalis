@@ -9,6 +9,7 @@ import matplotlib.pyplot as plt
 
 if TYPE_CHECKING:
     from causalis.dgp.causaldata import CausalData
+    from causalis.dgp.multicausaldata import MultiCausalData
 
 
 def _silverman_bandwidth(x: np.ndarray) -> float:
@@ -92,8 +93,68 @@ def _resolve_palette(treatments, palette, default_cycle):
     raise ValueError("palette must be a dict, list/tuple, or None.")
 
 
+def _looks_like_multicausal_data(data: object) -> bool:
+    """
+    Runtime check for MultiCausalData-like contracts without importing at runtime.
+    """
+    return hasattr(data, "treatment_names") and hasattr(data, "control_treatment")
+
+
+def _resolve_plot_frame(
+        data,
+        treatment: Optional[str],
+        outcome: Optional[str],
+) -> Tuple[pd.DataFrame, str, str, Optional[np.ndarray]]:
+    """
+    Resolve plotting frame and column names for CausalData / MultiCausalData.
+    """
+    df = getattr(data, "df")
+
+    y_attr = getattr(data, "outcome")
+    y_col_default = y_attr.name if isinstance(y_attr, pd.Series) else y_attr
+    y_col = outcome or y_col_default
+
+    treatment_order: Optional[np.ndarray] = None
+
+    if _looks_like_multicausal_data(data) and treatment is None:
+        t_cols = list(getattr(data, "treatment_names"))
+        if y_col not in df.columns:
+            raise ValueError("Specified treatment/outcome columns not found in DataFrame.")
+        if not all(col in df.columns for col in t_cols):
+            raise ValueError("Specified treatment/outcome columns not found in DataFrame.")
+
+        assigned_idx = df[t_cols].to_numpy(dtype=int, copy=False).argmax(axis=1)
+        assigned_treatment = pd.Categorical.from_codes(
+            assigned_idx,
+            categories=t_cols,
+            ordered=True,
+        )
+
+        t_col = "treatment"
+        while t_col in df.columns or t_col == y_col:
+            t_col = "_" + t_col
+
+        df = pd.DataFrame({t_col: assigned_treatment, y_col: df[y_col]})
+        treatment_order = np.asarray(t_cols, dtype=object)
+    else:
+        if _looks_like_multicausal_data(data):
+            t_col_default = None
+        else:
+            t_attr = getattr(data, "treatment")
+            t_col_default = t_attr.name if isinstance(t_attr, pd.Series) else t_attr
+
+        t_col = treatment or t_col_default
+        if t_col is None:
+            raise ValueError("Treatment column is not available in the provided data contract.")
+
+    if t_col not in df.columns or y_col not in df.columns:
+        raise ValueError("Specified treatment/outcome columns not found in DataFrame.")
+
+    return df, t_col, y_col, treatment_order
+
+
 def outcome_plot_dist(
-        data: CausalData,
+        data: Union[CausalData, MultiCausalData],
         treatment: Optional[str] = None,
         outcome: Optional[str] = None,
         bins: Union[str, int] = "fd",
@@ -124,10 +185,11 @@ def outcome_plot_dist(
 
     Parameters
     ----------
-    data : CausalData
+    data : CausalData or MultiCausalData
         The causal dataset containing the dataframe and metadata.
     treatment : str, optional
-        Treatment column name. Defaults to the one in `data_contracts`.
+        Treatment column name. For MultiCausalData, if not provided, one-hot
+        treatment columns are converted to assigned treatment labels.
     outcome : str, optional
         Outcome column name. Defaults to the one in `data_contracts`.
     bins : str or int, default "fd"
@@ -162,21 +224,8 @@ def outcome_plot_dist(
     matplotlib.figure.Figure
         The generated figure object.
     """
-    df = getattr(data, "df")
-
-    t_attr = getattr(data, "treatment")
-    t_col_default = t_attr.name if isinstance(t_attr, pd.Series) else t_attr
-    
-    y_attr = getattr(data, "outcome")
-    y_col_default = y_attr.name if isinstance(y_attr, pd.Series) else y_attr
-
-    t_col = treatment or t_col_default
-    y_col = outcome or y_col_default
-
-    if t_col not in df.columns or y_col not in df.columns:
-        raise ValueError("Specified treatment/outcome columns not found in DataFrame.")
-
-    treatments = pd.unique(df[t_col])
+    df, t_col, y_col, treatment_order = _resolve_plot_frame(data, treatment, outcome)
+    treatments = treatment_order if treatment_order is not None else pd.unique(df[t_col])
     valid = df[[t_col, y_col]].dropna()
     if valid.empty:
         raise ValueError("No non-missing values for the selected treatment/outcome.")
@@ -397,7 +446,7 @@ def outcome_plot_dist(
 
 
 def outcome_plot_boxplot(
-        data: CausalData,
+        data: Union[CausalData, MultiCausalData],
         treatment: Optional[str] = None,
         outcome: Optional[str] = None,
         figsize: Tuple[float, float] = (9, 5.5),
@@ -422,10 +471,11 @@ def outcome_plot_boxplot(
 
     Parameters
     ----------
-    data : CausalData
+    data : CausalData or MultiCausalData
         The causal dataset containing the dataframe and metadata.
     treatment : str, optional
-        Treatment column name. Defaults to the one in `data_contracts`.
+        Treatment column name. For MultiCausalData, if not provided, one-hot
+        treatment columns are converted to assigned treatment labels.
     outcome : str, optional
         Outcome column name. Defaults to the one in `data_contracts`.
     figsize : tuple, default (9, 5.5)
@@ -452,25 +502,13 @@ def outcome_plot_boxplot(
     matplotlib.figure.Figure
         The generated figure object.
     """
-    df = getattr(data, "df")
-
-    t_attr = getattr(data, "treatment")
-    t_col_default = t_attr.name if isinstance(t_attr, pd.Series) else t_attr
-    
-    y_attr = getattr(data, "outcome")
-    y_col_default = y_attr.name if isinstance(y_attr, pd.Series) else y_attr
-
-    t_col = treatment or t_col_default
-    y_col = outcome or y_col_default
-
-    if t_col not in df.columns or y_col not in df.columns:
-        raise ValueError("Specified treatment/outcome columns not found in DataFrame.")
+    df, t_col, y_col, treatment_order = _resolve_plot_frame(data, treatment, outcome)
 
     df_valid = df[[t_col, y_col]].dropna()
     if df_valid.empty:
         raise ValueError("No valid rows with both treatment and outcome present.")
 
-    treatments = pd.unique(df_valid[t_col])
+    treatments = treatment_order if treatment_order is not None else pd.unique(df_valid[t_col])
     plot_data = [df_valid.loc[df_valid[t_col] == tr, y_col].values for tr in treatments]
 
     rc = {
@@ -540,7 +578,7 @@ def outcome_plot_boxplot(
 
 
 def outcome_plots(
-        data: CausalData,
+        data: Union[CausalData, MultiCausalData],
         treatment: Optional[str] = None,
         outcome: Optional[str] = None,
         bins: int = 30,
@@ -556,7 +594,7 @@ def outcome_plots(
 
     Parameters
     ----------
-    data : CausalData
+    data : CausalData or MultiCausalData
         The causal dataset containing the dataframe and metadata.
     treatment : str, optional
         Treatment column name. Defaults to the one in `data_contracts`.

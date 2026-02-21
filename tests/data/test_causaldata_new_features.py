@@ -8,33 +8,33 @@ from pydantic import ValidationError
 def test_causal_data_extra_forbid():
     df = pd.DataFrame({
         "y": [1, 2, 3],
-        "t": [0, 1, 0],
+        "d": [0, 1, 0],
         "x": [5, 6, 7]
     })
     # Should work
-    CausalData(df=df, outcome="y", treatment="t", confounders=["x"])
+    CausalData(df=df, outcome="y", treatment="d", confounders=["x"])
     
     # Should fail due to extra="forbid"
     with pytest.raises(ValidationError):
-        CausalData(df=df, outcome="y", treatment="t", confounders=["x"], extra_arg="oops")
+        CausalData(df=df, outcome="y", treatment="d", confounders=["x"], extra_arg="oops")
 
 def test_causal_data_dtype_agnostic_duplicates():
     df = pd.DataFrame({
         "y": [1.0, 2.0, 3.0],
-        "t": [1, 0, 1],
+        "d": [1, 0, 1],
         "x": [1.0, 0.0, 1.0]  # Same values as t, but different dtype (float vs int)
     })
     # This should now raise ValueError because t and x have identical values
     with pytest.raises(ValueError, match="have identical values"):
-        CausalData(df=df, outcome="y", treatment="t", confounders=["x"])
+        CausalData(df=df, outcome="y", treatment="d", confounders=["x"])
 
 def test_causal_data_get_df_empty():
     df = pd.DataFrame({
         "y": [1, 2, 3],
-        "t": [0, 1, 0],
+        "d": [0, 1, 0],
         "x": [5, 6, 7]
     })
-    cd = CausalData(df=df, outcome="y", treatment="t", confounders=["x"])
+    cd = CausalData(df=df, outcome="y", treatment="d", confounders=["x"])
     
     empty_df = cd.get_df(include_outcome=False, include_treatment=False, include_confounders=False)
     assert empty_df.shape == (3, 0)
@@ -43,57 +43,181 @@ def test_causal_data_get_df_empty():
 def test_multi_causal_data_basic():
     df = pd.DataFrame({
         "y": [1, 2, 3],
-        "t1": [0, 1, 0],
-        "t2": [1, 0, 1],
+        "d1": [0, 1, 0],
+        "d2": [1, 0, 1],
         "x": [5, 6, 7]
     })
-    mcd = MultiCausalData(df=df, outcome="y", treatments=["t1", "t2"], confounders=["x"])
-    assert mcd.treatment_names == ["t1", "t2"]
+    mcd = MultiCausalData(
+        df=df,
+        outcome="y",
+        treatment_names=["d1", "d2"],
+        confounders=["x"],
+        control_treatment="d1",
+    )
+    assert mcd.treatment_names == ["d1", "d2"]
     assert mcd.df.shape == (3, 4)
     # Check canonicalization to int8
-    assert mcd.df["t1"].dtype == "int8"
-    assert mcd.df["t2"].dtype == "int8"
+    assert mcd.df["d1"].dtype == "int8"
+    assert mcd.df["d2"].dtype == "int8"
 
-def test_multi_causal_data_max_treatments():
-    df = pd.DataFrame({
-        "y": [1, 2, 3],
-        "t1": [0, 1, 0],
-        "t2": [0, 1, 0],
-        "t3": [0, 1, 0],
-        "t4": [0, 1, 0],
-        "t5": [0, 1, 0],
-        "t6": [0, 1, 0],
-    })
-    with pytest.raises(ValueError, match="Too many treatment columns"):
-        MultiCausalData(df=df, outcome="y", treatments=["t1", "t2", "t3", "t4", "t5", "t6"])
 
 def test_multi_causal_data_binary_validation():
     df = pd.DataFrame({
         "y": [1, 2, 3],
-        "t1": [0, 1, 2], # Not binary
+        "d1": [0, 1, 2], # Not binary
+        "d2": [1, 0, 0],
     })
     with pytest.raises(ValueError, match="must be binary encoded"):
-        MultiCausalData(df=df, outcome="y", treatments=["t1"])
+        MultiCausalData(df=df, outcome="y", treatment_names=["d1", "d2"], control_treatment="d1")
 
     df_float = pd.DataFrame({
         "y": [1, 2, 3],
-        "t1": [0.0, 1.0, 1e-13], # Close enough to 0
+        "d1": [0.0, 1.0, 1e-13], # Close enough to 0
+        "d2": [1.0, 0.0, 1.0],
     })
-    mcd = MultiCausalData(df=df_float, outcome="y", treatments=["t1"])
-    assert mcd.df["t1"].dtype == "int8"
-    assert (mcd.df["t1"] == [0, 1, 0]).all()
+    mcd = MultiCausalData(df=df_float, outcome="y", treatment_names=["d1", "d2"], control_treatment="d1")
+    assert mcd.df["d1"].dtype == "int8"
+    assert (mcd.df["d1"] == [0, 1, 0]).all()
+
+
+def test_multi_causal_data_requires_control_treatment():
+    df = pd.DataFrame({
+        "y": [1, 2, 3],
+        "d0": [1, 0, 1],
+        "d1": [0, 1, 0],
+    })
+    with pytest.raises(ValidationError, match="control_treatment"):
+        MultiCausalData(df=df, outcome="y", treatment_names=["d0", "d1"])
+
+
+def test_multi_causal_data_requires_one_hot_rows():
+    df = pd.DataFrame({
+        "y": [1, 2, 3],
+        "d0": [1, 0, 0],
+        "d1": [0, 1, 1],
+        "d2": [0, 1, 0],  # second row has two active treatments
+        "x": [5, 6, 7]
+    })
+    with pytest.raises(ValueError, match="one-hot encoded per row"):
+        MultiCausalData(
+            df=df,
+            outcome="y",
+            treatment_names=["d0", "d1", "d2"],
+            confounders=["x"],
+            control_treatment="d0",
+        )
+
+
+def test_multi_causal_data_control_treatment_reordering():
+    df = pd.DataFrame({
+        "y": [1, 2, 3, 4],
+        "d0": [1, 0, 1, 0],
+        "d1": [0, 1, 0, 0],
+        "d2": [0, 0, 0, 1],
+        "x": [5, 6, 7, 8]
+    })
+    mcd = MultiCausalData(
+        df=df,
+        outcome="y",
+        treatment_names=["d1", "d2", "d0"],
+        control_treatment="d0",
+        confounders=["x"],
+    )
+    assert mcd.treatment_names[0] == "d0"
+    assert mcd.control_treatment == "d0"
+
+
+def test_multi_causal_data_requires_at_least_two_treatments():
+    df = pd.DataFrame({
+        "y": [1, 2, 3],
+        "d1": [0, 1, 0],
+    })
+    with pytest.raises(ValueError, match="at least 2 treatment columns"):
+        MultiCausalData(df=df, outcome="y", treatment_names=["d1"], control_treatment="d1")
+
+
+
+def test_multi_causal_data_outcome_and_user_id_are_stripped():
+    df = pd.DataFrame({
+        "y": [1, 2, 3],
+        "d0": [1, 0, 1],
+        "d1": [0, 1, 0],
+        "uid": [10, 11, 12],
+    })
+    mcd = MultiCausalData(
+        df=df,
+        outcome="  y  ",
+        treatment_names=["d0", "d1"],
+        user_id="  uid  ",
+        control_treatment="d0",
+    )
+    assert mcd.outcome == "y"
+    assert mcd.user_id == "uid"
+
+def test_multi_causal_data_outcome_and_user_id_cannot_be_blank():
+    df = pd.DataFrame({
+        "y": [1, 2, 3],
+        "d0": [1, 0, 1],
+        "d1": [0, 1, 0],
+        "uid": [10, 11, 12],
+    })
+    with pytest.raises(ValidationError, match="outcome must be a non-empty string"):
+        MultiCausalData(df=df, outcome="   ", treatment_names=["d0", "d1"], control_treatment="d0")
+    with pytest.raises(ValidationError, match="user_id must be a non-empty string"):
+        MultiCausalData(df=df, outcome="y", treatment_names=["d0", "d1"], user_id="   ", control_treatment="d0")
+
+def test_multi_causal_data_finite_checks_for_used_columns():
+    df_outcome_inf = pd.DataFrame({
+        "y": [1.0, np.inf, 3.0],
+        "d0": [1, 0, 1],
+        "d1": [0, 1, 0],
+    })
+    with pytest.raises(ValueError, match="outcome must contain only finite values"):
+        MultiCausalData(df=df_outcome_inf, outcome="y", treatment_names=["d0", "d1"], control_treatment="d0")
+
+    df_confounder_inf = pd.DataFrame({
+        "y": [1.0, 2.0, 3.0],
+        "d0": [1, 0, 1],
+        "d1": [0, 1, 0],
+        "x": [1.0, -np.inf, 2.0],
+    })
+    with pytest.raises(ValueError, match="confounder must contain only finite values"):
+        MultiCausalData(
+            df=df_confounder_inf,
+            outcome="y",
+            treatment_names=["d0", "d1"],
+            confounders=["x"],
+            control_treatment="d0",
+        )
+
+    df_treatment_inf = pd.DataFrame({
+        "y": [1.0, 2.0, 3.0],
+        "d0": [1.0, 0.0, np.inf],
+        "d1": [0.0, 1.0, 0.0],
+    })
+    with pytest.raises(ValueError, match="treatment must contain only finite values"):
+        MultiCausalData(df=df_treatment_inf, outcome="y", treatment_names=["d0", "d1"], control_treatment="d0")
 
 def test_multi_causal_data_get_df():
     df = pd.DataFrame({
         "y": [1, 2, 3],
-        "t1": [0, 1, 0],
-        "t2": [1, 0, 1],
+        "d1": [0, 1, 0],
+        "d2": [1, 0, 1],
         "x": [5, 6, 7]
     })
-    mcd = MultiCausalData(df=df, outcome="y", treatments=["t1", "t2"], confounders=["x"])
+    mcd = MultiCausalData(
+        df=df,
+        outcome="y",
+        treatment_names=["d1", "d2"],
+        confounders=["x"],
+        control_treatment="d1",
+    )
     
     df_only_t = mcd.get_df(include_outcome=False, include_confounders=False)
-    assert list(df_only_t.columns) == ["t1", "t2"]
+    assert list(df_only_t.columns) == ["d1", "d2"]
     
     df_empty = mcd.get_df(include_outcome=False, include_confounders=False, include_treatments=False)
     assert df_empty.shape == (3, 0)
+
+
+

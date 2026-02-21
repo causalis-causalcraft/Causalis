@@ -170,7 +170,7 @@ class MultiTreatmentIRM(BaseEstimator):
                 y_is_binary = False
                 try:
                     df_tmp = self.data.get_df()
-                    y_tmp = df_tmp[self.data.outcome.name].to_numpy()
+                    y_tmp = df_tmp[self.data.outcome].to_numpy()
                     y_is_binary = _is_binary(y_tmp)
                 except (AttributeError, KeyError, ValueError):
                     pass
@@ -195,14 +195,14 @@ class MultiTreatmentIRM(BaseEstimator):
 
     def _check_data(self) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
         df = self.data.get_df().copy()
-        y = df[self.data.outcome.name].to_numpy(dtype=float)
+        y = df[self.data.outcome].to_numpy(dtype=float)
         d = df[self.data.treatments.columns].to_numpy()
 
         n_treatments_ = len(self.data.treatments.columns)
         if n_treatments_ < 3:
             raise ValueError("Need at least 2 treatments and 1 control variations")
 
-        x_cols = list(self.data.confounders_names)
+        x_cols = list(self.data.confounders)
         if len(x_cols) == 0:
             raise ValueError("MultiCausalData must include non-empty confounders.")
         X = df[x_cols].to_numpy(dtype=float)
@@ -427,7 +427,7 @@ class MultiTreatmentIRM(BaseEstimator):
                 m_hat=m_hat,
                 d=d,
                 y=y,
-                x=self.data.get_df()[list(self.data.confounders_names)].to_numpy(dtype=float),
+                x=self.data.get_df()[list(self.data.confounders)].to_numpy(dtype=float),
                 g_hat=g_hat,
                 psi_b=psi_b,
                 folds=self.folds_,
@@ -461,9 +461,9 @@ class MultiTreatmentIRM(BaseEstimator):
             is_significant=np.where(np.isfinite(pval), pval < alpha / self.n_treatments, False),
             n_treated=int(np.sum(d == 1)),
             n_control=int(np.sum(d == 0)),
-            outcome=self.data.outcome.name,
+            outcome=self.data.outcome,
             treatment=list(self.data.treatments.columns),
-            confounders=list(self.data.confounders_names),
+            confounders=list(self.data.confounders),
             time=datetime.now().strftime("%Y-%m-%d"),
             diagnostic_data=diag,
         )
@@ -576,7 +576,7 @@ class MultiTreatmentIRM(BaseEstimator):
 
         if y is None or d is None:
             df = self.data.get_df()
-            y = df[self.data.outcome.name].to_numpy(dtype=float)
+            y = df[self.data.outcome].to_numpy(dtype=float)
             d = df[self.data.treatment.name].to_numpy()
 
         # --- get fitted nuisances ---

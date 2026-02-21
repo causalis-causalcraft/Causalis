@@ -324,7 +324,7 @@ treatment prevalence, noise, and (optionally) heterogeneous treatment effects.
 - m: true propensity P(T=1 | X) marginalized over U
 - m_obs: realized propensity P(T=1 | X, U)
 - tau_link: tau(X) on the structural (link) scale
-- g0: E[Y | X, T=0] on the natural outcome scale marginalized over U
+- g0: E[Y | X, T=0] on the natural outcome scale marginalized over U .,9
 - g1: E[Y | X, T=1] on the natural outcome scale marginalized over U
 - cate: g1 - g0 (conditional average treatment effect on the natural outcome scale)
 
@@ -1180,6 +1180,18 @@ m_alpha: Optional[np.ndarray] = None
 m_hat: np.ndarray
 ```
 
+##### `m_hat_raw`
+
+```python
+m_hat_raw: Optional[np.ndarray] = None
+```
+
+##### `normalize_ipw`
+
+```python
+normalize_ipw: Optional[bool] = None
+```
+
 ##### `nu2`
 
 ```python
@@ -1210,6 +1222,12 @@ psi_nu2: Optional[np.ndarray] = None
 psi_sigma2: Optional[np.ndarray] = None
 ```
 
+##### `residual_plot_cache`
+
+```python
+residual_plot_cache: Optional[Dict[str, Any]] = None
+```
+
 ##### `riesz_rep`
 
 ```python
@@ -1220,6 +1238,12 @@ riesz_rep: Optional[np.ndarray] = None
 
 ```python
 score: Optional[str] = None
+```
+
+##### `score_plot_cache`
+
+```python
+score_plot_cache: Optional[Dict[str, Any]] = None
 ```
 
 ##### `sensitivity_analysis`
@@ -1238,6 +1262,18 @@ sigma2: Optional[float] = None
 
 ```python
 trimming_threshold: float = 0.0
+```
+
+##### `w`
+
+```python
+w: Optional[np.ndarray] = None
+```
+
+##### `w_bar`
+
+```python
+w_bar: Optional[np.ndarray] = None
 ```
 
 ##### `x`
@@ -1259,7 +1295,7 @@ y: Optional[np.ndarray] = None
 - [**CUPEDDiagnosticData**](#causalis.data_contracts.causal_diagnostic_data.CUPEDDiagnosticData) – Diagnostic data_contracts for CUPED-style (Lin-interacted OLS) adjustment.
 - [**DiagnosticData**](#causalis.data_contracts.causal_diagnostic_data.DiagnosticData) – Base class for all diagnostic data_contracts.
 - [**DiffInMeansDiagnosticData**](#causalis.data_contracts.causal_diagnostic_data.DiffInMeansDiagnosticData) – Diagnostic data_contracts for Difference-in-Means model.
-- [**MultiUnconfoundednessDiagnosticData**](#causalis.data_contracts.causal_diagnostic_data.MultiUnconfoundednessDiagnosticData) – Fields common to all models assuming unconfoundedness with multi_uncofoundedness.
+- [**MultiUnconfoundednessDiagnosticData**](#causalis.data_contracts.causal_diagnostic_data.MultiUnconfoundednessDiagnosticData) – Fields common to all models assuming unconfoundedness with multi_unconfoundedness.
 - [**UnconfoundednessDiagnosticData**](#causalis.data_contracts.causal_diagnostic_data.UnconfoundednessDiagnosticData) – Fields common to all models assuming unconfoundedness.
 
 ##### `CUPEDDiagnosticData`
@@ -1356,7 +1392,7 @@ Diagnostic data_contracts for Difference-in-Means model.
 
 Bases: <code>[DiagnosticData](#causalis.data_contracts.causal_diagnostic_data.DiagnosticData)</code>
 
-Fields common to all models assuming unconfoundedness with multi_uncofoundedness.
+Fields common to all models assuming unconfoundedness with multi_unconfoundedness.
 
 ###### `d`
 
@@ -1386,6 +1422,12 @@ m_alpha: Optional[np.ndarray] = None
 
 ```python
 m_hat: np.ndarray
+```
+
+###### `normalize_ipw`
+
+```python
+normalize_ipw: Optional[bool] = None
 ```
 
 ###### `nu2`
@@ -1496,6 +1538,18 @@ m_alpha: Optional[np.ndarray] = None
 m_hat: np.ndarray
 ```
 
+###### `m_hat_raw`
+
+```python
+m_hat_raw: Optional[np.ndarray] = None
+```
+
+###### `normalize_ipw`
+
+```python
+normalize_ipw: Optional[bool] = None
+```
+
 ###### `nu2`
 
 ```python
@@ -1526,6 +1580,12 @@ psi_nu2: Optional[np.ndarray] = None
 psi_sigma2: Optional[np.ndarray] = None
 ```
 
+###### `residual_plot_cache`
+
+```python
+residual_plot_cache: Optional[Dict[str, Any]] = None
+```
+
 ###### `riesz_rep`
 
 ```python
@@ -1536,6 +1596,12 @@ riesz_rep: Optional[np.ndarray] = None
 
 ```python
 score: Optional[str] = None
+```
+
+###### `score_plot_cache`
+
+```python
+score_plot_cache: Optional[Dict[str, Any]] = None
 ```
 
 ###### `sensitivity_analysis`
@@ -1554,6 +1620,18 @@ sigma2: Optional[float] = None
 
 ```python
 trimming_threshold: float = 0.0
+```
+
+###### `w`
+
+```python
+w: Optional[np.ndarray] = None
+```
+
+###### `w_bar`
+
+```python
+w_bar: Optional[np.ndarray] = None
 ```
 
 ###### `x`
@@ -2889,7 +2967,7 @@ treatment prevalence, noise, and (optionally) heterogeneous treatment effects.
 - m: true propensity P(T=1 | X) marginalized over U
 - m_obs: realized propensity P(T=1 | X, U)
 - tau_link: tau(X) on the structural (link) scale
-- g0: E[Y | X, T=0] on the natural outcome scale marginalized over U
+- g0: E[Y | X, T=0] on the natural outcome scale marginalized over U .,9
 - g1: E[Y | X, T=1] on the natural outcome scale marginalized over U
 - cate: g1 - g0 (conditional average treatment effect on the natural outcome scale)
 
@@ -3207,6 +3285,7 @@ Uses rank -> normal scores -> Pearson correlation approach.
 - [**generate_cuped_tweedie_26**](#causalis.dgp.causaldata.generate_cuped_tweedie_26) – Gold standard Tweedie-like DGP with mixed marginals and structured HTE.
 - [**generate_obs_hte_26**](#causalis.dgp.causaldata.generate_obs_hte_26) – Observational dataset with nonlinear outcome model, nonlinear treatment assignment,
 - [**generate_obs_hte_26_rich**](#causalis.dgp.causaldata.generate_obs_hte_26_rich) – Observational dataset with richer confounding, nonlinear outcome model,
+- [**generate_obs_hte_binary_26**](#causalis.dgp.causaldata.generate_obs_hte_binary_26) – Observational binary-outcome dataset with nonlinear confounding and
 - [**generate_rct**](#causalis.dgp.causaldata.generate_rct) – Generate an RCT dataset with randomized treatment assignment.
 - [**make_cuped_binary_26**](#causalis.dgp.causaldata.make_cuped_binary_26) – Binary CUPED benchmark with richer confounders and structured HTE.
 - [**make_cuped_tweedie**](#causalis.dgp.causaldata.make_cuped_tweedie) – Tweedie-like DGP with mixed marginals and structured HTE.
@@ -3413,7 +3492,7 @@ treatment prevalence, noise, and (optionally) heterogeneous treatment effects.
 - m: true propensity P(T=1 | X) marginalized over U
 - m_obs: realized propensity P(T=1 | X, U)
 - tau_link: tau(X) on the structural (link) scale
-- g0: E[Y | X, T=0] on the natural outcome scale marginalized over U
+- g0: E[Y | X, T=0] on the natural outcome scale marginalized over U .,9
 - g1: E[Y | X, T=1] on the natural outcome scale marginalized over U
 - cate: g1 - g0 (conditional average treatment effect on the natural outcome scale)
 
@@ -3733,7 +3812,7 @@ treatment prevalence, noise, and (optionally) heterogeneous treatment effects.
 - m: true propensity P(T=1 | X) marginalized over U
 - m_obs: realized propensity P(T=1 | X, U)
 - tau_link: tau(X) on the structural (link) scale
-- g0: E[Y | X, T=0] on the natural outcome scale marginalized over U
+- g0: E[Y | X, T=0] on the natural outcome scale marginalized over U .,9
 - g1: E[Y | X, T=1] on the natural outcome scale marginalized over U
 - cate: g1 - g0 (conditional average treatment effect on the natural outcome scale)
 
@@ -4445,6 +4524,25 @@ Adds additional realistic covariates and dependencies to mimic real data.
 - **n** (<code>[int](#int)</code>) – Number of samples.
 - **seed** (<code>[int](#int)</code>) – Random seed.
 - **include_oracle** (<code>[bool](#bool)</code>) – Whether to include oracle ground-truth columns like 'cate', 'propensity', etc.
+- **return_causal_data** (<code>[bool](#bool)</code>) – If True, returns a CausalData object. If False, returns a pandas DataFrame.
+
+##### `generate_obs_hte_binary_26`
+
+```python
+generate_obs_hte_binary_26(n: int = 100000, seed: int = 42, include_oracle: bool = True, return_causal_data: bool = True) -> Union[pd.DataFrame, CausalData]
+```
+
+Observational binary-outcome dataset with nonlinear confounding and
+heterogeneous treatment effects.
+
+This scenario follows the structure of `generate_obs_hte_26_rich`, but uses
+a binary outcome model and a modified confounder set.
+
+**Parameters:**
+
+- **n** (<code>[int](#int)</code>) – Number of samples.
+- **seed** (<code>[int](#int)</code>) – Random seed.
+- **include_oracle** (<code>[bool](#bool)</code>) – Whether to include oracle columns like 'cate', 'propensity', etc.
 - **return_causal_data** (<code>[bool](#bool)</code>) – If True, returns a CausalData object. If False, returns a pandas DataFrame.
 
 ##### `generate_rct`
@@ -5927,7 +6025,7 @@ Generate an observational dataset with linear effects of confounders and a const
 - [**cate**](#causalis.scenarios.cate) –
 - [**classic_rct**](#causalis.scenarios.classic_rct) –
 - [**cuped**](#causalis.scenarios.cuped) –
-- [**multi_uncofoundedness**](#causalis.scenarios.multi_uncofoundedness) –
+- [**multi_unconfoundedness**](#causalis.scenarios.multi_unconfoundedness) –
 - [**unconfoundedness**](#causalis.scenarios.unconfoundedness) –
 
 #### `cate`
@@ -7182,7 +7280,7 @@ If control_mean is near 0, relative stats are undefined/unstable and return inf/
 
 - [**cuped_forest_plot**](#causalis.scenarios.cuped.cuped_forest_plot) – Forest plot of absolute estimates and CIs for CUPED vs non-CUPED.
 - [**regression_assumptions_table_from_data**](#causalis.scenarios.cuped.regression_assumptions_table_from_data) – Fit CUPED on `CausalData` and return the assumptions flag table.
-- [**regression_assumptions_table_from_estimate**](#causalis.scenarios.cuped.regression_assumptions_table_from_estimate) – Build assumption table from CUPED `CausalEstimate` and transform it.
+- [**regression_assumptions_table_from_estimate**](#causalis.scenarios.cuped.regression_assumptions_table_from_estimate) – Build assumptions table from a CUPED estimate.
 - [**style_regression_assumptions_table**](#causalis.scenarios.cuped.style_regression_assumptions_table) – Return pandas Styler with colored flag cells for notebook display.
 
 ##### `CUPEDModel`
@@ -7547,7 +7645,7 @@ Wrapper for generate_cuped_binary().
 - [**regression_assumptions_table_from_checks**](#causalis.scenarios.cuped.diagnostics.regression_assumptions_table_from_checks) – Return a table of GREEN/YELLOW/RED assumption flags from checks payload.
 - [**regression_assumptions_table_from_data**](#causalis.scenarios.cuped.diagnostics.regression_assumptions_table_from_data) – Fit CUPED on `CausalData` and return the assumptions flag table.
 - [**regression_assumptions_table_from_diagnostic_data**](#causalis.scenarios.cuped.diagnostics.regression_assumptions_table_from_diagnostic_data) – Build assumption table from `CUPEDDiagnosticData` payload.
-- [**regression_assumptions_table_from_estimate**](#causalis.scenarios.cuped.diagnostics.regression_assumptions_table_from_estimate) – Build assumption table from CUPED `CausalEstimate` and transform it.
+- [**regression_assumptions_table_from_estimate**](#causalis.scenarios.cuped.diagnostics.regression_assumptions_table_from_estimate) – Build assumptions table from a CUPED estimate.
 - [**run_regression_checks**](#causalis.scenarios.cuped.diagnostics.run_regression_checks) – Build a compact payload with design, residual, and influence diagnostics.
 - [**style_regression_assumptions_table**](#causalis.scenarios.cuped.diagnostics.style_regression_assumptions_table) – Return pandas Styler with colored flag cells for notebook display.
 
@@ -7736,10 +7834,15 @@ Build assumption table from `CUPEDDiagnosticData` payload.
 ###### `regression_assumptions_table_from_estimate`
 
 ```python
-regression_assumptions_table_from_estimate(estimate: CausalEstimate, style_regression_assumptions_table: Optional[Callable[[pd.DataFrame], Any]] = None, cov_type: Optional[str] = None, condition_number_warn_threshold: float = 100000000.0, vif_warn_threshold: float = 20.0, tiny_one_minus_h_tol: float = 1e-08) -> Any
+regression_assumptions_table_from_estimate(data_or_estimate: CausalData | CausalEstimate, estimate: Optional[CausalEstimate] = None, style_regression_assumptions_table: Optional[Callable[[pd.DataFrame], Any]] = None, cov_type: Optional[str] = None, condition_number_warn_threshold: float = 100000000.0, vif_warn_threshold: float = 20.0, tiny_one_minus_h_tol: float = 1e-08) -> Any
 ```
 
-Build assumption table from CUPED `CausalEstimate` and transform it.
+Build assumptions table from a CUPED estimate.
+
+Supports both call styles:
+
+1. `regression_assumptions_table_from_estimate(estimate, ...)`
+1. `regression_assumptions_table_from_estimate(data, estimate, ...)`
 
 ###### `regression_checks`
 
@@ -7763,7 +7866,7 @@ Build assumption table from CUPED `CausalEstimate` and transform it.
 - [**regression_assumptions_table_from_checks**](#causalis.scenarios.cuped.diagnostics.regression_checks.regression_assumptions_table_from_checks) – Return a table of GREEN/YELLOW/RED assumption flags from checks payload.
 - [**regression_assumptions_table_from_data**](#causalis.scenarios.cuped.diagnostics.regression_checks.regression_assumptions_table_from_data) – Fit CUPED on `CausalData` and return the assumptions flag table.
 - [**regression_assumptions_table_from_diagnostic_data**](#causalis.scenarios.cuped.diagnostics.regression_checks.regression_assumptions_table_from_diagnostic_data) – Build assumption table from `CUPEDDiagnosticData` payload.
-- [**regression_assumptions_table_from_estimate**](#causalis.scenarios.cuped.diagnostics.regression_checks.regression_assumptions_table_from_estimate) – Build assumption table from CUPED `CausalEstimate` and transform it.
+- [**regression_assumptions_table_from_estimate**](#causalis.scenarios.cuped.diagnostics.regression_checks.regression_assumptions_table_from_estimate) – Build assumptions table from a CUPED estimate.
 - [**run_regression_checks**](#causalis.scenarios.cuped.diagnostics.regression_checks.run_regression_checks) – Build a compact payload with design, residual, and influence diagnostics.
 - [**style_regression_assumptions_table**](#causalis.scenarios.cuped.diagnostics.regression_checks.style_regression_assumptions_table) – Return pandas Styler with colored flag cells for notebook display.
 - [**vif_from_corr**](#causalis.scenarios.cuped.diagnostics.regression_checks.vif_from_corr) – Approximate VIF from inverse correlation matrix of standardized covariates.
@@ -7946,10 +8049,15 @@ Build assumption table from `CUPEDDiagnosticData` payload.
 ####### `regression_assumptions_table_from_estimate`
 
 ```python
-regression_assumptions_table_from_estimate(estimate: CausalEstimate, style_regression_assumptions_table: Optional[Callable[[pd.DataFrame], Any]] = None, cov_type: Optional[str] = None, condition_number_warn_threshold: float = 100000000.0, vif_warn_threshold: float = 20.0, tiny_one_minus_h_tol: float = 1e-08) -> Any
+regression_assumptions_table_from_estimate(data_or_estimate: CausalData | CausalEstimate, estimate: Optional[CausalEstimate] = None, style_regression_assumptions_table: Optional[Callable[[pd.DataFrame], Any]] = None, cov_type: Optional[str] = None, condition_number_warn_threshold: float = 100000000.0, vif_warn_threshold: float = 20.0, tiny_one_minus_h_tol: float = 1e-08) -> Any
 ```
 
-Build assumption table from CUPED `CausalEstimate` and transform it.
+Build assumptions table from a CUPED estimate.
+
+Supports both call styles:
+
+1. `regression_assumptions_table_from_estimate(estimate, ...)`
+1. `regression_assumptions_table_from_estimate(data, estimate, ...)`
 
 ####### `run_regression_checks`
 
@@ -8273,10 +8381,15 @@ Fit CUPED on `CausalData` and return the assumptions flag table.
 ##### `regression_assumptions_table_from_estimate`
 
 ```python
-regression_assumptions_table_from_estimate(estimate: CausalEstimate, style_regression_assumptions_table: Optional[Callable[[pd.DataFrame], Any]] = None, cov_type: Optional[str] = None, condition_number_warn_threshold: float = 100000000.0, vif_warn_threshold: float = 20.0, tiny_one_minus_h_tol: float = 1e-08) -> Any
+regression_assumptions_table_from_estimate(data_or_estimate: CausalData | CausalEstimate, estimate: Optional[CausalEstimate] = None, style_regression_assumptions_table: Optional[Callable[[pd.DataFrame], Any]] = None, cov_type: Optional[str] = None, condition_number_warn_threshold: float = 100000000.0, vif_warn_threshold: float = 20.0, tiny_one_minus_h_tol: float = 1e-08) -> Any
 ```
 
-Build assumption table from CUPED `CausalEstimate` and transform it.
+Build assumptions table from a CUPED estimate.
+
+Supports both call styles:
+
+1. `regression_assumptions_table_from_estimate(estimate, ...)`
+1. `regression_assumptions_table_from_estimate(data, estimate, ...)`
 
 ##### `style_regression_assumptions_table`
 
@@ -8286,17 +8399,17 @@ style_regression_assumptions_table(table: pd.DataFrame)
 
 Return pandas Styler with colored flag cells for notebook display.
 
-#### `multi_uncofoundedness`
+#### `multi_unconfoundedness`
 
 **Modules:**
 
-- [**dgp**](#causalis.scenarios.multi_uncofoundedness.dgp) –
-- [**model**](#causalis.scenarios.multi_uncofoundedness.model) –
-- [**refutation**](#causalis.scenarios.multi_uncofoundedness.refutation) –
+- [**dgp**](#causalis.scenarios.multi_unconfoundedness.dgp) –
+- [**model**](#causalis.scenarios.multi_unconfoundedness.model) –
+- [**refutation**](#causalis.scenarios.multi_unconfoundedness.refutation) –
 
 **Classes:**
 
-- [**MultiTreatmentIRM**](#causalis.scenarios.multi_uncofoundedness.MultiTreatmentIRM) – Interactive Regression Model with multi_uncofoundedness (Multi treatment IRM) with DoubleML-style cross-fitting using CausalData.
+- [**MultiTreatmentIRM**](#causalis.scenarios.multi_unconfoundedness.MultiTreatmentIRM) – Interactive Regression Model with multi_unconfoundedness (Multi treatment IRM) with DoubleML-style cross-fitting using CausalData.
 
 ##### `MultiTreatmentIRM`
 
@@ -8306,7 +8419,7 @@ MultiTreatmentIRM(data: Optional[MultiCausalData] = None, ml_g: Any = None, ml_m
 
 Bases: <code>[BaseEstimator](#sklearn.base.BaseEstimator)</code>
 
-Interactive Regression Model with multi_uncofoundedness (Multi treatment IRM) with DoubleML-style cross-fitting using CausalData.
+Interactive Regression Model with multi_unconfoundedness (Multi treatment IRM) with DoubleML-style cross-fitting using CausalData.
 Model supports >= 2 treatments.
 
 <details class="-parameters" open markdown="1">
@@ -8335,10 +8448,10 @@ Random seed for fold creation.
 
 **Functions:**
 
-- [**confint**](#causalis.scenarios.multi_uncofoundedness.MultiTreatmentIRM.confint) –
-- [**estimate**](#causalis.scenarios.multi_uncofoundedness.MultiTreatmentIRM.estimate) –
-- [**fit**](#causalis.scenarios.multi_uncofoundedness.MultiTreatmentIRM.fit) –
-- [**sensitivity_analysis**](#causalis.scenarios.multi_uncofoundedness.MultiTreatmentIRM.sensitivity_analysis) –
+- [**confint**](#causalis.scenarios.multi_unconfoundedness.MultiTreatmentIRM.confint) –
+- [**estimate**](#causalis.scenarios.multi_unconfoundedness.MultiTreatmentIRM.estimate) –
+- [**fit**](#causalis.scenarios.multi_unconfoundedness.MultiTreatmentIRM.fit) –
+- [**sensitivity_analysis**](#causalis.scenarios.multi_unconfoundedness.MultiTreatmentIRM.sensitivity_analysis) –
 
 ###### `coef`
 
@@ -8500,7 +8613,7 @@ trimming_threshold = float(trimming_threshold)
 
 **Functions:**
 
-- [**generate_multitreatment_irm_26**](#causalis.scenarios.multi_uncofoundedness.dgp.generate_multitreatment_irm_26) – Pre-configured multi-treatment dataset suitable for MultiTreatmentIRM.
+- [**generate_multitreatment_irm_26**](#causalis.scenarios.multi_unconfoundedness.dgp.generate_multitreatment_irm_26) – Pre-configured multi-treatment dataset suitable for MultiTreatmentIRM.
 
 ###### `generate_multitreatment_irm_26`
 
@@ -8518,7 +8631,7 @@ Pre-configured multi-treatment dataset suitable for MultiTreatmentIRM.
 
 **Classes:**
 
-- [**MultiTreatmentIRM**](#causalis.scenarios.multi_uncofoundedness.model.MultiTreatmentIRM) – Interactive Regression Model with multi_uncofoundedness (Multi treatment IRM) with DoubleML-style cross-fitting using CausalData.
+- [**MultiTreatmentIRM**](#causalis.scenarios.multi_unconfoundedness.model.MultiTreatmentIRM) – Interactive Regression Model with multi_unconfoundedness (Multi treatment IRM) with DoubleML-style cross-fitting using CausalData.
 
 ###### `HAS_CATBOOST`
 
@@ -8534,7 +8647,7 @@ MultiTreatmentIRM(data: Optional[MultiCausalData] = None, ml_g: Any = None, ml_m
 
 Bases: <code>[BaseEstimator](#sklearn.base.BaseEstimator)</code>
 
-Interactive Regression Model with multi_uncofoundedness (Multi treatment IRM) with DoubleML-style cross-fitting using CausalData.
+Interactive Regression Model with multi_unconfoundedness (Multi treatment IRM) with DoubleML-style cross-fitting using CausalData.
 Model supports >= 2 treatments.
 
 <details class="-parameters" open markdown="1">
@@ -8563,10 +8676,10 @@ Random seed for fold creation.
 
 **Functions:**
 
-- [**confint**](#causalis.scenarios.multi_uncofoundedness.model.MultiTreatmentIRM.confint) –
-- [**estimate**](#causalis.scenarios.multi_uncofoundedness.model.MultiTreatmentIRM.estimate) –
-- [**fit**](#causalis.scenarios.multi_uncofoundedness.model.MultiTreatmentIRM.fit) –
-- [**sensitivity_analysis**](#causalis.scenarios.multi_uncofoundedness.model.MultiTreatmentIRM.sensitivity_analysis) –
+- [**confint**](#causalis.scenarios.multi_unconfoundedness.model.MultiTreatmentIRM.confint) –
+- [**estimate**](#causalis.scenarios.multi_unconfoundedness.model.MultiTreatmentIRM.estimate) –
+- [**fit**](#causalis.scenarios.multi_unconfoundedness.model.MultiTreatmentIRM.fit) –
+- [**sensitivity_analysis**](#causalis.scenarios.multi_unconfoundedness.model.MultiTreatmentIRM.sensitivity_analysis) –
 
 ####### `coef`
 
@@ -8728,24 +8841,24 @@ trimming_threshold = float(trimming_threshold)
 
 **Modules:**
 
-- [**overlap**](#causalis.scenarios.multi_uncofoundedness.refutation.overlap) –
-- [**unconfoundedness**](#causalis.scenarios.multi_uncofoundedness.refutation.unconfoundedness) –
+- [**overlap**](#causalis.scenarios.multi_unconfoundedness.refutation.overlap) –
+- [**unconfoundedness**](#causalis.scenarios.multi_unconfoundedness.refutation.unconfoundedness) –
 
 ###### `overlap`
 
 **Modules:**
 
-- [**overlap_plot**](#causalis.scenarios.multi_uncofoundedness.refutation.overlap.overlap_plot) –
+- [**overlap_plot**](#causalis.scenarios.multi_unconfoundedness.refutation.overlap.overlap_plot) –
 
 **Functions:**
 
-- [**plot_m_overlap**](#causalis.scenarios.multi_uncofoundedness.refutation.overlap.plot_m_overlap) – Multi-treatment overlap plot for propensity scores m_k(x)=P(D=k|X), ATE diagnostics style.
+- [**plot_m_overlap**](#causalis.scenarios.multi_unconfoundedness.refutation.overlap.plot_m_overlap) – Multi-treatment overlap plot for propensity scores m_k(x)=P(D=k|X), ATE diagnostics style.
 
 ####### `overlap_plot`
 
 **Functions:**
 
-- [**plot_m_overlap**](#causalis.scenarios.multi_uncofoundedness.refutation.overlap.overlap_plot.plot_m_overlap) – Multi-treatment overlap plot for propensity scores m_k(x)=P(D=k|X), ATE diagnostics style.
+- [**plot_m_overlap**](#causalis.scenarios.multi_unconfoundedness.refutation.overlap.overlap_plot.plot_m_overlap) – Multi-treatment overlap plot for propensity scores m_k(x)=P(D=k|X), ATE diagnostics style.
 
 ######## `plot_m_overlap`
 
@@ -8801,16 +8914,16 @@ Multi-treatment overlap plot for propensity scores m_k(x)=P(D=k|X), ATE diagnost
 
 **Modules:**
 
-- [**sensitivity**](#causalis.scenarios.multi_uncofoundedness.refutation.unconfoundedness.sensitivity) –
-- [**unconfoundedness_validation**](#causalis.scenarios.multi_uncofoundedness.refutation.unconfoundedness.unconfoundedness_validation) –
+- [**sensitivity**](#causalis.scenarios.multi_unconfoundedness.refutation.unconfoundedness.sensitivity) –
+- [**unconfoundedness_validation**](#causalis.scenarios.multi_unconfoundedness.refutation.unconfoundedness.unconfoundedness_validation) –
 
 **Functions:**
 
-- [**compute_bias_aware_ci**](#causalis.scenarios.multi_uncofoundedness.refutation.unconfoundedness.compute_bias_aware_ci) – Multi-treatment (pairwise 0 vs k) bias-aware CI.
-- [**get_sensitivity_summary**](#causalis.scenarios.multi_uncofoundedness.refutation.unconfoundedness.get_sensitivity_summary) –
-- [**run_uncofoundedness_diagnostics**](#causalis.scenarios.multi_uncofoundedness.refutation.unconfoundedness.run_uncofoundedness_diagnostics) – Multi-treatment uncofoundedness diagnostics focused on balance (SMD), ATE only.
-- [**sensitivity_analysis**](#causalis.scenarios.multi_uncofoundedness.refutation.unconfoundedness.sensitivity_analysis) –
-- [**validate_uncofoundedness_balance**](#causalis.scenarios.multi_uncofoundedness.refutation.unconfoundedness.validate_uncofoundedness_balance) – Multitreatment version (one-hot d, matrix m_hat) for ATE only.
+- [**compute_bias_aware_ci**](#causalis.scenarios.multi_unconfoundedness.refutation.unconfoundedness.compute_bias_aware_ci) – Multi-treatment (pairwise 0 vs k) bias-aware CI.
+- [**get_sensitivity_summary**](#causalis.scenarios.multi_unconfoundedness.refutation.unconfoundedness.get_sensitivity_summary) –
+- [**run_uncofoundedness_diagnostics**](#causalis.scenarios.multi_unconfoundedness.refutation.unconfoundedness.run_uncofoundedness_diagnostics) – Multi-treatment unconfoundedness diagnostics focused on balance (SMD), ATE only.
+- [**sensitivity_analysis**](#causalis.scenarios.multi_unconfoundedness.refutation.unconfoundedness.sensitivity_analysis) –
+- [**validate_uncofoundedness_balance**](#causalis.scenarios.multi_unconfoundedness.refutation.unconfoundedness.validate_uncofoundedness_balance) – Multitreatment version (one-hot d, matrix m_hat) for ATE only.
 
 ####### `compute_bias_aware_ci`
 
@@ -8839,7 +8952,7 @@ get_sensitivity_summary(effect_estimation: Dict[str, Any] | Any, _: Dict[str, An
 run_uncofoundedness_diagnostics(*, res: _Dict[str, _Any] | _Any = None, X: _Optional[np.ndarray] = None, d: _Optional[np.ndarray] = None, m_hat: _Optional[np.ndarray] = None, names: _Optional[_List[str]] = None, treatment_names: _Optional[_List[str]] = None, score: _Optional[str] = None, normalize: _Optional[bool] = None, threshold: float = 0.1, eps_overlap: float = 0.01, return_summary: bool = True) -> _Dict[str, _Any]
 ```
 
-Multi-treatment uncofoundedness diagnostics focused on balance (SMD), ATE only.
+Multi-treatment unconfoundedness diagnostics focused on balance (SMD), ATE only.
 
 Pairwise comparisons: baseline treatment 0 vs k (k=1..K-1)
 
@@ -8869,14 +8982,14 @@ Inputs:
 
 **Functions:**
 
-- [**combine_nu2**](#causalis.scenarios.multi_uncofoundedness.refutation.unconfoundedness.sensitivity.combine_nu2) – Для каждого контраста k:
-- [**compute_bias_aware_ci**](#causalis.scenarios.multi_uncofoundedness.refutation.unconfoundedness.sensitivity.compute_bias_aware_ci) – Multi-treatment (pairwise 0 vs k) bias-aware CI.
-- [**compute_sensitivity_bias**](#causalis.scenarios.multi_uncofoundedness.refutation.unconfoundedness.sensitivity.compute_sensitivity_bias) –
-- [**compute_sensitivity_bias_local**](#causalis.scenarios.multi_uncofoundedness.refutation.unconfoundedness.sensitivity.compute_sensitivity_bias_local) –
-- [**format_bias_aware_summary**](#causalis.scenarios.multi_uncofoundedness.refutation.unconfoundedness.sensitivity.format_bias_aware_summary) –
-- [**get_sensitivity_summary**](#causalis.scenarios.multi_uncofoundedness.refutation.unconfoundedness.sensitivity.get_sensitivity_summary) –
-- [**pulltheta_se_ci**](#causalis.scenarios.multi_uncofoundedness.refutation.unconfoundedness.sensitivity.pulltheta_se_ci) – Возвращает:
-- [**sensitivity_analysis**](#causalis.scenarios.multi_uncofoundedness.refutation.unconfoundedness.sensitivity.sensitivity_analysis) –
+- [**combine_nu2**](#causalis.scenarios.multi_unconfoundedness.refutation.unconfoundedness.sensitivity.combine_nu2) – Для каждого контраста k:
+- [**compute_bias_aware_ci**](#causalis.scenarios.multi_unconfoundedness.refutation.unconfoundedness.sensitivity.compute_bias_aware_ci) – Multi-treatment (pairwise 0 vs k) bias-aware CI.
+- [**compute_sensitivity_bias**](#causalis.scenarios.multi_unconfoundedness.refutation.unconfoundedness.sensitivity.compute_sensitivity_bias) –
+- [**compute_sensitivity_bias_local**](#causalis.scenarios.multi_unconfoundedness.refutation.unconfoundedness.sensitivity.compute_sensitivity_bias_local) –
+- [**format_bias_aware_summary**](#causalis.scenarios.multi_unconfoundedness.refutation.unconfoundedness.sensitivity.format_bias_aware_summary) –
+- [**get_sensitivity_summary**](#causalis.scenarios.multi_unconfoundedness.refutation.unconfoundedness.sensitivity.get_sensitivity_summary) –
+- [**pulltheta_se_ci**](#causalis.scenarios.multi_unconfoundedness.refutation.unconfoundedness.sensitivity.pulltheta_se_ci) – Возвращает:
+- [**sensitivity_analysis**](#causalis.scenarios.multi_unconfoundedness.refutation.unconfoundedness.sensitivity.sensitivity_analysis) –
 
 ######## `combine_nu2`
 
@@ -8957,8 +9070,8 @@ sensitivity_analysis(effect_estimation: Dict[str, Any] | Any, _: Dict[str, Any] 
 
 **Functions:**
 
-- [**run_uncofoundedness_diagnostics**](#causalis.scenarios.multi_uncofoundedness.refutation.unconfoundedness.unconfoundedness_validation.run_uncofoundedness_diagnostics) – Multi-treatment uncofoundedness diagnostics focused on balance (SMD), ATE only.
-- [**validate_uncofoundedness_balance**](#causalis.scenarios.multi_uncofoundedness.refutation.unconfoundedness.unconfoundedness_validation.validate_uncofoundedness_balance) – Multitreatment version (one-hot d, matrix m_hat) for ATE only.
+- [**run_uncofoundedness_diagnostics**](#causalis.scenarios.multi_unconfoundedness.refutation.unconfoundedness.unconfoundedness_validation.run_uncofoundedness_diagnostics) – Multi-treatment unconfoundedness diagnostics focused on balance (SMD), ATE only.
+- [**validate_uncofoundedness_balance**](#causalis.scenarios.multi_unconfoundedness.refutation.unconfoundedness.unconfoundedness_validation.validate_uncofoundedness_balance) – Multitreatment version (one-hot d, matrix m_hat) for ATE only.
 
 ######## `run_uncofoundedness_diagnostics`
 
@@ -8966,7 +9079,7 @@ sensitivity_analysis(effect_estimation: Dict[str, Any] | Any, _: Dict[str, Any] 
 run_uncofoundedness_diagnostics(*, res: _Dict[str, _Any] | _Any = None, X: _Optional[np.ndarray] = None, d: _Optional[np.ndarray] = None, m_hat: _Optional[np.ndarray] = None, names: _Optional[_List[str]] = None, treatment_names: _Optional[_List[str]] = None, score: _Optional[str] = None, normalize: _Optional[bool] = None, threshold: float = 0.1, eps_overlap: float = 0.01, return_summary: bool = True) -> _Dict[str, _Any]
 ```
 
-Multi-treatment uncofoundedness diagnostics focused on balance (SMD), ATE only.
+Multi-treatment unconfoundedness diagnostics focused on balance (SMD), ATE only.
 
 Pairwise comparisons: baseline treatment 0 vs k (k=1..K-1)
 
@@ -9073,7 +9186,8 @@ Interactive Regression Model (IRM) with cross-fitting using CausalData.
 - **ml_m** (<code>[classifier](#classifier)</code>) – Learner for E[D|X] (propensity). Must support predict_proba() or predict() in (0,1).
 - **n_folds** (<code>[int](#int)</code>) – Number of cross-fitting folds.
 - **n_rep** (<code>[int](#int)</code>) – Number of repetitions of sample splitting. Currently only 1 is supported.
-- **normalize_ipw** (<code>[bool](#bool)</code>) – Whether to normalize IPW terms within the score.
+- **normalize_ipw** (<code>[bool](#bool)</code>) – Whether to normalize IPW terms within the score. Applied to ATE only.
+  For ATTE, normalization is ignored to preserve the canonical ATTE EIF.
 - **trimming_rule** (<code>'truncate'</code>) – Trimming approach for propensity scores.
 - **trimming_threshold** (<code>[float](#float)</code>) – Threshold for trimming if rule is "truncate".
 - **weights** (<code>[Optional](#typing.Optional)\[[ndarray](#numpy.ndarray) or [Dict](#typing.Dict)\]</code>) – Optional weights.
@@ -9149,7 +9263,7 @@ Compute treatment effects using stored nuisance predictions.
 
 **Parameters:**
 
-- **score** (<code>('ATE', 'ATTE', 'CATE')</code>) – Target estimand.
+- **score** (<code>('ATE', 'ATTE')</code>) – Target estimand.
 - **alpha** (<code>[float](#float)</code>) – Significance level for intervals.
 - **diagnostic_data** (<code>[bool](#bool)</code>) – Whether to include diagnostic data_contracts in the result.
 
@@ -9221,6 +9335,12 @@ n_rep = int(n_rep)
 
 ```python
 normalize_ipw = bool(normalize_ipw)
+```
+
+###### `normalize_ipw_effective_`
+
+```python
+normalize_ipw_effective_ = bool(normalize_ipw)
 ```
 
 ###### `orth_signal`
@@ -9382,6 +9502,7 @@ Estimate per-observation CATEs using IRM and return a DataFrame with a new 'cate
 
 - [**generate_obs_hte_26**](#causalis.scenarios.unconfoundedness.dgp.generate_obs_hte_26) – Observational dataset with nonlinear outcome model, nonlinear treatment assignment,
 - [**generate_obs_hte_26_rich**](#causalis.scenarios.unconfoundedness.dgp.generate_obs_hte_26_rich) – Observational dataset with richer confounding, nonlinear outcome model,
+- [**generate_obs_hte_binary_26**](#causalis.scenarios.unconfoundedness.dgp.generate_obs_hte_binary_26) – Observational binary-outcome dataset with nonlinear confounding and
 - [**obs_linear_26_dataset**](#causalis.scenarios.unconfoundedness.dgp.obs_linear_26_dataset) – A pre-configured observational linear dataset with 5 standard confounders.
 
 ###### `generate_obs_hte_26`
@@ -9416,6 +9537,25 @@ Adds additional realistic covariates and dependencies to mimic real data.
 - **n** (<code>[int](#int)</code>) – Number of samples.
 - **seed** (<code>[int](#int)</code>) – Random seed.
 - **include_oracle** (<code>[bool](#bool)</code>) – Whether to include oracle ground-truth columns like 'cate', 'propensity', etc.
+- **return_causal_data** (<code>[bool](#bool)</code>) – If True, returns a CausalData object. If False, returns a pandas DataFrame.
+
+###### `generate_obs_hte_binary_26`
+
+```python
+generate_obs_hte_binary_26(n: int = 100000, seed: int = 42, include_oracle: bool = True, return_causal_data: bool = True) -> Union[pd.DataFrame, CausalData]
+```
+
+Observational binary-outcome dataset with nonlinear confounding and
+heterogeneous treatment effects.
+
+This scenario follows the structure of `generate_obs_hte_26_rich`, but uses
+a binary outcome model and a modified confounder set.
+
+**Parameters:**
+
+- **n** (<code>[int](#int)</code>) – Number of samples.
+- **seed** (<code>[int](#int)</code>) – Random seed.
+- **include_oracle** (<code>[bool](#bool)</code>) – Whether to include oracle columns like 'cate', 'propensity', etc.
 - **return_causal_data** (<code>[bool](#bool)</code>) – If True, returns a CausalData object. If False, returns a pandas DataFrame.
 
 ###### `obs_linear_26_dataset`
@@ -9496,7 +9636,8 @@ Interactive Regression Model (IRM) with cross-fitting using CausalData.
 - **ml_m** (<code>[classifier](#classifier)</code>) – Learner for E[D|X] (propensity). Must support predict_proba() or predict() in (0,1).
 - **n_folds** (<code>[int](#int)</code>) – Number of cross-fitting folds.
 - **n_rep** (<code>[int](#int)</code>) – Number of repetitions of sample splitting. Currently only 1 is supported.
-- **normalize_ipw** (<code>[bool](#bool)</code>) – Whether to normalize IPW terms within the score.
+- **normalize_ipw** (<code>[bool](#bool)</code>) – Whether to normalize IPW terms within the score. Applied to ATE only.
+  For ATTE, normalization is ignored to preserve the canonical ATTE EIF.
 - **trimming_rule** (<code>'truncate'</code>) – Trimming approach for propensity scores.
 - **trimming_threshold** (<code>[float](#float)</code>) – Threshold for trimming if rule is "truncate".
 - **weights** (<code>[Optional](#typing.Optional)\[[ndarray](#numpy.ndarray) or [Dict](#typing.Dict)\]</code>) – Optional weights.
@@ -9572,7 +9713,7 @@ Compute treatment effects using stored nuisance predictions.
 
 **Parameters:**
 
-- **score** (<code>('ATE', 'ATTE', 'CATE')</code>) – Target estimand.
+- **score** (<code>('ATE', 'ATTE')</code>) – Target estimand.
 - **alpha** (<code>[float](#float)</code>) – Significance level for intervals.
 - **diagnostic_data** (<code>[bool](#bool)</code>) – Whether to include diagnostic data_contracts in the result.
 
@@ -9644,6 +9785,12 @@ n_rep = int(n_rep)
 
 ```python
 normalize_ipw = bool(normalize_ipw)
+```
+
+####### `normalize_ipw_effective_`
+
+```python
+normalize_ipw_effective_ = bool(normalize_ipw)
 ```
 
 ####### `orth_signal`
@@ -9751,447 +9898,28 @@ weights = weights
 Refutation and robustness utilities for Causalis.
 
 Importing this package exposes the public functions from all refutation
-submodules (overlap, score, uncofoundedness) so you can access
+submodules (overlap, score, unconfoundedness) so you can access
 commonly used helpers directly via `causalis.refutation`.
 
 **Modules:**
 
 - [**overlap**](#causalis.scenarios.unconfoundedness.refutation.overlap) –
 - [**score**](#causalis.scenarios.unconfoundedness.refutation.score) –
-- [**uncofoundedness**](#causalis.scenarios.unconfoundedness.refutation.uncofoundedness) –
-
-**Classes:**
-
-- [**CausalData**](#causalis.scenarios.unconfoundedness.refutation.CausalData) – Container for causal inference datasets.
+- [**unconfoundedness**](#causalis.scenarios.unconfoundedness.refutation.unconfoundedness) –
 
 **Functions:**
 
-- [**add_score_flags**](#causalis.scenarios.unconfoundedness.refutation.add_score_flags) – Augment run_score_diagnostics(...) dict with:
-- [**aipw_score_ate**](#causalis.scenarios.unconfoundedness.refutation.aipw_score_ate) – Efficient influence function (EIF) for ATE.
-- [**aipw_score_atte**](#causalis.scenarios.unconfoundedness.refutation.aipw_score_atte) – Efficient influence function (EIF) for ATTE under IRM/AIPW.
-- [**att_overlap_tests**](#causalis.scenarios.unconfoundedness.refutation.att_overlap_tests) – Compute ATT overlap/weight diagnostics from a dml_att(\_source) result dict.
-- [**att_weight_sum_identity**](#causalis.scenarios.unconfoundedness.refutation.att_weight_sum_identity) – ATT weight-sum identity check (un-normalized IPW form).
-- [**auc_for_m**](#causalis.scenarios.unconfoundedness.refutation.auc_for_m) – ROC AUC using scores m_hat vs labels D.
-- [**calibration_report_m**](#causalis.scenarios.unconfoundedness.refutation.calibration_report_m) – Propensity calibration report for cross-fitted propensities m_hat against treatment D.
-- [**ece_binary**](#causalis.scenarios.unconfoundedness.refutation.ece_binary) – Expected Calibration Error (ECE) for binary labels using equal-width bins on [0,1].
-- [**edge_mass**](#causalis.scenarios.unconfoundedness.refutation.edge_mass) – Edge mass diagnostics.
-- [**ess_per_group**](#causalis.scenarios.unconfoundedness.refutation.ess_per_group) – Effective sample size (ESS) for ATE-style inverse-probability weights per arm.
-- [**extract_nuisances**](#causalis.scenarios.unconfoundedness.refutation.extract_nuisances) – Extract cross-fitted nuisance predictions from an IRM-like model or a compatible dummy.
 - [**get_sensitivity_summary**](#causalis.scenarios.unconfoundedness.refutation.get_sensitivity_summary) – Render a single, unified bias-aware summary string.
-- [**influence_summary**](#causalis.scenarios.unconfoundedness.refutation.influence_summary) – Compute influence diagnostics showing where uncertainty comes from.
-- [**ks_distance**](#causalis.scenarios.unconfoundedness.refutation.ks_distance) – Two-sample Kolmogorov–Smirnov distance between m_hat|D=1 and m_hat|D=0.
-- [**oos_moment_check**](#causalis.scenarios.unconfoundedness.refutation.oos_moment_check) – Out-of-sample moment check to avoid tautological results (legacy/simple version).
-- [**oos_moment_check_from_psi**](#causalis.scenarios.unconfoundedness.refutation.oos_moment_check_from_psi) – OOS moment check using cached ψ_a, ψ_b only.
-- [**oos_moment_check_with_fold_nuisances**](#causalis.scenarios.unconfoundedness.refutation.oos_moment_check_with_fold_nuisances) – Out-of-sample moment check using fold-specific nuisances to avoid tautological results.
-- [**orthogonality_derivatives**](#causalis.scenarios.unconfoundedness.refutation.orthogonality_derivatives) – Compute orthogonality (Gateaux derivative) tests for nuisance functions (ATE case).
-- [**orthogonality_derivatives_atte**](#causalis.scenarios.unconfoundedness.refutation.orthogonality_derivatives_atte) – Gateaux derivatives of the ATTE score wrt nuisances (g0, m). g1-derivative is 0.
-- [**overlap_diagnostics_atte**](#causalis.scenarios.unconfoundedness.refutation.overlap_diagnostics_atte) – Key overlap metrics for ATTE: availability of suitable controls.
-- [**overlap_report_from_result**](#causalis.scenarios.unconfoundedness.refutation.overlap_report_from_result) – High-level helper that takes `IRM` result or model and returns a positivity/overlap report as a dict.
+- [**interpret_sensitivity_analysis**](#causalis.scenarios.unconfoundedness.refutation.interpret_sensitivity_analysis) – Run sensitivity analysis and return a structured interpretation.
+- [**plot_influence_instability**](#causalis.scenarios.unconfoundedness.refutation.plot_influence_instability) – Plot instability diagnostics for per-unit score (EIF moment).
 - [**plot_m_overlap**](#causalis.scenarios.unconfoundedness.refutation.plot_m_overlap) – Overlap plot for m(x)=P(D=1|X) with high-res rendering.
-- [**positivity_overlap_checks**](#causalis.scenarios.unconfoundedness.refutation.positivity_overlap_checks) – Run positivity/overlap diagnostics for DML-IRM (ATE & ATT).
-- [**refute_irm_orthogonality**](#causalis.scenarios.unconfoundedness.refutation.refute_irm_orthogonality) – Comprehensive AIPW orthogonality diagnostics for IRM models.
-- [**refute_placebo_outcome**](#causalis.scenarios.unconfoundedness.refutation.refute_placebo_outcome) – Generate random outcome variables while keeping treatment
-- [**refute_placebo_treatment**](#causalis.scenarios.unconfoundedness.refutation.refute_placebo_treatment) – Generate random binary treatment variables while keeping outcome and
-- [**refute_subset**](#causalis.scenarios.unconfoundedness.refutation.refute_subset) – Re-estimate the effect on a random subset (default 80 %)
-- [**run_overlap_diagnostics**](#causalis.scenarios.unconfoundedness.refutation.run_overlap_diagnostics) – Single entry-point for overlap / positivity / calibration diagnostics.
-- [**run_score_diagnostics**](#causalis.scenarios.unconfoundedness.refutation.run_score_diagnostics) – Single entry-point for score diagnostics (orthogonality) akin to run_overlap_diagnostics.
-- [**run_uncofoundedness_diagnostics**](#causalis.scenarios.unconfoundedness.refutation.run_uncofoundedness_diagnostics) – Uncofoundedness diagnostics focused on balance (SMD).
+- [**plot_propensity_reliability**](#causalis.scenarios.unconfoundedness.refutation.plot_propensity_reliability) – Plot a propensity calibration reliability diagram.
+- [**plot_residual_diagnostics**](#causalis.scenarios.unconfoundedness.refutation.plot_residual_diagnostics) – Plot residual diagnostics for nuisance models.
+- [**run_overlap_diagnostics**](#causalis.scenarios.unconfoundedness.refutation.run_overlap_diagnostics) – Run overlap diagnostics from `CausalData` and `CausalEstimate`.
+- [**run_score_diagnostics**](#causalis.scenarios.unconfoundedness.refutation.run_score_diagnostics) – Run score diagnostics from `CausalData` and `CausalEstimate`.
+- [**run_unconfoundedness_diagnostics**](#causalis.scenarios.unconfoundedness.refutation.run_unconfoundedness_diagnostics) – Run unconfoundedness diagnostics from `CausalData` and `CausalEstimate`.
 - [**sensitivity_analysis**](#causalis.scenarios.unconfoundedness.refutation.sensitivity_analysis) – Compute bias-aware components and cache them.
 - [**sensitivity_benchmark**](#causalis.scenarios.unconfoundedness.refutation.sensitivity_benchmark) – Computes a benchmark for a given set of features by refitting a short IRM model
-- [**trim_sensitivity_curve_ate**](#causalis.scenarios.unconfoundedness.refutation.trim_sensitivity_curve_ate) – Sensitivity of ATE estimate to propensity clipping epsilon (no re-fit).
-- [**trim_sensitivity_curve_atte**](#causalis.scenarios.unconfoundedness.refutation.trim_sensitivity_curve_atte) – Re-estimate θ while progressively trimming CONTROLS with large m(X).
-- [**validate_uncofoundedness_balance**](#causalis.scenarios.unconfoundedness.refutation.validate_uncofoundedness_balance) – Assess covariate balance under the uncofoundedness assumption by computing
-
-###### `CausalData`
-
-Bases: <code>[BaseModel](#pydantic.BaseModel)</code>
-
-Container for causal inference datasets.
-
-Wraps a pandas DataFrame and stores the names of treatment, outcome, and optional confounder columns.
-The stored DataFrame is restricted to only those columns.
-Uses Pydantic for validation and as a data_contracts contract.
-
-**Attributes:**
-
-- [**df**](#causalis.scenarios.unconfoundedness.refutation.CausalData.df) (<code>[DataFrame](#pandas.DataFrame)</code>) – The DataFrame containing the data_contracts restricted to outcome, treatment, and confounder columns.
-  NaN values are not allowed in the used columns.
-- [**treatment_name**](#causalis.scenarios.unconfoundedness.refutation.CausalData.treatment_name) (<code>[str](#str)</code>) – Column name representing the treatment variable.
-- [**outcome_name**](#causalis.scenarios.unconfoundedness.refutation.CausalData.outcome_name) (<code>[str](#str)</code>) – Column name representing the outcome variable.
-- [**confounders_names**](#causalis.scenarios.unconfoundedness.refutation.CausalData.confounders_names) (<code>[List](#typing.List)\[[str](#str)\]</code>) – Names of the confounder columns (may be empty).
-- [**user_id_name**](#causalis.scenarios.unconfoundedness.refutation.CausalData.user_id_name) (<code>([str](#str), [optional](#optional))</code>) – Column name representing the unique identifier for each observation/user.
-
-**Functions:**
-
-- [**from_df**](#causalis.scenarios.unconfoundedness.refutation.CausalData.from_df) – Friendly constructor for CausalData.
-- [**get_df**](#causalis.scenarios.unconfoundedness.refutation.CausalData.get_df) – Get a DataFrame with specified columns.
-
-####### `X`
-
-```python
-X: pd.DataFrame
-```
-
-Design matrix of confounders.
-
-**Returns:**
-
-- <code>[DataFrame](#pandas.DataFrame)</code> – The DataFrame containing only confounder columns.
-
-####### `confounders`
-
-```python
-confounders: List[str]
-```
-
-List of confounder column names.
-
-**Returns:**
-
-- <code>[List](#typing.List)\[[str](#str)\]</code> – Names of the confounder columns.
-
-####### `confounders_names`
-
-```python
-confounders_names: List[str] = Field(alias='confounders', default_factory=list)
-```
-
-####### `df`
-
-```python
-df: pd.DataFrame
-```
-
-####### `from_df`
-
-```python
-from_df(df: pd.DataFrame, treatment: str, outcome: str, confounders: Optional[Union[str, List[str]]] = None, user_id: Optional[str] = None, **kwargs: Any) -> 'CausalData'
-```
-
-Friendly constructor for CausalData.
-
-**Parameters:**
-
-- **df** (<code>[DataFrame](#pandas.DataFrame)</code>) – The DataFrame containing the data_contracts.
-- **treatment** (<code>[str](#str)</code>) – Column name representing the treatment variable.
-- **outcome** (<code>[str](#str)</code>) – Column name representing the outcome variable.
-- **confounders** (<code>[Union](#typing.Union)\[[str](#str), [List](#typing.List)\[[str](#str)\]\]</code>) – Column name(s) representing the confounders/covariates.
-- **user_id** (<code>[str](#str)</code>) – Column name representing the unique identifier for each observation/user.
-- \*\***kwargs** (<code>[Any](#typing.Any)</code>) – Additional arguments passed to the Pydantic model constructor.
-
-**Returns:**
-
-- <code>[CausalData](#causalis.data_contracts.causaldata.CausalData)</code> – A validated CausalData instance.
-
-####### `get_df`
-
-```python
-get_df(columns: Optional[List[str]] = None, include_treatment: bool = True, include_outcome: bool = True, include_confounders: bool = True, include_user_id: bool = False) -> pd.DataFrame
-```
-
-Get a DataFrame with specified columns.
-
-**Parameters:**
-
-- **columns** (<code>[List](#typing.List)\[[str](#str)\]</code>) – Specific column names to include.
-- **include_treatment** (<code>[bool](#bool)</code>) – Whether to include the treatment column.
-- **include_outcome** (<code>[bool](#bool)</code>) – Whether to include the outcome column.
-- **include_confounders** (<code>[bool](#bool)</code>) – Whether to include confounder columns.
-- **include_user_id** (<code>[bool](#bool)</code>) – Whether to include the user_id column.
-
-**Returns:**
-
-- <code>[DataFrame](#pandas.DataFrame)</code> – A copy of the internal DataFrame with selected columns.
-
-**Raises:**
-
-- <code>[ValueError](#ValueError)</code> – If any specified columns do not exist.
-
-####### `model_config`
-
-```python
-model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True, extra='forbid')
-```
-
-####### `outcome`
-
-```python
-outcome: pd.Series
-```
-
-Outcome column as a Series.
-
-**Returns:**
-
-- <code>[Series](#pandas.Series)</code> – The outcome column.
-
-####### `outcome_name`
-
-```python
-outcome_name: str = Field(alias='outcome')
-```
-
-####### `treatment`
-
-```python
-treatment: pd.Series
-```
-
-Treatment column as a Series.
-
-**Returns:**
-
-- <code>[Series](#pandas.Series)</code> – The treatment column.
-
-####### `treatment_name`
-
-```python
-treatment_name: str = Field(alias='treatment')
-```
-
-####### `user_id`
-
-```python
-user_id: pd.Series
-```
-
-user_id column as a Series.
-
-**Returns:**
-
-- <code>[Series](#pandas.Series)</code> – The user_id column.
-
-####### `user_id_name`
-
-```python
-user_id_name: Optional[str] = Field(alias='user_id', default=None)
-```
-
-###### `DEFAULT_THRESHOLDS`
-
-```python
-DEFAULT_THRESHOLDS = dict(edge_mass_warn_001=0.02, edge_mass_strong_001=0.05, edge_mass_warn_002=0.05, edge_mass_strong_002=0.1, ks_warn=0.3, ks_strong=0.4, auc_warn=0.8, auc_strong=0.9, ipw_relerr_warn=0.05, ipw_relerr_strong=0.1, ess_ratio_warn=0.3, ess_ratio_strong=0.15, clip_share_warn=0.02, clip_share_strong=0.05, tail_vs_med_warn=10.0)
-```
-
-###### `ResultLike`
-
-```python
-ResultLike = Dict[str, Any] | Any
-```
-
-###### `add_score_flags`
-
-```python
-add_score_flags(rep_score: dict, thresholds: dict | None = None, *, effect_size_guard: float = 0.02, oos_gate: bool = True, se_rule: str | None = None, se_ref: float | None = None) -> dict
-```
-
-Augment run_score_diagnostics(...) dict with:
-
-- rep['flags'] (per-metric flags)
-- rep['thresholds'] (the cutoffs used)
-- rep['summary'] with a new 'flag' column
-- rep['overall_flag'] (rollup)
-
-Additional logic:
-
-- Practical effect-size guard: if the constant-basis derivative magnitude is tiny
-  (\<= effect_size_guard), then downgrade an orthogonality RED to GREEN (if OOS is GREEN)
-  or to YELLOW (otherwise). Controlled by `oos_gate`.
-- Huge-n relaxation: for very large n (>= 200k), relax tail/kurtosis flags slightly
-  under specified value gates.
-
-###### `aipw_score_ate`
-
-```python
-aipw_score_ate(y: np.ndarray, d: np.ndarray, g0: np.ndarray, g1: np.ndarray, m: np.ndarray, theta: float, trimming_threshold: float = 0.01) -> np.ndarray
-```
-
-Efficient influence function (EIF) for ATE.
-Uses IRM naming: g0,g1 are outcome regressions E[Y|X,D=0/1], m is propensity P(D=1|X).
-
-###### `aipw_score_atte`
-
-```python
-aipw_score_atte(y: np.ndarray, d: np.ndarray, g0: np.ndarray, g1: np.ndarray, m: np.ndarray, theta: float, p_treated: Optional[float] = None, trimming_threshold: float = 0.01) -> np.ndarray
-```
-
-Efficient influence function (EIF) for ATTE under IRM/AIPW.
-
-ψ_ATTE(W; θ, η) = \[ D\*(Y - g0(X) - θ) - (1-D)*{ m(X)/(1-m(X)) }*(Y - g0(X)) \] / E[D]
-
-Notes:
-
-- Matches the ATTE score with weights ω=D/E[D], ar{ω}=m(X)/E[D].
-- g1 enters only via θ; ∂ψ/∂g1 = 0.
-
-###### `att_overlap_tests`
-
-```python
-att_overlap_tests(dml_att_result: dict, epsilon_list: dict = (0.01, 0.02)) -> dict
-```
-
-Compute ATT overlap/weight diagnostics from a dml_att(\_source) result dict.
-
-Inputs expected in result\['diagnostic_data'\]:
-
-- m_hat: np.ndarray of cross-fitted propensity scores Pr(D=1|X)
-- d: np.ndarray of treatment indicators {0,1}
-
-**Parameters:**
-
-- **dml_att_result** (<code>[dict](#dict)</code>) – Result dictionary with diagnostic_data containing m_hat and d.
-- **epsilon_list** (<code>tuple of float</code>) – Epsilons used for edge-mass diagnostics.
-
-**Returns:**
-
-- <code>[dict](#dict)</code> – Dictionary with keys:
-- edge_mass : dict
-  Edge-mass diagnostics by epsilon with share_below/share_above and warn flag.
-- ks : dict
-  KS statistic and warn flag for m|D=1 vs m|D=0.
-- auc : dict
-  AUC diagnostic with value and flag ('GREEN'/'YELLOW'/'RED' or 'NA').
-- ess : dict
-  Effective sample size diagnostics for treated and control arms.
-- att_weight_identity : dict
-  Weight-sum identity check with lhs_sum, rhs_sum, rel_err, and flag.
-
-**Raises:**
-
-- <code>[ValueError](#ValueError)</code> – If diagnostic_data is missing m_hat or d, or if their lengths differ.
-
-###### `att_weight_sum_identity`
-
-```python
-att_weight_sum_identity(m_hat: np.ndarray, D: np.ndarray) -> Dict[str, float]
-```
-
-ATT weight-sum identity check (un-normalized IPW form).
-
-Math:
-w1_i = D_i / p1, w0_i = (1 - D_i) * m_hat_i / ((1 - m_hat_i) * p1), where p1 = (1/n) sum_i D_i.
-Sum check: sum_i (1 - D_i) * m_hat_i / (1 - m_hat_i) ?≈ sum_i D_i.
-
-**Returns:**
-
-- <code>[dict](#dict)</code> – Dictionary with keys:
-- lhs_sum : float
-  Left-hand side sum.
-- rhs_sum : float
-  Right-hand side sum.
-- rel_err : float
-  Relative error between lhs and rhs.
-
-###### `auc_for_m`
-
-```python
-auc_for_m(m_hat: np.ndarray, D: np.ndarray) -> float
-```
-
-ROC AUC using scores m_hat vs labels D.
-
-Math (Mann–Whitney relation):
-AUC = P(m_i^+ > m_j^-) + 0.5 P(m_i^+ = m_j^-)
-
-###### `calibration_report_m`
-
-```python
-calibration_report_m(m_hat: np.ndarray, D: np.ndarray, n_bins: int = 10, *, thresholds: Optional[Dict[str, float]] = None) -> Dict[str, Any]
-```
-
-Propensity calibration report for cross-fitted propensities m_hat against treatment D.
-
-Returns a dictionary with:
-
-- auc: ROC AUC of m_hat vs D (Mann–Whitney)
-- brier: Brier score (mean squared error)
-- ece: Expected Calibration Error (equal-width bins)
-- reliability_table: pd.DataFrame with per-bin stats
-- recalibration: {'intercept': alpha, 'slope': beta} from logistic recalibration
-- flags: {'ece': ..., 'slope': ..., 'intercept': ...} using GREEN/YELLOW/RED
-
-###### `ece_binary`
-
-```python
-ece_binary(p: np.ndarray, y: np.ndarray, n_bins: int = 10) -> float
-```
-
-Expected Calibration Error (ECE) for binary labels using equal-width bins on [0,1].
-
-**Parameters:**
-
-- **p** (<code>[ndarray](#numpy.ndarray)</code>) – Predicted probabilities in [0,1]. Will be clipped to [0,1].
-- **y** (<code>[ndarray](#numpy.ndarray)</code>) – Binary labels {0,1}.
-- **n_bins** (<code>[int](#int)</code>) – Number of bins.
-
-**Returns:**
-
-- <code>[float](#float)</code> – ECE value in [0,1].
-
-###### `edge_mass`
-
-```python
-edge_mass(m_hat: np.ndarray, eps: Union[float, Tuple[float, ...], list, np.ndarray] = 0.01) -> Dict[Any, Any]
-```
-
-Edge mass diagnostics.
-
-Math:
-share_below = (1/n) * sum_i 1{ m_hat_i < ε }
-share_above = (1/n) * sum_i 1{ m_hat_i > 1 - ε }
-
-**Parameters:**
-
-- **m_hat** (<code>[ndarray](#numpy.ndarray)</code>) – Array of propensities m_hat in [0,1].
-- **eps** (<code>[float](#float) or [array](#array) - [like](#like)</code>) – A single ε or a sequence of ε values.
-
-**Returns:**
-
-- <code>[dict](#dict)</code> – - If eps is a scalar: {'eps': ε, 'share_below': float, 'share_above': float}
-- If eps is a sequence: {ε: {'share_below': float, 'share_above': float}, ...}
-
-###### `ess_per_group`
-
-```python
-ess_per_group(m_hat: np.ndarray, D: np.ndarray) -> Dict[str, float]
-```
-
-Effective sample size (ESS) for ATE-style inverse-probability weights per arm.
-
-Weights:
-w1_i = D_i / m_hat_i,
-w0_i = (1 - D_i) / (1 - m_hat_i).
-
-ESS:
-ESS(w_g) = (sum_i w\_{gi})^2 / sum_i w\_{gi}^2.
-
-Returns dict with ess and ratios (ESS / group size).
-
-###### `extract_nuisances`
-
-```python
-extract_nuisances(model, test_indices: Optional[np.ndarray] = None) -> Tuple[np.ndarray, np.ndarray, np.ndarray]
-```
-
-Extract cross-fitted nuisance predictions from an IRM-like model or a compatible dummy.
-
-Tries several backends for robustness:
-
-1. IRM attributes: m_hat\_, g0_hat\_, g1_hat\_
-1. model.predictions dict with keys: 'ml_m','ml_g0','ml_g1'
-1. Direct attributes: ml_m, ml_g0, ml_g1
-
-**Parameters:**
-
-- **model** (<code>[object](#object)</code>) – Fitted internal IRM estimator (causalis.shared.models.IRM) or a compatible dummy model
-- **test_indices** (<code>[ndarray](#numpy.ndarray)</code>) – If provided, extract predictions only for these indices
-
-**Returns:**
-
-- <code>[Tuple](#typing.Tuple)\[[ndarray](#numpy.ndarray), [ndarray](#numpy.ndarray), [ndarray](#numpy.ndarray)\]</code> – (m, g0, g1) where:
-- m: propensity scores P(D=1|X)
-- g0: outcome predictions E[Y|X,D=0]
-- g1: outcome predictions E[Y|X,D=1]
 
 ###### `get_sensitivity_summary`
 
@@ -10213,302 +9941,44 @@ and then formats via `format_bias_aware_summary` for consistency.
 
 - <code>[Optional](#typing.Optional)\[[str](#str)\]</code> – Formatted summary string or None if extraction fails.
 
-###### `influence_summary`
+###### `interpret_sensitivity_analysis`
 
 ```python
-influence_summary(y: np.ndarray, d: np.ndarray, g0: np.ndarray, g1: np.ndarray, m: np.ndarray, theta_hat: float, k: int = 10, score: str = 'ATE', trimming_threshold: float = 0.01) -> Dict[str, Any]
+interpret_sensitivity_analysis(effect_estimation: Dict[str, Any] | Any, *, r2_y: float, r2_d: float, rho: float = 1.0, H0: float = 0.0, alpha: float = 0.05, use_signed_rr: bool = False) -> Dict[str, Any]
 ```
 
-Compute influence diagnostics showing where uncertainty comes from.
+Run sensitivity analysis and return a structured interpretation.
 
 **Parameters:**
 
-- **y** (<code>[ndarray](#numpy.ndarray)</code>) – Data arrays
-- **d** (<code>[ndarray](#numpy.ndarray)</code>) – Data arrays
-- **g0** (<code>[ndarray](#numpy.ndarray)</code>) – Data arrays
-- **g1** (<code>[ndarray](#numpy.ndarray)</code>) – Data arrays
-- **m** (<code>[ndarray](#numpy.ndarray)</code>) – Data arrays
-- **theta_hat** (<code>[float](#float)</code>) – Estimated treatment effect
-- **k** (<code>[int](#int)</code>) – Number of top influential observations to return
+- **effect_estimation** (<code>[Dict](#typing.Dict)\[[str](#str), [Any](#typing.Any)\] or [Any](#typing.Any)</code>) – The effect estimation object.
+- **r2_y** (<code>[float](#float)</code>) – Sensitivity parameter for outcome residual confounding strength.
+- **r2_d** (<code>[float](#float)</code>) – Sensitivity parameter for treatment residual confounding strength.
+- **rho** (<code>[float](#float)</code>) – Correlation parameter for unobserved confounding.
+- **H0** (<code>[float](#float)</code>) – Null hypothesis used for significance checks.
+- **alpha** (<code>[float](#float)</code>) – Significance level.
+- **use_signed_rr** (<code>[bool](#bool)</code>) – Whether to use signed rr in the quadratic sensitivity combination.
 
 **Returns:**
 
-- <code>[Dict](#typing.Dict)\[[str](#str), [Any](#typing.Any)\]</code> – Influence diagnostics including SE, heavy-tail metrics, and top-k cases
-
-###### `ks_distance`
-
-```python
-ks_distance(m_hat: np.ndarray, D: np.ndarray) -> float
-```
-
-Two-sample Kolmogorov–Smirnov distance between m_hat|D=1 and m_hat|D=0.
-
-Math:
-KS = sup_t | F\_{m|D=1}(t) - F\_{m|D=0}(t) |
-
-###### `oos_moment_check`
-
-```python
-oos_moment_check(fold_thetas: List[float], fold_indices: List[np.ndarray], y: np.ndarray, d: np.ndarray, g0: np.ndarray, g1: np.ndarray, m: np.ndarray, score_fn: Optional[Callable[[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray, float], np.ndarray]] = None) -> Tuple[pd.DataFrame, float]
-```
-
-Out-of-sample moment check to avoid tautological results (legacy/simple version).
-
-For each fold k, evaluates the AIPW score using θ fitted on other folds,
-then tests if the combined moment condition holds.
-
-**Parameters:**
-
-- **fold_thetas** (<code>[List](#typing.List)\[[float](#float)\]</code>) – Treatment effects estimated excluding each fold
-- **fold_indices** (<code>[List](#typing.List)\[[ndarray](#numpy.ndarray)\]</code>) – Indices for each fold
-- **y** (<code>[ndarray](#numpy.ndarray)</code>) – Data arrays (outcomes, treatment, predictions)
-- **d** (<code>[ndarray](#numpy.ndarray)</code>) – Data arrays (outcomes, treatment, predictions)
-- **g0** (<code>[ndarray](#numpy.ndarray)</code>) – Data arrays (outcomes, treatment, predictions)
-- **g1** (<code>[ndarray](#numpy.ndarray)</code>) – Data arrays (outcomes, treatment, predictions)
-- **m** (<code>[ndarray](#numpy.ndarray)</code>) – Data arrays (outcomes, treatment, predictions)
-
-**Returns:**
-
-- <code>[Tuple](#typing.Tuple)\[[DataFrame](#pandas.DataFrame), [float](#float)\]</code> – Fold-wise results and combined t-statistic
-
-###### `oos_moment_check_from_psi`
-
-```python
-oos_moment_check_from_psi(psi_a: np.ndarray, psi_b: np.ndarray, fold_indices: List[np.ndarray], *, strict: bool = False) -> Tuple[pd.DataFrame, float, Optional[float]]
-```
-
-OOS moment check using cached ψ_a, ψ_b only.
-Returns (fold-wise DF, t_fold_agg, t_strict if requested).
-
-###### `oos_moment_check_with_fold_nuisances`
-
-```python
-oos_moment_check_with_fold_nuisances(fold_thetas: List[float], fold_indices: List[np.ndarray], fold_nuisances: List[Tuple[np.ndarray, np.ndarray, np.ndarray]], y: np.ndarray, d: np.ndarray, score_fn: Optional[Callable[[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray, float], np.ndarray]] = None) -> Tuple[pd.DataFrame, float]
-```
-
-Out-of-sample moment check using fold-specific nuisances to avoid tautological results.
-
-For each fold k, evaluates the AIPW score using θ fitted on other folds and
-nuisance predictions from the fold-specific model, then tests if the combined
-moment condition holds.
-
-**Parameters:**
-
-- **fold_thetas** (<code>[List](#typing.List)\[[float](#float)\]</code>) – Treatment effects estimated excluding each fold
-- **fold_indices** (<code>[List](#typing.List)\[[ndarray](#numpy.ndarray)\]</code>) – Indices for each fold
-- **fold_nuisances** (<code>[List](#typing.List)\[[Tuple](#typing.Tuple)\[[ndarray](#numpy.ndarray), [ndarray](#numpy.ndarray), [ndarray](#numpy.ndarray)\]\]</code>) – Fold-specific nuisance predictions (m, g0, g1) for each fold
-- **y** (<code>[ndarray](#numpy.ndarray)</code>) – Observed outcomes and treatments
-- **d** (<code>[ndarray](#numpy.ndarray)</code>) – Observed outcomes and treatments
-
-**Returns:**
-
-- <code>[Tuple](#typing.Tuple)\[[DataFrame](#pandas.DataFrame), [float](#float)\]</code> – Fold-wise results and combined t-statistic
-
-###### `orthogonality_derivatives`
-
-```python
-orthogonality_derivatives(X_basis: np.ndarray, y: np.ndarray, d: np.ndarray, g0: np.ndarray, g1: np.ndarray, m: np.ndarray, trimming_threshold: float = 0.01) -> pd.DataFrame
-```
-
-Compute orthogonality (Gateaux derivative) tests for nuisance functions (ATE case).
-Uses IRM naming: g0,g1 outcomes; m propensity.
-
-###### `orthogonality_derivatives_atte`
-
-```python
-orthogonality_derivatives_atte(X_basis: np.ndarray, y: np.ndarray, d: np.ndarray, g0: np.ndarray, m: np.ndarray, p_treated: float, trimming_threshold: float = 0.01) -> pd.DataFrame
-```
-
-Gateaux derivatives of the ATTE score wrt nuisances (g0, m). g1-derivative is 0.
-
-For ψ_ATTE = \[ D\*(Y - g0 - θ) - (1-D)*(m/(1-m))*(Y - g0) \] / p_treated:
-
-∂\_{g0}[h] : (1/n) Σ h(X_i) * \[ ((1-D_i)*m_i/(1-m_i) - D_i) / p_treated \]
-∂\_{m}[s] : (1/n) Σ s(X_i) * \[ -(1-D_i)*(Y_i - g0_i) / ( p_treated * (1-m_i)^2 ) \]
-
-Both have 0 expectation at the truth (Neyman orthogonality).
+- <code>[Dict](#typing.Dict)\[[str](#str), [Any](#typing.Any)\]</code> – Dictionary with:
+  - raw: the output of `sensitivity_analysis(...)`
+  - interpretation: machine-readable interpretation fields
+  - summary: compact human-readable interpretation
 
 ###### `overlap`
 
 **Modules:**
 
 - [**overlap_plot**](#causalis.scenarios.unconfoundedness.refutation.overlap.overlap_plot) –
-- [**overlap_validation**](#causalis.scenarios.unconfoundedness.refutation.overlap.overlap_validation) – Overlap validation module
+- [**overlap_validation**](#causalis.scenarios.unconfoundedness.refutation.overlap.overlap_validation) – Overlap diagnostics focused on positivity and propensity calibration.
+- [**reliability_plot**](#causalis.scenarios.unconfoundedness.refutation.overlap.reliability_plot) – Reliability diagram for propensity calibration diagnostics.
 
 **Functions:**
 
-- [**att_overlap_tests**](#causalis.scenarios.unconfoundedness.refutation.overlap.att_overlap_tests) – Compute ATT overlap/weight diagnostics from a dml_att(\_source) result dict.
-- [**att_weight_sum_identity**](#causalis.scenarios.unconfoundedness.refutation.overlap.att_weight_sum_identity) – ATT weight-sum identity check (un-normalized IPW form).
-- [**auc_for_m**](#causalis.scenarios.unconfoundedness.refutation.overlap.auc_for_m) – ROC AUC using scores m_hat vs labels D.
-- [**calibration_report_m**](#causalis.scenarios.unconfoundedness.refutation.overlap.calibration_report_m) – Propensity calibration report for cross-fitted propensities m_hat against treatment D.
-- [**ece_binary**](#causalis.scenarios.unconfoundedness.refutation.overlap.ece_binary) – Expected Calibration Error (ECE) for binary labels using equal-width bins on [0,1].
-- [**edge_mass**](#causalis.scenarios.unconfoundedness.refutation.overlap.edge_mass) – Edge mass diagnostics.
-- [**ess_per_group**](#causalis.scenarios.unconfoundedness.refutation.overlap.ess_per_group) – Effective sample size (ESS) for ATE-style inverse-probability weights per arm.
-- [**ks_distance**](#causalis.scenarios.unconfoundedness.refutation.overlap.ks_distance) – Two-sample Kolmogorov–Smirnov distance between m_hat|D=1 and m_hat|D=0.
-- [**overlap_report_from_result**](#causalis.scenarios.unconfoundedness.refutation.overlap.overlap_report_from_result) – High-level helper that takes `IRM` result or model and returns a positivity/overlap report as a dict.
 - [**plot_m_overlap**](#causalis.scenarios.unconfoundedness.refutation.overlap.plot_m_overlap) – Overlap plot for m(x)=P(D=1|X) with high-res rendering.
-- [**positivity_overlap_checks**](#causalis.scenarios.unconfoundedness.refutation.overlap.positivity_overlap_checks) – Run positivity/overlap diagnostics for DML-IRM (ATE & ATT).
-- [**run_overlap_diagnostics**](#causalis.scenarios.unconfoundedness.refutation.overlap.run_overlap_diagnostics) – Single entry-point for overlap / positivity / calibration diagnostics.
-
-####### `DEFAULT_THRESHOLDS`
-
-```python
-DEFAULT_THRESHOLDS = dict(edge_mass_warn_001=0.02, edge_mass_strong_001=0.05, edge_mass_warn_002=0.05, edge_mass_strong_002=0.1, ks_warn=0.3, ks_strong=0.4, auc_warn=0.8, auc_strong=0.9, ipw_relerr_warn=0.05, ipw_relerr_strong=0.1, ess_ratio_warn=0.3, ess_ratio_strong=0.15, clip_share_warn=0.02, clip_share_strong=0.05, tail_vs_med_warn=10.0)
-```
-
-####### `att_overlap_tests`
-
-```python
-att_overlap_tests(dml_att_result: dict, epsilon_list: dict = (0.01, 0.02)) -> dict
-```
-
-Compute ATT overlap/weight diagnostics from a dml_att(\_source) result dict.
-
-Inputs expected in result\['diagnostic_data'\]:
-
-- m_hat: np.ndarray of cross-fitted propensity scores Pr(D=1|X)
-- d: np.ndarray of treatment indicators {0,1}
-
-**Parameters:**
-
-- **dml_att_result** (<code>[dict](#dict)</code>) – Result dictionary with diagnostic_data containing m_hat and d.
-- **epsilon_list** (<code>tuple of float</code>) – Epsilons used for edge-mass diagnostics.
-
-**Returns:**
-
-- <code>[dict](#dict)</code> – Dictionary with keys:
-- edge_mass : dict
-  Edge-mass diagnostics by epsilon with share_below/share_above and warn flag.
-- ks : dict
-  KS statistic and warn flag for m|D=1 vs m|D=0.
-- auc : dict
-  AUC diagnostic with value and flag ('GREEN'/'YELLOW'/'RED' or 'NA').
-- ess : dict
-  Effective sample size diagnostics for treated and control arms.
-- att_weight_identity : dict
-  Weight-sum identity check with lhs_sum, rhs_sum, rel_err, and flag.
-
-**Raises:**
-
-- <code>[ValueError](#ValueError)</code> – If diagnostic_data is missing m_hat or d, or if their lengths differ.
-
-####### `att_weight_sum_identity`
-
-```python
-att_weight_sum_identity(m_hat: np.ndarray, D: np.ndarray) -> Dict[str, float]
-```
-
-ATT weight-sum identity check (un-normalized IPW form).
-
-Math:
-w1_i = D_i / p1, w0_i = (1 - D_i) * m_hat_i / ((1 - m_hat_i) * p1), where p1 = (1/n) sum_i D_i.
-Sum check: sum_i (1 - D_i) * m_hat_i / (1 - m_hat_i) ?≈ sum_i D_i.
-
-**Returns:**
-
-- <code>[dict](#dict)</code> – Dictionary with keys:
-- lhs_sum : float
-  Left-hand side sum.
-- rhs_sum : float
-  Right-hand side sum.
-- rel_err : float
-  Relative error between lhs and rhs.
-
-####### `auc_for_m`
-
-```python
-auc_for_m(m_hat: np.ndarray, D: np.ndarray) -> float
-```
-
-ROC AUC using scores m_hat vs labels D.
-
-Math (Mann–Whitney relation):
-AUC = P(m_i^+ > m_j^-) + 0.5 P(m_i^+ = m_j^-)
-
-####### `calibration_report_m`
-
-```python
-calibration_report_m(m_hat: np.ndarray, D: np.ndarray, n_bins: int = 10, *, thresholds: Optional[Dict[str, float]] = None) -> Dict[str, Any]
-```
-
-Propensity calibration report for cross-fitted propensities m_hat against treatment D.
-
-Returns a dictionary with:
-
-- auc: ROC AUC of m_hat vs D (Mann–Whitney)
-- brier: Brier score (mean squared error)
-- ece: Expected Calibration Error (equal-width bins)
-- reliability_table: pd.DataFrame with per-bin stats
-- recalibration: {'intercept': alpha, 'slope': beta} from logistic recalibration
-- flags: {'ece': ..., 'slope': ..., 'intercept': ...} using GREEN/YELLOW/RED
-
-####### `ece_binary`
-
-```python
-ece_binary(p: np.ndarray, y: np.ndarray, n_bins: int = 10) -> float
-```
-
-Expected Calibration Error (ECE) for binary labels using equal-width bins on [0,1].
-
-**Parameters:**
-
-- **p** (<code>[ndarray](#numpy.ndarray)</code>) – Predicted probabilities in [0,1]. Will be clipped to [0,1].
-- **y** (<code>[ndarray](#numpy.ndarray)</code>) – Binary labels {0,1}.
-- **n_bins** (<code>[int](#int)</code>) – Number of bins.
-
-**Returns:**
-
-- <code>[float](#float)</code> – ECE value in [0,1].
-
-####### `edge_mass`
-
-```python
-edge_mass(m_hat: np.ndarray, eps: Union[float, Tuple[float, ...], list, np.ndarray] = 0.01) -> Dict[Any, Any]
-```
-
-Edge mass diagnostics.
-
-Math:
-share_below = (1/n) * sum_i 1{ m_hat_i < ε }
-share_above = (1/n) * sum_i 1{ m_hat_i > 1 - ε }
-
-**Parameters:**
-
-- **m_hat** (<code>[ndarray](#numpy.ndarray)</code>) – Array of propensities m_hat in [0,1].
-- **eps** (<code>[float](#float) or [array](#array) - [like](#like)</code>) – A single ε or a sequence of ε values.
-
-**Returns:**
-
-- <code>[dict](#dict)</code> – - If eps is a scalar: {'eps': ε, 'share_below': float, 'share_above': float}
-- If eps is a sequence: {ε: {'share_below': float, 'share_above': float}, ...}
-
-####### `ess_per_group`
-
-```python
-ess_per_group(m_hat: np.ndarray, D: np.ndarray) -> Dict[str, float]
-```
-
-Effective sample size (ESS) for ATE-style inverse-probability weights per arm.
-
-Weights:
-w1_i = D_i / m_hat_i,
-w0_i = (1 - D_i) / (1 - m_hat_i).
-
-ESS:
-ESS(w_g) = (sum_i w\_{gi})^2 / sum_i w\_{gi}^2.
-
-Returns dict with ess and ratios (ESS / group size).
-
-####### `ks_distance`
-
-```python
-ks_distance(m_hat: np.ndarray, D: np.ndarray) -> float
-```
-
-Two-sample Kolmogorov–Smirnov distance between m_hat|D=1 and m_hat|D=0.
-
-Math:
-KS = sup_t | F\_{m|D=1}(t) - F\_{m|D=0}(t) |
+- [**plot_propensity_reliability**](#causalis.scenarios.unconfoundedness.refutation.overlap.plot_propensity_reliability) – Plot a propensity calibration reliability diagram.
+- [**run_overlap_diagnostics**](#causalis.scenarios.unconfoundedness.refutation.overlap.run_overlap_diagnostics) – Run overlap diagnostics from `CausalData` and `CausalEstimate`.
 
 ####### `overlap_plot`
 
@@ -10519,7 +9989,7 @@ KS = sup_t | F\_{m|D=1}(t) - F\_{m|D=0}(t) |
 ######## `plot_m_overlap`
 
 ```python
-plot_m_overlap(diag: UnconfoundednessDiagnosticData, clip: Tuple[float, float] = (0.01, 0.99), bins: Any = 'fd', kde: bool = True, shade_overlap: bool = True, ax: Optional[plt.Axes] = None, figsize: Tuple[float, float] = (9, 5.5), dpi: int = 220, font_scale: float = 1.15, save: Optional[str] = None, save_dpi: Optional[int] = None, transparent: bool = False, color_t: Optional[Any] = None, color_c: Optional[Any] = None) -> plt.Figure
+plot_m_overlap(diag: Union[UnconfoundednessDiagnosticData, CausalEstimate, dict], clip: Tuple[float, float] = (0.01, 0.99), bins: Any = 'fd', kde: bool = True, shade_overlap: bool = True, ax: Optional[plt.Axes] = None, figsize: Tuple[float, float] = (9, 5.5), dpi: int = 220, font_scale: float = 1.15, save: Optional[str] = None, save_dpi: Optional[int] = None, transparent: bool = False, color_t: Optional[Any] = None, color_c: Optional[Any] = None) -> plt.Figure
 ```
 
 Overlap plot for m(x)=P(D=1|X) with high-res rendering.
@@ -10530,7 +10000,7 @@ Overlap plot for m(x)=P(D=1|X) with high-res rendering.
 
 **Parameters:**
 
-- **diag** (<code>[UnconfoundednessDiagnosticData](#causalis.data_contracts.causal_diagnostic_data.UnconfoundednessDiagnosticData)</code>) – Diagnostic data containing m_hat and d.
+- **diag** (<code>[UnconfoundednessDiagnosticData](#causalis.data_contracts.causal_diagnostic_data.UnconfoundednessDiagnosticData) or [CausalEstimate](#causalis.data_contracts.causal_estimate.CausalEstimate)</code>) – Diagnostic data directly, or an estimate containing diagnostic_data with m_hat and d.
 - **clip** (<code>[tuple](#tuple)</code>) – Quantiles to clip for KDE range.
 - **bins** (<code>[str](#str) or [int](#int)</code>) – Histogram bins.
 - **kde** (<code>[bool](#bool)</code>) – Whether to show KDE.
@@ -10549,282 +10019,26 @@ Overlap plot for m(x)=P(D=1|X) with high-res rendering.
 
 - <code>[Figure](#matplotlib.figure.Figure)</code> – The generated figure.
 
-####### `overlap_report_from_result`
-
-```python
-overlap_report_from_result(res: ResultLike, *, use_hajek: bool = False, thresholds: Dict[str, float] = DEFAULT_THRESHOLDS, n_bins: int = 10, cal_thresholds: Optional[Dict[str, float]] = None, auc_flip_margin: float = 0.05) -> Dict[str, Any]
-```
-
-High-level helper that takes `IRM` result or model and returns a positivity/overlap report as a dict.
-
-If the input result contains a flag indicating normalized IPW (Hájek), this function will
-auto-detect it and pass use_hajek=True to the underlying diagnostics, so users of
-`IRM(normalize_ipw=True)` get meaningful ipw_sum\_\* checks without extra arguments.
-
 ####### `overlap_validation`
 
-Overlap validation module
+Overlap diagnostics focused on positivity and propensity calibration.
 
 **Functions:**
 
-- [**att_overlap_tests**](#causalis.scenarios.unconfoundedness.refutation.overlap.overlap_validation.att_overlap_tests) – Compute ATT overlap/weight diagnostics from a dml_att(\_source) result dict.
-- [**att_weight_sum_identity**](#causalis.scenarios.unconfoundedness.refutation.overlap.overlap_validation.att_weight_sum_identity) – ATT weight-sum identity check (un-normalized IPW form).
-- [**auc_for_m**](#causalis.scenarios.unconfoundedness.refutation.overlap.overlap_validation.auc_for_m) – ROC AUC using scores m_hat vs labels D.
-- [**calibration_report_m**](#causalis.scenarios.unconfoundedness.refutation.overlap.overlap_validation.calibration_report_m) – Propensity calibration report for cross-fitted propensities m_hat against treatment D.
-- [**ece_binary**](#causalis.scenarios.unconfoundedness.refutation.overlap.overlap_validation.ece_binary) – Expected Calibration Error (ECE) for binary labels using equal-width bins on [0,1].
-- [**edge_mass**](#causalis.scenarios.unconfoundedness.refutation.overlap.overlap_validation.edge_mass) – Edge mass diagnostics.
-- [**ess_per_group**](#causalis.scenarios.unconfoundedness.refutation.overlap.overlap_validation.ess_per_group) – Effective sample size (ESS) for ATE-style inverse-probability weights per arm.
-- [**extract_diag_from_result**](#causalis.scenarios.unconfoundedness.refutation.overlap.overlap_validation.extract_diag_from_result) – Extract m_hat, D, and trimming epsilon from IRM result or model.
-- [**ks_distance**](#causalis.scenarios.unconfoundedness.refutation.overlap.overlap_validation.ks_distance) – Two-sample Kolmogorov–Smirnov distance between m_hat|D=1 and m_hat|D=0.
-- [**overlap_report_from_result**](#causalis.scenarios.unconfoundedness.refutation.overlap.overlap_validation.overlap_report_from_result) – High-level helper that takes `IRM` result or model and returns a positivity/overlap report as a dict.
-- [**positivity_overlap_checks**](#causalis.scenarios.unconfoundedness.refutation.overlap.overlap_validation.positivity_overlap_checks) – Run positivity/overlap diagnostics for DML-IRM (ATE & ATT).
-- [**run_overlap_diagnostics**](#causalis.scenarios.unconfoundedness.refutation.overlap.overlap_validation.run_overlap_diagnostics) – Single entry-point for overlap / positivity / calibration diagnostics.
-
-######## `CAL_THRESHOLDS`
-
-```python
-CAL_THRESHOLDS = dict(ece_warn=0.1, ece_strong=0.2, slope_warn_lo=0.8, slope_warn_hi=1.2, slope_strong_lo=0.6, slope_strong_hi=1.4, intercept_warn=0.2, intercept_strong=0.4)
-```
-
-######## `DEFAULT_THRESHOLDS`
-
-```python
-DEFAULT_THRESHOLDS = dict(edge_mass_warn_001=0.02, edge_mass_strong_001=0.05, edge_mass_warn_002=0.05, edge_mass_strong_002=0.1, ks_warn=0.3, ks_strong=0.4, auc_warn=0.8, auc_strong=0.9, ipw_relerr_warn=0.05, ipw_relerr_strong=0.1, ess_ratio_warn=0.3, ess_ratio_strong=0.15, clip_share_warn=0.02, clip_share_strong=0.05, tail_vs_med_warn=10.0)
-```
-
-######## `ResultLike`
-
-```python
-ResultLike = Union[Dict[str, Any], Any]
-```
-
-######## `att_overlap_tests`
-
-```python
-att_overlap_tests(dml_att_result: dict, epsilon_list: dict = (0.01, 0.02)) -> dict
-```
-
-Compute ATT overlap/weight diagnostics from a dml_att(\_source) result dict.
-
-Inputs expected in result\['diagnostic_data'\]:
-
-- m_hat: np.ndarray of cross-fitted propensity scores Pr(D=1|X)
-- d: np.ndarray of treatment indicators {0,1}
-
-**Parameters:**
-
-- **dml_att_result** (<code>[dict](#dict)</code>) – Result dictionary with diagnostic_data containing m_hat and d.
-- **epsilon_list** (<code>tuple of float</code>) – Epsilons used for edge-mass diagnostics.
-
-**Returns:**
-
-- <code>[dict](#dict)</code> – Dictionary with keys:
-- edge_mass : dict
-  Edge-mass diagnostics by epsilon with share_below/share_above and warn flag.
-- ks : dict
-  KS statistic and warn flag for m|D=1 vs m|D=0.
-- auc : dict
-  AUC diagnostic with value and flag ('GREEN'/'YELLOW'/'RED' or 'NA').
-- ess : dict
-  Effective sample size diagnostics for treated and control arms.
-- att_weight_identity : dict
-  Weight-sum identity check with lhs_sum, rhs_sum, rel_err, and flag.
-
-**Raises:**
-
-- <code>[ValueError](#ValueError)</code> – If diagnostic_data is missing m_hat or d, or if their lengths differ.
-
-######## `att_weight_sum_identity`
-
-```python
-att_weight_sum_identity(m_hat: np.ndarray, D: np.ndarray) -> Dict[str, float]
-```
-
-ATT weight-sum identity check (un-normalized IPW form).
-
-Math:
-w1_i = D_i / p1, w0_i = (1 - D_i) * m_hat_i / ((1 - m_hat_i) * p1), where p1 = (1/n) sum_i D_i.
-Sum check: sum_i (1 - D_i) * m_hat_i / (1 - m_hat_i) ?≈ sum_i D_i.
-
-**Returns:**
-
-- <code>[dict](#dict)</code> – Dictionary with keys:
-- lhs_sum : float
-  Left-hand side sum.
-- rhs_sum : float
-  Right-hand side sum.
-- rel_err : float
-  Relative error between lhs and rhs.
-
-######## `auc_for_m`
-
-```python
-auc_for_m(m_hat: np.ndarray, D: np.ndarray) -> float
-```
-
-ROC AUC using scores m_hat vs labels D.
-
-Math (Mann–Whitney relation):
-AUC = P(m_i^+ > m_j^-) + 0.5 P(m_i^+ = m_j^-)
-
-######## `calibration_report_m`
-
-```python
-calibration_report_m(m_hat: np.ndarray, D: np.ndarray, n_bins: int = 10, *, thresholds: Optional[Dict[str, float]] = None) -> Dict[str, Any]
-```
-
-Propensity calibration report for cross-fitted propensities m_hat against treatment D.
-
-Returns a dictionary with:
-
-- auc: ROC AUC of m_hat vs D (Mann–Whitney)
-- brier: Brier score (mean squared error)
-- ece: Expected Calibration Error (equal-width bins)
-- reliability_table: pd.DataFrame with per-bin stats
-- recalibration: {'intercept': alpha, 'slope': beta} from logistic recalibration
-- flags: {'ece': ..., 'slope': ..., 'intercept': ...} using GREEN/YELLOW/RED
-
-######## `ece_binary`
-
-```python
-ece_binary(p: np.ndarray, y: np.ndarray, n_bins: int = 10) -> float
-```
-
-Expected Calibration Error (ECE) for binary labels using equal-width bins on [0,1].
-
-**Parameters:**
-
-- **p** (<code>[ndarray](#numpy.ndarray)</code>) – Predicted probabilities in [0,1]. Will be clipped to [0,1].
-- **y** (<code>[ndarray](#numpy.ndarray)</code>) – Binary labels {0,1}.
-- **n_bins** (<code>[int](#int)</code>) – Number of bins.
-
-**Returns:**
-
-- <code>[float](#float)</code> – ECE value in [0,1].
-
-######## `edge_mass`
-
-```python
-edge_mass(m_hat: np.ndarray, eps: Union[float, Tuple[float, ...], list, np.ndarray] = 0.01) -> Dict[Any, Any]
-```
-
-Edge mass diagnostics.
-
-Math:
-share_below = (1/n) * sum_i 1{ m_hat_i < ε }
-share_above = (1/n) * sum_i 1{ m_hat_i > 1 - ε }
-
-**Parameters:**
-
-- **m_hat** (<code>[ndarray](#numpy.ndarray)</code>) – Array of propensities m_hat in [0,1].
-- **eps** (<code>[float](#float) or [array](#array) - [like](#like)</code>) – A single ε or a sequence of ε values.
-
-**Returns:**
-
-- <code>[dict](#dict)</code> – - If eps is a scalar: {'eps': ε, 'share_below': float, 'share_above': float}
-- If eps is a sequence: {ε: {'share_below': float, 'share_above': float}, ...}
-
-######## `ess_per_group`
-
-```python
-ess_per_group(m_hat: np.ndarray, D: np.ndarray) -> Dict[str, float]
-```
-
-Effective sample size (ESS) for ATE-style inverse-probability weights per arm.
-
-Weights:
-w1_i = D_i / m_hat_i,
-w0_i = (1 - D_i) / (1 - m_hat_i).
-
-ESS:
-ESS(w_g) = (sum_i w\_{gi})^2 / sum_i w\_{gi}^2.
-
-Returns dict with ess and ratios (ESS / group size).
-
-######## `extract_diag_from_result`
-
-```python
-extract_diag_from_result(res: ResultLike) -> Tuple[np.ndarray, np.ndarray, Optional[float]]
-```
-
-Extract m_hat, D, and trimming epsilon from IRM result or model.
-Accepts:
-
-- dict returned by legacy dml_ate/dml_att (prefers key 'diagnostic_data'; otherwise uses 'model'), or
-- a fitted IRM-like or external model instance with a .data or .data_contracts attribute.
-  Returns (m_hat, D, trimming_threshold_if_any).
-
-######## `ks_distance`
-
-```python
-ks_distance(m_hat: np.ndarray, D: np.ndarray) -> float
-```
-
-Two-sample Kolmogorov–Smirnov distance between m_hat|D=1 and m_hat|D=0.
-
-Math:
-KS = sup_t | F\_{m|D=1}(t) - F\_{m|D=0}(t) |
-
-######## `overlap_report_from_result`
-
-```python
-overlap_report_from_result(res: ResultLike, *, use_hajek: bool = False, thresholds: Dict[str, float] = DEFAULT_THRESHOLDS, n_bins: int = 10, cal_thresholds: Optional[Dict[str, float]] = None, auc_flip_margin: float = 0.05) -> Dict[str, Any]
-```
-
-High-level helper that takes `IRM` result or model and returns a positivity/overlap report as a dict.
-
-If the input result contains a flag indicating normalized IPW (Hájek), this function will
-auto-detect it and pass use_hajek=True to the underlying diagnostics, so users of
-`IRM(normalize_ipw=True)` get meaningful ipw_sum\_\* checks without extra arguments.
-
-######## `positivity_overlap_checks`
-
-```python
-positivity_overlap_checks(m_hat: np.ndarray, D: np.ndarray, *, m_clipped_from: Optional[Tuple[float, float]] = None, g_clipped_share: Optional[float] = None, use_hajek: bool = False, thresholds: Dict[str, float] = DEFAULT_THRESHOLDS, n_bins: int = 10, cal_thresholds: Optional[Dict[str, float]] = None, auc_flip_margin: float = 0.05) -> Dict[str, Any]
-```
-
-Run positivity/overlap diagnostics for DML-IRM (ATE & ATT).
-Inputs are cross-fitted m̂ and treatment D (0/1). Returns a structured report with GREEN/YELLOW/RED flags.
+- [**run_overlap_diagnostics**](#causalis.scenarios.unconfoundedness.refutation.overlap.overlap_validation.run_overlap_diagnostics) – Run overlap diagnostics from `CausalData` and `CausalEstimate`.
 
 ######## `run_overlap_diagnostics`
 
 ```python
-run_overlap_diagnostics(res: ResultLike = None, *, m_hat: Optional[np.ndarray] = None, D: Optional[np.ndarray] = None, thresholds: Dict[str, float] = DEFAULT_THRESHOLDS, n_bins: int = 10, use_hajek: Optional[bool] = None, m_clipped_from: Optional[Tuple[float, float]] = None, g_clipped_share: Optional[float] = None, return_summary: bool = True, cal_thresholds: Optional[Dict[str, float]] = None, auc_flip_margin: float = 0.05) -> Dict[str, Any]
+run_overlap_diagnostics(data: CausalData, estimate: CausalEstimate, *, thresholds: Optional[Dict[str, float]] = None, n_bins: int = 10, use_hajek: Optional[bool] = None, return_summary: bool = True, auc_flip_margin: float = 0.05) -> Dict[str, Any]
 ```
 
-Single entry-point for overlap / positivity / calibration diagnostics.
-
-You can call it in TWO ways:
-A) With raw arrays:
-run_overlap_diagnostics(m_hat=..., D=...)
-B) With a model/result:
-run_overlap_diagnostics(res=\<dml_ate/dml_att result dict or IRM/compatible model>)
-
-The function:
-
-- Auto-extracts (m_hat, D, trimming_threshold) from `res` if provided.
-- Auto-detects Hájek normalization if available on `res` (normalize_ipw).
-- Runs positivity/overlap checks (edge mass, KS, AUC, ESS, tails, ATT identity),
-  clipping audit, and calibration (ECE + logistic recalibration).
-- Returns a dict with full details and, optionally, a compact summary DataFrame.
-
-**Returns:**
-
-- <code>[dict](#dict)</code> – A dictionary with keys including:
-  - n, n_treated, p1
-  - edge_mass, edge_mass_by_arm, ks, auc
-  - ate_ipw, ate_ess, ate_tails
-  - att_weights, att_ess
-  - clipping
-  - calibration (with reliability_table)
-  - flags (GREEN/YELLOW/RED/NA)
-  - summary (pd.DataFrame) if return_summary=True
-  - meta (use_hajek, thresholds)
+Run overlap diagnostics from `CausalData` and `CausalEstimate`.
 
 ####### `plot_m_overlap`
 
 ```python
-plot_m_overlap(diag: UnconfoundednessDiagnosticData, clip: Tuple[float, float] = (0.01, 0.99), bins: Any = 'fd', kde: bool = True, shade_overlap: bool = True, ax: Optional[plt.Axes] = None, figsize: Tuple[float, float] = (9, 5.5), dpi: int = 220, font_scale: float = 1.15, save: Optional[str] = None, save_dpi: Optional[int] = None, transparent: bool = False, color_t: Optional[Any] = None, color_c: Optional[Any] = None) -> plt.Figure
+plot_m_overlap(diag: Union[UnconfoundednessDiagnosticData, CausalEstimate, dict], clip: Tuple[float, float] = (0.01, 0.99), bins: Any = 'fd', kde: bool = True, shade_overlap: bool = True, ax: Optional[plt.Axes] = None, figsize: Tuple[float, float] = (9, 5.5), dpi: int = 220, font_scale: float = 1.15, save: Optional[str] = None, save_dpi: Optional[int] = None, transparent: bool = False, color_t: Optional[Any] = None, color_c: Optional[Any] = None) -> plt.Figure
 ```
 
 Overlap plot for m(x)=P(D=1|X) with high-res rendering.
@@ -10835,7 +10049,7 @@ Overlap plot for m(x)=P(D=1|X) with high-res rendering.
 
 **Parameters:**
 
-- **diag** (<code>[UnconfoundednessDiagnosticData](#causalis.data_contracts.causal_diagnostic_data.UnconfoundednessDiagnosticData)</code>) – Diagnostic data containing m_hat and d.
+- **diag** (<code>[UnconfoundednessDiagnosticData](#causalis.data_contracts.causal_diagnostic_data.UnconfoundednessDiagnosticData) or [CausalEstimate](#causalis.data_contracts.causal_estimate.CausalEstimate)</code>) – Diagnostic data directly, or an estimate containing diagnostic_data with m_hat and d.
 - **clip** (<code>[tuple](#tuple)</code>) – Quantiles to clip for KDE range.
 - **bins** (<code>[str](#str) or [int](#int)</code>) – Histogram bins.
 - **kde** (<code>[bool](#bool)</code>) – Whether to show KDE.
@@ -10854,75 +10068,132 @@ Overlap plot for m(x)=P(D=1|X) with high-res rendering.
 
 - <code>[Figure](#matplotlib.figure.Figure)</code> – The generated figure.
 
-####### `positivity_overlap_checks`
+####### `plot_propensity_reliability`
 
 ```python
-positivity_overlap_checks(m_hat: np.ndarray, D: np.ndarray, *, m_clipped_from: Optional[Tuple[float, float]] = None, g_clipped_share: Optional[float] = None, use_hajek: bool = False, thresholds: Dict[str, float] = DEFAULT_THRESHOLDS, n_bins: int = 10, cal_thresholds: Optional[Dict[str, float]] = None, auc_flip_margin: float = 0.05) -> Dict[str, Any]
+plot_propensity_reliability(estimate: CausalEstimate, data: Optional[CausalData] = None, *, n_bins: int = 10, show_recalibration: bool = True, annotate_metrics: bool = True, ax: Optional[plt.Axes] = None, figsize: Tuple[float, float] = (7.2, 6.2), dpi: int = 220, font_scale: float = 1.1, point_color: Optional[Any] = None, diagonal_color: Any = '0.35', recalibration_color: Any = 'C1', min_marker_size: float = 35.0, marker_size_scale: float = 250.0, save: Optional[str] = None, save_dpi: Optional[int] = None, transparent: bool = False) -> plt.Figure
 ```
 
-Run positivity/overlap diagnostics for DML-IRM (ATE & ATT).
-Inputs are cross-fitted m̂ and treatment D (0/1). Returns a structured report with GREEN/YELLOW/RED flags.
+Plot a propensity calibration reliability diagram.
+
+**Parameters:**
+
+- **estimate** (<code>[CausalEstimate](#causalis.data_contracts.causal_estimate.CausalEstimate)</code>) – Estimate with diagnostic data (`m_hat`; optionally `m_hat_raw`, `d`).
+- **data** (<code>[CausalData](#causalis.dgp.causaldata.CausalData)</code>) – Optional fallback source for treatment `d` when not stored in diagnostic data.
+- **n_bins** (<code>[int](#int)</code>) – Number of calibration bins used to build the reliability table.
+- **show_recalibration** (<code>[bool](#bool)</code>) – Overlay logistic recalibration curve
+  `sigmoid(alpha + beta * logit(p))` when parameters are available.
+- **annotate_metrics** (<code>[bool](#bool)</code>) – Annotate ECE and logistic recalibration parameters on the figure.
+- **ax** (<code>[Axes](#matplotlib.axes.Axes)</code>) – Existing axes to plot on.
+- **figsize** (<code>[tuple](#tuple)</code>) – Figure size.
+- **dpi** (<code>[int](#int)</code>) – Dots per inch.
+- **font_scale** (<code>[float](#float)</code>) – Font scaling factor.
+- **point_color** (<code>[color](#color)</code>) – Marker color for binned reliability points.
+- **diagonal_color** (<code>[color](#color)</code>) – Color for the perfect calibration diagonal.
+- **recalibration_color** (<code>[color](#color)</code>) – Color for the logistic recalibration curve.
+- **min_marker_size** (<code>[float](#float)</code>) – Base marker area for non-empty bins.
+- **marker_size_scale** (<code>[float](#float)</code>) – Additional marker area scaled by bin count share.
+- **save** (<code>[str](#str)</code>) – Path to save the figure.
+- **save_dpi** (<code>[int](#int)</code>) – DPI for saving.
+- **transparent** (<code>[bool](#bool)</code>) – Whether to save with transparency.
+
+**Returns:**
+
+- <code>[Figure](#matplotlib.figure.Figure)</code> – The generated figure.
+
+####### `reliability_plot`
+
+Reliability diagram for propensity calibration diagnostics.
+
+**Functions:**
+
+- [**plot_propensity_reliability**](#causalis.scenarios.unconfoundedness.refutation.overlap.reliability_plot.plot_propensity_reliability) – Plot a propensity calibration reliability diagram.
+
+######## `plot_propensity_reliability`
+
+```python
+plot_propensity_reliability(estimate: CausalEstimate, data: Optional[CausalData] = None, *, n_bins: int = 10, show_recalibration: bool = True, annotate_metrics: bool = True, ax: Optional[plt.Axes] = None, figsize: Tuple[float, float] = (7.2, 6.2), dpi: int = 220, font_scale: float = 1.1, point_color: Optional[Any] = None, diagonal_color: Any = '0.35', recalibration_color: Any = 'C1', min_marker_size: float = 35.0, marker_size_scale: float = 250.0, save: Optional[str] = None, save_dpi: Optional[int] = None, transparent: bool = False) -> plt.Figure
+```
+
+Plot a propensity calibration reliability diagram.
+
+**Parameters:**
+
+- **estimate** (<code>[CausalEstimate](#causalis.data_contracts.causal_estimate.CausalEstimate)</code>) – Estimate with diagnostic data (`m_hat`; optionally `m_hat_raw`, `d`).
+- **data** (<code>[CausalData](#causalis.dgp.causaldata.CausalData)</code>) – Optional fallback source for treatment `d` when not stored in diagnostic data.
+- **n_bins** (<code>[int](#int)</code>) – Number of calibration bins used to build the reliability table.
+- **show_recalibration** (<code>[bool](#bool)</code>) – Overlay logistic recalibration curve
+  `sigmoid(alpha + beta * logit(p))` when parameters are available.
+- **annotate_metrics** (<code>[bool](#bool)</code>) – Annotate ECE and logistic recalibration parameters on the figure.
+- **ax** (<code>[Axes](#matplotlib.axes.Axes)</code>) – Existing axes to plot on.
+- **figsize** (<code>[tuple](#tuple)</code>) – Figure size.
+- **dpi** (<code>[int](#int)</code>) – Dots per inch.
+- **font_scale** (<code>[float](#float)</code>) – Font scaling factor.
+- **point_color** (<code>[color](#color)</code>) – Marker color for binned reliability points.
+- **diagonal_color** (<code>[color](#color)</code>) – Color for the perfect calibration diagonal.
+- **recalibration_color** (<code>[color](#color)</code>) – Color for the logistic recalibration curve.
+- **min_marker_size** (<code>[float](#float)</code>) – Base marker area for non-empty bins.
+- **marker_size_scale** (<code>[float](#float)</code>) – Additional marker area scaled by bin count share.
+- **save** (<code>[str](#str)</code>) – Path to save the figure.
+- **save_dpi** (<code>[int](#int)</code>) – DPI for saving.
+- **transparent** (<code>[bool](#bool)</code>) – Whether to save with transparency.
+
+**Returns:**
+
+- <code>[Figure](#matplotlib.figure.Figure)</code> – The generated figure.
 
 ####### `run_overlap_diagnostics`
 
 ```python
-run_overlap_diagnostics(res: ResultLike = None, *, m_hat: Optional[np.ndarray] = None, D: Optional[np.ndarray] = None, thresholds: Dict[str, float] = DEFAULT_THRESHOLDS, n_bins: int = 10, use_hajek: Optional[bool] = None, m_clipped_from: Optional[Tuple[float, float]] = None, g_clipped_share: Optional[float] = None, return_summary: bool = True, cal_thresholds: Optional[Dict[str, float]] = None, auc_flip_margin: float = 0.05) -> Dict[str, Any]
+run_overlap_diagnostics(data: CausalData, estimate: CausalEstimate, *, thresholds: Optional[Dict[str, float]] = None, n_bins: int = 10, use_hajek: Optional[bool] = None, return_summary: bool = True, auc_flip_margin: float = 0.05) -> Dict[str, Any]
 ```
 
-Single entry-point for overlap / positivity / calibration diagnostics.
+Run overlap diagnostics from `CausalData` and `CausalEstimate`.
 
-You can call it in TWO ways:
-A) With raw arrays:
-run_overlap_diagnostics(m_hat=..., D=...)
-B) With a model/result:
-run_overlap_diagnostics(res=\<dml_ate/dml_att result dict or IRM/compatible model>)
+###### `plot_influence_instability`
 
-The function:
+```python
+plot_influence_instability(estimate: CausalEstimate, data: Optional[CausalData] = None, *, trimming_threshold: Optional[float] = None, use_estimator_psi: bool = True, include_ipw: bool = True, bins: Any = 'fd', log_hist: bool = False, scatter_log_y: bool = True, top_k: int = 10, figsize: Optional[Tuple[float, float]] = None, dpi: int = 220, font_scale: float = 1.1, save: Optional[str] = None, save_dpi: Optional[int] = None, transparent: bool = False) -> plt.Figure
+```
 
-- Auto-extracts (m_hat, D, trimming_threshold) from `res` if provided.
-- Auto-detects Hájek normalization if available on `res` (normalize_ipw).
-- Runs positivity/overlap checks (edge mass, KS, AUC, ESS, tails, ATT identity),
-  clipping audit, and calibration (ECE + logistic recalibration).
-- Returns a dict with full details and, optionally, a compact summary DataFrame.
+Plot instability diagnostics for per-unit score (EIF moment).
+
+<details class="panels" open markdown="1">
+<summary>Panels</summary>
+
+1. Histogram of `|psi_i|` (optional log-x scale).
+1. Scatter of `|psi_i|` versus clipped propensity `m_i`.
+1. (optional) Histogram of IPW terms.
+1. (optional) ESS ratio bars for treated/control weights.
+
+</details>
+
+**Parameters:**
+
+- **estimate** (<code>[CausalEstimate](#causalis.data_contracts.causal_estimate.CausalEstimate)</code>) – Estimate with diagnostic data (`m_hat`, `g0_hat`; optionally `y`, `d`, `g1_hat`, `psi`).
+- **data** (<code>[CausalData](#causalis.dgp.causaldata.CausalData)</code>) – Optional fallback source for `y` and `d` if not stored in diagnostic data.
+- **trimming_threshold** (<code>[float](#float)</code>) – Propensity clipping threshold. If omitted, uses diagnostic/model defaults.
+- **use_estimator_psi** (<code>[bool](#bool)</code>) – Use estimator-provided `diagnostic_data.psi` when available; otherwise reconstruct score.
+- **include_ipw** (<code>[bool](#bool)</code>) – Add IPW-term histogram and ESS ratio bar panels.
+- **bins** (<code>[Any](#typing.Any)</code>) – Histogram bins for non-log histograms.
+- **log_hist** (<code>[bool](#bool)</code>) – Use log-scaled x-axis bins for `|psi_i|` histogram when possible.
+- **scatter_log_y** (<code>[bool](#bool)</code>) – Plot `|psi_i|` on log scale in the scatter panel.
+- **top_k** (<code>[int](#int)</code>) – Highlight top-k largest `|psi_i|` in the scatter panel.
+- **figsize** (<code>[tuple](#tuple)</code>) – Figure size. Defaults to `(12, 8)` with IPW panels, `(11, 4.6)` otherwise.
+- **dpi** (<code>[int](#int)</code>) – Dots per inch.
+- **font_scale** (<code>[float](#float)</code>) – Font scaling factor.
+- **save** (<code>[str](#str)</code>) – Path to save the figure.
+- **save_dpi** (<code>[int](#int)</code>) – DPI for saving.
+- **transparent** (<code>[bool](#bool)</code>) – Whether to save with transparency.
 
 **Returns:**
 
-- <code>[dict](#dict)</code> – A dictionary with keys including:
-  - n, n_treated, p1
-  - edge_mass, edge_mass_by_arm, ks, auc
-  - ate_ipw, ate_ess, ate_tails
-  - att_weights, att_ess
-  - clipping
-  - calibration (with reliability_table)
-  - flags (GREEN/YELLOW/RED/NA)
-  - summary (pd.DataFrame) if return_summary=True
-  - meta (use_hajek, thresholds)
-
-###### `overlap_diagnostics_atte`
-
-```python
-overlap_diagnostics_atte(m: np.ndarray, d: np.ndarray, eps_list: List[float] = [0.95, 0.97, 0.98, 0.99]) -> pd.DataFrame
-```
-
-Key overlap metrics for ATTE: availability of suitable controls.
-Reports conditional shares: among CONTROLS, fraction with m(X) ≥ threshold; among TREATED, fraction with m(X) ≤ 1 - threshold.
-
-###### `overlap_report_from_result`
-
-```python
-overlap_report_from_result(res: ResultLike, *, use_hajek: bool = False, thresholds: Dict[str, float] = DEFAULT_THRESHOLDS, n_bins: int = 10, cal_thresholds: Optional[Dict[str, float]] = None, auc_flip_margin: float = 0.05) -> Dict[str, Any]
-```
-
-High-level helper that takes `IRM` result or model and returns a positivity/overlap report as a dict.
-
-If the input result contains a flag indicating normalized IPW (Hájek), this function will
-auto-detect it and pass use_hajek=True to the underlying diagnostics, so users of
-`IRM(normalize_ipw=True)` get meaningful ipw_sum\_\* checks without extra arguments.
+- <code>[Figure](#matplotlib.figure.Figure)</code> – The generated figure.
 
 ###### `plot_m_overlap`
 
 ```python
-plot_m_overlap(diag: UnconfoundednessDiagnosticData, clip: Tuple[float, float] = (0.01, 0.99), bins: Any = 'fd', kde: bool = True, shade_overlap: bool = True, ax: Optional[plt.Axes] = None, figsize: Tuple[float, float] = (9, 5.5), dpi: int = 220, font_scale: float = 1.15, save: Optional[str] = None, save_dpi: Optional[int] = None, transparent: bool = False, color_t: Optional[Any] = None, color_c: Optional[Any] = None) -> plt.Figure
+plot_m_overlap(diag: Union[UnconfoundednessDiagnosticData, CausalEstimate, dict], clip: Tuple[float, float] = (0.01, 0.99), bins: Any = 'fd', kde: bool = True, shade_overlap: bool = True, ax: Optional[plt.Axes] = None, figsize: Tuple[float, float] = (9, 5.5), dpi: int = 220, font_scale: float = 1.15, save: Optional[str] = None, save_dpi: Optional[int] = None, transparent: bool = False, color_t: Optional[Any] = None, color_c: Optional[Any] = None) -> plt.Figure
 ```
 
 Overlap plot for m(x)=P(D=1|X) with high-res rendering.
@@ -10933,7 +10204,7 @@ Overlap plot for m(x)=P(D=1|X) with high-res rendering.
 
 **Parameters:**
 
-- **diag** (<code>[UnconfoundednessDiagnosticData](#causalis.data_contracts.causal_diagnostic_data.UnconfoundednessDiagnosticData)</code>) – Diagnostic data containing m_hat and d.
+- **diag** (<code>[UnconfoundednessDiagnosticData](#causalis.data_contracts.causal_diagnostic_data.UnconfoundednessDiagnosticData) or [CausalEstimate](#causalis.data_contracts.causal_estimate.CausalEstimate)</code>) – Diagnostic data directly, or an estimate containing diagnostic_data with m_hat and d.
 - **clip** (<code>[tuple](#tuple)</code>) – Quantiles to clip for KDE range.
 - **bins** (<code>[str](#str) or [int](#int)</code>) – Histogram bins.
 - **kde** (<code>[bool](#bool)</code>) – Whether to show KDE.
@@ -10952,684 +10223,304 @@ Overlap plot for m(x)=P(D=1|X) with high-res rendering.
 
 - <code>[Figure](#matplotlib.figure.Figure)</code> – The generated figure.
 
-###### `positivity_overlap_checks`
+###### `plot_propensity_reliability`
 
 ```python
-positivity_overlap_checks(m_hat: np.ndarray, D: np.ndarray, *, m_clipped_from: Optional[Tuple[float, float]] = None, g_clipped_share: Optional[float] = None, use_hajek: bool = False, thresholds: Dict[str, float] = DEFAULT_THRESHOLDS, n_bins: int = 10, cal_thresholds: Optional[Dict[str, float]] = None, auc_flip_margin: float = 0.05) -> Dict[str, Any]
+plot_propensity_reliability(estimate: CausalEstimate, data: Optional[CausalData] = None, *, n_bins: int = 10, show_recalibration: bool = True, annotate_metrics: bool = True, ax: Optional[plt.Axes] = None, figsize: Tuple[float, float] = (7.2, 6.2), dpi: int = 220, font_scale: float = 1.1, point_color: Optional[Any] = None, diagonal_color: Any = '0.35', recalibration_color: Any = 'C1', min_marker_size: float = 35.0, marker_size_scale: float = 250.0, save: Optional[str] = None, save_dpi: Optional[int] = None, transparent: bool = False) -> plt.Figure
 ```
 
-Run positivity/overlap diagnostics for DML-IRM (ATE & ATT).
-Inputs are cross-fitted m̂ and treatment D (0/1). Returns a structured report with GREEN/YELLOW/RED flags.
-
-###### `refute_irm_orthogonality`
-
-```python
-refute_irm_orthogonality(inference_fn: Callable[..., Dict[str, Any]], data: CausalData, trim_propensity: Tuple[float, float] = (0.02, 0.98), n_basis_funcs: Optional[int] = None, n_folds_oos: int = 4, score: Optional[str] = None, trimming_threshold: float = 0.01, strict_oos: bool = True, **inference_kwargs: bool) -> Dict[str, Any]
-```
-
-Comprehensive AIPW orthogonality diagnostics for IRM models.
-
-Implements three key diagnostic approaches based on the efficient influence function (EIF):
-
-1. Out-of-sample moment check (non-tautological)
-1. Orthogonality (Gateaux derivative) tests
-1. Influence diagnostics
+Plot a propensity calibration reliability diagram.
 
 **Parameters:**
 
-- **inference_fn** (<code>[Callable](#typing.Callable)</code>) – The inference function (dml_ate or dml_att)
-- **data** (<code>[CausalData](#causalis.dgp.causaldata.CausalData)</code>) – The causal data_contracts object
-- **trim_propensity** (<code>[Tuple](#typing.Tuple)\[[float](#float), [float](#float)\]</code>) – Propensity score trimming bounds (min, max) to avoid extreme weights
-- **n_basis_funcs** (<code>[Optional](#typing.Optional)\[[int](#int)\]</code>) – Number of basis functions for orthogonality derivative tests (constant + covariates).
-  If None, defaults to the number of confounders in `data_contracts` plus 1 for the constant term.
-- **n_folds_oos** (<code>[int](#int)</code>) – Number of folds for out-of-sample moment check
-- \*\***inference_kwargs** (<code>[dict](#dict)</code>) – Additional arguments passed to inference_fn
+- **estimate** (<code>[CausalEstimate](#causalis.data_contracts.causal_estimate.CausalEstimate)</code>) – Estimate with diagnostic data (`m_hat`; optionally `m_hat_raw`, `d`).
+- **data** (<code>[CausalData](#causalis.dgp.causaldata.CausalData)</code>) – Optional fallback source for treatment `d` when not stored in diagnostic data.
+- **n_bins** (<code>[int](#int)</code>) – Number of calibration bins used to build the reliability table.
+- **show_recalibration** (<code>[bool](#bool)</code>) – Overlay logistic recalibration curve
+  `sigmoid(alpha + beta * logit(p))` when parameters are available.
+- **annotate_metrics** (<code>[bool](#bool)</code>) – Annotate ECE and logistic recalibration parameters on the figure.
+- **ax** (<code>[Axes](#matplotlib.axes.Axes)</code>) – Existing axes to plot on.
+- **figsize** (<code>[tuple](#tuple)</code>) – Figure size.
+- **dpi** (<code>[int](#int)</code>) – Dots per inch.
+- **font_scale** (<code>[float](#float)</code>) – Font scaling factor.
+- **point_color** (<code>[color](#color)</code>) – Marker color for binned reliability points.
+- **diagonal_color** (<code>[color](#color)</code>) – Color for the perfect calibration diagonal.
+- **recalibration_color** (<code>[color](#color)</code>) – Color for the logistic recalibration curve.
+- **min_marker_size** (<code>[float](#float)</code>) – Base marker area for non-empty bins.
+- **marker_size_scale** (<code>[float](#float)</code>) – Additional marker area scaled by bin count share.
+- **save** (<code>[str](#str)</code>) – Path to save the figure.
+- **save_dpi** (<code>[int](#int)</code>) – DPI for saving.
+- **transparent** (<code>[bool](#bool)</code>) – Whether to save with transparency.
 
 **Returns:**
 
-- <code>[Dict](#typing.Dict)\[[str](#str), [Any](#typing.Any)\]</code> – Dictionary containing:
-- oos_moment_test: Out-of-sample moment condition results
-- orthogonality_derivatives: Gateaux derivative test results
-- influence_diagnostics: Influence function diagnostics
-- theta: Original treatment effect estimate
-- trimmed_diagnostics: Results on trimmed sample
-- overall_assessment: Summary diagnostic assessment
+- <code>[Figure](#matplotlib.figure.Figure)</code> – The generated figure.
 
-**Examples:**
-
-```pycon
->>> from causalis.refutation.orthogonality import refute_irm_orthogonality
->>> from causalis.scenarios.unconfoundedness.irm import IRM
->>> 
->>> # Define a wrapper for refutation utilities that expect an inference function
->>> def irm_ate_inference(data, **kwargs):
->>>     return IRM(data, **kwargs).fit().estimate().model_dump()
->>> 
->>> # Comprehensive orthogonality check
->>> ortho_results = refute_irm_orthogonality(irm_ate_inference, causal_data)
->>> 
->>> # Check key diagnostics
->>> print(f"OOS moment t-stat: {ortho_results['oos_moment_test']['tstat']:.3f}")
->>> print(f"Assessment: {ortho_results['overall_assessment']}")
-```
-
-###### `refute_placebo_outcome`
+###### `plot_residual_diagnostics`
 
 ```python
-refute_placebo_outcome(inference_fn: Callable[..., Dict[str, Any]], data: CausalData, random_state: int | None = None, **inference_kwargs: int | None) -> Dict[str, float]
+plot_residual_diagnostics(estimate: CausalEstimate, data: Optional[CausalData] = None, *, clip_propensity: float = 1e-06, n_bins: int = 20, marker_size: float = 12.0, alpha: float = 0.35, figsize: Tuple[float, float] = (14.0, 4.8), dpi: int = 220, font_scale: float = 1.1, save: Optional[str] = None, save_dpi: Optional[int] = None, transparent: bool = False) -> plt.Figure
 ```
 
-Generate random outcome variables while keeping treatment
-and covariates intact. For binary outcomes, generates random binary
-variables with the same proportion. For continuous outcomes, generates
-random variables from a normal distribution fitted to the original data_contracts.
-A valid causal design should now yield θ ≈ 0 and a large p-value.
+Plot residual diagnostics for nuisance models.
 
-###### `refute_placebo_treatment`
+<details class="panels" open markdown="1">
+<summary>Panels</summary>
 
-```python
-refute_placebo_treatment(inference_fn: Callable[..., Dict[str, Any]], data: CausalData, random_state: int | None = None, **inference_kwargs: int | None) -> Dict[str, float]
-```
+1. Treated-only: `u1 = y - g1` vs `g1`.
+1. Control-only: `u0 = y - g0` vs `g0`.
+1. Binned calibration error: `E[d - m | m in bin]` vs binned `m`.
 
-Generate random binary treatment variables while keeping outcome and
-covariates intact. Generates random binary treatment with the same
-proportion as the original treatment. Breaks the treatment–outcome link.
+</details>
 
-###### `refute_subset`
+**Parameters:**
 
-```python
-refute_subset(inference_fn: Callable[..., Dict[str, Any]], data: CausalData, fraction: float = 0.8, random_state: int | None = None, **inference_kwargs: int | None) -> Dict[str, float]
-```
+- **estimate** (<code>[CausalEstimate](#causalis.data_contracts.causal_estimate.CausalEstimate)</code>) – Estimate with diagnostic data (`m_hat`, `g0_hat`; optionally `g1_hat`, `y`, `d`).
+- **data** (<code>[CausalData](#causalis.dgp.causaldata.CausalData)</code>) – Optional fallback source for `y` and `d` when missing in diagnostic data.
+- **clip_propensity** (<code>[float](#float)</code>) – Clipping epsilon for propensity values in the treatment-residual panel.
+- **n_bins** (<code>[int](#int)</code>) – Number of quantile bins for the binned-mean trend overlays.
+- **marker_size** (<code>[float](#float)</code>) – Scatter marker size.
+- **alpha** (<code>[float](#float)</code>) – Scatter opacity.
+- **figsize** (<code>[tuple](#tuple)</code>) – Figure size.
+- **dpi** (<code>[int](#int)</code>) – Dots per inch.
+- **font_scale** (<code>[float](#float)</code>) – Font scaling factor.
+- **save** (<code>[str](#str)</code>) – Path to save the figure.
+- **save_dpi** (<code>[int](#int)</code>) – DPI for saving.
+- **transparent** (<code>[bool](#bool)</code>) – Whether to save with transparency.
 
-Re-estimate the effect on a random subset (default 80 %)
-to check sample-stability of the estimate.
+**Returns:**
+
+- <code>[Figure](#matplotlib.figure.Figure)</code> – The generated figure.
 
 ###### `run_overlap_diagnostics`
 
 ```python
-run_overlap_diagnostics(res: ResultLike = None, *, m_hat: Optional[np.ndarray] = None, D: Optional[np.ndarray] = None, thresholds: Dict[str, float] = DEFAULT_THRESHOLDS, n_bins: int = 10, use_hajek: Optional[bool] = None, m_clipped_from: Optional[Tuple[float, float]] = None, g_clipped_share: Optional[float] = None, return_summary: bool = True, cal_thresholds: Optional[Dict[str, float]] = None, auc_flip_margin: float = 0.05) -> Dict[str, Any]
+run_overlap_diagnostics(data: CausalData, estimate: CausalEstimate, *, thresholds: Optional[Dict[str, float]] = None, n_bins: int = 10, use_hajek: Optional[bool] = None, return_summary: bool = True, auc_flip_margin: float = 0.05) -> Dict[str, Any]
 ```
 
-Single entry-point for overlap / positivity / calibration diagnostics.
-
-You can call it in TWO ways:
-A) With raw arrays:
-run_overlap_diagnostics(m_hat=..., D=...)
-B) With a model/result:
-run_overlap_diagnostics(res=\<dml_ate/dml_att result dict or IRM/compatible model>)
-
-The function:
-
-- Auto-extracts (m_hat, D, trimming_threshold) from `res` if provided.
-- Auto-detects Hájek normalization if available on `res` (normalize_ipw).
-- Runs positivity/overlap checks (edge mass, KS, AUC, ESS, tails, ATT identity),
-  clipping audit, and calibration (ECE + logistic recalibration).
-- Returns a dict with full details and, optionally, a compact summary DataFrame.
-
-**Returns:**
-
-- <code>[dict](#dict)</code> – A dictionary with keys including:
-  - n, n_treated, p1
-  - edge_mass, edge_mass_by_arm, ks, auc
-  - ate_ipw, ate_ess, ate_tails
-  - att_weights, att_ess
-  - clipping
-  - calibration (with reliability_table)
-  - flags (GREEN/YELLOW/RED/NA)
-  - summary (pd.DataFrame) if return_summary=True
-  - meta (use_hajek, thresholds)
+Run overlap diagnostics from `CausalData` and `CausalEstimate`.
 
 ###### `run_score_diagnostics`
 
 ```python
-run_score_diagnostics(res: ResultLike = None, *, y: Optional[np.ndarray] = None, d: Optional[np.ndarray] = None, g0: Optional[np.ndarray] = None, g1: Optional[np.ndarray] = None, m: Optional[np.ndarray] = None, theta: Optional[float] = None, score: Optional[str] = None, trimming_threshold: float = 0.01, n_basis_funcs: Optional[int] = None, return_summary: bool = True) -> Dict[str, Any]
+run_score_diagnostics(data: CausalData, estimate: CausalEstimate, *, trimming_threshold: Optional[float] = None, n_basis_funcs: Optional[int] = None, return_summary: bool = True) -> Dict[str, Any]
 ```
 
-Single entry-point for score diagnostics (orthogonality) akin to run_overlap_diagnostics.
+Run score diagnostics from `CausalData` and `CausalEstimate`.
 
-You can call it in TWO ways:
-A) With raw arrays:
-run_score_diagnostics(y=..., d=..., g0=..., g1=..., m=..., theta=...)
-B) With a model/result:
-run_score_diagnostics(res=<IRM result or IRM-like model>)
-
-Returns a dictionary with:
-
-- params (score, trimming_threshold)
-- oos_moment_test (if fast-path caches available on model; else omitted)
-- orthogonality_derivatives (DataFrame)
-- influence_diagnostics (full_sample)
-- summary (compact DataFrame) if return_summary=True
-- meta
-
-###### `run_uncofoundedness_diagnostics`
+###### `run_unconfoundedness_diagnostics`
 
 ```python
-run_uncofoundedness_diagnostics(*, res: _Dict[str, _Any] | _Any = None, X: _Optional[np.ndarray] = None, d: _Optional[np.ndarray] = None, m_hat: _Optional[np.ndarray] = None, names: _Optional[_List[str]] = None, score: _Optional[str] = None, normalize: _Optional[bool] = None, threshold: float = 0.1, eps_overlap: float = 0.01, return_summary: bool = True) -> _Dict[str, _Any]
+run_unconfoundedness_diagnostics(data: CausalData, estimate: CausalEstimate, *, threshold: float = 0.1, normalize: Optional[bool] = None, return_summary: bool = True) -> Dict[str, Any]
 ```
 
-Uncofoundedness diagnostics focused on balance (SMD).
-
-Inputs:
-
-- Either a result/model via `res`, or raw arrays X, d, m_hat (+ optional names, score, normalize).
-
-Returns a dictionary:
-{
-"params": {"score", "normalize", "smd_threshold"},
-"balance": {"smd", "smd_unweighted", "smd_max", "frac_violations", "pass", "worst_features"},
-"flags": {"balance_max_smd", "balance_violations"},
-"overall_flag": max severity across balance flags,
-"summary": pd.DataFrame with balance rows only
-}
+Run unconfoundedness diagnostics from `CausalData` and `CausalEstimate`.
 
 ###### `score`
 
 **Modules:**
 
-- [**score_validation**](#causalis.scenarios.unconfoundedness.refutation.score.score_validation) – AIPW orthogonality diagnostics for IRM-based models.
+- [**influence_plot**](#causalis.scenarios.unconfoundedness.refutation.score.influence_plot) – Influence/instability plots for score-based diagnostics.
+- [**residual_plots**](#causalis.scenarios.unconfoundedness.refutation.score.residual_plots) – Residual diagnostic plots for nuisance models g0/g1 and m.
+- [**score_validation**](#causalis.scenarios.unconfoundedness.refutation.score.score_validation) – Score diagnostics focused on orthogonality and EIF stability.
 
 **Functions:**
 
-- [**influence_summary**](#causalis.scenarios.unconfoundedness.refutation.score.influence_summary) – Compute influence diagnostics showing where uncertainty comes from.
-- [**refute_irm_orthogonality**](#causalis.scenarios.unconfoundedness.refutation.score.refute_irm_orthogonality) – Comprehensive AIPW orthogonality diagnostics for IRM models.
-- [**refute_placebo_outcome**](#causalis.scenarios.unconfoundedness.refutation.score.refute_placebo_outcome) – Generate random outcome variables while keeping treatment
-- [**refute_placebo_treatment**](#causalis.scenarios.unconfoundedness.refutation.score.refute_placebo_treatment) – Generate random binary treatment variables while keeping outcome and
-- [**refute_subset**](#causalis.scenarios.unconfoundedness.refutation.score.refute_subset) – Re-estimate the effect on a random subset (default 80 %)
-- [**run_score_diagnostics**](#causalis.scenarios.unconfoundedness.refutation.score.run_score_diagnostics) – Single entry-point for score diagnostics (orthogonality) akin to run_overlap_diagnostics.
+- [**plot_influence_instability**](#causalis.scenarios.unconfoundedness.refutation.score.plot_influence_instability) – Plot instability diagnostics for per-unit score (EIF moment).
+- [**plot_residual_diagnostics**](#causalis.scenarios.unconfoundedness.refutation.score.plot_residual_diagnostics) – Plot residual diagnostics for nuisance models.
+- [**run_score_diagnostics**](#causalis.scenarios.unconfoundedness.refutation.score.run_score_diagnostics) – Run score diagnostics from `CausalData` and `CausalEstimate`.
 
-####### `influence_summary`
+####### `influence_plot`
+
+Influence/instability plots for score-based diagnostics.
+
+**Functions:**
+
+- [**plot_influence_instability**](#causalis.scenarios.unconfoundedness.refutation.score.influence_plot.plot_influence_instability) – Plot instability diagnostics for per-unit score (EIF moment).
+
+######## `plot_influence_instability`
 
 ```python
-influence_summary(y: np.ndarray, d: np.ndarray, g0: np.ndarray, g1: np.ndarray, m: np.ndarray, theta_hat: float, k: int = 10, score: str = 'ATE', trimming_threshold: float = 0.01) -> Dict[str, Any]
+plot_influence_instability(estimate: CausalEstimate, data: Optional[CausalData] = None, *, trimming_threshold: Optional[float] = None, use_estimator_psi: bool = True, include_ipw: bool = True, bins: Any = 'fd', log_hist: bool = False, scatter_log_y: bool = True, top_k: int = 10, figsize: Optional[Tuple[float, float]] = None, dpi: int = 220, font_scale: float = 1.1, save: Optional[str] = None, save_dpi: Optional[int] = None, transparent: bool = False) -> plt.Figure
 ```
 
-Compute influence diagnostics showing where uncertainty comes from.
+Plot instability diagnostics for per-unit score (EIF moment).
+
+<details class="panels" open markdown="1">
+<summary>Panels</summary>
+
+1. Histogram of `|psi_i|` (optional log-x scale).
+1. Scatter of `|psi_i|` versus clipped propensity `m_i`.
+1. (optional) Histogram of IPW terms.
+1. (optional) ESS ratio bars for treated/control weights.
+
+</details>
 
 **Parameters:**
 
-- **y** (<code>[ndarray](#numpy.ndarray)</code>) – Data arrays
-- **d** (<code>[ndarray](#numpy.ndarray)</code>) – Data arrays
-- **g0** (<code>[ndarray](#numpy.ndarray)</code>) – Data arrays
-- **g1** (<code>[ndarray](#numpy.ndarray)</code>) – Data arrays
-- **m** (<code>[ndarray](#numpy.ndarray)</code>) – Data arrays
-- **theta_hat** (<code>[float](#float)</code>) – Estimated treatment effect
-- **k** (<code>[int](#int)</code>) – Number of top influential observations to return
+- **estimate** (<code>[CausalEstimate](#causalis.data_contracts.causal_estimate.CausalEstimate)</code>) – Estimate with diagnostic data (`m_hat`, `g0_hat`; optionally `y`, `d`, `g1_hat`, `psi`).
+- **data** (<code>[CausalData](#causalis.dgp.causaldata.CausalData)</code>) – Optional fallback source for `y` and `d` if not stored in diagnostic data.
+- **trimming_threshold** (<code>[float](#float)</code>) – Propensity clipping threshold. If omitted, uses diagnostic/model defaults.
+- **use_estimator_psi** (<code>[bool](#bool)</code>) – Use estimator-provided `diagnostic_data.psi` when available; otherwise reconstruct score.
+- **include_ipw** (<code>[bool](#bool)</code>) – Add IPW-term histogram and ESS ratio bar panels.
+- **bins** (<code>[Any](#typing.Any)</code>) – Histogram bins for non-log histograms.
+- **log_hist** (<code>[bool](#bool)</code>) – Use log-scaled x-axis bins for `|psi_i|` histogram when possible.
+- **scatter_log_y** (<code>[bool](#bool)</code>) – Plot `|psi_i|` on log scale in the scatter panel.
+- **top_k** (<code>[int](#int)</code>) – Highlight top-k largest `|psi_i|` in the scatter panel.
+- **figsize** (<code>[tuple](#tuple)</code>) – Figure size. Defaults to `(12, 8)` with IPW panels, `(11, 4.6)` otherwise.
+- **dpi** (<code>[int](#int)</code>) – Dots per inch.
+- **font_scale** (<code>[float](#float)</code>) – Font scaling factor.
+- **save** (<code>[str](#str)</code>) – Path to save the figure.
+- **save_dpi** (<code>[int](#int)</code>) – DPI for saving.
+- **transparent** (<code>[bool](#bool)</code>) – Whether to save with transparency.
 
 **Returns:**
 
-- <code>[Dict](#typing.Dict)\[[str](#str), [Any](#typing.Any)\]</code> – Influence diagnostics including SE, heavy-tail metrics, and top-k cases
+- <code>[Figure](#matplotlib.figure.Figure)</code> – The generated figure.
 
-####### `refute_irm_orthogonality`
+####### `plot_influence_instability`
 
 ```python
-refute_irm_orthogonality(inference_fn: Callable[..., Dict[str, Any]], data: CausalData, trim_propensity: Tuple[float, float] = (0.02, 0.98), n_basis_funcs: Optional[int] = None, n_folds_oos: int = 4, score: Optional[str] = None, trimming_threshold: float = 0.01, strict_oos: bool = True, **inference_kwargs: bool) -> Dict[str, Any]
+plot_influence_instability(estimate: CausalEstimate, data: Optional[CausalData] = None, *, trimming_threshold: Optional[float] = None, use_estimator_psi: bool = True, include_ipw: bool = True, bins: Any = 'fd', log_hist: bool = False, scatter_log_y: bool = True, top_k: int = 10, figsize: Optional[Tuple[float, float]] = None, dpi: int = 220, font_scale: float = 1.1, save: Optional[str] = None, save_dpi: Optional[int] = None, transparent: bool = False) -> plt.Figure
 ```
 
-Comprehensive AIPW orthogonality diagnostics for IRM models.
+Plot instability diagnostics for per-unit score (EIF moment).
 
-Implements three key diagnostic approaches based on the efficient influence function (EIF):
+<details class="panels" open markdown="1">
+<summary>Panels</summary>
 
-1. Out-of-sample moment check (non-tautological)
-1. Orthogonality (Gateaux derivative) tests
-1. Influence diagnostics
+1. Histogram of `|psi_i|` (optional log-x scale).
+1. Scatter of `|psi_i|` versus clipped propensity `m_i`.
+1. (optional) Histogram of IPW terms.
+1. (optional) ESS ratio bars for treated/control weights.
+
+</details>
 
 **Parameters:**
 
-- **inference_fn** (<code>[Callable](#typing.Callable)</code>) – The inference function (dml_ate or dml_att)
-- **data** (<code>[CausalData](#causalis.dgp.causaldata.CausalData)</code>) – The causal data_contracts object
-- **trim_propensity** (<code>[Tuple](#typing.Tuple)\[[float](#float), [float](#float)\]</code>) – Propensity score trimming bounds (min, max) to avoid extreme weights
-- **n_basis_funcs** (<code>[Optional](#typing.Optional)\[[int](#int)\]</code>) – Number of basis functions for orthogonality derivative tests (constant + covariates).
-  If None, defaults to the number of confounders in `data_contracts` plus 1 for the constant term.
-- **n_folds_oos** (<code>[int](#int)</code>) – Number of folds for out-of-sample moment check
-- \*\***inference_kwargs** (<code>[dict](#dict)</code>) – Additional arguments passed to inference_fn
+- **estimate** (<code>[CausalEstimate](#causalis.data_contracts.causal_estimate.CausalEstimate)</code>) – Estimate with diagnostic data (`m_hat`, `g0_hat`; optionally `y`, `d`, `g1_hat`, `psi`).
+- **data** (<code>[CausalData](#causalis.dgp.causaldata.CausalData)</code>) – Optional fallback source for `y` and `d` if not stored in diagnostic data.
+- **trimming_threshold** (<code>[float](#float)</code>) – Propensity clipping threshold. If omitted, uses diagnostic/model defaults.
+- **use_estimator_psi** (<code>[bool](#bool)</code>) – Use estimator-provided `diagnostic_data.psi` when available; otherwise reconstruct score.
+- **include_ipw** (<code>[bool](#bool)</code>) – Add IPW-term histogram and ESS ratio bar panels.
+- **bins** (<code>[Any](#typing.Any)</code>) – Histogram bins for non-log histograms.
+- **log_hist** (<code>[bool](#bool)</code>) – Use log-scaled x-axis bins for `|psi_i|` histogram when possible.
+- **scatter_log_y** (<code>[bool](#bool)</code>) – Plot `|psi_i|` on log scale in the scatter panel.
+- **top_k** (<code>[int](#int)</code>) – Highlight top-k largest `|psi_i|` in the scatter panel.
+- **figsize** (<code>[tuple](#tuple)</code>) – Figure size. Defaults to `(12, 8)` with IPW panels, `(11, 4.6)` otherwise.
+- **dpi** (<code>[int](#int)</code>) – Dots per inch.
+- **font_scale** (<code>[float](#float)</code>) – Font scaling factor.
+- **save** (<code>[str](#str)</code>) – Path to save the figure.
+- **save_dpi** (<code>[int](#int)</code>) – DPI for saving.
+- **transparent** (<code>[bool](#bool)</code>) – Whether to save with transparency.
 
 **Returns:**
 
-- <code>[Dict](#typing.Dict)\[[str](#str), [Any](#typing.Any)\]</code> – Dictionary containing:
-- oos_moment_test: Out-of-sample moment condition results
-- orthogonality_derivatives: Gateaux derivative test results
-- influence_diagnostics: Influence function diagnostics
-- theta: Original treatment effect estimate
-- trimmed_diagnostics: Results on trimmed sample
-- overall_assessment: Summary diagnostic assessment
+- <code>[Figure](#matplotlib.figure.Figure)</code> – The generated figure.
 
-**Examples:**
-
-```pycon
->>> from causalis.refutation.orthogonality import refute_irm_orthogonality
->>> from causalis.scenarios.unconfoundedness.irm import IRM
->>> 
->>> # Define a wrapper for refutation utilities that expect an inference function
->>> def irm_ate_inference(data, **kwargs):
->>>     return IRM(data, **kwargs).fit().estimate().model_dump()
->>> 
->>> # Comprehensive orthogonality check
->>> ortho_results = refute_irm_orthogonality(irm_ate_inference, causal_data)
->>> 
->>> # Check key diagnostics
->>> print(f"OOS moment t-stat: {ortho_results['oos_moment_test']['tstat']:.3f}")
->>> print(f"Assessment: {ortho_results['overall_assessment']}")
-```
-
-####### `refute_placebo_outcome`
+####### `plot_residual_diagnostics`
 
 ```python
-refute_placebo_outcome(inference_fn: Callable[..., Dict[str, Any]], data: CausalData, random_state: int | None = None, **inference_kwargs: int | None) -> Dict[str, float]
+plot_residual_diagnostics(estimate: CausalEstimate, data: Optional[CausalData] = None, *, clip_propensity: float = 1e-06, n_bins: int = 20, marker_size: float = 12.0, alpha: float = 0.35, figsize: Tuple[float, float] = (14.0, 4.8), dpi: int = 220, font_scale: float = 1.1, save: Optional[str] = None, save_dpi: Optional[int] = None, transparent: bool = False) -> plt.Figure
 ```
 
-Generate random outcome variables while keeping treatment
-and covariates intact. For binary outcomes, generates random binary
-variables with the same proportion. For continuous outcomes, generates
-random variables from a normal distribution fitted to the original data_contracts.
-A valid causal design should now yield θ ≈ 0 and a large p-value.
+Plot residual diagnostics for nuisance models.
 
-####### `refute_placebo_treatment`
+<details class="panels" open markdown="1">
+<summary>Panels</summary>
+
+1. Treated-only: `u1 = y - g1` vs `g1`.
+1. Control-only: `u0 = y - g0` vs `g0`.
+1. Binned calibration error: `E[d - m | m in bin]` vs binned `m`.
+
+</details>
+
+**Parameters:**
+
+- **estimate** (<code>[CausalEstimate](#causalis.data_contracts.causal_estimate.CausalEstimate)</code>) – Estimate with diagnostic data (`m_hat`, `g0_hat`; optionally `g1_hat`, `y`, `d`).
+- **data** (<code>[CausalData](#causalis.dgp.causaldata.CausalData)</code>) – Optional fallback source for `y` and `d` when missing in diagnostic data.
+- **clip_propensity** (<code>[float](#float)</code>) – Clipping epsilon for propensity values in the treatment-residual panel.
+- **n_bins** (<code>[int](#int)</code>) – Number of quantile bins for the binned-mean trend overlays.
+- **marker_size** (<code>[float](#float)</code>) – Scatter marker size.
+- **alpha** (<code>[float](#float)</code>) – Scatter opacity.
+- **figsize** (<code>[tuple](#tuple)</code>) – Figure size.
+- **dpi** (<code>[int](#int)</code>) – Dots per inch.
+- **font_scale** (<code>[float](#float)</code>) – Font scaling factor.
+- **save** (<code>[str](#str)</code>) – Path to save the figure.
+- **save_dpi** (<code>[int](#int)</code>) – DPI for saving.
+- **transparent** (<code>[bool](#bool)</code>) – Whether to save with transparency.
+
+**Returns:**
+
+- <code>[Figure](#matplotlib.figure.Figure)</code> – The generated figure.
+
+####### `residual_plots`
+
+Residual diagnostic plots for nuisance models g0/g1 and m.
+
+**Functions:**
+
+- [**plot_residual_diagnostics**](#causalis.scenarios.unconfoundedness.refutation.score.residual_plots.plot_residual_diagnostics) – Plot residual diagnostics for nuisance models.
+
+######## `plot_residual_diagnostics`
 
 ```python
-refute_placebo_treatment(inference_fn: Callable[..., Dict[str, Any]], data: CausalData, random_state: int | None = None, **inference_kwargs: int | None) -> Dict[str, float]
+plot_residual_diagnostics(estimate: CausalEstimate, data: Optional[CausalData] = None, *, clip_propensity: float = 1e-06, n_bins: int = 20, marker_size: float = 12.0, alpha: float = 0.35, figsize: Tuple[float, float] = (14.0, 4.8), dpi: int = 220, font_scale: float = 1.1, save: Optional[str] = None, save_dpi: Optional[int] = None, transparent: bool = False) -> plt.Figure
 ```
 
-Generate random binary treatment variables while keeping outcome and
-covariates intact. Generates random binary treatment with the same
-proportion as the original treatment. Breaks the treatment–outcome link.
+Plot residual diagnostics for nuisance models.
 
-####### `refute_subset`
+<details class="panels" open markdown="1">
+<summary>Panels</summary>
 
-```python
-refute_subset(inference_fn: Callable[..., Dict[str, Any]], data: CausalData, fraction: float = 0.8, random_state: int | None = None, **inference_kwargs: int | None) -> Dict[str, float]
-```
+1. Treated-only: `u1 = y - g1` vs `g1`.
+1. Control-only: `u0 = y - g0` vs `g0`.
+1. Binned calibration error: `E[d - m | m in bin]` vs binned `m`.
 
-Re-estimate the effect on a random subset (default 80 %)
-to check sample-stability of the estimate.
+</details>
+
+**Parameters:**
+
+- **estimate** (<code>[CausalEstimate](#causalis.data_contracts.causal_estimate.CausalEstimate)</code>) – Estimate with diagnostic data (`m_hat`, `g0_hat`; optionally `g1_hat`, `y`, `d`).
+- **data** (<code>[CausalData](#causalis.dgp.causaldata.CausalData)</code>) – Optional fallback source for `y` and `d` when missing in diagnostic data.
+- **clip_propensity** (<code>[float](#float)</code>) – Clipping epsilon for propensity values in the treatment-residual panel.
+- **n_bins** (<code>[int](#int)</code>) – Number of quantile bins for the binned-mean trend overlays.
+- **marker_size** (<code>[float](#float)</code>) – Scatter marker size.
+- **alpha** (<code>[float](#float)</code>) – Scatter opacity.
+- **figsize** (<code>[tuple](#tuple)</code>) – Figure size.
+- **dpi** (<code>[int](#int)</code>) – Dots per inch.
+- **font_scale** (<code>[float](#float)</code>) – Font scaling factor.
+- **save** (<code>[str](#str)</code>) – Path to save the figure.
+- **save_dpi** (<code>[int](#int)</code>) – DPI for saving.
+- **transparent** (<code>[bool](#bool)</code>) – Whether to save with transparency.
+
+**Returns:**
+
+- <code>[Figure](#matplotlib.figure.Figure)</code> – The generated figure.
 
 ####### `run_score_diagnostics`
 
 ```python
-run_score_diagnostics(res: ResultLike = None, *, y: Optional[np.ndarray] = None, d: Optional[np.ndarray] = None, g0: Optional[np.ndarray] = None, g1: Optional[np.ndarray] = None, m: Optional[np.ndarray] = None, theta: Optional[float] = None, score: Optional[str] = None, trimming_threshold: float = 0.01, n_basis_funcs: Optional[int] = None, return_summary: bool = True) -> Dict[str, Any]
+run_score_diagnostics(data: CausalData, estimate: CausalEstimate, *, trimming_threshold: Optional[float] = None, n_basis_funcs: Optional[int] = None, return_summary: bool = True) -> Dict[str, Any]
 ```
 
-Single entry-point for score diagnostics (orthogonality) akin to run_overlap_diagnostics.
-
-You can call it in TWO ways:
-A) With raw arrays:
-run_score_diagnostics(y=..., d=..., g0=..., g1=..., m=..., theta=...)
-B) With a model/result:
-run_score_diagnostics(res=<IRM result or IRM-like model>)
-
-Returns a dictionary with:
-
-- params (score, trimming_threshold)
-- oos_moment_test (if fast-path caches available on model; else omitted)
-- orthogonality_derivatives (DataFrame)
-- influence_diagnostics (full_sample)
-- summary (compact DataFrame) if return_summary=True
-- meta
+Run score diagnostics from `CausalData` and `CausalEstimate`.
 
 ####### `score_validation`
 
-AIPW orthogonality diagnostics for IRM-based models.
-
-This module implements comprehensive orthogonality diagnostics for AIPW/IRM-based
-models like dml_ate and dml_att to validate the key assumptions required
-for valid causal inference. Based on the efficient influence function (EIF) framework.
-
-Key diagnostics implemented:
-
-- Out-of-sample moment check (non-tautological)
-- Orthogonality (Gateaux derivative) tests
-- Influence diagnostics
+Score diagnostics focused on orthogonality and EIF stability.
 
 **Functions:**
 
-- [**add_score_flags**](#causalis.scenarios.unconfoundedness.refutation.score.score_validation.add_score_flags) – Augment run_score_diagnostics(...) dict with:
-- [**aipw_score_ate**](#causalis.scenarios.unconfoundedness.refutation.score.score_validation.aipw_score_ate) – Efficient influence function (EIF) for ATE.
-- [**aipw_score_atte**](#causalis.scenarios.unconfoundedness.refutation.score.score_validation.aipw_score_atte) – Efficient influence function (EIF) for ATTE under IRM/AIPW.
-- [**extract_nuisances**](#causalis.scenarios.unconfoundedness.refutation.score.score_validation.extract_nuisances) – Extract cross-fitted nuisance predictions from an IRM-like model or a compatible dummy.
-- [**influence_summary**](#causalis.scenarios.unconfoundedness.refutation.score.score_validation.influence_summary) – Compute influence diagnostics showing where uncertainty comes from.
-- [**oos_moment_check**](#causalis.scenarios.unconfoundedness.refutation.score.score_validation.oos_moment_check) – Out-of-sample moment check to avoid tautological results (legacy/simple version).
-- [**oos_moment_check_from_psi**](#causalis.scenarios.unconfoundedness.refutation.score.score_validation.oos_moment_check_from_psi) – OOS moment check using cached ψ_a, ψ_b only.
-- [**oos_moment_check_with_fold_nuisances**](#causalis.scenarios.unconfoundedness.refutation.score.score_validation.oos_moment_check_with_fold_nuisances) – Out-of-sample moment check using fold-specific nuisances to avoid tautological results.
-- [**orthogonality_derivatives**](#causalis.scenarios.unconfoundedness.refutation.score.score_validation.orthogonality_derivatives) – Compute orthogonality (Gateaux derivative) tests for nuisance functions (ATE case).
-- [**orthogonality_derivatives_atte**](#causalis.scenarios.unconfoundedness.refutation.score.score_validation.orthogonality_derivatives_atte) – Gateaux derivatives of the ATTE score wrt nuisances (g0, m). g1-derivative is 0.
-- [**overlap_diagnostics_atte**](#causalis.scenarios.unconfoundedness.refutation.score.score_validation.overlap_diagnostics_atte) – Key overlap metrics for ATTE: availability of suitable controls.
-- [**refute_irm_orthogonality**](#causalis.scenarios.unconfoundedness.refutation.score.score_validation.refute_irm_orthogonality) – Comprehensive AIPW orthogonality diagnostics for IRM models.
-- [**refute_placebo_outcome**](#causalis.scenarios.unconfoundedness.refutation.score.score_validation.refute_placebo_outcome) – Generate random outcome variables while keeping treatment
-- [**refute_placebo_treatment**](#causalis.scenarios.unconfoundedness.refutation.score.score_validation.refute_placebo_treatment) – Generate random binary treatment variables while keeping outcome and
-- [**refute_subset**](#causalis.scenarios.unconfoundedness.refutation.score.score_validation.refute_subset) – Re-estimate the effect on a random subset (default 80 %)
-- [**run_score_diagnostics**](#causalis.scenarios.unconfoundedness.refutation.score.score_validation.run_score_diagnostics) – Single entry-point for score diagnostics (orthogonality) akin to run_overlap_diagnostics.
-- [**trim_sensitivity_curve_ate**](#causalis.scenarios.unconfoundedness.refutation.score.score_validation.trim_sensitivity_curve_ate) – Sensitivity of ATE estimate to propensity clipping epsilon (no re-fit).
-- [**trim_sensitivity_curve_atte**](#causalis.scenarios.unconfoundedness.refutation.score.score_validation.trim_sensitivity_curve_atte) – Re-estimate θ while progressively trimming CONTROLS with large m(X).
-
-######## `ResultLike`
-
-```python
-ResultLike = Dict[str, Any] | Any
-```
-
-######## `add_score_flags`
-
-```python
-add_score_flags(rep_score: dict, thresholds: dict | None = None, *, effect_size_guard: float = 0.02, oos_gate: bool = True, se_rule: str | None = None, se_ref: float | None = None) -> dict
-```
-
-Augment run_score_diagnostics(...) dict with:
-
-- rep['flags'] (per-metric flags)
-- rep['thresholds'] (the cutoffs used)
-- rep['summary'] with a new 'flag' column
-- rep['overall_flag'] (rollup)
-
-Additional logic:
-
-- Practical effect-size guard: if the constant-basis derivative magnitude is tiny
-  (\<= effect_size_guard), then downgrade an orthogonality RED to GREEN (if OOS is GREEN)
-  or to YELLOW (otherwise). Controlled by `oos_gate`.
-- Huge-n relaxation: for very large n (>= 200k), relax tail/kurtosis flags slightly
-  under specified value gates.
-
-######## `aipw_score_ate`
-
-```python
-aipw_score_ate(y: np.ndarray, d: np.ndarray, g0: np.ndarray, g1: np.ndarray, m: np.ndarray, theta: float, trimming_threshold: float = 0.01) -> np.ndarray
-```
-
-Efficient influence function (EIF) for ATE.
-Uses IRM naming: g0,g1 are outcome regressions E[Y|X,D=0/1], m is propensity P(D=1|X).
-
-######## `aipw_score_atte`
-
-```python
-aipw_score_atte(y: np.ndarray, d: np.ndarray, g0: np.ndarray, g1: np.ndarray, m: np.ndarray, theta: float, p_treated: Optional[float] = None, trimming_threshold: float = 0.01) -> np.ndarray
-```
-
-Efficient influence function (EIF) for ATTE under IRM/AIPW.
-
-ψ_ATTE(W; θ, η) = \[ D\*(Y - g0(X) - θ) - (1-D)*{ m(X)/(1-m(X)) }*(Y - g0(X)) \] / E[D]
-
-Notes:
-
-- Matches the ATTE score with weights ω=D/E[D], ar{ω}=m(X)/E[D].
-- g1 enters only via θ; ∂ψ/∂g1 = 0.
-
-######## `extract_nuisances`
-
-```python
-extract_nuisances(model, test_indices: Optional[np.ndarray] = None) -> Tuple[np.ndarray, np.ndarray, np.ndarray]
-```
-
-Extract cross-fitted nuisance predictions from an IRM-like model or a compatible dummy.
-
-Tries several backends for robustness:
-
-1. IRM attributes: m_hat\_, g0_hat\_, g1_hat\_
-1. model.predictions dict with keys: 'ml_m','ml_g0','ml_g1'
-1. Direct attributes: ml_m, ml_g0, ml_g1
-
-**Parameters:**
-
-- **model** (<code>[object](#object)</code>) – Fitted internal IRM estimator (causalis.shared.models.IRM) or a compatible dummy model
-- **test_indices** (<code>[ndarray](#numpy.ndarray)</code>) – If provided, extract predictions only for these indices
-
-**Returns:**
-
-- <code>[Tuple](#typing.Tuple)\[[ndarray](#numpy.ndarray), [ndarray](#numpy.ndarray), [ndarray](#numpy.ndarray)\]</code> – (m, g0, g1) where:
-- m: propensity scores P(D=1|X)
-- g0: outcome predictions E[Y|X,D=0]
-- g1: outcome predictions E[Y|X,D=1]
-
-######## `influence_summary`
-
-```python
-influence_summary(y: np.ndarray, d: np.ndarray, g0: np.ndarray, g1: np.ndarray, m: np.ndarray, theta_hat: float, k: int = 10, score: str = 'ATE', trimming_threshold: float = 0.01) -> Dict[str, Any]
-```
-
-Compute influence diagnostics showing where uncertainty comes from.
-
-**Parameters:**
-
-- **y** (<code>[ndarray](#numpy.ndarray)</code>) – Data arrays
-- **d** (<code>[ndarray](#numpy.ndarray)</code>) – Data arrays
-- **g0** (<code>[ndarray](#numpy.ndarray)</code>) – Data arrays
-- **g1** (<code>[ndarray](#numpy.ndarray)</code>) – Data arrays
-- **m** (<code>[ndarray](#numpy.ndarray)</code>) – Data arrays
-- **theta_hat** (<code>[float](#float)</code>) – Estimated treatment effect
-- **k** (<code>[int](#int)</code>) – Number of top influential observations to return
-
-**Returns:**
-
-- <code>[Dict](#typing.Dict)\[[str](#str), [Any](#typing.Any)\]</code> – Influence diagnostics including SE, heavy-tail metrics, and top-k cases
-
-######## `oos_moment_check`
-
-```python
-oos_moment_check(fold_thetas: List[float], fold_indices: List[np.ndarray], y: np.ndarray, d: np.ndarray, g0: np.ndarray, g1: np.ndarray, m: np.ndarray, score_fn: Optional[Callable[[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray, float], np.ndarray]] = None) -> Tuple[pd.DataFrame, float]
-```
-
-Out-of-sample moment check to avoid tautological results (legacy/simple version).
-
-For each fold k, evaluates the AIPW score using θ fitted on other folds,
-then tests if the combined moment condition holds.
-
-**Parameters:**
-
-- **fold_thetas** (<code>[List](#typing.List)\[[float](#float)\]</code>) – Treatment effects estimated excluding each fold
-- **fold_indices** (<code>[List](#typing.List)\[[ndarray](#numpy.ndarray)\]</code>) – Indices for each fold
-- **y** (<code>[ndarray](#numpy.ndarray)</code>) – Data arrays (outcomes, treatment, predictions)
-- **d** (<code>[ndarray](#numpy.ndarray)</code>) – Data arrays (outcomes, treatment, predictions)
-- **g0** (<code>[ndarray](#numpy.ndarray)</code>) – Data arrays (outcomes, treatment, predictions)
-- **g1** (<code>[ndarray](#numpy.ndarray)</code>) – Data arrays (outcomes, treatment, predictions)
-- **m** (<code>[ndarray](#numpy.ndarray)</code>) – Data arrays (outcomes, treatment, predictions)
-
-**Returns:**
-
-- <code>[Tuple](#typing.Tuple)\[[DataFrame](#pandas.DataFrame), [float](#float)\]</code> – Fold-wise results and combined t-statistic
-
-######## `oos_moment_check_from_psi`
-
-```python
-oos_moment_check_from_psi(psi_a: np.ndarray, psi_b: np.ndarray, fold_indices: List[np.ndarray], *, strict: bool = False) -> Tuple[pd.DataFrame, float, Optional[float]]
-```
-
-OOS moment check using cached ψ_a, ψ_b only.
-Returns (fold-wise DF, t_fold_agg, t_strict if requested).
-
-######## `oos_moment_check_with_fold_nuisances`
-
-```python
-oos_moment_check_with_fold_nuisances(fold_thetas: List[float], fold_indices: List[np.ndarray], fold_nuisances: List[Tuple[np.ndarray, np.ndarray, np.ndarray]], y: np.ndarray, d: np.ndarray, score_fn: Optional[Callable[[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray, float], np.ndarray]] = None) -> Tuple[pd.DataFrame, float]
-```
-
-Out-of-sample moment check using fold-specific nuisances to avoid tautological results.
-
-For each fold k, evaluates the AIPW score using θ fitted on other folds and
-nuisance predictions from the fold-specific model, then tests if the combined
-moment condition holds.
-
-**Parameters:**
-
-- **fold_thetas** (<code>[List](#typing.List)\[[float](#float)\]</code>) – Treatment effects estimated excluding each fold
-- **fold_indices** (<code>[List](#typing.List)\[[ndarray](#numpy.ndarray)\]</code>) – Indices for each fold
-- **fold_nuisances** (<code>[List](#typing.List)\[[Tuple](#typing.Tuple)\[[ndarray](#numpy.ndarray), [ndarray](#numpy.ndarray), [ndarray](#numpy.ndarray)\]\]</code>) – Fold-specific nuisance predictions (m, g0, g1) for each fold
-- **y** (<code>[ndarray](#numpy.ndarray)</code>) – Observed outcomes and treatments
-- **d** (<code>[ndarray](#numpy.ndarray)</code>) – Observed outcomes and treatments
-
-**Returns:**
-
-- <code>[Tuple](#typing.Tuple)\[[DataFrame](#pandas.DataFrame), [float](#float)\]</code> – Fold-wise results and combined t-statistic
-
-######## `orthogonality_derivatives`
-
-```python
-orthogonality_derivatives(X_basis: np.ndarray, y: np.ndarray, d: np.ndarray, g0: np.ndarray, g1: np.ndarray, m: np.ndarray, trimming_threshold: float = 0.01) -> pd.DataFrame
-```
-
-Compute orthogonality (Gateaux derivative) tests for nuisance functions (ATE case).
-Uses IRM naming: g0,g1 outcomes; m propensity.
-
-######## `orthogonality_derivatives_atte`
-
-```python
-orthogonality_derivatives_atte(X_basis: np.ndarray, y: np.ndarray, d: np.ndarray, g0: np.ndarray, m: np.ndarray, p_treated: float, trimming_threshold: float = 0.01) -> pd.DataFrame
-```
-
-Gateaux derivatives of the ATTE score wrt nuisances (g0, m). g1-derivative is 0.
-
-For ψ_ATTE = \[ D\*(Y - g0 - θ) - (1-D)*(m/(1-m))*(Y - g0) \] / p_treated:
-
-∂\_{g0}[h] : (1/n) Σ h(X_i) * \[ ((1-D_i)*m_i/(1-m_i) - D_i) / p_treated \]
-∂\_{m}[s] : (1/n) Σ s(X_i) * \[ -(1-D_i)*(Y_i - g0_i) / ( p_treated * (1-m_i)^2 ) \]
-
-Both have 0 expectation at the truth (Neyman orthogonality).
-
-######## `overlap_diagnostics_atte`
-
-```python
-overlap_diagnostics_atte(m: np.ndarray, d: np.ndarray, eps_list: List[float] = [0.95, 0.97, 0.98, 0.99]) -> pd.DataFrame
-```
-
-Key overlap metrics for ATTE: availability of suitable controls.
-Reports conditional shares: among CONTROLS, fraction with m(X) ≥ threshold; among TREATED, fraction with m(X) ≤ 1 - threshold.
-
-######## `refute_irm_orthogonality`
-
-```python
-refute_irm_orthogonality(inference_fn: Callable[..., Dict[str, Any]], data: CausalData, trim_propensity: Tuple[float, float] = (0.02, 0.98), n_basis_funcs: Optional[int] = None, n_folds_oos: int = 4, score: Optional[str] = None, trimming_threshold: float = 0.01, strict_oos: bool = True, **inference_kwargs: bool) -> Dict[str, Any]
-```
-
-Comprehensive AIPW orthogonality diagnostics for IRM models.
-
-Implements three key diagnostic approaches based on the efficient influence function (EIF):
-
-1. Out-of-sample moment check (non-tautological)
-1. Orthogonality (Gateaux derivative) tests
-1. Influence diagnostics
-
-**Parameters:**
-
-- **inference_fn** (<code>[Callable](#typing.Callable)</code>) – The inference function (dml_ate or dml_att)
-- **data** (<code>[CausalData](#causalis.dgp.causaldata.CausalData)</code>) – The causal data_contracts object
-- **trim_propensity** (<code>[Tuple](#typing.Tuple)\[[float](#float), [float](#float)\]</code>) – Propensity score trimming bounds (min, max) to avoid extreme weights
-- **n_basis_funcs** (<code>[Optional](#typing.Optional)\[[int](#int)\]</code>) – Number of basis functions for orthogonality derivative tests (constant + covariates).
-  If None, defaults to the number of confounders in `data_contracts` plus 1 for the constant term.
-- **n_folds_oos** (<code>[int](#int)</code>) – Number of folds for out-of-sample moment check
-- \*\***inference_kwargs** (<code>[dict](#dict)</code>) – Additional arguments passed to inference_fn
-
-**Returns:**
-
-- <code>[Dict](#typing.Dict)\[[str](#str), [Any](#typing.Any)\]</code> – Dictionary containing:
-- oos_moment_test: Out-of-sample moment condition results
-- orthogonality_derivatives: Gateaux derivative test results
-- influence_diagnostics: Influence function diagnostics
-- theta: Original treatment effect estimate
-- trimmed_diagnostics: Results on trimmed sample
-- overall_assessment: Summary diagnostic assessment
-
-**Examples:**
-
-```pycon
->>> from causalis.refutation.orthogonality import refute_irm_orthogonality
->>> from causalis.scenarios.unconfoundedness.irm import IRM
->>> 
->>> # Define a wrapper for refutation utilities that expect an inference function
->>> def irm_ate_inference(data, **kwargs):
->>>     return IRM(data, **kwargs).fit().estimate().model_dump()
->>> 
->>> # Comprehensive orthogonality check
->>> ortho_results = refute_irm_orthogonality(irm_ate_inference, causal_data)
->>> 
->>> # Check key diagnostics
->>> print(f"OOS moment t-stat: {ortho_results['oos_moment_test']['tstat']:.3f}")
->>> print(f"Assessment: {ortho_results['overall_assessment']}")
-```
-
-######## `refute_placebo_outcome`
-
-```python
-refute_placebo_outcome(inference_fn: Callable[..., Dict[str, Any]], data: CausalData, random_state: int | None = None, **inference_kwargs: int | None) -> Dict[str, float]
-```
-
-Generate random outcome variables while keeping treatment
-and covariates intact. For binary outcomes, generates random binary
-variables with the same proportion. For continuous outcomes, generates
-random variables from a normal distribution fitted to the original data_contracts.
-A valid causal design should now yield θ ≈ 0 and a large p-value.
-
-######## `refute_placebo_treatment`
-
-```python
-refute_placebo_treatment(inference_fn: Callable[..., Dict[str, Any]], data: CausalData, random_state: int | None = None, **inference_kwargs: int | None) -> Dict[str, float]
-```
-
-Generate random binary treatment variables while keeping outcome and
-covariates intact. Generates random binary treatment with the same
-proportion as the original treatment. Breaks the treatment–outcome link.
-
-######## `refute_subset`
-
-```python
-refute_subset(inference_fn: Callable[..., Dict[str, Any]], data: CausalData, fraction: float = 0.8, random_state: int | None = None, **inference_kwargs: int | None) -> Dict[str, float]
-```
-
-Re-estimate the effect on a random subset (default 80 %)
-to check sample-stability of the estimate.
+- [**run_score_diagnostics**](#causalis.scenarios.unconfoundedness.refutation.score.score_validation.run_score_diagnostics) – Run score diagnostics from `CausalData` and `CausalEstimate`.
 
 ######## `run_score_diagnostics`
 
 ```python
-run_score_diagnostics(res: ResultLike = None, *, y: Optional[np.ndarray] = None, d: Optional[np.ndarray] = None, g0: Optional[np.ndarray] = None, g1: Optional[np.ndarray] = None, m: Optional[np.ndarray] = None, theta: Optional[float] = None, score: Optional[str] = None, trimming_threshold: float = 0.01, n_basis_funcs: Optional[int] = None, return_summary: bool = True) -> Dict[str, Any]
+run_score_diagnostics(data: CausalData, estimate: CausalEstimate, *, trimming_threshold: Optional[float] = None, n_basis_funcs: Optional[int] = None, return_summary: bool = True) -> Dict[str, Any]
 ```
 
-Single entry-point for score diagnostics (orthogonality) akin to run_overlap_diagnostics.
-
-You can call it in TWO ways:
-A) With raw arrays:
-run_score_diagnostics(y=..., d=..., g0=..., g1=..., m=..., theta=...)
-B) With a model/result:
-run_score_diagnostics(res=<IRM result or IRM-like model>)
-
-Returns a dictionary with:
-
-- params (score, trimming_threshold)
-- oos_moment_test (if fast-path caches available on model; else omitted)
-- orthogonality_derivatives (DataFrame)
-- influence_diagnostics (full_sample)
-- summary (compact DataFrame) if return_summary=True
-- meta
-
-######## `trim_sensitivity_curve_ate`
-
-```python
-trim_sensitivity_curve_ate(m_hat: np.ndarray, D: np.ndarray, Y: np.ndarray, g0_hat: np.ndarray, g1_hat: np.ndarray, eps_grid: tuple[float, ...] = (0.0, 0.005, 0.01, 0.02, 0.05)) -> pd.DataFrame
-```
-
-Sensitivity of ATE estimate to propensity clipping epsilon (no re-fit).
-
-For each epsilon in eps_grid, compute the AIPW/IRM ATE estimate using
-m_clipped = clip(m_hat, eps, 1-eps) over the full sample and report
-the plug-in standard error from the EIF.
-
-**Parameters:**
-
-- **m_hat** (<code>[ndarray](#numpy.ndarray)</code>) – Cross-fitted nuisances and observed arrays.
-- **D** (<code>[ndarray](#numpy.ndarray)</code>) – Cross-fitted nuisances and observed arrays.
-- **Y** (<code>[ndarray](#numpy.ndarray)</code>) – Cross-fitted nuisances and observed arrays.
-- **g0_hat** (<code>[ndarray](#numpy.ndarray)</code>) – Cross-fitted nuisances and observed arrays.
-- **g1_hat** (<code>[ndarray](#numpy.ndarray)</code>) – Cross-fitted nuisances and observed arrays.
-- **eps_grid** (<code>[tuple](#tuple)\[[float](#float), ...\]</code>) – Sequence of clipping thresholds ε to evaluate.
-
-**Returns:**
-
-- <code>[DataFrame](#pandas.DataFrame)</code> – Columns: ['trim_eps','n','pct_clipped','theta','se'].
-  pct_clipped is the percent of observations with m outside [ε,1-ε].
-
-######## `trim_sensitivity_curve_atte`
-
-```python
-trim_sensitivity_curve_atte(inference_fn: Callable[..., Dict[str, Any]], data: CausalData, m: np.ndarray, d: np.ndarray, thresholds: np.ndarray = np.linspace(0.9, 0.995, 12), **inference_kwargs: np.ndarray) -> pd.DataFrame
-```
-
-Re-estimate θ while progressively trimming CONTROLS with large m(X).
+Run score diagnostics from `CausalData` and `CausalEstimate`.
 
 ###### `sensitivity_analysis`
 
@@ -11675,7 +10566,8 @@ Returns a DataFrame containing r2_y, r2_d, rho and the change in estimates.
 
 - **effect_estimation** (<code>[dict](#dict)</code>) – A dictionary containing the fitted IRM model under the key 'model'.
 - **benchmarking_set** (<code>[list](#list)\[[str](#str)\]</code>) – List of confounder names to be used for benchmarking (to be removed in the short model).
-- **fit_args** (<code>[dict](#dict)</code>) – Additional keyword arguments for the IRM.fit() method of the short model.
+- **fit_args** (<code>[dict](#dict)</code>) – Legacy name for additional keyword arguments passed to `IRM.estimate(...)`
+  on the short model. If `score` is omitted, the long-model score is reused.
 
 **Returns:**
 
@@ -11683,55 +10575,20 @@ Returns a DataFrame containing r2_y, r2_d, rho and the change in estimates.
 - r2_y, r2_d, rho: residual-based benchmarking strengths
 - theta_long, theta_short, delta: effect estimates and their change (long - short)
 
-###### `trim_sensitivity_curve_ate`
-
-```python
-trim_sensitivity_curve_ate(m_hat: np.ndarray, D: np.ndarray, Y: np.ndarray, g0_hat: np.ndarray, g1_hat: np.ndarray, eps_grid: tuple[float, ...] = (0.0, 0.005, 0.01, 0.02, 0.05)) -> pd.DataFrame
-```
-
-Sensitivity of ATE estimate to propensity clipping epsilon (no re-fit).
-
-For each epsilon in eps_grid, compute the AIPW/IRM ATE estimate using
-m_clipped = clip(m_hat, eps, 1-eps) over the full sample and report
-the plug-in standard error from the EIF.
-
-**Parameters:**
-
-- **m_hat** (<code>[ndarray](#numpy.ndarray)</code>) – Cross-fitted nuisances and observed arrays.
-- **D** (<code>[ndarray](#numpy.ndarray)</code>) – Cross-fitted nuisances and observed arrays.
-- **Y** (<code>[ndarray](#numpy.ndarray)</code>) – Cross-fitted nuisances and observed arrays.
-- **g0_hat** (<code>[ndarray](#numpy.ndarray)</code>) – Cross-fitted nuisances and observed arrays.
-- **g1_hat** (<code>[ndarray](#numpy.ndarray)</code>) – Cross-fitted nuisances and observed arrays.
-- **eps_grid** (<code>[tuple](#tuple)\[[float](#float), ...\]</code>) – Sequence of clipping thresholds ε to evaluate.
-
-**Returns:**
-
-- <code>[DataFrame](#pandas.DataFrame)</code> – Columns: ['trim_eps','n','pct_clipped','theta','se'].
-  pct_clipped is the percent of observations with m outside [ε,1-ε].
-
-###### `trim_sensitivity_curve_atte`
-
-```python
-trim_sensitivity_curve_atte(inference_fn: Callable[..., Dict[str, Any]], data: CausalData, m: np.ndarray, d: np.ndarray, thresholds: np.ndarray = np.linspace(0.9, 0.995, 12), **inference_kwargs: np.ndarray) -> pd.DataFrame
-```
-
-Re-estimate θ while progressively trimming CONTROLS with large m(X).
-
-###### `uncofoundedness`
+###### `unconfoundedness`
 
 **Modules:**
 
-- [**sensitivity**](#causalis.scenarios.unconfoundedness.refutation.uncofoundedness.sensitivity) – Sensitivity functions refactored into a dedicated module.
-- [**uncofoundedness_validation**](#causalis.scenarios.unconfoundedness.refutation.uncofoundedness.uncofoundedness_validation) – Uncofoundedness validation module
+- [**sensitivity**](#causalis.scenarios.unconfoundedness.refutation.unconfoundedness.sensitivity) – Sensitivity functions refactored into a dedicated module.
+- [**unconfoundedness_validation**](#causalis.scenarios.unconfoundedness.refutation.unconfoundedness.unconfoundedness_validation) – Unconfoundedness diagnostics focused on covariate balance (SMD).
 
 **Functions:**
 
-- [**compute_bias_aware_ci**](#causalis.scenarios.unconfoundedness.refutation.uncofoundedness.compute_bias_aware_ci) – Compute bias-aware confidence intervals.
-- [**get_sensitivity_summary**](#causalis.scenarios.unconfoundedness.refutation.uncofoundedness.get_sensitivity_summary) – Render a single, unified bias-aware summary string.
-- [**run_uncofoundedness_diagnostics**](#causalis.scenarios.unconfoundedness.refutation.uncofoundedness.run_uncofoundedness_diagnostics) – Uncofoundedness diagnostics focused on balance (SMD).
-- [**sensitivity_analysis**](#causalis.scenarios.unconfoundedness.refutation.uncofoundedness.sensitivity_analysis) – Compute bias-aware components and cache them.
-- [**sensitivity_benchmark**](#causalis.scenarios.unconfoundedness.refutation.uncofoundedness.sensitivity_benchmark) – Computes a benchmark for a given set of features by refitting a short IRM model
-- [**validate_uncofoundedness_balance**](#causalis.scenarios.unconfoundedness.refutation.uncofoundedness.validate_uncofoundedness_balance) – Assess covariate balance under the uncofoundedness assumption by computing
+- [**compute_bias_aware_ci**](#causalis.scenarios.unconfoundedness.refutation.unconfoundedness.compute_bias_aware_ci) – Compute bias-aware confidence intervals.
+- [**get_sensitivity_summary**](#causalis.scenarios.unconfoundedness.refutation.unconfoundedness.get_sensitivity_summary) – Render a single, unified bias-aware summary string.
+- [**run_unconfoundedness_diagnostics**](#causalis.scenarios.unconfoundedness.refutation.unconfoundedness.run_unconfoundedness_diagnostics) – Run unconfoundedness diagnostics from `CausalData` and `CausalEstimate`.
+- [**sensitivity_analysis**](#causalis.scenarios.unconfoundedness.refutation.unconfoundedness.sensitivity_analysis) – Compute bias-aware components and cache them.
+- [**sensitivity_benchmark**](#causalis.scenarios.unconfoundedness.refutation.unconfoundedness.sensitivity_benchmark) – Computes a benchmark for a given set of features by refitting a short IRM model
 
 ####### `compute_bias_aware_ci`
 
@@ -11745,9 +10602,9 @@ Returns a dict with:
 
 - theta, se, alpha, z
 - sampling_ci
-- theta_bounds_cofounding = [theta_lower, theta_upper] = theta ± max_bias
-- bias_aware_ci = \[theta - (max_bias + z*se), theta + (max_bias + z*se)\]
-- max_bias and components (sigma2, nu2)
+- theta_bounds_cofounding = [theta_lower, theta_upper] = theta ± bound_width
+- bias_aware_ci = \[theta - (bound_width + z*se), theta + (bound_width + z*se)\]
+- max_bias_base, max_bias, bound_width and components (sigma2, nu2)
 
 **Parameters:**
 
@@ -11785,39 +10642,27 @@ and then formats via `format_bias_aware_summary` for consistency.
 
 - <code>[Optional](#typing.Optional)\[[str](#str)\]</code> – Formatted summary string or None if extraction fails.
 
-####### `run_uncofoundedness_diagnostics`
+####### `run_unconfoundedness_diagnostics`
 
 ```python
-run_uncofoundedness_diagnostics(*, res: _Dict[str, _Any] | _Any = None, X: _Optional[np.ndarray] = None, d: _Optional[np.ndarray] = None, m_hat: _Optional[np.ndarray] = None, names: _Optional[_List[str]] = None, score: _Optional[str] = None, normalize: _Optional[bool] = None, threshold: float = 0.1, eps_overlap: float = 0.01, return_summary: bool = True) -> _Dict[str, _Any]
+run_unconfoundedness_diagnostics(data: CausalData, estimate: CausalEstimate, *, threshold: float = 0.1, normalize: Optional[bool] = None, return_summary: bool = True) -> Dict[str, Any]
 ```
 
-Uncofoundedness diagnostics focused on balance (SMD).
-
-Inputs:
-
-- Either a result/model via `res`, or raw arrays X, d, m_hat (+ optional names, score, normalize).
-
-Returns a dictionary:
-{
-"params": {"score", "normalize", "smd_threshold"},
-"balance": {"smd", "smd_unweighted", "smd_max", "frac_violations", "pass", "worst_features"},
-"flags": {"balance_max_smd", "balance_violations"},
-"overall_flag": max severity across balance flags,
-"summary": pd.DataFrame with balance rows only
-}
+Run unconfoundedness diagnostics from `CausalData` and `CausalEstimate`.
 
 ####### `sensitivity`
 
 Sensitivity functions refactored into a dedicated module.
 
 This module centralizes bias-aware sensitivity helpers and the public
-entry points used by refutation utilities for uncofoundedness.
+entry points used by refutation utilities for unconfoundedness.
 
 **Functions:**
 
-- [**get_sensitivity_summary**](#causalis.scenarios.unconfoundedness.refutation.uncofoundedness.sensitivity.get_sensitivity_summary) – Render a single, unified bias-aware summary string.
-- [**sensitivity_analysis**](#causalis.scenarios.unconfoundedness.refutation.uncofoundedness.sensitivity.sensitivity_analysis) – Compute bias-aware components and cache them.
-- [**sensitivity_benchmark**](#causalis.scenarios.unconfoundedness.refutation.uncofoundedness.sensitivity.sensitivity_benchmark) – Computes a benchmark for a given set of features by refitting a short IRM model
+- [**get_sensitivity_summary**](#causalis.scenarios.unconfoundedness.refutation.unconfoundedness.sensitivity.get_sensitivity_summary) – Render a single, unified bias-aware summary string.
+- [**interpret_sensitivity_analysis**](#causalis.scenarios.unconfoundedness.refutation.unconfoundedness.sensitivity.interpret_sensitivity_analysis) – Run sensitivity analysis and return a structured interpretation.
+- [**sensitivity_analysis**](#causalis.scenarios.unconfoundedness.refutation.unconfoundedness.sensitivity.sensitivity_analysis) – Compute bias-aware components and cache them.
+- [**sensitivity_benchmark**](#causalis.scenarios.unconfoundedness.refutation.unconfoundedness.sensitivity.sensitivity_benchmark) – Computes a benchmark for a given set of features by refitting a short IRM model
 
 ######## `get_sensitivity_summary`
 
@@ -11838,6 +10683,31 @@ and then formats via `format_bias_aware_summary` for consistency.
 **Returns:**
 
 - <code>[Optional](#typing.Optional)\[[str](#str)\]</code> – Formatted summary string or None if extraction fails.
+
+######## `interpret_sensitivity_analysis`
+
+```python
+interpret_sensitivity_analysis(effect_estimation: Dict[str, Any] | Any, *, r2_y: float, r2_d: float, rho: float = 1.0, H0: float = 0.0, alpha: float = 0.05, use_signed_rr: bool = False) -> Dict[str, Any]
+```
+
+Run sensitivity analysis and return a structured interpretation.
+
+**Parameters:**
+
+- **effect_estimation** (<code>[Dict](#typing.Dict)\[[str](#str), [Any](#typing.Any)\] or [Any](#typing.Any)</code>) – The effect estimation object.
+- **r2_y** (<code>[float](#float)</code>) – Sensitivity parameter for outcome residual confounding strength.
+- **r2_d** (<code>[float](#float)</code>) – Sensitivity parameter for treatment residual confounding strength.
+- **rho** (<code>[float](#float)</code>) – Correlation parameter for unobserved confounding.
+- **H0** (<code>[float](#float)</code>) – Null hypothesis used for significance checks.
+- **alpha** (<code>[float](#float)</code>) – Significance level.
+- **use_signed_rr** (<code>[bool](#bool)</code>) – Whether to use signed rr in the quadratic sensitivity combination.
+
+**Returns:**
+
+- <code>[Dict](#typing.Dict)\[[str](#str), [Any](#typing.Any)\]</code> – Dictionary with:
+  - raw: the output of `sensitivity_analysis(...)`
+  - interpretation: machine-readable interpretation fields
+  - summary: compact human-readable interpretation
 
 ######## `sensitivity_analysis`
 
@@ -11883,7 +10753,8 @@ Returns a DataFrame containing r2_y, r2_d, rho and the change in estimates.
 
 - **effect_estimation** (<code>[dict](#dict)</code>) – A dictionary containing the fitted IRM model under the key 'model'.
 - **benchmarking_set** (<code>[list](#list)\[[str](#str)\]</code>) – List of confounder names to be used for benchmarking (to be removed in the short model).
-- **fit_args** (<code>[dict](#dict)</code>) – Additional keyword arguments for the IRM.fit() method of the short model.
+- **fit_args** (<code>[dict](#dict)</code>) – Legacy name for additional keyword arguments passed to `IRM.estimate(...)`
+  on the short model. If `score` is omitted, the long-model score is reused.
 
 **Returns:**
 
@@ -11935,7 +10806,8 @@ Returns a DataFrame containing r2_y, r2_d, rho and the change in estimates.
 
 - **effect_estimation** (<code>[dict](#dict)</code>) – A dictionary containing the fitted IRM model under the key 'model'.
 - **benchmarking_set** (<code>[list](#list)\[[str](#str)\]</code>) – List of confounder names to be used for benchmarking (to be removed in the short model).
-- **fit_args** (<code>[dict](#dict)</code>) – Additional keyword arguments for the IRM.fit() method of the short model.
+- **fit_args** (<code>[dict](#dict)</code>) – Legacy name for additional keyword arguments passed to `IRM.estimate(...)`
+  on the short model. If `score` is omitted, the long-model score is reused.
 
 **Returns:**
 
@@ -11943,158 +10815,21 @@ Returns a DataFrame containing r2_y, r2_d, rho and the change in estimates.
 - r2_y, r2_d, rho: residual-based benchmarking strengths
 - theta_long, theta_short, delta: effect estimates and their change (long - short)
 
-####### `uncofoundedness_validation`
+####### `unconfoundedness_validation`
 
-Uncofoundedness validation module
+Unconfoundedness diagnostics focused on covariate balance (SMD).
 
 **Functions:**
 
-- [**run_uncofoundedness_diagnostics**](#causalis.scenarios.unconfoundedness.refutation.uncofoundedness.uncofoundedness_validation.run_uncofoundedness_diagnostics) – Uncofoundedness diagnostics focused on balance (SMD).
-- [**validate_uncofoundedness_balance**](#causalis.scenarios.unconfoundedness.refutation.uncofoundedness.uncofoundedness_validation.validate_uncofoundedness_balance) – Assess covariate balance under the uncofoundedness assumption by computing
+- [**run_unconfoundedness_diagnostics**](#causalis.scenarios.unconfoundedness.refutation.unconfoundedness.unconfoundedness_validation.run_unconfoundedness_diagnostics) – Run unconfoundedness diagnostics from `CausalData` and `CausalEstimate`.
 
-######## `run_uncofoundedness_diagnostics`
-
-```python
-run_uncofoundedness_diagnostics(*, res: _Dict[str, _Any] | _Any = None, X: _Optional[np.ndarray] = None, d: _Optional[np.ndarray] = None, m_hat: _Optional[np.ndarray] = None, names: _Optional[_List[str]] = None, score: _Optional[str] = None, normalize: _Optional[bool] = None, threshold: float = 0.1, eps_overlap: float = 0.01, return_summary: bool = True) -> _Dict[str, _Any]
-```
-
-Uncofoundedness diagnostics focused on balance (SMD).
-
-Inputs:
-
-- Either a result/model via `res`, or raw arrays X, d, m_hat (+ optional names, score, normalize).
-
-Returns a dictionary:
-{
-"params": {"score", "normalize", "smd_threshold"},
-"balance": {"smd", "smd_unweighted", "smd_max", "frac_violations", "pass", "worst_features"},
-"flags": {"balance_max_smd", "balance_violations"},
-"overall_flag": max severity across balance flags,
-"summary": pd.DataFrame with balance rows only
-}
-
-######## `validate_uncofoundedness_balance`
+######## `run_unconfoundedness_diagnostics`
 
 ```python
-validate_uncofoundedness_balance(effect_estimation: Dict[str, Any] | Any, *, threshold: float = 0.1, normalize: Optional[bool] = None) -> Dict[str, Any]
+run_unconfoundedness_diagnostics(data: CausalData, estimate: CausalEstimate, *, threshold: float = 0.1, normalize: Optional[bool] = None, return_summary: bool = True) -> Dict[str, Any]
 ```
 
-Assess covariate balance under the uncofoundedness assumption by computing
-standardized mean differences (SMD) both before weighting (raw groups) and
-after weighting using the IPW / ATT weights implied by the DML/IRM estimation.
-
-This function expects the result dictionary or CausalEstimate returned by dml_ate() or dml_att(),
-which includes a fitted IRM model and a 'diagnostic_data' entry with the
-necessary arrays.
-
-We compute, for each confounder X_j:
-
-- For ATE (weighted): w1 = D/m_hat, w0 = (1-D)/(1-m_hat).
-- For ATTE (weighted): Treated weight = 1 for D=1; Control weight w0 = m_hat/(1-m_hat) for D=0.
-- If estimation used normalized IPW (normalize_ipw=True), we scale the corresponding
-  weights by their sample mean (as done in IRM) before computing balance.
-
-The SMD is defined as |mu1 - mu0| / s_pooled, where mu_g are (weighted) means in the
-(pseudo-)populations and s_pooled is the square root of the average of the (weighted)
-variances in the two groups.
-
-**Parameters:**
-
-- **effect_estimation** (<code>[Dict](#typing.Dict)\[[str](#str), [Any](#typing.Any)\] | [Any](#typing.Any)</code>) – Output from dml_ate() or dml_att(). Must contain 'diagnostic_data'.
-- **threshold** (<code>[float](#float)</code>) – Threshold for SMD; values below indicate acceptable balance for most use cases.
-- **normalize** (<code>[Optional](#typing.Optional)\[[bool](#bool)\]</code>) – Whether to use normalized weights. If None, inferred from diagnostic_data.
-
-**Returns:**
-
-- <code>[Dict](#typing.Dict)\[[str](#str), [Any](#typing.Any)\]</code> – A dictionary with keys:
-- 'smd': pd.Series of weighted SMD values indexed by confounder names
-- 'smd_unweighted': pd.Series of SMD values computed before weighting (raw groups)
-- 'score': 'ATE' or 'ATTE'
-- 'normalized': bool used for weighting
-- 'threshold': float
-- 'pass': bool indicating whether all weighted SMDs are below threshold
-
-####### `validate_uncofoundedness_balance`
-
-```python
-validate_uncofoundedness_balance(effect_estimation: Dict[str, Any] | Any, *, threshold: float = 0.1, normalize: Optional[bool] = None) -> Dict[str, Any]
-```
-
-Assess covariate balance under the uncofoundedness assumption by computing
-standardized mean differences (SMD) both before weighting (raw groups) and
-after weighting using the IPW / ATT weights implied by the DML/IRM estimation.
-
-This function expects the result dictionary or CausalEstimate returned by dml_ate() or dml_att(),
-which includes a fitted IRM model and a 'diagnostic_data' entry with the
-necessary arrays.
-
-We compute, for each confounder X_j:
-
-- For ATE (weighted): w1 = D/m_hat, w0 = (1-D)/(1-m_hat).
-- For ATTE (weighted): Treated weight = 1 for D=1; Control weight w0 = m_hat/(1-m_hat) for D=0.
-- If estimation used normalized IPW (normalize_ipw=True), we scale the corresponding
-  weights by their sample mean (as done in IRM) before computing balance.
-
-The SMD is defined as |mu1 - mu0| / s_pooled, where mu_g are (weighted) means in the
-(pseudo-)populations and s_pooled is the square root of the average of the (weighted)
-variances in the two groups.
-
-**Parameters:**
-
-- **effect_estimation** (<code>[Dict](#typing.Dict)\[[str](#str), [Any](#typing.Any)\] | [Any](#typing.Any)</code>) – Output from dml_ate() or dml_att(). Must contain 'diagnostic_data'.
-- **threshold** (<code>[float](#float)</code>) – Threshold for SMD; values below indicate acceptable balance for most use cases.
-- **normalize** (<code>[Optional](#typing.Optional)\[[bool](#bool)\]</code>) – Whether to use normalized weights. If None, inferred from diagnostic_data.
-
-**Returns:**
-
-- <code>[Dict](#typing.Dict)\[[str](#str), [Any](#typing.Any)\]</code> – A dictionary with keys:
-- 'smd': pd.Series of weighted SMD values indexed by confounder names
-- 'smd_unweighted': pd.Series of SMD values computed before weighting (raw groups)
-- 'score': 'ATE' or 'ATTE'
-- 'normalized': bool used for weighting
-- 'threshold': float
-- 'pass': bool indicating whether all weighted SMDs are below threshold
-
-###### `validate_uncofoundedness_balance`
-
-```python
-validate_uncofoundedness_balance(effect_estimation: Dict[str, Any] | Any, *, threshold: float = 0.1, normalize: Optional[bool] = None) -> Dict[str, Any]
-```
-
-Assess covariate balance under the uncofoundedness assumption by computing
-standardized mean differences (SMD) both before weighting (raw groups) and
-after weighting using the IPW / ATT weights implied by the DML/IRM estimation.
-
-This function expects the result dictionary or CausalEstimate returned by dml_ate() or dml_att(),
-which includes a fitted IRM model and a 'diagnostic_data' entry with the
-necessary arrays.
-
-We compute, for each confounder X_j:
-
-- For ATE (weighted): w1 = D/m_hat, w0 = (1-D)/(1-m_hat).
-- For ATTE (weighted): Treated weight = 1 for D=1; Control weight w0 = m_hat/(1-m_hat) for D=0.
-- If estimation used normalized IPW (normalize_ipw=True), we scale the corresponding
-  weights by their sample mean (as done in IRM) before computing balance.
-
-The SMD is defined as |mu1 - mu0| / s_pooled, where mu_g are (weighted) means in the
-(pseudo-)populations and s_pooled is the square root of the average of the (weighted)
-variances in the two groups.
-
-**Parameters:**
-
-- **effect_estimation** (<code>[Dict](#typing.Dict)\[[str](#str), [Any](#typing.Any)\] | [Any](#typing.Any)</code>) – Output from dml_ate() or dml_att(). Must contain 'diagnostic_data'.
-- **threshold** (<code>[float](#float)</code>) – Threshold for SMD; values below indicate acceptable balance for most use cases.
-- **normalize** (<code>[Optional](#typing.Optional)\[[bool](#bool)\]</code>) – Whether to use normalized weights. If None, inferred from diagnostic_data.
-
-**Returns:**
-
-- <code>[Dict](#typing.Dict)\[[str](#str), [Any](#typing.Any)\]</code> – A dictionary with keys:
-- 'smd': pd.Series of weighted SMD values indexed by confounder names
-- 'smd_unweighted': pd.Series of SMD values computed before weighting (raw groups)
-- 'score': 'ATE' or 'ATTE'
-- 'normalized': bool used for weighting
-- 'threshold': float
-- 'pass': bool indicating whether all weighted SMDs are below threshold
+Run unconfoundedness diagnostics from `CausalData` and `CausalEstimate`.
 
 ### `causalis.shared`
 

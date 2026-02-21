@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
 import numpy as np
 import pandas as pd
@@ -8,45 +8,16 @@ from scipy.stats import ks_2samp
 
 if TYPE_CHECKING:
     from causalis.dgp.causaldata import CausalData
+    from causalis.dgp.multicausaldata import MultiCausalData
 
 
-def confounders_balance(data: CausalData) -> pd.DataFrame:
-    """
-    Compute balance diagnostics for confounders between treatment groups.
-
-    Produces a DataFrame containing expanded confounder columns (after one-hot
-    encoding categorical variables if present) with:
-      - confounders: name of the confounder
-      - mean_d_0: mean value for control group (t=0)
-      - mean_d_1: mean value for treated group (t=1)
-      - abs_diff: abs(mean_d_1 - mean_d_0)
-      - smd: standardized mean difference (Cohen's d using pooled std)
-      - ks_pvalue: p-value for the KS test (rounded to 5 decimal places, non-scientific)
-
-    Parameters
-    ----------
-    data : CausalData
-        The causal dataset containing the dataframe, treatment, and confounders.
-        Accepts CausalData or any object with `df`, `treatment`, and `confounders`
-        attributes/properties.
-
-    Returns
-    -------
-    pd.DataFrame
-        Balance table sorted by |smd| (descending).
-    """
-    # Extract components from data_contracts object
-    df = getattr(data, "df")
-
-    # Handle both string column names (Lite) and Series properties (CausalData)
-    t_attr = getattr(data, "treatment")
-    treatment = t_attr.name if isinstance(t_attr, pd.Series) else t_attr
-
-    # Both Lite and CausalData have 'confounders' returning List[str]
-    confounders = list(getattr(data, "confounders"))
-
+def _compute_balance_table(
+    df: pd.DataFrame,
+    confounders: list[str],
+    mask_d_0: np.ndarray,
+    mask_d_1: np.ndarray,
+) -> pd.DataFrame:
     X = df[confounders]
-    t = df[treatment].astype(int).values
 
     # Convert categorical variables to dummy variables for analysis
     # Even if CausalData is strict, other inputs might not be.
@@ -56,25 +27,22 @@ def confounders_balance(data: CausalData) -> pd.DataFrame:
     for col in X_num.columns:
         x = X_num[col].values.astype(float)
 
-        mask_c = t == 0
-        mask_t = t == 1
-
         # Calculate means for each treatment group
-        mean_d_0 = float(np.mean(x[mask_c])) if mask_c.any() else np.nan
-        mean_d_1 = float(np.mean(x[mask_t])) if mask_t.any() else np.nan
+        mean_d_0 = float(np.mean(x[mask_d_0])) if mask_d_0.any() else np.nan
+        mean_d_1 = float(np.mean(x[mask_d_1])) if mask_d_1.any() else np.nan
 
         # Absolute difference
         abs_diff = float(abs(mean_d_1 - mean_d_0)) if np.isfinite(mean_d_0) and np.isfinite(mean_d_1) else np.nan
 
         # Standardized mean difference (SMD)
-        v_control = float(np.var(x[mask_c], ddof=1)) if np.sum(mask_c) > 1 else 0.0
-        v_treated = float(np.var(x[mask_t], ddof=1)) if np.sum(mask_t) > 1 else 0.0
+        v_control = float(np.var(x[mask_d_0], ddof=1)) if np.sum(mask_d_0) > 1 else 0.0
+        v_treated = float(np.var(x[mask_d_1], ddof=1)) if np.sum(mask_d_1) > 1 else 0.0
         pooled_std = float(np.sqrt((v_control + v_treated) / 2))
         smd = float((mean_d_1 - mean_d_0) / pooled_std) if pooled_std > 0 else 0.0
 
-        # Kolmogorov–Smirnov test
+        # Kolmogorov-Smirnov test
         try:
-            ks_res = ks_2samp(x[mask_t], x[mask_c])
+            ks_res = ks_2samp(x[mask_d_1], x[mask_d_0])
             ks_pvalue = float(ks_res.pvalue)
         except Exception:
             ks_pvalue = np.nan
@@ -105,3 +73,93 @@ def confounders_balance(data: CausalData) -> pd.DataFrame:
         )
 
     return balance_df.reset_index(drop=True)
+
+
+def confounders_balance(
+    data: CausalData | MultiCausalData,
+    treatment_d_0: Optional[str] = None,
+    treatment_d_1: Optional[str] = None,
+) -> pd.DataFrame:
+    """
+    Compute balance diagnostics for confounders between two treatment groups.
+
+    Produces a DataFrame containing expanded confounder columns (after one-hot
+    encoding categorical variables if present) with:
+      - confounders: name of the confounder
+      - mean_d_0: mean value for control group (t=0)
+      - mean_d_1: mean value for treated group (t=1)
+      - abs_diff: abs(mean_d_1 - mean_d_0)
+      - smd: standardized mean difference (Cohen's d using pooled std)
+      - ks_pvalue: p-value for the KS test (rounded to 5 decimal places, non-scientific)
+
+    Parameters
+    ----------
+    data : CausalData or MultiCausalData
+        The causal dataset containing the dataframe and confounders.
+    treatment_d_0 : str, optional
+        For MultiCausalData, name of the first treatment column to compare.
+        Mapped to output column `mean_d_0`.
+    treatment_d_1 : str, optional
+        For MultiCausalData, name of the second treatment column to compare.
+        Mapped to output column `mean_d_1`.
+
+    Returns
+    -------
+    pd.DataFrame
+        Balance table sorted by |smd| (descending).
+    """
+    # Extract shared components from data contract object
+    df = getattr(data, "df")
+    confounders = list(getattr(data, "confounders"))
+
+    is_multicausal = hasattr(data, "treatment_names") and hasattr(data, "control_treatment")
+    if is_multicausal:
+        if treatment_d_0 is None or treatment_d_1 is None:
+            raise ValueError(
+                "For MultiCausalData, provide two treatment columns to compare, "
+                "for example confounders_balance(data, 'd_0', 'd_2')."
+            )
+        if treatment_d_0 == treatment_d_1:
+            raise ValueError("Compared treatment columns must be different.")
+
+        t_cols = list(getattr(data, "treatment_names"))
+        missing = [t for t in (treatment_d_0, treatment_d_1) if t not in t_cols]
+        if missing:
+            raise ValueError(
+                f"Compared treatment column(s) {missing} are not in MultiCausalData.treatment_names={t_cols}."
+            )
+
+        mask_d_0_full = df[treatment_d_0].to_numpy(dtype=int, copy=False) == 1
+        mask_d_1_full = df[treatment_d_1].to_numpy(dtype=int, copy=False) == 1
+
+        if not mask_d_0_full.any() or not mask_d_1_full.any():
+            raise ValueError(
+                "Both compared treatments must have at least one assigned row in the dataset."
+            )
+
+        selected = mask_d_0_full | mask_d_1_full
+        df_cmp = df.loc[selected]
+        mask_d_0 = mask_d_0_full[selected]
+        mask_d_1 = mask_d_1_full[selected]
+
+        return _compute_balance_table(
+            df=df_cmp,
+            confounders=confounders,
+            mask_d_0=mask_d_0,
+            mask_d_1=mask_d_1,
+        )
+
+    # Keep legacy CausalData behavior (single binary treatment column).
+    t_attr = getattr(data, "treatment")
+    treatment = t_attr.name if isinstance(t_attr, pd.Series) else t_attr
+
+    t = df[treatment].astype(int).to_numpy(copy=False)
+    mask_d_0 = t == 0
+    mask_d_1 = t == 1
+
+    return _compute_balance_table(
+        df=df,
+        confounders=confounders,
+        mask_d_0=mask_d_0,
+        mask_d_1=mask_d_1,
+    )
