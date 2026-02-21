@@ -2,11 +2,14 @@
 Outcome shared grouped by treatment for CausalData.
 """
 
+from __future__ import annotations
+
 import pandas as pd
 from causalis.dgp.causaldata import CausalData
+from causalis.dgp.multicausaldata import MultiCausalData
 
 
-def outcome_stats(data: CausalData) -> pd.DataFrame:
+def outcome_stats(data: CausalData | MultiCausalData) -> pd.DataFrame:
     """
     Comprehensive outcome shared grouped by treatment.
 
@@ -17,8 +20,8 @@ def outcome_stats(data: CausalData) -> pd.DataFrame:
 
     Parameters
     ----------
-    data : CausalData
-        The CausalData object containing treatment and outcome variables.
+    data : CausalData or MultiCausalData
+        The causal dataset containing treatment and outcome variables.
 
     Returns
     -------
@@ -43,14 +46,26 @@ def outcome_stats(data: CausalData) -> pd.DataFrame:
     0          0   3000  5.123456  2.345678  0.123456  2.345678  3.456789  5.123456  6.789012  7.890123  9.876543
     1          1   2000  6.789012  2.456789  0.234567  3.456789  4.567890  6.789012  8.901234  9.012345  10.987654
     """
-    df, t, y = data.df, data.treatment_name, data.outcome_name
-
-    # Ensure treatment is numeric for grouping
-    if not pd.api.types.is_numeric_dtype(df[t]):
-        raise ValueError("Treatment must be numeric 0/1 for outcome_stats().")
-
-    # Create grouped object for multiple operations
-    grouped = df.groupby(t)[y]
+    if isinstance(data, MultiCausalData):
+        df, y = data.df, data.outcome
+        t_cols = list(data.treatment_names)
+        assigned_idx = df[t_cols].to_numpy(dtype=int, copy=False).argmax(axis=1)
+        assigned_treatment = pd.Categorical.from_codes(
+            assigned_idx,
+            categories=t_cols,
+            ordered=True,
+        )
+        grouped = (
+            pd.DataFrame({"treatment": assigned_treatment, y: df[y]})
+            .groupby("treatment", sort=False, observed=True)[y]
+        )
+    else:
+        df, y = data.df, data.outcome_name
+        t = data.treatment_name
+        # Keep legacy behavior for single-treatment CausalData.
+        if not pd.api.types.is_numeric_dtype(df[t]):
+            raise ValueError("Treatment must be numeric 0/1 for outcome_stats().")
+        grouped = df.groupby(t)[y]
 
     # Calculate basic shared using built-in methods
     basic_stats = grouped.agg(['count', 'mean', 'std', 'min', 'median', 'max'])

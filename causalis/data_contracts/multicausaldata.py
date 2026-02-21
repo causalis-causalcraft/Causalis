@@ -1,5 +1,6 @@
 """
-Causalis Dataclass for storing Cross-sectional DataFrame and column metadata for causal inference with multiple treatments.
+Causalis Dataclass for storing Cross-sectional DataFrame and column metadata
+for causal inference with multiple treatments.
 """
 
 from __future__ import annotations
@@ -12,50 +13,53 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator, field_valida
 
 class MultiCausalData(BaseModel):
     """
-    Data contract for cross-sectional causal data with multiple binary treatment columns.
+    Data contract for cross-sectional causal data with multi-class one-hot treatments.
 
     Parameters
     ----------
     df : pd.DataFrame
         The DataFrame containing the causal data.
-    outcome_name : str
-        The name of the outcome column. (Alias: "outcome")
+    outcome : str
+        The name of the outcome column.
     treatment_names : List[str]
-        The names of the treatment columns. (Alias: "treatments")
-    confounders_names : List[str], optional
-        The names of the confounder columns, by default []. (Alias: "confounders")
-    user_id_name : Optional[str], optional
-        The name of the user ID column, by default None. (Alias: "user_id")
+        The names of the treatment columns.
+    confounders : List[str], optional
+        The names of the confounder columns, by default [].
+    user_id : Optional[str], optional
+        The name of the user ID column, by default None.
+    control_treatment : str
+        Name of the control/baseline treatment column.
 
     Notes
     -----
     This class enforces several constraints on the data, including:
-    - Maximum number of treatments (default 5).
+    - Maximum number of treatment_names (default 15).
     - No duplicate column names in the input DataFrame.
-    - Disjoint roles for columns (outcome, treatments, confounders, user_id).
+    - Disjoint roles for columns (outcome, treatment_names, confounders, user_id).
+    - Non-empty normalized names for outcome and user_id (if provided).
     - Existence of all specified columns in the DataFrame.
     - Numeric or boolean types for outcome and confounders.
-    - Non-constant values for outcome, treatments, and confounders.
+    - Finite values for outcome, confounders, and treatment_names.
+    - Non-constant values for outcome, treatment_names, and confounders.
     - No NaN values in used columns.
     - Binary (0/1) encoding for treatment columns.
+    - One-hot treatment assignment (exactly one active treatment per row).
+    - A stable control treatment in position 0.
     - No identical values between different columns.
     - Unique values for user_id (if specified).
     """
-    model_config = ConfigDict(
-        arbitrary_types_allowed=True,
-        populate_by_name=True,
-        extra="forbid",
-    )
+    model_config = ConfigDict(arbitrary_types_allowed=True, extra="forbid")
 
     # Hard constraints
-    MAX_TREATMENTS: ClassVar[int] = 5
+    MAX_TREATMENTS: ClassVar[int] = 15
     FLOAT_TOL: ClassVar[float] = 1e-12  # for float 0/1 acceptance
 
     df: pd.DataFrame
-    outcome_name: str = Field(alias="outcome")
-    treatment_names: List[str] = Field(alias="treatments")
-    confounders_names: List[str] = Field(alias="confounders", default_factory=list)
-    user_id_name: Optional[str] = Field(alias="user_id", default=None)
+    outcome: str
+    treatment_names: List[str]
+    confounders: List[str] = Field(default_factory=list)
+    user_id: Optional[str] = None
+    control_treatment: str
 
     @classmethod
     def from_df(
@@ -63,9 +67,10 @@ class MultiCausalData(BaseModel):
         df: pd.DataFrame,
         *,
         outcome: str,
-        treatments: Union[str, List[str]],
+        treatment_names: Union[str, List[str]],
         confounders: Optional[Union[str, List[str]]] = None,
         user_id: Optional[str] = None,
+        control_treatment: str,
         **kwargs: Any,
     ) -> "MultiCausalData":
         """
@@ -77,12 +82,14 @@ class MultiCausalData(BaseModel):
             The input DataFrame.
         outcome : str
             The name of the outcome column.
-        treatments : Union[str, List[str]]
+        treatment_names : Union[str, List[str]]
             The name(s) of the treatment column(s).
         confounders : Union[str, List[str]], optional
             The name(s) of the confounder column(s), by default None.
         user_id : str, optional
             The name of the user ID column, by default None.
+        control_treatment : str
+            Name of the control treatment column.
         **kwargs : Any
             Additional keyword arguments passed to the constructor.
 
@@ -94,9 +101,10 @@ class MultiCausalData(BaseModel):
         return cls(
             df=df,
             outcome=outcome,
-            treatments=treatments,
+            treatment_names=treatment_names,
             confounders=confounders,
             user_id=user_id,
+            control_treatment=control_treatment,
             **kwargs,
         )
 
@@ -121,30 +129,38 @@ class MultiCausalData(BaseModel):
         TypeError
             If input is not a string or list of strings.
         ValueError
-            If treatments list is empty.
+            If treatment_names list is empty.
         """
         if v is None:
-            raise TypeError("treatments must be a string or a list of strings (cannot be None).")
+            raise TypeError("treatment_names must be a string or a list of strings (cannot be None).")
         if isinstance(v, str):
             out = [v]
         elif isinstance(v, list):
             for item in v:
                 if not isinstance(item, str):
                     raise TypeError(f"All treatment names must be strings. Found {type(item).__name__}: {item}")
-            seen = set()
-            out = []
-            for t in v:
-                if t not in seen:
-                    out.append(t)
-                    seen.add(t)
+            dupes = [t for i, t in enumerate(v) if t in set(v[:i])]
+            if dupes:
+                raise ValueError(f"treatment_names contains duplicate names: {list(dict.fromkeys(dupes))}")
+            out = v
         else:
-            raise TypeError("treatments must be a string or a list of strings.")
+            raise TypeError("treatment_names must be a string or a list of strings.")
 
         if not out:
-            raise ValueError("treatments cannot be empty.")
+            raise ValueError("treatment_names cannot be empty.")
         return out
 
-    @field_validator("confounders_names", mode="before")
+    @field_validator("outcome", mode="before")
+    @classmethod
+    def _normalize_outcome(cls, v: Any) -> str:
+        if not isinstance(v, str):
+            raise TypeError("outcome must be a string.")
+        out = v.strip()
+        if not out:
+            raise ValueError("outcome must be a non-empty string.")
+        return out
+
+    @field_validator("confounders", mode="before")
     @classmethod
     def _normalize_confounders(cls, v: Any) -> List[str]:
         """
@@ -182,19 +198,43 @@ class MultiCausalData(BaseModel):
             return out
         raise TypeError("confounders must be None, a string, or a list of strings.")
 
+    @field_validator("user_id", mode="before")
+    @classmethod
+    def _normalize_user_id(cls, v: Any) -> Optional[str]:
+        if v is None:
+            return None
+        if not isinstance(v, str):
+            raise TypeError("user_id must be a string or None.")
+        out = v.strip()
+        if not out:
+            raise ValueError("user_id must be a non-empty string if provided.")
+        return out
+
+    @field_validator("control_treatment", mode="before")
+    @classmethod
+    def _validate_control_treatment(cls, v: Any) -> str:
+        if v is None:
+            raise TypeError("control_treatment must be provided and be a non-empty string.")
+        if not isinstance(v, str):
+            raise TypeError("control_treatment must be a string.")
+        out = v.strip()
+        if not out:
+            raise ValueError("control_treatment must be a non-empty string.")
+        return out
+
     @model_validator(mode="after")
     def _validate_and_normalize(self) -> "MultiCausalData":
         """
         Perform cross-field validation and data normalization.
 
         This method checks for:
-        - Maximum number of treatments.
+        - Maximum number of treatment_names.
         - Disjoint roles for columns.
         - Existence of all columns in the DataFrame.
         - Correct data types.
         - Non-constant values.
         - Lack of NaN values.
-        - Binary encoding for treatments.
+        - Binary encoding for treatment_names.
         - Unique user IDs.
 
         Returns
@@ -208,10 +248,11 @@ class MultiCausalData(BaseModel):
             If any validation rule is violated.
         """
         df = self.df
-        outcome = self.outcome_name
-        treatments = self.treatment_names
-        confounders = self.confounders_names
-        user_id = self.user_id_name
+        outcome = self.outcome
+        treatment_names = list(self.treatment_names)
+        confounders = self.confounders
+        user_id = self.user_id
+        control_treatment = self.control_treatment
 
         # 0) duplicate column names
         if df.columns.has_duplicates:
@@ -219,24 +260,40 @@ class MultiCausalData(BaseModel):
             raise ValueError(f"DataFrame has duplicate column names: {dupes}. This is not supported.")
 
         # 1) cap treatments
-        if len(treatments) > self.MAX_TREATMENTS:
+        if len(treatment_names) > self.MAX_TREATMENTS:
             raise ValueError(
-                f"Too many treatment columns: {len(treatments)}. "
-                f"Maximum allowed is {self.MAX_TREATMENTS}. Treatments={treatments}"
+                f"Too many treatment columns: {len(treatment_names)}. "
+                f"Maximum allowed is {self.MAX_TREATMENTS}. Treatments={treatment_names}"
+            )
+        if len(treatment_names) < 2:
+            raise ValueError(
+                "MultiCausalData requires at least 2 treatment columns for one-hot multi-class setup "
+                "(control + at least one active treatment)."
             )
 
+        # 1b) control treatment handling + canonical treatment order
+        if control_treatment not in treatment_names:
+            raise ValueError(
+                f"control_treatment '{control_treatment}' must be one of treatment_names={treatment_names}."
+            )
+
+        if treatment_names[0] != control_treatment:
+            treatment_names = [control_treatment] + [t for t in treatment_names if t != control_treatment]
+        self.treatment_names = treatment_names
+        self.control_treatment = control_treatment
+
         # 2) disjoint roles
-        if outcome in set(treatments):
+        if outcome in set(treatment_names):
             raise ValueError(f"Column '{outcome}' cannot be both outcome and treatment.")
         if user_id and user_id == outcome:
             raise ValueError(f"Column '{user_id}' cannot be both user_id and outcome.")
-        if user_id and user_id in set(treatments):
+        if user_id and user_id in set(treatment_names):
             raise ValueError(f"Column '{user_id}' cannot be both user_id and treatment.")
 
-        overlap_confs = [c for c in confounders if (c == outcome or c in set(treatments) or (user_id and c == user_id))]
+        overlap_confs = [c for c in confounders if (c == outcome or c in set(treatment_names) or (user_id and c == user_id))]
         if overlap_confs:
             raise ValueError(
-                "confounder columns must be disjoint from outcome/treatments/user_id; overlapping columns: "
+                "confounder columns must be disjoint from outcome/treatment_names/user_id; overlapping columns: "
                 + ", ".join(overlap_confs)
             )
 
@@ -244,7 +301,7 @@ class MultiCausalData(BaseModel):
         all_cols = set(df.columns)
         if outcome not in all_cols:
             raise ValueError(f"Column '{outcome}' specified as outcome does not exist in the DataFrame.")
-        missing_t = [t for t in treatments if t not in all_cols]
+        missing_t = [t for t in treatment_names if t not in all_cols]
         if missing_t:
             raise ValueError(f"Treatment column(s) {missing_t} do not exist in the DataFrame.")
         missing_x = [c for c in confounders if c not in all_cols]
@@ -256,6 +313,8 @@ class MultiCausalData(BaseModel):
         # 4) outcome type + non-constant
         if not (pdtypes.is_numeric_dtype(df[outcome]) or pdtypes.is_bool_dtype(df[outcome])):
             raise ValueError(f"Column '{outcome}' specified as outcome must contain only int, float, or bool values.")
+        if not np.isfinite(df[outcome].to_numpy(dtype=float, copy=False)).all():
+            raise ValueError(f"Column '{outcome}' specified as outcome must contain only finite values.")
         if df[outcome].nunique(dropna=False) <= 1:
             raise ValueError(f"Column '{outcome}' specified as outcome is constant (zero variance).")
 
@@ -263,8 +322,17 @@ class MultiCausalData(BaseModel):
         for c in confounders:
             if not (pdtypes.is_numeric_dtype(df[c]) or pdtypes.is_bool_dtype(df[c])):
                 raise ValueError(f"Column '{c}' specified as confounder must contain only int, float, or bool values.")
+            if not np.isfinite(df[c].to_numpy(dtype=float, copy=False)).all():
+                raise ValueError(f"Column '{c}' specified as confounder must contain only finite values.")
             if df[c].nunique(dropna=False) <= 1:
                 raise ValueError(f"Column '{c}' specified as confounder is constant (zero variance).")
+
+        # 5b) treatment type + finite checks (before binary casting)
+        for t in treatment_names:
+            if not (pdtypes.is_numeric_dtype(df[t]) or pdtypes.is_bool_dtype(df[t])):
+                raise ValueError(f"Column '{t}' specified as treatment must contain only int, float, or bool values.")
+            if not np.isfinite(df[t].to_numpy(dtype=float, copy=False)).all():
+                raise ValueError(f"Column '{t}' specified as treatment must contain only finite values.")
 
         # 6) NaNs disallowed in used cols
         cols_to_keep: List[str] = []
@@ -272,7 +340,7 @@ class MultiCausalData(BaseModel):
             cols_to_keep.append(user_id)
         cols_to_keep.append(outcome)
         cols_to_keep.extend(confounders)
-        cols_to_keep.extend(treatments)
+        cols_to_keep.extend(treatment_names)
         cols_to_keep = list(dict.fromkeys(cols_to_keep))
 
         if df[cols_to_keep].isna().any().any():
@@ -293,8 +361,21 @@ class MultiCausalData(BaseModel):
                 )
 
         # 9) validate + canonicalize treatments as int8 binary
-        for t in treatments:
+        for t in treatment_names:
             self.df[t] = self._validate_and_cast_binary_treatment(self.df[t], t)
+
+        # 9b) enforce one-hot rows (exactly one active class per observation)
+        treatment_row_sums = self.df[treatment_names].sum(axis=1)
+        invalid_mask = treatment_row_sums != 1
+        if invalid_mask.any():
+            bad_idx = self.df.index[invalid_mask][:10].tolist()
+            bad_sums = sorted(pd.unique(treatment_row_sums[invalid_mask]))[:10]
+            suffix = "" if invalid_mask.sum() <= 10 else f" ... (+{int(invalid_mask.sum()) - 10} more rows)"
+            raise ValueError(
+                "Treatment columns must be one-hot encoded per row (exactly one 1 across all treatment columns). "
+                f"Invalid row indices (up to 10 shown): {bad_idx}{suffix}. "
+                f"Observed invalid row sums (up to 10): {bad_sums}"
+            )
 
         # 10) duplicate-column values check (dtype-agnostic)
         self._check_duplicate_column_values_dtype_agnostic(self.df)
@@ -371,9 +452,9 @@ class MultiCausalData(BaseModel):
         ValueError
             If any two columns have identical values.
         """
-        cols: List[str] = [self.outcome_name] + self.confounders_names + self.treatment_names
-        if self.user_id_name:
-            cols.append(self.user_id_name)
+        cols: List[str] = [self.outcome] + self.confounders + self.treatment_names
+        if self.user_id:
+            cols.append(self.user_id)
         cols = list(dict.fromkeys(cols))
 
         def _eq(a: pd.Series, b: pd.Series) -> bool:
@@ -388,18 +469,6 @@ class MultiCausalData(BaseModel):
                     raise ValueError(
                         f"Columns '{c1}' and '{c2}' have identical values, which is not allowed for causal inference."
                     )
-
-    @property
-    def outcome(self) -> pd.Series:
-        """
-        Return the outcome column as a pandas Series.
-
-        Returns
-        -------
-        pd.Series
-            The outcome column.
-        """
-        return self.df[self.outcome_name]
 
     @property
     def treatments(self) -> pd.DataFrame:
@@ -445,9 +514,9 @@ class MultiCausalData(BaseModel):
         pd.DataFrame
             The confounder columns.
         """
-        if not self.confounders_names:
+        if not self.confounders:
             return self.df.iloc[:, 0:0].copy()
-        return self.df[self.confounders_names].copy()
+        return self.df[self.confounders].copy()
 
     def get_df(
         self,
@@ -491,16 +560,35 @@ class MultiCausalData(BaseModel):
             return self.df.iloc[:, 0:0].copy()
 
         if include_outcome:
-            cols.append(self.outcome_name)
+            cols.append(self.outcome)
         if include_confounders:
-            cols.extend(self.confounders_names)
+            cols.extend(self.confounders)
         if include_treatments:
             cols.extend(self.treatment_names)
-        if include_user_id and self.user_id_name:
-            cols.append(self.user_id_name)
+        if include_user_id and self.user_id:
+            cols.append(self.user_id)
 
         cols = list(dict.fromkeys(cols))
         missing = [c for c in cols if c not in self.df.columns]
         if missing:
             raise ValueError(f"Column(s) {missing} do not exist in the DataFrame.")
         return self.df[cols].copy()
+
+    def __repr__(self) -> str:
+        treatment_repr: str | list[str]
+        if len(self.treatment_names) == 1:
+            treatment_repr = self.treatment_names[0]
+        else:
+            treatment_repr = self.treatment_names
+
+        return (
+            f"{self.__class__.__name__}(df={self.df.shape}, "
+            f"treatment_names={treatment_repr!r}, "
+            f"control_treatment={self.control_treatment!r})"
+            f"outcome={self.outcome!r}, "
+            f"confounders={self.confounders!r}, "
+            f"user_id={self.user_id!r}, "
+        )
+
+    def __str__(self) -> str:
+        return self.__repr__()

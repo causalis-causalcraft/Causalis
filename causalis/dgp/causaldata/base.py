@@ -1,13 +1,17 @@
 from __future__ import annotations
 import numpy as np
 import pandas as pd
+import sys
 from dataclasses import dataclass, field
 from typing import Dict, Optional, Union, List, Tuple, Callable, Any
 
 from causalis.dgp.causaldata import CausalData
 from causalis.dgp.base import _sigmoid, _gaussian_copula
 
-@dataclass(slots=True)
+_DATACLASS_KWARGS = {"slots": True} if sys.version_info >= (3, 10) else {}
+
+
+@dataclass(**_DATACLASS_KWARGS)
 class CausalDatasetGenerator:
     """
     Generate synthetic causal inference datasets with controllable confounding,
