@@ -1,0 +1,24 @@
+#!/usr/bin/env sh
+# Minimal ripgrep-compatible fallback for this repo environment.
+if [ "$1" = "--files" ]; then
+  shift
+  if [ "$#" -gt 0 ]; then
+    find "$@" -type f ! -path '*/.git/*'
+  else
+    find . -type f ! -path '*/.git/*'
+  fi
+  exit 0
+fi
+
+if [ "$#" -eq 0 ]; then
+  echo "rg fallback: missing pattern" >&2
+  exit 2
+fi
+
+pattern="$1"
+shift
+if [ "$#" -gt 0 ]; then
+  grep -R -n -- "$pattern" "$@"
+else
+  grep -R -n -- "$pattern" .
+fi

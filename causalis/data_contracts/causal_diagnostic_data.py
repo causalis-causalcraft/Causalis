@@ -50,6 +50,7 @@ class MultiUnconfoundednessDiagnosticData(DiagnosticData):
     """Fields common to all models assuming unconfoundedness with multi_unconfoundedness."""
 
     m_hat: np.ndarray  # Propensity scores
+    m_hat_raw: Optional[np.ndarray] = None  # Raw (pre-trimming) propensity scores when available
     d: np.ndarray  # Treatments indicators
     y: Optional[np.ndarray] = None  # Outcomes
     x: Optional[np.ndarray] = None  # Confounders (for balance checks)

@@ -3,11 +3,36 @@ import numpy as np
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 
+from causalis.data_contracts.multicausal_estimate import MultiCausalEstimate
+from causalis.data_contracts.multicausaldata import MultiCausalData
 from causalis.data_contracts.causal_diagnostic_data import MultiUnconfoundednessDiagnosticData
 
 
+def _resolve_overlap_diag(
+    diag: Union[MultiUnconfoundednessDiagnosticData, MultiCausalEstimate, dict, Any]
+) -> MultiUnconfoundednessDiagnosticData:
+    if isinstance(diag, MultiUnconfoundednessDiagnosticData):
+        resolved = diag
+    elif isinstance(diag, MultiCausalEstimate):
+        resolved = diag.diagnostic_data
+    elif isinstance(diag, dict):
+        resolved = diag.get("diagnostic_data", None)
+    else:
+        resolved = getattr(diag, "diagnostic_data", None)
+
+    if resolved is None:
+        raise ValueError(
+            "plot_m_overlap expects MultiUnconfoundednessDiagnosticData or "
+            "MultiCausalEstimate with diagnostic_data. "
+            "Call estimate(..., diagnostic_data=True)."
+        )
+    if not hasattr(resolved, "m_hat") or not hasattr(resolved, "d"):
+        raise ValueError("diagnostic_data must include both `m_hat` and `d`.")
+    return resolved
+
+
 def plot_m_overlap(
-    diag: MultiUnconfoundednessDiagnosticData,
+    diag: Union[MultiUnconfoundednessDiagnosticData, MultiCausalEstimate, dict, Any],
     clip: Tuple[float, float] = (0.01, 0.99),
     bins: Any = "fd",
     kde: bool = True,
@@ -147,8 +172,9 @@ def plot_m_overlap(
         ax1.legend(frameon=False)
 
     # ------- Data -----------------------------------------------------------
-    d = np.asarray(getattr(diag, "d"), dtype=float)
-    m = np.asarray(getattr(diag, "m_hat"), dtype=float)
+    diag_resolved = _resolve_overlap_diag(diag)
+    d = np.asarray(getattr(diag_resolved, "d"), dtype=float)
+    m = np.asarray(getattr(diag_resolved, "m_hat"), dtype=float)
 
     if d.ndim != 2 or m.ndim != 2:
         raise ValueError("Expected multi-treatment diag: d and m_hat must be 2D arrays (n, K).")
@@ -297,3 +323,19 @@ def plot_m_overlap(
             )
         plt.close(fig)
         return fig
+
+
+def overlap_plot(
+    data: MultiCausalData,
+    estimate: MultiCausalEstimate,
+    **kwargs: Any,
+) -> plt.Figure:
+    """Convenience wrapper to match `overlap_plot(data, estimate)` API style."""
+    if not isinstance(data, MultiCausalData):
+        raise TypeError(f"data must be MultiCausalData, got {type(data).__name__}.")
+    if not isinstance(estimate, MultiCausalEstimate):
+        raise TypeError(f"estimate must be MultiCausalEstimate, got {type(estimate).__name__}.")
+    return plot_m_overlap(estimate, treatment_names=list(data.treatment_names), **kwargs)
+
+
+__all__ = ["plot_m_overlap", "overlap_plot"]
