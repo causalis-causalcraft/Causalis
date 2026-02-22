@@ -12,11 +12,13 @@ __all__ = [
     "unconfoundedness",
     "plot_m_overlap",
     "overlap_plot",
+    "plot_residual_diagnostics",
     "run_score_diagnostics",
     "run_unconfoundedness_diagnostics",
     "validate_unconfoundedness_balance",
     "run_overlap_diagnostics",
     "sensitivity_analysis",
     "get_sensitivity_summary",
+    "sensitivity_benchmark",
     "compute_bias_aware_ci",
 ]

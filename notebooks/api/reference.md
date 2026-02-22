@@ -18,7 +18,7 @@ Causalis: A Python package for causal inference.
 - [**causaldata**](#causalis.data_contracts.causaldata) – Causalis Dataclass for storing Cross-sectional DataFrame and column metadata for causal inference.
 - [**causaldata_instrumental**](#causalis.data_contracts.causaldata_instrumental) –
 - [**multicausal_estimate**](#causalis.data_contracts.multicausal_estimate) –
-- [**multicausaldata**](#causalis.data_contracts.multicausaldata) – Causalis Dataclass for storing Cross-sectional DataFrame and column metadata for causal inference with multiple treatments.
+- [**multicausaldata**](#causalis.data_contracts.multicausaldata) – Causalis Dataclass for storing Cross-sectional DataFrame and column metadata
 - [**regression_checks**](#causalis.data_contracts.regression_checks) –
 
 **Classes:**
@@ -28,7 +28,7 @@ Causalis: A Python package for causal inference.
 - [**CausalDatasetGenerator**](#causalis.data_contracts.CausalDatasetGenerator) – Generate synthetic causal inference datasets with controllable confounding,
 - [**CausalEstimate**](#causalis.data_contracts.CausalEstimate) – Result container for causal effect estimates.
 - [**DiagnosticData**](#causalis.data_contracts.DiagnosticData) – Base class for all diagnostic data_contracts.
-- [**MultiCausalData**](#causalis.data_contracts.MultiCausalData) – Data contract for cross-sectional causal data with multiple binary treatment columns.
+- [**MultiCausalData**](#causalis.data_contracts.MultiCausalData) – Data contract for cross-sectional causal data with multi-class one-hot treatments.
 - [**RegressionChecks**](#causalis.data_contracts.RegressionChecks) – Lightweight OLS/regression health checks for CUPED diagnostics.
 - [**UnconfoundednessDiagnosticData**](#causalis.data_contracts.UnconfoundednessDiagnosticData) – Fields common to all models assuming unconfoundedness.
 
@@ -798,29 +798,34 @@ model_config = ConfigDict(arbitrary_types_allowed=True)
 
 Bases: <code>[BaseModel](#pydantic.BaseModel)</code>
 
-Data contract for cross-sectional causal data with multiple binary treatment columns.
+Data contract for cross-sectional causal data with multi-class one-hot treatments.
 
 **Parameters:**
 
 - **df** (<code>[DataFrame](#pandas.DataFrame)</code>) – The DataFrame containing the causal data.
-- **outcome_name** (<code>[str](#str)</code>) – The name of the outcome column. (Alias: "outcome")
-- **treatment_names** (<code>[List](#typing.List)\[[str](#str)\]</code>) – The names of the treatment columns. (Alias: "treatments")
-- **confounders_names** (<code>[List](#typing.List)\[[str](#str)\]</code>) – The names of the confounder columns, by default []. (Alias: "confounders")
-- **user_id_name** (<code>[Optional](#typing.Optional)\[[str](#str)\]</code>) – The name of the user ID column, by default None. (Alias: "user_id")
+- **outcome** (<code>[str](#str)</code>) – The name of the outcome column.
+- **treatment_names** (<code>[List](#typing.List)\[[str](#str)\]</code>) – The names of the treatment columns.
+- **confounders** (<code>[List](#typing.List)\[[str](#str)\]</code>) – The names of the confounder columns, by default [].
+- **user_id** (<code>[Optional](#typing.Optional)\[[str](#str)\]</code>) – The name of the user ID column, by default None.
+- **control_treatment** (<code>[str](#str)</code>) – Name of the control/baseline treatment column.
 
 <details class="note" open markdown="1">
 <summary>Notes</summary>
 
 This class enforces several constraints on the data, including:
 
-- Maximum number of treatments (default 5).
+- Maximum number of treatment_names (default 15).
 - No duplicate column names in the input DataFrame.
-- Disjoint roles for columns (outcome, treatments, confounders, user_id).
+- Disjoint roles for columns (outcome, treatment_names, confounders, user_id).
+- Non-empty normalized names for outcome and user_id (if provided).
 - Existence of all specified columns in the DataFrame.
 - Numeric or boolean types for outcome and confounders.
-- Non-constant values for outcome, treatments, and confounders.
+- Finite values for outcome, confounders, and treatment_names.
+- Non-constant values for outcome, treatment_names, and confounders.
 - No NaN values in used columns.
 - Binary (0/1) encoding for treatment columns.
+- One-hot treatment assignment (exactly one active treatment per row).
+- A stable control treatment in position 0.
 - No identical values between different columns.
 - Unique values for user_id (if specified).
 
@@ -840,7 +845,7 @@ FLOAT_TOL: float = 1e-12
 ##### `MAX_TREATMENTS`
 
 ```python
-MAX_TREATMENTS: int = 5
+MAX_TREATMENTS: int = 15
 ```
 
 ##### `X`
@@ -855,10 +860,16 @@ Return the confounder columns as a pandas DataFrame.
 
 - <code>[DataFrame](#pandas.DataFrame)</code> – The confounder columns.
 
-##### `confounders_names`
+##### `confounders`
 
 ```python
-confounders_names: List[str] = Field(alias='confounders', default_factory=list)
+confounders: List[str] = Field(default_factory=list)
+```
+
+##### `control_treatment`
+
+```python
+control_treatment: str
 ```
 
 ##### `df`
@@ -870,7 +881,7 @@ df: pd.DataFrame
 ##### `from_df`
 
 ```python
-from_df(df: pd.DataFrame, *, outcome: str, treatments: Union[str, List[str]], confounders: Optional[Union[str, List[str]]] = None, user_id: Optional[str] = None, **kwargs: Any) -> 'MultiCausalData'
+from_df(df: pd.DataFrame, *, outcome: str, treatment_names: Union[str, List[str]], confounders: Optional[Union[str, List[str]]] = None, user_id: Optional[str] = None, control_treatment: str, **kwargs: Any) -> 'MultiCausalData'
 ```
 
 Create a MultiCausalData instance from a pandas DataFrame.
@@ -879,9 +890,10 @@ Create a MultiCausalData instance from a pandas DataFrame.
 
 - **df** (<code>[DataFrame](#pandas.DataFrame)</code>) – The input DataFrame.
 - **outcome** (<code>[str](#str)</code>) – The name of the outcome column.
-- **treatments** (<code>[Union](#typing.Union)\[[str](#str), [List](#typing.List)\[[str](#str)\]\]</code>) – The name(s) of the treatment column(s).
+- **treatment_names** (<code>[Union](#typing.Union)\[[str](#str), [List](#typing.List)\[[str](#str)\]\]</code>) – The name(s) of the treatment column(s).
 - **confounders** (<code>[Union](#typing.Union)\[[str](#str), [List](#typing.List)\[[str](#str)\]\]</code>) – The name(s) of the confounder column(s), by default None.
 - **user_id** (<code>[str](#str)</code>) – The name of the user ID column, by default None.
+- **control_treatment** (<code>[str](#str)</code>) – Name of the control treatment column.
 - \*\***kwargs** (<code>[Any](#typing.Any)</code>) – Additional keyword arguments passed to the constructor.
 
 **Returns:**
@@ -915,25 +927,13 @@ Get a subset of the underlying DataFrame.
 ##### `model_config`
 
 ```python
-model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True, extra='forbid')
+model_config = ConfigDict(arbitrary_types_allowed=True, extra='forbid')
 ```
 
 ##### `outcome`
 
 ```python
-outcome: pd.Series
-```
-
-Return the outcome column as a pandas Series.
-
-**Returns:**
-
-- <code>[Series](#pandas.Series)</code> – The outcome column.
-
-##### `outcome_name`
-
-```python
-outcome_name: str = Field(alias='outcome')
+outcome: str
 ```
 
 ##### `treatment`
@@ -955,7 +955,7 @@ Return the single treatment column as a pandas Series.
 ##### `treatment_names`
 
 ```python
-treatment_names: List[str] = Field(alias='treatments')
+treatment_names: List[str]
 ```
 
 ##### `treatments`
@@ -970,10 +970,10 @@ Return the treatment columns as a pandas DataFrame.
 
 - <code>[DataFrame](#pandas.DataFrame)</code> – The treatment columns.
 
-##### `user_id_name`
+##### `user_id`
 
 ```python
-user_id_name: Optional[str] = Field(alias='user_id', default=None)
+user_id: Optional[str] = None
 ```
 
 #### `RegressionChecks`
@@ -1424,6 +1424,12 @@ m_alpha: Optional[np.ndarray] = None
 m_hat: np.ndarray
 ```
 
+###### `m_hat_raw`
+
+```python
+m_hat_raw: Optional[np.ndarray] = None
+```
+
 ###### `normalize_ipw`
 
 ```python
@@ -1460,6 +1466,12 @@ psi_nu2: Optional[np.ndarray] = None
 psi_sigma2: Optional[np.ndarray] = None
 ```
 
+###### `residual_plot_cache`
+
+```python
+residual_plot_cache: Optional[Dict[str, Any]] = None
+```
+
 ###### `riesz_rep`
 
 ```python
@@ -1470,6 +1482,12 @@ riesz_rep: Optional[np.ndarray] = None
 
 ```python
 score: Optional[str] = None
+```
+
+###### `sensitivity_analysis`
+
+```python
+sensitivity_analysis: Optional[Dict[str, Any]] = None
 ```
 
 ###### `sigma2`
@@ -2357,11 +2375,10 @@ Result container for causal effect estimates.
 - **confounders** (<code>list of str</code>) – The names of the confounders used in the model.
 - **time** (<code>[str](#str)</code>) – The date when the estimate was created (YYYY-MM-DD).
 - **diagnostic_data** (<code>[DiagnosticData](#causalis.data_contracts.causal_diagnostic_data.DiagnosticData)</code>) – Additional diagnostic data_contracts.
-- **sensitivity_analysis** (<code>[dict](#dict)</code>) – Results from sensitivity analysis.
 
 **Functions:**
 
-- [**summary**](#causalis.data_contracts.multicausal_estimate.MultiCausalEstimate.summary) – Return a summary DataFrame of the results.
+- [**summary**](#causalis.data_contracts.multicausal_estimate.MultiCausalEstimate.summary) – Return a CausalEstimate-like summary for all baseline contrasts.
 
 ###### `alpha`
 
@@ -2397,6 +2414,18 @@ ci_upper_relative: Optional[np.ndarray] = None
 
 ```python
 confounders: List[str] = Field(default_factory=list)
+```
+
+###### `contrast_labels`
+
+```python
+contrast_labels: List[str] = Field(default_factory=list)
+```
+
+###### `control_mean`
+
+```python
+control_mean: Optional[float] = None
 ```
 
 ###### `diagnostic_data`
@@ -2447,6 +2476,12 @@ n_control: int
 n_treated: int
 ```
 
+###### `n_treated_by_arm`
+
+```python
+n_treated_by_arm: Optional[np.ndarray] = None
+```
+
 ###### `outcome`
 
 ```python
@@ -2459,23 +2494,17 @@ outcome: str
 p_value: Optional[np.ndarray] = None
 ```
 
-###### `sensitivity_analysis`
-
-```python
-sensitivity_analysis: Dict[str, Any] = Field(default_factory=dict)
-```
-
 ###### `summary`
 
 ```python
 summary() -> pd.DataFrame
 ```
 
-Return a summary DataFrame of the results.
+Return a CausalEstimate-like summary for all baseline contrasts.
 
 **Returns:**
 
-- <code>[DataFrame](#pandas.DataFrame)</code> – Summary DataFrame.
+- <code>[DataFrame](#pandas.DataFrame)</code> – Summary indexed by `field` and with one column per contrast (d_k vs d_0).
 
 ###### `time`
 
@@ -2487,6 +2516,12 @@ time: str = Field(default_factory=(lambda: datetime.now().strftime('%Y-%m-%d')))
 
 ```python
 treatment: List[str]
+```
+
+###### `treatment_mean`
+
+```python
+treatment_mean: Optional[np.ndarray] = None
 ```
 
 ###### `value`
@@ -2503,39 +2538,45 @@ value_relative: Optional[np.ndarray] = None
 
 #### `multicausaldata`
 
-Causalis Dataclass for storing Cross-sectional DataFrame and column metadata for causal inference with multiple treatments.
+Causalis Dataclass for storing Cross-sectional DataFrame and column metadata
+for causal inference with multiple treatments.
 
 **Classes:**
 
-- [**MultiCausalData**](#causalis.data_contracts.multicausaldata.MultiCausalData) – Data contract for cross-sectional causal data with multiple binary treatment columns.
+- [**MultiCausalData**](#causalis.data_contracts.multicausaldata.MultiCausalData) – Data contract for cross-sectional causal data with multi-class one-hot treatments.
 
 ##### `MultiCausalData`
 
 Bases: <code>[BaseModel](#pydantic.BaseModel)</code>
 
-Data contract for cross-sectional causal data with multiple binary treatment columns.
+Data contract for cross-sectional causal data with multi-class one-hot treatments.
 
 **Parameters:**
 
 - **df** (<code>[DataFrame](#pandas.DataFrame)</code>) – The DataFrame containing the causal data.
-- **outcome_name** (<code>[str](#str)</code>) – The name of the outcome column. (Alias: "outcome")
-- **treatment_names** (<code>[List](#typing.List)\[[str](#str)\]</code>) – The names of the treatment columns. (Alias: "treatments")
-- **confounders_names** (<code>[List](#typing.List)\[[str](#str)\]</code>) – The names of the confounder columns, by default []. (Alias: "confounders")
-- **user_id_name** (<code>[Optional](#typing.Optional)\[[str](#str)\]</code>) – The name of the user ID column, by default None. (Alias: "user_id")
+- **outcome** (<code>[str](#str)</code>) – The name of the outcome column.
+- **treatment_names** (<code>[List](#typing.List)\[[str](#str)\]</code>) – The names of the treatment columns.
+- **confounders** (<code>[List](#typing.List)\[[str](#str)\]</code>) – The names of the confounder columns, by default [].
+- **user_id** (<code>[Optional](#typing.Optional)\[[str](#str)\]</code>) – The name of the user ID column, by default None.
+- **control_treatment** (<code>[str](#str)</code>) – Name of the control/baseline treatment column.
 
 <details class="note" open markdown="1">
 <summary>Notes</summary>
 
 This class enforces several constraints on the data, including:
 
-- Maximum number of treatments (default 5).
+- Maximum number of treatment_names (default 15).
 - No duplicate column names in the input DataFrame.
-- Disjoint roles for columns (outcome, treatments, confounders, user_id).
+- Disjoint roles for columns (outcome, treatment_names, confounders, user_id).
+- Non-empty normalized names for outcome and user_id (if provided).
 - Existence of all specified columns in the DataFrame.
 - Numeric or boolean types for outcome and confounders.
-- Non-constant values for outcome, treatments, and confounders.
+- Finite values for outcome, confounders, and treatment_names.
+- Non-constant values for outcome, treatment_names, and confounders.
 - No NaN values in used columns.
 - Binary (0/1) encoding for treatment columns.
+- One-hot treatment assignment (exactly one active treatment per row).
+- A stable control treatment in position 0.
 - No identical values between different columns.
 - Unique values for user_id (if specified).
 
@@ -2555,7 +2596,7 @@ FLOAT_TOL: float = 1e-12
 ###### `MAX_TREATMENTS`
 
 ```python
-MAX_TREATMENTS: int = 5
+MAX_TREATMENTS: int = 15
 ```
 
 ###### `X`
@@ -2570,10 +2611,16 @@ Return the confounder columns as a pandas DataFrame.
 
 - <code>[DataFrame](#pandas.DataFrame)</code> – The confounder columns.
 
-###### `confounders_names`
+###### `confounders`
 
 ```python
-confounders_names: List[str] = Field(alias='confounders', default_factory=list)
+confounders: List[str] = Field(default_factory=list)
+```
+
+###### `control_treatment`
+
+```python
+control_treatment: str
 ```
 
 ###### `df`
@@ -2585,7 +2632,7 @@ df: pd.DataFrame
 ###### `from_df`
 
 ```python
-from_df(df: pd.DataFrame, *, outcome: str, treatments: Union[str, List[str]], confounders: Optional[Union[str, List[str]]] = None, user_id: Optional[str] = None, **kwargs: Any) -> 'MultiCausalData'
+from_df(df: pd.DataFrame, *, outcome: str, treatment_names: Union[str, List[str]], confounders: Optional[Union[str, List[str]]] = None, user_id: Optional[str] = None, control_treatment: str, **kwargs: Any) -> 'MultiCausalData'
 ```
 
 Create a MultiCausalData instance from a pandas DataFrame.
@@ -2594,9 +2641,10 @@ Create a MultiCausalData instance from a pandas DataFrame.
 
 - **df** (<code>[DataFrame](#pandas.DataFrame)</code>) – The input DataFrame.
 - **outcome** (<code>[str](#str)</code>) – The name of the outcome column.
-- **treatments** (<code>[Union](#typing.Union)\[[str](#str), [List](#typing.List)\[[str](#str)\]\]</code>) – The name(s) of the treatment column(s).
+- **treatment_names** (<code>[Union](#typing.Union)\[[str](#str), [List](#typing.List)\[[str](#str)\]\]</code>) – The name(s) of the treatment column(s).
 - **confounders** (<code>[Union](#typing.Union)\[[str](#str), [List](#typing.List)\[[str](#str)\]\]</code>) – The name(s) of the confounder column(s), by default None.
 - **user_id** (<code>[str](#str)</code>) – The name of the user ID column, by default None.
+- **control_treatment** (<code>[str](#str)</code>) – Name of the control treatment column.
 - \*\***kwargs** (<code>[Any](#typing.Any)</code>) – Additional keyword arguments passed to the constructor.
 
 **Returns:**
@@ -2630,25 +2678,13 @@ Get a subset of the underlying DataFrame.
 ###### `model_config`
 
 ```python
-model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True, extra='forbid')
+model_config = ConfigDict(arbitrary_types_allowed=True, extra='forbid')
 ```
 
 ###### `outcome`
 
 ```python
-outcome: pd.Series
-```
-
-Return the outcome column as a pandas Series.
-
-**Returns:**
-
-- <code>[Series](#pandas.Series)</code> – The outcome column.
-
-###### `outcome_name`
-
-```python
-outcome_name: str = Field(alias='outcome')
+outcome: str
 ```
 
 ###### `treatment`
@@ -2670,7 +2706,7 @@ Return the single treatment column as a pandas Series.
 ###### `treatment_names`
 
 ```python
-treatment_names: List[str] = Field(alias='treatments')
+treatment_names: List[str]
 ```
 
 ###### `treatments`
@@ -2685,10 +2721,10 @@ Return the treatment columns as a pandas DataFrame.
 
 - <code>[DataFrame](#pandas.DataFrame)</code> – The treatment columns.
 
-###### `user_id_name`
+###### `user_id`
 
 ```python
-user_id_name: Optional[str] = Field(alias='user_id', default=None)
+user_id: Optional[str] = None
 ```
 
 #### `obs_linear_26_dataset`
@@ -5273,41 +5309,48 @@ Based on the benchmark scenario in docs/research/dgp_benchmarking.ipynb.
 
 **Classes:**
 
-- [**MultiCausalData**](#causalis.dgp.multicausaldata.MultiCausalData) – Data contract for cross-sectional causal data with multiple binary treatment columns.
+- [**MultiCausalData**](#causalis.dgp.multicausaldata.MultiCausalData) – Data contract for cross-sectional causal data with multi-class one-hot treatments.
 - [**MultiCausalDatasetGenerator**](#causalis.dgp.multicausaldata.MultiCausalDatasetGenerator) – Generate synthetic causal datasets with multi-class (one-hot) treatments.
 
 **Functions:**
 
 - [**generate_multitreatment**](#causalis.dgp.multicausaldata.generate_multitreatment) – Generate a multi-treatment dataset using MultiCausalDatasetGenerator.
+- [**generate_multitreatment_binary_26**](#causalis.dgp.multicausaldata.generate_multitreatment_binary_26) –
+- [**generate_multitreatment_gamma_26**](#causalis.dgp.multicausaldata.generate_multitreatment_gamma_26) –
 - [**generate_multitreatment_irm_26**](#causalis.dgp.multicausaldata.generate_multitreatment_irm_26) –
 
 ##### `MultiCausalData`
 
 Bases: <code>[BaseModel](#pydantic.BaseModel)</code>
 
-Data contract for cross-sectional causal data with multiple binary treatment columns.
+Data contract for cross-sectional causal data with multi-class one-hot treatments.
 
 **Parameters:**
 
 - **df** (<code>[DataFrame](#pandas.DataFrame)</code>) – The DataFrame containing the causal data.
-- **outcome_name** (<code>[str](#str)</code>) – The name of the outcome column. (Alias: "outcome")
-- **treatment_names** (<code>[List](#typing.List)\[[str](#str)\]</code>) – The names of the treatment columns. (Alias: "treatments")
-- **confounders_names** (<code>[List](#typing.List)\[[str](#str)\]</code>) – The names of the confounder columns, by default []. (Alias: "confounders")
-- **user_id_name** (<code>[Optional](#typing.Optional)\[[str](#str)\]</code>) – The name of the user ID column, by default None. (Alias: "user_id")
+- **outcome** (<code>[str](#str)</code>) – The name of the outcome column.
+- **treatment_names** (<code>[List](#typing.List)\[[str](#str)\]</code>) – The names of the treatment columns.
+- **confounders** (<code>[List](#typing.List)\[[str](#str)\]</code>) – The names of the confounder columns, by default [].
+- **user_id** (<code>[Optional](#typing.Optional)\[[str](#str)\]</code>) – The name of the user ID column, by default None.
+- **control_treatment** (<code>[str](#str)</code>) – Name of the control/baseline treatment column.
 
 <details class="note" open markdown="1">
 <summary>Notes</summary>
 
 This class enforces several constraints on the data, including:
 
-- Maximum number of treatments (default 5).
+- Maximum number of treatment_names (default 15).
 - No duplicate column names in the input DataFrame.
-- Disjoint roles for columns (outcome, treatments, confounders, user_id).
+- Disjoint roles for columns (outcome, treatment_names, confounders, user_id).
+- Non-empty normalized names for outcome and user_id (if provided).
 - Existence of all specified columns in the DataFrame.
 - Numeric or boolean types for outcome and confounders.
-- Non-constant values for outcome, treatments, and confounders.
+- Finite values for outcome, confounders, and treatment_names.
+- Non-constant values for outcome, treatment_names, and confounders.
 - No NaN values in used columns.
 - Binary (0/1) encoding for treatment columns.
+- One-hot treatment assignment (exactly one active treatment per row).
+- A stable control treatment in position 0.
 - No identical values between different columns.
 - Unique values for user_id (if specified).
 
@@ -5327,7 +5370,7 @@ FLOAT_TOL: float = 1e-12
 ###### `MAX_TREATMENTS`
 
 ```python
-MAX_TREATMENTS: int = 5
+MAX_TREATMENTS: int = 15
 ```
 
 ###### `X`
@@ -5342,10 +5385,16 @@ Return the confounder columns as a pandas DataFrame.
 
 - <code>[DataFrame](#pandas.DataFrame)</code> – The confounder columns.
 
-###### `confounders_names`
+###### `confounders`
 
 ```python
-confounders_names: List[str] = Field(alias='confounders', default_factory=list)
+confounders: List[str] = Field(default_factory=list)
+```
+
+###### `control_treatment`
+
+```python
+control_treatment: str
 ```
 
 ###### `df`
@@ -5357,7 +5406,7 @@ df: pd.DataFrame
 ###### `from_df`
 
 ```python
-from_df(df: pd.DataFrame, *, outcome: str, treatments: Union[str, List[str]], confounders: Optional[Union[str, List[str]]] = None, user_id: Optional[str] = None, **kwargs: Any) -> 'MultiCausalData'
+from_df(df: pd.DataFrame, *, outcome: str, treatment_names: Union[str, List[str]], confounders: Optional[Union[str, List[str]]] = None, user_id: Optional[str] = None, control_treatment: str, **kwargs: Any) -> 'MultiCausalData'
 ```
 
 Create a MultiCausalData instance from a pandas DataFrame.
@@ -5366,9 +5415,10 @@ Create a MultiCausalData instance from a pandas DataFrame.
 
 - **df** (<code>[DataFrame](#pandas.DataFrame)</code>) – The input DataFrame.
 - **outcome** (<code>[str](#str)</code>) – The name of the outcome column.
-- **treatments** (<code>[Union](#typing.Union)\[[str](#str), [List](#typing.List)\[[str](#str)\]\]</code>) – The name(s) of the treatment column(s).
+- **treatment_names** (<code>[Union](#typing.Union)\[[str](#str), [List](#typing.List)\[[str](#str)\]\]</code>) – The name(s) of the treatment column(s).
 - **confounders** (<code>[Union](#typing.Union)\[[str](#str), [List](#typing.List)\[[str](#str)\]\]</code>) – The name(s) of the confounder column(s), by default None.
 - **user_id** (<code>[str](#str)</code>) – The name of the user ID column, by default None.
+- **control_treatment** (<code>[str](#str)</code>) – Name of the control treatment column.
 - \*\***kwargs** (<code>[Any](#typing.Any)</code>) – Additional keyword arguments passed to the constructor.
 
 **Returns:**
@@ -5402,25 +5452,13 @@ Get a subset of the underlying DataFrame.
 ###### `model_config`
 
 ```python
-model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True, extra='forbid')
+model_config = ConfigDict(arbitrary_types_allowed=True, extra='forbid')
 ```
 
 ###### `outcome`
 
 ```python
-outcome: pd.Series
-```
-
-Return the outcome column as a pandas Series.
-
-**Returns:**
-
-- <code>[Series](#pandas.Series)</code> – The outcome column.
-
-###### `outcome_name`
-
-```python
-outcome_name: str = Field(alias='outcome')
+outcome: str
 ```
 
 ###### `treatment`
@@ -5442,7 +5480,7 @@ Return the single treatment column as a pandas Series.
 ###### `treatment_names`
 
 ```python
-treatment_names: List[str] = Field(alias='treatments')
+treatment_names: List[str]
 ```
 
 ###### `treatments`
@@ -5457,16 +5495,16 @@ Return the treatment columns as a pandas DataFrame.
 
 - <code>[DataFrame](#pandas.DataFrame)</code> – The treatment columns.
 
-###### `user_id_name`
+###### `user_id`
 
 ```python
-user_id_name: Optional[str] = Field(alias='user_id', default=None)
+user_id: Optional[str] = None
 ```
 
 ##### `MultiCausalDatasetGenerator`
 
 ```python
-MultiCausalDatasetGenerator(n_treatments: int = 3, treatment_names: Optional[List[str]] = None, theta: Optional[Union[float, List[float], np.ndarray]] = 1.0, tau: Optional[Union[Callable[[np.ndarray], np.ndarray], List[Optional[Callable[[np.ndarray], np.ndarray]]]]] = None, beta_y: Optional[np.ndarray] = None, g_y: Optional[Callable[[np.ndarray], np.ndarray]] = None, alpha_y: float = 0.0, sigma_y: float = 1.0, outcome_type: str = 'continuous', u_strength_y: float = 0.0, confounder_specs: Optional[List[Dict[str, Any]]] = None, k: int = 5, x_sampler: Optional[Callable[[int, int, int], np.ndarray]] = None, use_copula: bool = False, copula_corr: Optional[np.ndarray] = None, beta_d: Optional[Union[np.ndarray, List[Optional[np.ndarray]]]] = None, g_d: Optional[Union[Callable[[np.ndarray], np.ndarray], List[Optional[Callable[[np.ndarray], np.ndarray]]]]] = None, alpha_d: Optional[Union[float, List[float], np.ndarray]] = None, u_strength_d: Union[float, List[float], np.ndarray] = 0.0, propensity_sharpness: float = 1.0, target_d_rate: Optional[Union[List[float], np.ndarray]] = None, include_oracle: bool = True, seed: Optional[int] = None) -> None
+MultiCausalDatasetGenerator(n_treatments: int = 3, d_names: Optional[List[str]] = None, theta: Optional[Union[float, List[float], np.ndarray]] = 1.0, tau: Optional[Union[Callable[[np.ndarray], np.ndarray], List[Optional[Callable[[np.ndarray], np.ndarray]]]]] = None, beta_y: Optional[np.ndarray] = None, g_y: Optional[Callable[[np.ndarray], np.ndarray]] = None, alpha_y: float = 0.0, sigma_y: float = 1.0, outcome_type: str = 'continuous', gamma_shape: float = 2.0, u_strength_y: float = 0.0, confounder_specs: Optional[List[Dict[str, Any]]] = None, k: int = 5, x_sampler: Optional[Callable[[int, int, int], np.ndarray]] = None, use_copula: bool = False, copula_corr: Optional[np.ndarray] = None, beta_d: Optional[Union[np.ndarray, List[Optional[np.ndarray]]]] = None, g_d: Optional[Union[Callable[[np.ndarray], np.ndarray], List[Optional[Callable[[np.ndarray], np.ndarray]]]]] = None, alpha_d: Optional[Union[float, List[float], np.ndarray]] = None, u_strength_d: Union[float, List[float], np.ndarray] = 0.0, propensity_sharpness: float = 1.0, target_d_rate: Optional[Union[List[float], np.ndarray]] = None, include_oracle: bool = True, seed: Optional[int] = None) -> None
 ```
 
 Generate synthetic causal datasets with multi-class (one-hot) treatments.
@@ -5476,25 +5514,31 @@ P(D=k | X, U) = softmax_k(alpha_d[k] + f_k(X) + u_strength_d[k] * U)
 
 Outcome depends on confounders and the assigned treatment class:
 outcome_type = "continuous":
-Y = alpha_y + f_y(X) + u_strength_y * U + sum_k D_k * tau_k(X) + eps
+Y = alpha_y + f_y(X) + u_strength_y * U + sum_k D_k * (theta_k + tau_k(X)) + eps
 outcome_type = "binary":
-logit P(Y=1|X,D,U) = alpha_y + f_y(X) + u_strength_y * U + sum_k D_k * tau_k(X)
+logit P(Y=1|X,D,U) = alpha_y + f_y(X) + u_strength_y * U + sum_k D_k * (theta_k + tau_k(X))
 outcome_type = "poisson":
-log E[Y|X,D,U] = alpha_y + f_y(X) + u_strength_y * U + sum_k D_k * tau_k(X)
+log E[Y|X,D,U] = alpha_y + f_y(X) + u_strength_y * U + sum_k D_k * (theta_k + tau_k(X))
+outcome_type = "gamma":
+log E[Y|X,D,U] = alpha_y + f_y(X) + u_strength_y * U + sum_k D_k * (theta_k + tau_k(X))
 
 **Parameters:**
 
 - **n_treatments** (<code>[int](#int)</code>) – Number of treatment classes (including control). Column 0 is treated as control.
-- **treatment_names** (<code>list of str</code>) – Names of treatment columns. If None, uses ["t_0", "t_1", ...].
+  Generated treatment columns are a full one-hot encoding that sums to 1.
+- **d_names** (<code>list of str</code>) – Names of treatment columns. If None, uses ["d_0", "d_1", ...].
 - **theta** (<code>[float](#float) or [array](#array) - [like](#like)</code>) – Constant treatment effects on the link scale for each class.
   If scalar, applied to all non-control classes (control effect = 0).
   If length K-1, prepends 0 for control. If length K, uses as provided.
 - **tau** (<code>callable or list of callables</code>) – Heterogeneous effects for each class. If callable, applied to non-control classes.
+  Effects are additive with theta on the link scale:
+  tau_link_k(X) = theta_k + tau_k(X).
 - **beta_y** (<code>[array](#array) - [like](#like)</code>) – Linear coefficients for baseline outcome f_y(X).
 - **g_y** (<code>[callable](#callable)</code>) – Nonlinear baseline outcome function g_y(X).
 - **alpha_y** (<code>[float](#float)</code>) – Outcome intercept on link scale.
 - **sigma_y** (<code>[float](#float)</code>) – Std dev for continuous outcomes.
-- **outcome_type** (<code>('continuous', 'binary', 'poisson')</code>) – Outcome family.
+- **outcome_type** (<code>('continuous', 'binary', 'poisson', 'gamma')</code>) – Outcome family.
+- **gamma_shape** (<code>[float](#float)</code>) – Shape parameter for gamma outcomes.
 - **u_strength_y** (<code>[float](#float)</code>) – Strength of unobserved confounder in outcome.
 - **confounder_specs** (<code>list of dict</code>) – Schema for generating confounders (same format as CausalDatasetGenerator).
 - **k** (<code>[int](#int)</code>) – Number of confounders if confounder_specs is None.
@@ -5506,6 +5550,8 @@ log E[Y|X,D,U] = alpha_y + f_y(X) + u_strength_y * U + sum_k D_k * tau_k(X)
 - **g_d** (<code>callable or list of callables</code>) – Nonlinear treatment score per class. If callable, applies to non-control classes.
 - **alpha_d** (<code>[float](#float) or [array](#array) - [like](#like)</code>) – Intercepts for treatment scores. If scalar, applies to non-control classes.
 - **u_strength_d** (<code>[float](#float) or [array](#array) - [like](#like)</code>) – Unobserved confounder strength in treatment assignment.
+  If scalar, interpreted as [0, c, c, ...] so latent U perturbs non-control
+  classes relative to control (and does not cancel in softmax).
 - **propensity_sharpness** (<code>[float](#float)</code>) – Scales treatment scores to adjust overlap.
 - **target_d_rate** (<code>[array](#array) - [like](#like)</code>) – Target marginal class probabilities (length K). Calibrates alpha_d
   using iterative scaling (approximate when u_strength_d != 0).
@@ -5559,6 +5605,12 @@ confounder_specs: Optional[List[Dict[str, Any]]] = None
 copula_corr: Optional[np.ndarray] = None
 ```
 
+###### `d_names`
+
+```python
+d_names: Optional[List[str]] = None
+```
+
 ###### `g_d`
 
 ```python
@@ -5569,6 +5621,12 @@ g_d: Optional[Union[Callable[[np.ndarray], np.ndarray], List[Optional[Callable[[
 
 ```python
 g_y: Optional[Callable[[np.ndarray], np.ndarray]] = None
+```
+
+###### `gamma_shape`
+
+```python
+gamma_shape: float = 2.0
 ```
 
 ###### `generate`
@@ -5649,12 +5707,6 @@ theta: Optional[Union[float, List[float], np.ndarray]] = 1.0
 to_multicausal_data(n: int, confounders: Optional[Union[str, List[str]]] = None) -> MultiCausalData
 ```
 
-###### `treatment_names`
-
-```python
-treatment_names: Optional[List[str]] = None
-```
-
 ###### `u_strength_d`
 
 ```python
@@ -5688,7 +5740,7 @@ x_sampler: Optional[Callable[[int, int, int], np.ndarray]] = None
 ###### `MultiCausalDatasetGenerator`
 
 ```python
-MultiCausalDatasetGenerator(n_treatments: int = 3, treatment_names: Optional[List[str]] = None, theta: Optional[Union[float, List[float], np.ndarray]] = 1.0, tau: Optional[Union[Callable[[np.ndarray], np.ndarray], List[Optional[Callable[[np.ndarray], np.ndarray]]]]] = None, beta_y: Optional[np.ndarray] = None, g_y: Optional[Callable[[np.ndarray], np.ndarray]] = None, alpha_y: float = 0.0, sigma_y: float = 1.0, outcome_type: str = 'continuous', u_strength_y: float = 0.0, confounder_specs: Optional[List[Dict[str, Any]]] = None, k: int = 5, x_sampler: Optional[Callable[[int, int, int], np.ndarray]] = None, use_copula: bool = False, copula_corr: Optional[np.ndarray] = None, beta_d: Optional[Union[np.ndarray, List[Optional[np.ndarray]]]] = None, g_d: Optional[Union[Callable[[np.ndarray], np.ndarray], List[Optional[Callable[[np.ndarray], np.ndarray]]]]] = None, alpha_d: Optional[Union[float, List[float], np.ndarray]] = None, u_strength_d: Union[float, List[float], np.ndarray] = 0.0, propensity_sharpness: float = 1.0, target_d_rate: Optional[Union[List[float], np.ndarray]] = None, include_oracle: bool = True, seed: Optional[int] = None) -> None
+MultiCausalDatasetGenerator(n_treatments: int = 3, d_names: Optional[List[str]] = None, theta: Optional[Union[float, List[float], np.ndarray]] = 1.0, tau: Optional[Union[Callable[[np.ndarray], np.ndarray], List[Optional[Callable[[np.ndarray], np.ndarray]]]]] = None, beta_y: Optional[np.ndarray] = None, g_y: Optional[Callable[[np.ndarray], np.ndarray]] = None, alpha_y: float = 0.0, sigma_y: float = 1.0, outcome_type: str = 'continuous', gamma_shape: float = 2.0, u_strength_y: float = 0.0, confounder_specs: Optional[List[Dict[str, Any]]] = None, k: int = 5, x_sampler: Optional[Callable[[int, int, int], np.ndarray]] = None, use_copula: bool = False, copula_corr: Optional[np.ndarray] = None, beta_d: Optional[Union[np.ndarray, List[Optional[np.ndarray]]]] = None, g_d: Optional[Union[Callable[[np.ndarray], np.ndarray], List[Optional[Callable[[np.ndarray], np.ndarray]]]]] = None, alpha_d: Optional[Union[float, List[float], np.ndarray]] = None, u_strength_d: Union[float, List[float], np.ndarray] = 0.0, propensity_sharpness: float = 1.0, target_d_rate: Optional[Union[List[float], np.ndarray]] = None, include_oracle: bool = True, seed: Optional[int] = None) -> None
 ```
 
 Generate synthetic causal datasets with multi-class (one-hot) treatments.
@@ -5698,25 +5750,31 @@ P(D=k | X, U) = softmax_k(alpha_d[k] + f_k(X) + u_strength_d[k] * U)
 
 Outcome depends on confounders and the assigned treatment class:
 outcome_type = "continuous":
-Y = alpha_y + f_y(X) + u_strength_y * U + sum_k D_k * tau_k(X) + eps
+Y = alpha_y + f_y(X) + u_strength_y * U + sum_k D_k * (theta_k + tau_k(X)) + eps
 outcome_type = "binary":
-logit P(Y=1|X,D,U) = alpha_y + f_y(X) + u_strength_y * U + sum_k D_k * tau_k(X)
+logit P(Y=1|X,D,U) = alpha_y + f_y(X) + u_strength_y * U + sum_k D_k * (theta_k + tau_k(X))
 outcome_type = "poisson":
-log E[Y|X,D,U] = alpha_y + f_y(X) + u_strength_y * U + sum_k D_k * tau_k(X)
+log E[Y|X,D,U] = alpha_y + f_y(X) + u_strength_y * U + sum_k D_k * (theta_k + tau_k(X))
+outcome_type = "gamma":
+log E[Y|X,D,U] = alpha_y + f_y(X) + u_strength_y * U + sum_k D_k * (theta_k + tau_k(X))
 
 **Parameters:**
 
 - **n_treatments** (<code>[int](#int)</code>) – Number of treatment classes (including control). Column 0 is treated as control.
-- **treatment_names** (<code>list of str</code>) – Names of treatment columns. If None, uses ["t_0", "t_1", ...].
+  Generated treatment columns are a full one-hot encoding that sums to 1.
+- **d_names** (<code>list of str</code>) – Names of treatment columns. If None, uses ["d_0", "d_1", ...].
 - **theta** (<code>[float](#float) or [array](#array) - [like](#like)</code>) – Constant treatment effects on the link scale for each class.
   If scalar, applied to all non-control classes (control effect = 0).
   If length K-1, prepends 0 for control. If length K, uses as provided.
 - **tau** (<code>callable or list of callables</code>) – Heterogeneous effects for each class. If callable, applied to non-control classes.
+  Effects are additive with theta on the link scale:
+  tau_link_k(X) = theta_k + tau_k(X).
 - **beta_y** (<code>[array](#array) - [like](#like)</code>) – Linear coefficients for baseline outcome f_y(X).
 - **g_y** (<code>[callable](#callable)</code>) – Nonlinear baseline outcome function g_y(X).
 - **alpha_y** (<code>[float](#float)</code>) – Outcome intercept on link scale.
 - **sigma_y** (<code>[float](#float)</code>) – Std dev for continuous outcomes.
-- **outcome_type** (<code>('continuous', 'binary', 'poisson')</code>) – Outcome family.
+- **outcome_type** (<code>('continuous', 'binary', 'poisson', 'gamma')</code>) – Outcome family.
+- **gamma_shape** (<code>[float](#float)</code>) – Shape parameter for gamma outcomes.
 - **u_strength_y** (<code>[float](#float)</code>) – Strength of unobserved confounder in outcome.
 - **confounder_specs** (<code>list of dict</code>) – Schema for generating confounders (same format as CausalDatasetGenerator).
 - **k** (<code>[int](#int)</code>) – Number of confounders if confounder_specs is None.
@@ -5728,6 +5786,8 @@ log E[Y|X,D,U] = alpha_y + f_y(X) + u_strength_y * U + sum_k D_k * tau_k(X)
 - **g_d** (<code>callable or list of callables</code>) – Nonlinear treatment score per class. If callable, applies to non-control classes.
 - **alpha_d** (<code>[float](#float) or [array](#array) - [like](#like)</code>) – Intercepts for treatment scores. If scalar, applies to non-control classes.
 - **u_strength_d** (<code>[float](#float) or [array](#array) - [like](#like)</code>) – Unobserved confounder strength in treatment assignment.
+  If scalar, interpreted as [0, c, c, ...] so latent U perturbs non-control
+  classes relative to control (and does not cancel in softmax).
 - **propensity_sharpness** (<code>[float](#float)</code>) – Scales treatment scores to adjust overlap.
 - **target_d_rate** (<code>[array](#array) - [like](#like)</code>) – Target marginal class probabilities (length K). Calibrates alpha_d
   using iterative scaling (approximate when u_strength_d != 0).
@@ -5781,6 +5841,12 @@ confounder_specs: Optional[List[Dict[str, Any]]] = None
 copula_corr: Optional[np.ndarray] = None
 ```
 
+####### `d_names`
+
+```python
+d_names: Optional[List[str]] = None
+```
+
 ####### `g_d`
 
 ```python
@@ -5791,6 +5857,12 @@ g_d: Optional[Union[Callable[[np.ndarray], np.ndarray], List[Optional[Callable[[
 
 ```python
 g_y: Optional[Callable[[np.ndarray], np.ndarray]] = None
+```
+
+####### `gamma_shape`
+
+```python
+gamma_shape: float = 2.0
 ```
 
 ####### `generate`
@@ -5871,12 +5943,6 @@ theta: Optional[Union[float, List[float], np.ndarray]] = 1.0
 to_multicausal_data(n: int, confounders: Optional[Union[str, List[str]]] = None) -> MultiCausalData
 ```
 
-####### `treatment_names`
-
-```python
-treatment_names: Optional[List[str]] = None
-```
-
 ####### `u_strength_d`
 
 ```python
@@ -5910,7 +5976,7 @@ x_sampler: Optional[Callable[[int, int, int], np.ndarray]] = None
 ###### `generate_multitreatment`
 
 ```python
-generate_multitreatment(n: int = 10000, n_treatments: int = 3, outcome_type: str = 'continuous', sigma_y: float = 1.0, target_d_rate: Optional[Union[List[float], Any]] = None, confounder_specs: Optional[List[Dict[str, Any]]] = None, beta_y: Optional[Any] = None, beta_d: Optional[Any] = None, theta: Optional[Any] = None, random_state: Optional[int] = 42, k: int = 0, x_sampler: Optional[Any] = None, include_oracle: bool = True, return_causal_data: bool = False, treatment_names: Optional[List[str]] = None) -> Union[pd.DataFrame, MultiCausalData]
+generate_multitreatment(n: int = 10000, n_treatments: int = 3, outcome_type: str = 'continuous', sigma_y: float = 1.0, alpha_y: float = 0.0, gamma_shape: float = 2.0, tau: Optional[Any] = None, target_d_rate: Optional[Union[List[float], Any]] = None, confounder_specs: Optional[List[Dict[str, Any]]] = None, beta_y: Optional[Any] = None, beta_d: Optional[Any] = None, theta: Optional[Any] = None, random_state: Optional[int] = 42, k: int = 0, x_sampler: Optional[Any] = None, use_copula: bool = False, copula_corr: Optional[Any] = None, include_oracle: bool = True, return_causal_data: bool = False, d_names: Optional[List[str]] = None) -> Union[pd.DataFrame, MultiCausalData]
 ```
 
 Generate a multi-treatment dataset using MultiCausalDatasetGenerator.
@@ -5919,19 +5985,25 @@ Generate a multi-treatment dataset using MultiCausalDatasetGenerator.
 
 - **n** (<code>[int](#int)</code>) – Number of samples.
 - **n_treatments** (<code>[int](#int)</code>) – Number of treatment classes (including control).
-- **outcome_type** (<code>('continuous', 'binary', 'poisson')</code>) – Outcome family.
+- **outcome_type** (<code>('continuous', 'binary', 'poisson', 'gamma')</code>) – Outcome family.
 - **sigma_y** (<code>[float](#float)</code>) – Noise level for continuous outcomes.
+- **alpha_y** (<code>[float](#float)</code>) – Outcome intercept on the structural link scale.
+- **gamma_shape** (<code>[float](#float)</code>) – Shape parameter when `outcome_type="gamma"`.
+- **tau** (<code>callable or list of callables</code>) – Heterogeneous treatment effects per class. When provided with `theta`,
+  the structural effect is additive on link scale (`theta + tau(X)`).
 - **target_d_rate** (<code>[array](#array) - [like](#like)</code>) – Target marginal class probabilities (length K).
 - **confounder_specs** (<code>list of dict</code>) – Schema for confounder distributions.
 - **beta_y** (<code>[array](#array) - [like](#like)</code>) – Linear coefficients for outcome model.
 - **beta_d** (<code>[array](#array) - [like](#like)</code>) – Linear coefficients for treatment model.
-- **theta** (<code>[float](#float) or [array](#array) - [like](#like)</code>) – Constant treatment effects per class.
+- **theta** (<code>[float](#float) or [array](#array) - [like](#like)</code>) – Constant treatment effects per class (adds to `tau` when both are provided).
 - **random_state** (<code>[int](#int)</code>) – Random seed.
 - **k** (<code>[int](#int)</code>) – Number of confounders if confounder_specs is None.
 - **x_sampler** (<code>[callable](#callable)</code>) – Custom sampler for confounders.
+- **use_copula** (<code>[bool](#bool)</code>) – Whether to use Gaussian copula sampling for confounders.
+- **copula_corr** (<code>[array](#array) - [like](#like)</code>) – Correlation matrix used when `use_copula=True`.
 - **include_oracle** (<code>[bool](#bool)</code>) – Whether to include oracle columns.
 - **return_causal_data** (<code>[bool](#bool)</code>) – Whether to return a MultiCausalData object.
-- **treatment_names** (<code>list of str</code>) – Names of treatment columns.
+- **d_names** (<code>list of str</code>) – Names of treatment columns.
 
 **Returns:**
 
@@ -5940,7 +6012,7 @@ Generate a multi-treatment dataset using MultiCausalDatasetGenerator.
 ##### `generate_multitreatment`
 
 ```python
-generate_multitreatment(n: int = 10000, n_treatments: int = 3, outcome_type: str = 'continuous', sigma_y: float = 1.0, target_d_rate: Optional[Union[List[float], Any]] = None, confounder_specs: Optional[List[Dict[str, Any]]] = None, beta_y: Optional[Any] = None, beta_d: Optional[Any] = None, theta: Optional[Any] = None, random_state: Optional[int] = 42, k: int = 0, x_sampler: Optional[Any] = None, include_oracle: bool = True, return_causal_data: bool = False, treatment_names: Optional[List[str]] = None) -> Union[pd.DataFrame, MultiCausalData]
+generate_multitreatment(n: int = 10000, n_treatments: int = 3, outcome_type: str = 'continuous', sigma_y: float = 1.0, alpha_y: float = 0.0, gamma_shape: float = 2.0, tau: Optional[Any] = None, target_d_rate: Optional[Union[List[float], Any]] = None, confounder_specs: Optional[List[Dict[str, Any]]] = None, beta_y: Optional[Any] = None, beta_d: Optional[Any] = None, theta: Optional[Any] = None, random_state: Optional[int] = 42, k: int = 0, x_sampler: Optional[Any] = None, use_copula: bool = False, copula_corr: Optional[Any] = None, include_oracle: bool = True, return_causal_data: bool = False, d_names: Optional[List[str]] = None) -> Union[pd.DataFrame, MultiCausalData]
 ```
 
 Generate a multi-treatment dataset using MultiCausalDatasetGenerator.
@@ -5949,23 +6021,41 @@ Generate a multi-treatment dataset using MultiCausalDatasetGenerator.
 
 - **n** (<code>[int](#int)</code>) – Number of samples.
 - **n_treatments** (<code>[int](#int)</code>) – Number of treatment classes (including control).
-- **outcome_type** (<code>('continuous', 'binary', 'poisson')</code>) – Outcome family.
+- **outcome_type** (<code>('continuous', 'binary', 'poisson', 'gamma')</code>) – Outcome family.
 - **sigma_y** (<code>[float](#float)</code>) – Noise level for continuous outcomes.
+- **alpha_y** (<code>[float](#float)</code>) – Outcome intercept on the structural link scale.
+- **gamma_shape** (<code>[float](#float)</code>) – Shape parameter when `outcome_type="gamma"`.
+- **tau** (<code>callable or list of callables</code>) – Heterogeneous treatment effects per class. When provided with `theta`,
+  the structural effect is additive on link scale (`theta + tau(X)`).
 - **target_d_rate** (<code>[array](#array) - [like](#like)</code>) – Target marginal class probabilities (length K).
 - **confounder_specs** (<code>list of dict</code>) – Schema for confounder distributions.
 - **beta_y** (<code>[array](#array) - [like](#like)</code>) – Linear coefficients for outcome model.
 - **beta_d** (<code>[array](#array) - [like](#like)</code>) – Linear coefficients for treatment model.
-- **theta** (<code>[float](#float) or [array](#array) - [like](#like)</code>) – Constant treatment effects per class.
+- **theta** (<code>[float](#float) or [array](#array) - [like](#like)</code>) – Constant treatment effects per class (adds to `tau` when both are provided).
 - **random_state** (<code>[int](#int)</code>) – Random seed.
 - **k** (<code>[int](#int)</code>) – Number of confounders if confounder_specs is None.
 - **x_sampler** (<code>[callable](#callable)</code>) – Custom sampler for confounders.
+- **use_copula** (<code>[bool](#bool)</code>) – Whether to use Gaussian copula sampling for confounders.
+- **copula_corr** (<code>[array](#array) - [like](#like)</code>) – Correlation matrix used when `use_copula=True`.
 - **include_oracle** (<code>[bool](#bool)</code>) – Whether to include oracle columns.
 - **return_causal_data** (<code>[bool](#bool)</code>) – Whether to return a MultiCausalData object.
-- **treatment_names** (<code>list of str</code>) – Names of treatment columns.
+- **d_names** (<code>list of str</code>) – Names of treatment columns.
 
 **Returns:**
 
 - <code>[DataFrame](#pandas.DataFrame) or [MultiCausalData](#causalis.data_contracts.multicausaldata.MultiCausalData)</code> –
+
+##### `generate_multitreatment_binary_26`
+
+```python
+generate_multitreatment_binary_26(*args, **kwargs)
+```
+
+##### `generate_multitreatment_gamma_26`
+
+```python
+generate_multitreatment_gamma_26(*args, **kwargs)
+```
 
 ##### `generate_multitreatment_irm_26`
 
@@ -8405,11 +8495,11 @@ Return pandas Styler with colored flag cells for notebook display.
 
 - [**dgp**](#causalis.scenarios.multi_unconfoundedness.dgp) –
 - [**model**](#causalis.scenarios.multi_unconfoundedness.model) –
-- [**refutation**](#causalis.scenarios.multi_unconfoundedness.refutation) –
+- [**refutation**](#causalis.scenarios.multi_unconfoundedness.refutation) – Refutation utilities for multi-treatment unconfoundedness.
 
 **Classes:**
 
-- [**MultiTreatmentIRM**](#causalis.scenarios.multi_unconfoundedness.MultiTreatmentIRM) – Interactive Regression Model with multi_unconfoundedness (Multi treatment IRM) with DoubleML-style cross-fitting using CausalData.
+- [**MultiTreatmentIRM**](#causalis.scenarios.multi_unconfoundedness.MultiTreatmentIRM) – Interactive Regression Model for multi-treatment unconfoundedness.
 
 ##### `MultiTreatmentIRM`
 
@@ -8419,30 +8509,37 @@ MultiTreatmentIRM(data: Optional[MultiCausalData] = None, ml_g: Any = None, ml_m
 
 Bases: <code>[BaseEstimator](#sklearn.base.BaseEstimator)</code>
 
-Interactive Regression Model with multi_unconfoundedness (Multi treatment IRM) with DoubleML-style cross-fitting using CausalData.
+Interactive Regression Model for multi-treatment unconfoundedness.
+
+DoubleML-style cross-fitting estimator consuming `MultiCausalData` and
+producing pairwise ATE contrasts against baseline treatment (column 0).
 Model supports >= 2 treatments.
 
-<details class="-parameters" open markdown="1">
-<summary> Parameters</summary>
+<details class="----parameters" open markdown="1">
+<summary>    Parameters</summary>
 
+```
 data : MultiCausalData
-Data container with outcome, binary treatment (0/1), and confounders.
+    Data container with outcome, one-hot multi-treatment indicators, and confounders.
 ml_g : estimator
-Learner for E[Y|X,D]. If classifier and Y is binary, predict_proba is used; otherwise predict().
+    Learner for E[Y|X,D]. If classifier and Y is binary, predict_proba is used; otherwise predict().
 ml_m : classifier
-Learner for E[D|X] (generelized propensity score). Must support predict_proba() or predict() in (0,1).
+    Learner for E[D|X] (generelized propensity score). Must support predict_proba() or predict() in (0,1).
 n_folds : int, default 5
-Number of cross-fitting folds.
+    Number of cross-fitting folds.
 n_rep : int, default 1
-Number of repetitions of sample splitting. Currently only 1 is supported.
+    Number of repetitions of sample splitting. Currently only 1 is supported.
 normalize_ipw : bool, default False
-Whether to normalize IPW terms within the score.
+    Whether to normalize IPW terms within the score.
+    This is a Hajek-style stabilization: it can reduce variance but may add
+    small finite-sample bias.
 trimming_rule : {"truncate"}, default "truncate"
-Trimming approach for propensity scores.
+    Trimming approach for propensity scores.
 trimming_threshold : float, default 1e-2
-Threshold for trimming if rule is "truncate".
+    Threshold for trimming if rule is "truncate".
 random_state : Optional[int], default None
-Random seed for fold creation.
+    Random seed for fold creation.
+```
 
 </details>
 
@@ -8492,13 +8589,13 @@ Return diagnostic data.
 ###### `estimate`
 
 ```python
-estimate(score: str = 'ATE', alpha: float = 0.05, diagnostic_data: bool = True) -> CausalEstimate
+estimate(score: str = 'ATE', alpha: float = 0.05, diagnostic_data: bool = True) -> MultiCausalEstimate
 ```
 
 ###### `fit`
 
 ```python
-fit(data: Optional[CausalData] = None) -> 'MultiTreatmentIRM'
+fit(data: Optional[MultiCausalData] = None) -> 'MultiTreatmentIRM'
 ```
 
 ###### `ml_g`
@@ -8582,7 +8679,7 @@ Return the standard error of the estimate.
 ###### `sensitivity_analysis`
 
 ```python
-sensitivity_analysis(cf_y: float, r2_d: float, rho: float = 1.0, H0: float = 0.0, alpha: float = 0.05) -> 'MultiTreatmentIRM'
+sensitivity_analysis(cf_y: Optional[float] = None, r2_d: Any = 0.0, rho: Any = 1.0, H0: float = 0.0, alpha: float = 0.05, *, r2_y: Optional[float] = None) -> 'MultiTreatmentIRM'
 ```
 
 ###### `summary`
@@ -8613,25 +8710,47 @@ trimming_threshold = float(trimming_threshold)
 
 **Functions:**
 
-- [**generate_multitreatment_irm_26**](#causalis.scenarios.multi_unconfoundedness.dgp.generate_multitreatment_irm_26) – Pre-configured multi-treatment dataset suitable for MultiTreatmentIRM.
+- [**generate_multitreatment_binary_26**](#causalis.scenarios.multi_unconfoundedness.dgp.generate_multitreatment_binary_26) – Pre-configured multi-treatment dataset with Binary outcome.
+- [**generate_multitreatment_gamma_26**](#causalis.scenarios.multi_unconfoundedness.dgp.generate_multitreatment_gamma_26) – Pre-configured multi-treatment dataset with Gamma-distributed outcome.
+- [**generate_multitreatment_irm_26**](#causalis.scenarios.multi_unconfoundedness.dgp.generate_multitreatment_irm_26) –
+
+###### `generate_multitreatment_binary_26`
+
+```python
+generate_multitreatment_binary_26(n: int = 100000, seed: int = 42, include_oracle: bool = False, return_causal_data: bool = True) -> Union[pd.DataFrame, MultiCausalData]
+```
+
+Pre-configured multi-treatment dataset with Binary outcome.
+
+- 3 treatment classes: control + 2 treatments
+- 8 confounders with realistic marginals
+- Binary outcome with logistic-link linear confounding
+- Heterogeneous treatment effects and correlated confounders via Gaussian copula
+
+###### `generate_multitreatment_gamma_26`
+
+```python
+generate_multitreatment_gamma_26(n: int = 100000, seed: int = 42, include_oracle: bool = False, return_causal_data: bool = True) -> Union[pd.DataFrame, MultiCausalData]
+```
+
+Pre-configured multi-treatment dataset with Gamma-distributed outcome.
+
+- 3 treatment classes: control + 2 treatments
+- 8 confounders with realistic marginals
+- Gamma outcome with log-link linear confounding
+- Heterogeneous treatment effects and correlated confounders via Gaussian copula
 
 ###### `generate_multitreatment_irm_26`
 
 ```python
-generate_multitreatment_irm_26(n: int = 10000, seed: int = 42, include_oracle: bool = False, return_causal_data: bool = True) -> Union[pd.DataFrame, MultiCausalData]
+generate_multitreatment_irm_26(n: int = 100000, seed: int = 42, include_oracle: bool = False, return_causal_data: bool = True) -> Union[pd.DataFrame, MultiCausalData]
 ```
-
-Pre-configured multi-treatment dataset suitable for MultiTreatmentIRM.
-
-- 3 treatment classes: control + 2 treatments
-- 5 confounders with realistic marginals
-- Continuous outcome with linear confounding
 
 ##### `model`
 
 **Classes:**
 
-- [**MultiTreatmentIRM**](#causalis.scenarios.multi_unconfoundedness.model.MultiTreatmentIRM) – Interactive Regression Model with multi_unconfoundedness (Multi treatment IRM) with DoubleML-style cross-fitting using CausalData.
+- [**MultiTreatmentIRM**](#causalis.scenarios.multi_unconfoundedness.model.MultiTreatmentIRM) – Interactive Regression Model for multi-treatment unconfoundedness.
 
 ###### `HAS_CATBOOST`
 
@@ -8647,30 +8766,37 @@ MultiTreatmentIRM(data: Optional[MultiCausalData] = None, ml_g: Any = None, ml_m
 
 Bases: <code>[BaseEstimator](#sklearn.base.BaseEstimator)</code>
 
-Interactive Regression Model with multi_unconfoundedness (Multi treatment IRM) with DoubleML-style cross-fitting using CausalData.
+Interactive Regression Model for multi-treatment unconfoundedness.
+
+DoubleML-style cross-fitting estimator consuming `MultiCausalData` and
+producing pairwise ATE contrasts against baseline treatment (column 0).
 Model supports >= 2 treatments.
 
-<details class="-parameters" open markdown="1">
-<summary> Parameters</summary>
+<details class="----parameters" open markdown="1">
+<summary>    Parameters</summary>
 
+```
 data : MultiCausalData
-Data container with outcome, binary treatment (0/1), and confounders.
+    Data container with outcome, one-hot multi-treatment indicators, and confounders.
 ml_g : estimator
-Learner for E[Y|X,D]. If classifier and Y is binary, predict_proba is used; otherwise predict().
+    Learner for E[Y|X,D]. If classifier and Y is binary, predict_proba is used; otherwise predict().
 ml_m : classifier
-Learner for E[D|X] (generelized propensity score). Must support predict_proba() or predict() in (0,1).
+    Learner for E[D|X] (generelized propensity score). Must support predict_proba() or predict() in (0,1).
 n_folds : int, default 5
-Number of cross-fitting folds.
+    Number of cross-fitting folds.
 n_rep : int, default 1
-Number of repetitions of sample splitting. Currently only 1 is supported.
+    Number of repetitions of sample splitting. Currently only 1 is supported.
 normalize_ipw : bool, default False
-Whether to normalize IPW terms within the score.
+    Whether to normalize IPW terms within the score.
+    This is a Hajek-style stabilization: it can reduce variance but may add
+    small finite-sample bias.
 trimming_rule : {"truncate"}, default "truncate"
-Trimming approach for propensity scores.
+    Trimming approach for propensity scores.
 trimming_threshold : float, default 1e-2
-Threshold for trimming if rule is "truncate".
+    Threshold for trimming if rule is "truncate".
 random_state : Optional[int], default None
-Random seed for fold creation.
+    Random seed for fold creation.
+```
 
 </details>
 
@@ -8720,13 +8846,13 @@ Return diagnostic data.
 ####### `estimate`
 
 ```python
-estimate(score: str = 'ATE', alpha: float = 0.05, diagnostic_data: bool = True) -> CausalEstimate
+estimate(score: str = 'ATE', alpha: float = 0.05, diagnostic_data: bool = True) -> MultiCausalEstimate
 ```
 
 ####### `fit`
 
 ```python
-fit(data: Optional[CausalData] = None) -> 'MultiTreatmentIRM'
+fit(data: Optional[MultiCausalData] = None) -> 'MultiTreatmentIRM'
 ```
 
 ####### `ml_g`
@@ -8810,7 +8936,7 @@ Return the standard error of the estimate.
 ####### `sensitivity_analysis`
 
 ```python
-sensitivity_analysis(cf_y: float, r2_d: float, rho: float = 1.0, H0: float = 0.0, alpha: float = 0.05) -> 'MultiTreatmentIRM'
+sensitivity_analysis(cf_y: Optional[float] = None, r2_d: Any = 0.0, rho: Any = 1.0, H0: float = 0.0, alpha: float = 0.05, *, r2_y: Optional[float] = None) -> 'MultiTreatmentIRM'
 ```
 
 ####### `summary`
@@ -8839,106 +8965,384 @@ trimming_threshold = float(trimming_threshold)
 
 ##### `refutation`
 
+Refutation utilities for multi-treatment unconfoundedness.
+
 **Modules:**
 
 - [**overlap**](#causalis.scenarios.multi_unconfoundedness.refutation.overlap) –
+- [**overlap_plot**](#causalis.scenarios.multi_unconfoundedness.refutation.overlap_plot) –
+- [**score**](#causalis.scenarios.multi_unconfoundedness.refutation.score) –
 - [**unconfoundedness**](#causalis.scenarios.multi_unconfoundedness.refutation.unconfoundedness) –
+
+**Functions:**
+
+- [**compute_bias_aware_ci**](#causalis.scenarios.multi_unconfoundedness.refutation.compute_bias_aware_ci) –
+- [**get_sensitivity_summary**](#causalis.scenarios.multi_unconfoundedness.refutation.get_sensitivity_summary) –
+- [**plot_m_overlap**](#causalis.scenarios.multi_unconfoundedness.refutation.plot_m_overlap) – Multi-treatment overlap plot for pairwise conditional propensity scores.
+- [**plot_residual_diagnostics**](#causalis.scenarios.multi_unconfoundedness.refutation.plot_residual_diagnostics) – Plot residual diagnostics for multi-treatment nuisance models.
+- [**run_overlap_diagnostics**](#causalis.scenarios.multi_unconfoundedness.refutation.run_overlap_diagnostics) – Run multi-treatment overlap diagnostics from data and estimate.
+- [**run_score_diagnostics**](#causalis.scenarios.multi_unconfoundedness.refutation.run_score_diagnostics) – Run score diagnostics for multi-treatment baseline contrasts.
+- [**run_unconfoundedness_diagnostics**](#causalis.scenarios.multi_unconfoundedness.refutation.run_unconfoundedness_diagnostics) – Run multi-treatment unconfoundedness diagnostics from data and estimate.
+- [**sensitivity_analysis**](#causalis.scenarios.multi_unconfoundedness.refutation.sensitivity_analysis) –
+- [**sensitivity_benchmark**](#causalis.scenarios.multi_unconfoundedness.refutation.sensitivity_benchmark) –
+- [**validate_unconfoundedness_balance**](#causalis.scenarios.multi_unconfoundedness.refutation.validate_unconfoundedness_balance) – Convenience wrapper returning the balance block only.
+
+###### `compute_bias_aware_ci`
+
+```python
+compute_bias_aware_ci(effect_estimation: Dict[str, Any] | Any, _: Dict[str, Any] | Any = None, cf_y: float = 0.0, r2_d: Union[float, np.ndarray] = 0.0, rho: Union[float, np.ndarray] = 1.0, H0: float = 0.0, alpha: float = 0.05, use_signed_rr: bool = False) -> Dict[str, Any]
+```
+
+###### `get_sensitivity_summary`
+
+```python
+get_sensitivity_summary(effect_estimation: Dict[str, Any] | Any, _: Dict[str, Any] | Any = None, label: Optional[str] = None) -> Optional[str]
+```
 
 ###### `overlap`
 
 **Modules:**
 
 - [**overlap_plot**](#causalis.scenarios.multi_unconfoundedness.refutation.overlap.overlap_plot) –
+- [**overlap_validation**](#causalis.scenarios.multi_unconfoundedness.refutation.overlap.overlap_validation) – Overlap diagnostics for multi-treatment unconfoundedness.
 
 **Functions:**
 
-- [**plot_m_overlap**](#causalis.scenarios.multi_unconfoundedness.refutation.overlap.plot_m_overlap) – Multi-treatment overlap plot for propensity scores m_k(x)=P(D=k|X), ATE diagnostics style.
+- [**plot_m_overlap**](#causalis.scenarios.multi_unconfoundedness.refutation.overlap.plot_m_overlap) – Multi-treatment overlap plot for pairwise conditional propensity scores.
+- [**run_overlap_diagnostics**](#causalis.scenarios.multi_unconfoundedness.refutation.overlap.run_overlap_diagnostics) – Run multi-treatment overlap diagnostics from data and estimate.
 
 ####### `overlap_plot`
 
 **Functions:**
 
-- [**plot_m_overlap**](#causalis.scenarios.multi_unconfoundedness.refutation.overlap.overlap_plot.plot_m_overlap) – Multi-treatment overlap plot for propensity scores m_k(x)=P(D=k|X), ATE diagnostics style.
+- [**overlap_plot**](#causalis.scenarios.multi_unconfoundedness.refutation.overlap.overlap_plot.overlap_plot) – Convenience wrapper to match `overlap_plot(data, estimate)` API style.
+- [**plot_m_overlap**](#causalis.scenarios.multi_unconfoundedness.refutation.overlap.overlap_plot.plot_m_overlap) – Multi-treatment overlap plot for pairwise conditional propensity scores.
+
+######## `overlap_plot`
+
+```python
+overlap_plot(data: MultiCausalData, estimate: MultiCausalEstimate, **kwargs: Any) -> plt.Figure
+```
+
+Convenience wrapper to match `overlap_plot(data, estimate)` API style.
 
 ######## `plot_m_overlap`
 
 ```python
-plot_m_overlap(diag: MultiUnconfoundednessDiagnosticData, clip: Tuple[float, float] = (0.01, 0.99), bins: Any = 'fd', kde: bool = True, shade_overlap: bool = True, ax: Optional[plt.Axes] = None, figsize: Tuple[float, float] = (9, 5.5), dpi: int = 220, font_scale: float = 1.15, save: Optional[str] = None, save_dpi: Optional[int] = None, transparent: bool = False, color_t: Optional[Any] = None, color_c: Optional[Any] = None, *, treatment_idx: Optional[Union[int, List[int]]] = None, baseline_idx: int = 0, treatment_names: Optional[List[str]] = None) -> plt.Figure
+plot_m_overlap(diag: Union[MultiUnconfoundednessDiagnosticData, MultiCausalEstimate, dict, Any], clip: Tuple[float, float] = (0.01, 0.99), bins: Any = 'fd', kde: bool = True, shade_overlap: bool = True, ax: Optional[plt.Axes] = None, figsize: Tuple[float, float] = (9, 5.5), dpi: int = 220, font_scale: float = 1.15, save: Optional[str] = None, save_dpi: Optional[int] = None, transparent: bool = False, color_t: Optional[Any] = None, color_c: Optional[Any] = None, *, treatment_idx: Optional[Union[int, List[int]]] = None, baseline_idx: int = 0, treatment_names: Optional[List[str]] = None) -> plt.Figure
 ```
 
-Multi-treatment overlap plot for propensity scores m_k(x)=P(D=k|X), ATE diagnostics style.
+Multi-treatment overlap plot for pairwise conditional propensity scores.
 
-Делает pairwise-плоты baseline (по умолчанию 0) vs k:
+For each comparison baseline (default 0) vs k, this plots
+`P(D=k | X, D in {baseline, k}) = m_k(X) / (m_baseline(X) + m_k(X))`
+on the observed pair sample `D in {baseline, k}`, comparing:
 
-- сравниваем распределение m_k(x) среди наблюдений с D=k (treated)
-  и среди наблюдений с D=baseline (control для пары 0 vs k).
+- units with D=k (treated for the pair),
+- units with D=baseline (control for the pair).
 
-Параметры:
+Parameters:
 
 - diag.d: (n, K) one-hot
-- diag.m_hat: (n, K) propensity
+- diag.m_hat / diag.m_hat_raw: (n, K) propensity
 - treatment_idx:
-  - None -> построить для всех k != baseline_idx (мультипанель)
-  - int -> построить для конкретного k
-  - list[int] -> построить для набора k
-- ax: поддерживается только для одиночного графика (когда выбран ровно один k)
+  - None -> plot all k != baseline_idx (multi-panel)
+  - int -> plot one comparison
+  - list[int] -> plot selected comparisons
+- ax: supported only for a single comparison (exactly one k)
 
-Возвращает matplotlib.figure.Figure.
+Returns matplotlib.figure.Figure.
+
+####### `overlap_validation`
+
+Overlap diagnostics for multi-treatment unconfoundedness.
+
+**Functions:**
+
+- [**run_overlap_diagnostics**](#causalis.scenarios.multi_unconfoundedness.refutation.overlap.overlap_validation.run_overlap_diagnostics) – Run multi-treatment overlap diagnostics from data and estimate.
+
+######## `run_overlap_diagnostics`
+
+```python
+run_overlap_diagnostics(data: MultiCausalData, estimate: MultiCausalEstimate, *, thresholds: Optional[Dict[str, float]] = None, use_hajek: Optional[bool] = None, return_summary: bool = True, auc_flip_margin: float = 0.05) -> Dict[str, Any]
+```
+
+Run multi-treatment overlap diagnostics from data and estimate.
+
+Diagnostics are computed pairwise between baseline treatment 0 and each
+active treatment k using pairwise conditional propensity
+P(D=k | X, D in {0, k}) as the comparison score.
 
 ####### `plot_m_overlap`
 
 ```python
-plot_m_overlap(diag: MultiUnconfoundednessDiagnosticData, clip: Tuple[float, float] = (0.01, 0.99), bins: Any = 'fd', kde: bool = True, shade_overlap: bool = True, ax: Optional[plt.Axes] = None, figsize: Tuple[float, float] = (9, 5.5), dpi: int = 220, font_scale: float = 1.15, save: Optional[str] = None, save_dpi: Optional[int] = None, transparent: bool = False, color_t: Optional[Any] = None, color_c: Optional[Any] = None, *, treatment_idx: Optional[Union[int, List[int]]] = None, baseline_idx: int = 0, treatment_names: Optional[List[str]] = None) -> plt.Figure
+plot_m_overlap(diag: Union[MultiUnconfoundednessDiagnosticData, MultiCausalEstimate, dict, Any], clip: Tuple[float, float] = (0.01, 0.99), bins: Any = 'fd', kde: bool = True, shade_overlap: bool = True, ax: Optional[plt.Axes] = None, figsize: Tuple[float, float] = (9, 5.5), dpi: int = 220, font_scale: float = 1.15, save: Optional[str] = None, save_dpi: Optional[int] = None, transparent: bool = False, color_t: Optional[Any] = None, color_c: Optional[Any] = None, *, treatment_idx: Optional[Union[int, List[int]]] = None, baseline_idx: int = 0, treatment_names: Optional[List[str]] = None) -> plt.Figure
 ```
 
-Multi-treatment overlap plot for propensity scores m_k(x)=P(D=k|X), ATE diagnostics style.
+Multi-treatment overlap plot for pairwise conditional propensity scores.
 
-Делает pairwise-плоты baseline (по умолчанию 0) vs k:
+For each comparison baseline (default 0) vs k, this plots
+`P(D=k | X, D in {baseline, k}) = m_k(X) / (m_baseline(X) + m_k(X))`
+on the observed pair sample `D in {baseline, k}`, comparing:
 
-- сравниваем распределение m_k(x) среди наблюдений с D=k (treated)
-  и среди наблюдений с D=baseline (control для пары 0 vs k).
+- units with D=k (treated for the pair),
+- units with D=baseline (control for the pair).
 
-Параметры:
+Parameters:
 
 - diag.d: (n, K) one-hot
-- diag.m_hat: (n, K) propensity
+- diag.m_hat / diag.m_hat_raw: (n, K) propensity
 - treatment_idx:
-  - None -> построить для всех k != baseline_idx (мультипанель)
-  - int -> построить для конкретного k
-  - list[int] -> построить для набора k
-- ax: поддерживается только для одиночного графика (когда выбран ровно один k)
+  - None -> plot all k != baseline_idx (multi-panel)
+  - int -> plot one comparison
+  - list[int] -> plot selected comparisons
+- ax: supported only for a single comparison (exactly one k)
 
-Возвращает matplotlib.figure.Figure.
+Returns matplotlib.figure.Figure.
+
+####### `run_overlap_diagnostics`
+
+```python
+run_overlap_diagnostics(data: MultiCausalData, estimate: MultiCausalEstimate, *, thresholds: Optional[Dict[str, float]] = None, use_hajek: Optional[bool] = None, return_summary: bool = True, auc_flip_margin: float = 0.05) -> Dict[str, Any]
+```
+
+Run multi-treatment overlap diagnostics from data and estimate.
+
+Diagnostics are computed pairwise between baseline treatment 0 and each
+active treatment k using pairwise conditional propensity
+P(D=k | X, D in {0, k}) as the comparison score.
+
+###### `overlap_plot`
+
+**Functions:**
+
+- [**overlap_plot**](#causalis.scenarios.multi_unconfoundedness.refutation.overlap_plot.overlap_plot) – Convenience wrapper to match `overlap_plot(data, estimate)` API style.
+- [**plot_m_overlap**](#causalis.scenarios.multi_unconfoundedness.refutation.overlap_plot.plot_m_overlap) – Multi-treatment overlap plot for pairwise conditional propensity scores.
+
+####### `overlap_plot`
+
+```python
+overlap_plot(data: MultiCausalData, estimate: MultiCausalEstimate, **kwargs: Any) -> plt.Figure
+```
+
+Convenience wrapper to match `overlap_plot(data, estimate)` API style.
+
+####### `plot_m_overlap`
+
+```python
+plot_m_overlap(diag: Union[MultiUnconfoundednessDiagnosticData, MultiCausalEstimate, dict, Any], clip: Tuple[float, float] = (0.01, 0.99), bins: Any = 'fd', kde: bool = True, shade_overlap: bool = True, ax: Optional[plt.Axes] = None, figsize: Tuple[float, float] = (9, 5.5), dpi: int = 220, font_scale: float = 1.15, save: Optional[str] = None, save_dpi: Optional[int] = None, transparent: bool = False, color_t: Optional[Any] = None, color_c: Optional[Any] = None, *, treatment_idx: Optional[Union[int, List[int]]] = None, baseline_idx: int = 0, treatment_names: Optional[List[str]] = None) -> plt.Figure
+```
+
+Multi-treatment overlap plot for pairwise conditional propensity scores.
+
+For each comparison baseline (default 0) vs k, this plots
+`P(D=k | X, D in {baseline, k}) = m_k(X) / (m_baseline(X) + m_k(X))`
+on the observed pair sample `D in {baseline, k}`, comparing:
+
+- units with D=k (treated for the pair),
+- units with D=baseline (control for the pair).
+
+Parameters:
+
+- diag.d: (n, K) one-hot
+- diag.m_hat / diag.m_hat_raw: (n, K) propensity
+- treatment_idx:
+  - None -> plot all k != baseline_idx (multi-panel)
+  - int -> plot one comparison
+  - list[int] -> plot selected comparisons
+- ax: supported only for a single comparison (exactly one k)
+
+Returns matplotlib.figure.Figure.
+
+###### `plot_m_overlap`
+
+```python
+plot_m_overlap(diag: Union[MultiUnconfoundednessDiagnosticData, MultiCausalEstimate, dict, Any], clip: Tuple[float, float] = (0.01, 0.99), bins: Any = 'fd', kde: bool = True, shade_overlap: bool = True, ax: Optional[plt.Axes] = None, figsize: Tuple[float, float] = (9, 5.5), dpi: int = 220, font_scale: float = 1.15, save: Optional[str] = None, save_dpi: Optional[int] = None, transparent: bool = False, color_t: Optional[Any] = None, color_c: Optional[Any] = None, *, treatment_idx: Optional[Union[int, List[int]]] = None, baseline_idx: int = 0, treatment_names: Optional[List[str]] = None) -> plt.Figure
+```
+
+Multi-treatment overlap plot for pairwise conditional propensity scores.
+
+For each comparison baseline (default 0) vs k, this plots
+`P(D=k | X, D in {baseline, k}) = m_k(X) / (m_baseline(X) + m_k(X))`
+on the observed pair sample `D in {baseline, k}`, comparing:
+
+- units with D=k (treated for the pair),
+- units with D=baseline (control for the pair).
+
+Parameters:
+
+- diag.d: (n, K) one-hot
+- diag.m_hat / diag.m_hat_raw: (n, K) propensity
+- treatment_idx:
+  - None -> plot all k != baseline_idx (multi-panel)
+  - int -> plot one comparison
+  - list[int] -> plot selected comparisons
+- ax: supported only for a single comparison (exactly one k)
+
+Returns matplotlib.figure.Figure.
+
+###### `plot_residual_diagnostics`
+
+```python
+plot_residual_diagnostics(estimate: MultiCausalEstimate, data: Optional[MultiCausalData] = None, *, clip_propensity: float = 1e-06, n_bins: int = 20, marker_size: float = 12.0, alpha: float = 0.35, figsize: Tuple[float, float] = (14.0, 4.8), dpi: int = 220, font_scale: float = 1.1, save: Optional[str] = None, save_dpi: Optional[int] = None, transparent: bool = False) -> plt.Figure
+```
+
+Plot residual diagnostics for multi-treatment nuisance models.
+
+<details class="panels" open markdown="1">
+<summary>Panels</summary>
+
+1..K. Arm-specific residual-vs-fitted:
+`u_k = y - g_k` vs `g_k` within arm `D_k=1`.
+K+1. Binned calibration error for each arm:
+`E[D_k - m_k | m_k in bin]` vs binned `m_k`.
+
+</details>
+
+###### `run_overlap_diagnostics`
+
+```python
+run_overlap_diagnostics(data: MultiCausalData, estimate: MultiCausalEstimate, *, thresholds: Optional[Dict[str, float]] = None, use_hajek: Optional[bool] = None, return_summary: bool = True, auc_flip_margin: float = 0.05) -> Dict[str, Any]
+```
+
+Run multi-treatment overlap diagnostics from data and estimate.
+
+Diagnostics are computed pairwise between baseline treatment 0 and each
+active treatment k using pairwise conditional propensity
+P(D=k | X, D in {0, k}) as the comparison score.
+
+###### `run_score_diagnostics`
+
+```python
+run_score_diagnostics(data: MultiCausalData, estimate: MultiCausalEstimate, *, trimming_threshold: Optional[float] = None, n_basis_funcs: Optional[int] = None, return_summary: bool = True) -> Dict[str, Any]
+```
+
+Run score diagnostics for multi-treatment baseline contrasts.
+
+###### `run_unconfoundedness_diagnostics`
+
+```python
+run_unconfoundedness_diagnostics(data: MultiCausalData, estimate: MultiCausalEstimate, *, threshold: float = 0.1, normalize: Optional[bool] = None, return_summary: bool = True) -> Dict[str, Any]
+```
+
+Run multi-treatment unconfoundedness diagnostics from data and estimate.
+
+This implementation currently supports ATE diagnostics only and computes
+pairwise balance between baseline treatment 0 and each active treatment k.
+
+###### `score`
+
+**Modules:**
+
+- [**residual_plots**](#causalis.scenarios.multi_unconfoundedness.refutation.score.residual_plots) – Residual diagnostic plots for multi-treatment nuisance models g_k and m_k.
+- [**score_validation**](#causalis.scenarios.multi_unconfoundedness.refutation.score.score_validation) – Score diagnostics for multi-treatment unconfoundedness.
+
+**Functions:**
+
+- [**plot_residual_diagnostics**](#causalis.scenarios.multi_unconfoundedness.refutation.score.plot_residual_diagnostics) – Plot residual diagnostics for multi-treatment nuisance models.
+- [**run_score_diagnostics**](#causalis.scenarios.multi_unconfoundedness.refutation.score.run_score_diagnostics) – Run score diagnostics for multi-treatment baseline contrasts.
+
+####### `plot_residual_diagnostics`
+
+```python
+plot_residual_diagnostics(estimate: MultiCausalEstimate, data: Optional[MultiCausalData] = None, *, clip_propensity: float = 1e-06, n_bins: int = 20, marker_size: float = 12.0, alpha: float = 0.35, figsize: Tuple[float, float] = (14.0, 4.8), dpi: int = 220, font_scale: float = 1.1, save: Optional[str] = None, save_dpi: Optional[int] = None, transparent: bool = False) -> plt.Figure
+```
+
+Plot residual diagnostics for multi-treatment nuisance models.
+
+<details class="panels" open markdown="1">
+<summary>Panels</summary>
+
+1..K. Arm-specific residual-vs-fitted:
+`u_k = y - g_k` vs `g_k` within arm `D_k=1`.
+K+1. Binned calibration error for each arm:
+`E[D_k - m_k | m_k in bin]` vs binned `m_k`.
+
+</details>
+
+####### `residual_plots`
+
+Residual diagnostic plots for multi-treatment nuisance models g_k and m_k.
+
+**Functions:**
+
+- [**plot_residual_diagnostics**](#causalis.scenarios.multi_unconfoundedness.refutation.score.residual_plots.plot_residual_diagnostics) – Plot residual diagnostics for multi-treatment nuisance models.
+
+######## `plot_residual_diagnostics`
+
+```python
+plot_residual_diagnostics(estimate: MultiCausalEstimate, data: Optional[MultiCausalData] = None, *, clip_propensity: float = 1e-06, n_bins: int = 20, marker_size: float = 12.0, alpha: float = 0.35, figsize: Tuple[float, float] = (14.0, 4.8), dpi: int = 220, font_scale: float = 1.1, save: Optional[str] = None, save_dpi: Optional[int] = None, transparent: bool = False) -> plt.Figure
+```
+
+Plot residual diagnostics for multi-treatment nuisance models.
+
+<details class="panels" open markdown="1">
+<summary>Panels</summary>
+
+1..K. Arm-specific residual-vs-fitted:
+`u_k = y - g_k` vs `g_k` within arm `D_k=1`.
+K+1. Binned calibration error for each arm:
+`E[D_k - m_k | m_k in bin]` vs binned `m_k`.
+
+</details>
+
+####### `run_score_diagnostics`
+
+```python
+run_score_diagnostics(data: MultiCausalData, estimate: MultiCausalEstimate, *, trimming_threshold: Optional[float] = None, n_basis_funcs: Optional[int] = None, return_summary: bool = True) -> Dict[str, Any]
+```
+
+Run score diagnostics for multi-treatment baseline contrasts.
+
+####### `score_validation`
+
+Score diagnostics for multi-treatment unconfoundedness.
+
+**Functions:**
+
+- [**run_score_diagnostics**](#causalis.scenarios.multi_unconfoundedness.refutation.score.score_validation.run_score_diagnostics) – Run score diagnostics for multi-treatment baseline contrasts.
+
+######## `run_score_diagnostics`
+
+```python
+run_score_diagnostics(data: MultiCausalData, estimate: MultiCausalEstimate, *, trimming_threshold: Optional[float] = None, n_basis_funcs: Optional[int] = None, return_summary: bool = True) -> Dict[str, Any]
+```
+
+Run score diagnostics for multi-treatment baseline contrasts.
+
+###### `sensitivity_analysis`
+
+```python
+sensitivity_analysis(effect_estimation: Dict[str, Any] | Any, _: Dict[str, Any] | Any = None, cf_y: Optional[float] = None, r2_y: Optional[float] = None, r2_d: Union[float, np.ndarray] = 0.0, rho: Union[float, np.ndarray] = 1.0, H0: float = 0.0, alpha: float = 0.05, use_signed_rr: bool = False) -> Dict[str, Any]
+```
+
+###### `sensitivity_benchmark`
+
+```python
+sensitivity_benchmark(effect_estimation: Dict[str, Any] | Any, benchmarking_set: List[str], fit_args: Optional[Dict[str, Any]] = None) -> pd.DataFrame
+```
 
 ###### `unconfoundedness`
 
 **Modules:**
 
 - [**sensitivity**](#causalis.scenarios.multi_unconfoundedness.refutation.unconfoundedness.sensitivity) –
-- [**unconfoundedness_validation**](#causalis.scenarios.multi_unconfoundedness.refutation.unconfoundedness.unconfoundedness_validation) –
+- [**unconfoundedness_validation**](#causalis.scenarios.multi_unconfoundedness.refutation.unconfoundedness.unconfoundedness_validation) – Unconfoundedness diagnostics for multi-treatment settings.
 
 **Functions:**
 
-- [**compute_bias_aware_ci**](#causalis.scenarios.multi_unconfoundedness.refutation.unconfoundedness.compute_bias_aware_ci) – Multi-treatment (pairwise 0 vs k) bias-aware CI.
+- [**compute_bias_aware_ci**](#causalis.scenarios.multi_unconfoundedness.refutation.unconfoundedness.compute_bias_aware_ci) –
 - [**get_sensitivity_summary**](#causalis.scenarios.multi_unconfoundedness.refutation.unconfoundedness.get_sensitivity_summary) –
-- [**run_uncofoundedness_diagnostics**](#causalis.scenarios.multi_unconfoundedness.refutation.unconfoundedness.run_uncofoundedness_diagnostics) – Multi-treatment unconfoundedness diagnostics focused on balance (SMD), ATE only.
+- [**run_unconfoundedness_diagnostics**](#causalis.scenarios.multi_unconfoundedness.refutation.unconfoundedness.run_unconfoundedness_diagnostics) – Run multi-treatment unconfoundedness diagnostics from data and estimate.
 - [**sensitivity_analysis**](#causalis.scenarios.multi_unconfoundedness.refutation.unconfoundedness.sensitivity_analysis) –
-- [**validate_uncofoundedness_balance**](#causalis.scenarios.multi_unconfoundedness.refutation.unconfoundedness.validate_uncofoundedness_balance) – Multitreatment version (one-hot d, matrix m_hat) for ATE only.
+- [**sensitivity_benchmark**](#causalis.scenarios.multi_unconfoundedness.refutation.unconfoundedness.sensitivity_benchmark) –
+- [**validate_unconfoundedness_balance**](#causalis.scenarios.multi_unconfoundedness.refutation.unconfoundedness.validate_unconfoundedness_balance) – Convenience wrapper returning the balance block only.
 
 ####### `compute_bias_aware_ci`
 
 ```python
-compute_bias_aware_ci(effect_estimation: Dict[str, Any] | Any, _: Dict[str, Any] | Any = None, cf_y: float = 0.0, r2_d: float = 0.0, rho: float = 1.0, H0: float = 0.0, alpha: float = 0.05, use_signed_rr: bool = False) -> Dict[str, Any]
+compute_bias_aware_ci(effect_estimation: Dict[str, Any] | Any, _: Dict[str, Any] | Any = None, cf_y: float = 0.0, r2_d: Union[float, np.ndarray] = 0.0, rho: Union[float, np.ndarray] = 1.0, H0: float = 0.0, alpha: float = 0.05, use_signed_rr: bool = False) -> Dict[str, Any]
 ```
-
-Multi-treatment (pairwise 0 vs k) bias-aware CI.
-
-Returns dict with arrays of length J=K-1:
-
-- theta, se : (J,)
-- sampling_ci, theta_bounds_cofounding, bias_aware_ci : (J,2)
-- max_bias, nu2, rv, rva : (J,)
-- sigma2 : scalar
 
 ####### `get_sensitivity_summary`
 
@@ -8946,95 +9350,30 @@ Returns dict with arrays of length J=K-1:
 get_sensitivity_summary(effect_estimation: Dict[str, Any] | Any, _: Dict[str, Any] | Any = None, label: Optional[str] = None) -> Optional[str]
 ```
 
-####### `run_uncofoundedness_diagnostics`
+####### `run_unconfoundedness_diagnostics`
 
 ```python
-run_uncofoundedness_diagnostics(*, res: _Dict[str, _Any] | _Any = None, X: _Optional[np.ndarray] = None, d: _Optional[np.ndarray] = None, m_hat: _Optional[np.ndarray] = None, names: _Optional[_List[str]] = None, treatment_names: _Optional[_List[str]] = None, score: _Optional[str] = None, normalize: _Optional[bool] = None, threshold: float = 0.1, eps_overlap: float = 0.01, return_summary: bool = True) -> _Dict[str, _Any]
+run_unconfoundedness_diagnostics(data: MultiCausalData, estimate: MultiCausalEstimate, *, threshold: float = 0.1, normalize: Optional[bool] = None, return_summary: bool = True) -> Dict[str, Any]
 ```
 
-Multi-treatment unconfoundedness diagnostics focused on balance (SMD), ATE only.
+Run multi-treatment unconfoundedness diagnostics from data and estimate.
 
-Pairwise comparisons: baseline treatment 0 vs k (k=1..K-1)
-
-Inputs:
-
-- Either `res` containing diagnostic_data with x, d(one-hot), m_hat(matrix),
-  or raw arrays X, d, m_hat (+ optional names, treatment_names, normalize).
-  Returns:
-  {
-  "params": {"score", "normalize", "smd_threshold"},
-  "balance": {
-  "smd": pd.DataFrame (p, K-1),
-  "smd_unweighted": pd.DataFrame (p, K-1),
-  "smd_max": float,
-  "frac_violations": float,
-  "pass": bool,
-  "worst_features": pd.Series (top 10 by max SMD across comparisons),
-  "comparisons": list[str],
-  },
-  "flags": {"balance_max_smd", "balance_violations"},
-  "overall_flag": str,
-  "meta": {"n", "p", "K", "treatment_names"},
-  "summary": pd.DataFrame (optional)
-  }
+This implementation currently supports ATE diagnostics only and computes
+pairwise balance between baseline treatment 0 and each active treatment k.
 
 ####### `sensitivity`
 
 **Functions:**
 
-- [**combine_nu2**](#causalis.scenarios.multi_unconfoundedness.refutation.unconfoundedness.sensitivity.combine_nu2) – Для каждого контраста k:
-- [**compute_bias_aware_ci**](#causalis.scenarios.multi_unconfoundedness.refutation.unconfoundedness.sensitivity.compute_bias_aware_ci) – Multi-treatment (pairwise 0 vs k) bias-aware CI.
-- [**compute_sensitivity_bias**](#causalis.scenarios.multi_unconfoundedness.refutation.unconfoundedness.sensitivity.compute_sensitivity_bias) –
-- [**compute_sensitivity_bias_local**](#causalis.scenarios.multi_unconfoundedness.refutation.unconfoundedness.sensitivity.compute_sensitivity_bias_local) –
-- [**format_bias_aware_summary**](#causalis.scenarios.multi_unconfoundedness.refutation.unconfoundedness.sensitivity.format_bias_aware_summary) –
+- [**compute_bias_aware_ci**](#causalis.scenarios.multi_unconfoundedness.refutation.unconfoundedness.sensitivity.compute_bias_aware_ci) –
 - [**get_sensitivity_summary**](#causalis.scenarios.multi_unconfoundedness.refutation.unconfoundedness.sensitivity.get_sensitivity_summary) –
-- [**pulltheta_se_ci**](#causalis.scenarios.multi_unconfoundedness.refutation.unconfoundedness.sensitivity.pulltheta_se_ci) – Возвращает:
 - [**sensitivity_analysis**](#causalis.scenarios.multi_unconfoundedness.refutation.unconfoundedness.sensitivity.sensitivity_analysis) –
-
-######## `combine_nu2`
-
-```python
-combine_nu2(m_alpha: np.ndarray, rr: np.ndarray, cf_y: float, r2_d: float, rho: float, use_signed_rr: bool = False) -> Tuple[np.ndarray, np.ndarray]
-```
-
-Для каждого контраста k:
-base\_{i,k} = (a\_{i,k}^2)*cf_y + (b\_{i,k}^2)*cf_d + 2*rho*sqrt(cf_y\*cf_d)\*a\_{i,k}*b\_{i,k}
-a = sqrt(2*m_alpha), b = rr (signed) или abs(rr) (worst-case)
-Возвращает:
-nu2: (K-1,)
-psi_nu2: (n, K-1) (центрированная по столбцам)
+- [**sensitivity_benchmark**](#causalis.scenarios.multi_unconfoundedness.refutation.unconfoundedness.sensitivity.sensitivity_benchmark) –
 
 ######## `compute_bias_aware_ci`
 
 ```python
-compute_bias_aware_ci(effect_estimation: Dict[str, Any] | Any, _: Dict[str, Any] | Any = None, cf_y: float = 0.0, r2_d: float = 0.0, rho: float = 1.0, H0: float = 0.0, alpha: float = 0.05, use_signed_rr: bool = False) -> Dict[str, Any]
-```
-
-Multi-treatment (pairwise 0 vs k) bias-aware CI.
-
-Returns dict with arrays of length J=K-1:
-
-- theta, se : (J,)
-- sampling_ci, theta_bounds_cofounding, bias_aware_ci : (J,2)
-- max_bias, nu2, rv, rva : (J,)
-- sigma2 : scalar
-
-######## `compute_sensitivity_bias`
-
-```python
-compute_sensitivity_bias(sigma2: Union[float, np.ndarray], nu2: Union[float, np.ndarray], psi_sigma2: np.ndarray, psi_nu2: np.ndarray) -> Tuple[np.ndarray, np.ndarray]
-```
-
-######## `compute_sensitivity_bias_local`
-
-```python
-compute_sensitivity_bias_local(sigma2: Union[float, np.ndarray], nu2: Union[float, np.ndarray], psi_sigma2: np.ndarray, psi_nu2: np.ndarray) -> Tuple[np.ndarray, np.ndarray]
-```
-
-######## `format_bias_aware_summary`
-
-```python
-format_bias_aware_summary(res: Dict[str, Any], label: str | None = None) -> str
+compute_bias_aware_ci(effect_estimation: Dict[str, Any] | Any, _: Dict[str, Any] | Any = None, cf_y: float = 0.0, r2_d: Union[float, np.ndarray] = 0.0, rho: Union[float, np.ndarray] = 1.0, H0: float = 0.0, alpha: float = 0.05, use_signed_rr: bool = False) -> Dict[str, Any]
 ```
 
 ######## `get_sensitivity_summary`
@@ -9043,117 +9382,73 @@ format_bias_aware_summary(res: Dict[str, Any], label: str | None = None) -> str
 get_sensitivity_summary(effect_estimation: Dict[str, Any] | Any, _: Dict[str, Any] | Any = None, label: Optional[str] = None) -> Optional[str]
 ```
 
-######## `pulltheta_se_ci`
-
-```python
-pulltheta_se_ci(effect_estimation: Any, alpha: float) -> Tuple[Union[float, np.ndarray], Union[float, np.ndarray], Union[Tuple[float, float], np.ndarray]]
-```
-
-Возвращает:
-theta: float или (K-1,)
-se: float или (K-1,)
-ci: (2,) или (K-1, 2)
-
 ######## `sensitivity_analysis`
 
 ```python
-sensitivity_analysis(effect_estimation: Dict[str, Any] | Any, _: Dict[str, Any] | Any = None, cf_y: float = 0.0, r2_d: float = 0.0, rho: float = 1.0, H0: float = 0.0, alpha: float = 0.05, use_signed_rr: bool = False) -> Dict[str, Any]
+sensitivity_analysis(effect_estimation: Dict[str, Any] | Any, _: Dict[str, Any] | Any = None, cf_y: Optional[float] = None, r2_y: Optional[float] = None, r2_d: Union[float, np.ndarray] = 0.0, rho: Union[float, np.ndarray] = 1.0, H0: float = 0.0, alpha: float = 0.05, use_signed_rr: bool = False) -> Dict[str, Any]
+```
+
+######## `sensitivity_benchmark`
+
+```python
+sensitivity_benchmark(effect_estimation: Dict[str, Any] | Any, benchmarking_set: List[str], fit_args: Optional[Dict[str, Any]] = None) -> pd.DataFrame
 ```
 
 ####### `sensitivity_analysis`
 
 ```python
-sensitivity_analysis(effect_estimation: Dict[str, Any] | Any, _: Dict[str, Any] | Any = None, cf_y: float = 0.0, r2_d: float = 0.0, rho: float = 1.0, H0: float = 0.0, alpha: float = 0.05, use_signed_rr: bool = False) -> Dict[str, Any]
+sensitivity_analysis(effect_estimation: Dict[str, Any] | Any, _: Dict[str, Any] | Any = None, cf_y: Optional[float] = None, r2_y: Optional[float] = None, r2_d: Union[float, np.ndarray] = 0.0, rho: Union[float, np.ndarray] = 1.0, H0: float = 0.0, alpha: float = 0.05, use_signed_rr: bool = False) -> Dict[str, Any]
+```
+
+####### `sensitivity_benchmark`
+
+```python
+sensitivity_benchmark(effect_estimation: Dict[str, Any] | Any, benchmarking_set: List[str], fit_args: Optional[Dict[str, Any]] = None) -> pd.DataFrame
 ```
 
 ####### `unconfoundedness_validation`
 
+Unconfoundedness diagnostics for multi-treatment settings.
+
 **Functions:**
 
-- [**run_uncofoundedness_diagnostics**](#causalis.scenarios.multi_unconfoundedness.refutation.unconfoundedness.unconfoundedness_validation.run_uncofoundedness_diagnostics) – Multi-treatment unconfoundedness diagnostics focused on balance (SMD), ATE only.
-- [**validate_uncofoundedness_balance**](#causalis.scenarios.multi_unconfoundedness.refutation.unconfoundedness.unconfoundedness_validation.validate_uncofoundedness_balance) – Multitreatment version (one-hot d, matrix m_hat) for ATE only.
+- [**run_unconfoundedness_diagnostics**](#causalis.scenarios.multi_unconfoundedness.refutation.unconfoundedness.unconfoundedness_validation.run_unconfoundedness_diagnostics) – Run multi-treatment unconfoundedness diagnostics from data and estimate.
+- [**validate_unconfoundedness_balance**](#causalis.scenarios.multi_unconfoundedness.refutation.unconfoundedness.unconfoundedness_validation.validate_unconfoundedness_balance) – Convenience wrapper returning the balance block only.
 
-######## `run_uncofoundedness_diagnostics`
-
-```python
-run_uncofoundedness_diagnostics(*, res: _Dict[str, _Any] | _Any = None, X: _Optional[np.ndarray] = None, d: _Optional[np.ndarray] = None, m_hat: _Optional[np.ndarray] = None, names: _Optional[_List[str]] = None, treatment_names: _Optional[_List[str]] = None, score: _Optional[str] = None, normalize: _Optional[bool] = None, threshold: float = 0.1, eps_overlap: float = 0.01, return_summary: bool = True) -> _Dict[str, _Any]
-```
-
-Multi-treatment unconfoundedness diagnostics focused on balance (SMD), ATE only.
-
-Pairwise comparisons: baseline treatment 0 vs k (k=1..K-1)
-
-Inputs:
-
-- Either `res` containing diagnostic_data with x, d(one-hot), m_hat(matrix),
-  or raw arrays X, d, m_hat (+ optional names, treatment_names, normalize).
-  Returns:
-  {
-  "params": {"score", "normalize", "smd_threshold"},
-  "balance": {
-  "smd": pd.DataFrame (p, K-1),
-  "smd_unweighted": pd.DataFrame (p, K-1),
-  "smd_max": float,
-  "frac_violations": float,
-  "pass": bool,
-  "worst_features": pd.Series (top 10 by max SMD across comparisons),
-  "comparisons": list[str],
-  },
-  "flags": {"balance_max_smd", "balance_violations"},
-  "overall_flag": str,
-  "meta": {"n", "p", "K", "treatment_names"},
-  "summary": pd.DataFrame (optional)
-  }
-
-######## `validate_uncofoundedness_balance`
+######## `run_unconfoundedness_diagnostics`
 
 ```python
-validate_uncofoundedness_balance(effect_estimation: Dict[str, Any] | Any, *, threshold: float = 0.1, normalize: Optional[bool] = None) -> Dict[str, Any]
+run_unconfoundedness_diagnostics(data: MultiCausalData, estimate: MultiCausalEstimate, *, threshold: float = 0.1, normalize: Optional[bool] = None, return_summary: bool = True) -> Dict[str, Any]
 ```
 
-Multitreatment version (one-hot d, matrix m_hat) for ATE only.
+Run multi-treatment unconfoundedness diagnostics from data and estimate.
 
-Assumes:
+This implementation currently supports ATE diagnostics only and computes
+pairwise balance between baseline treatment 0 and each active treatment k.
 
-- d: shape (n, K) one-hot treatment indicators (baseline is column 0)
-- m_hat: shape (n, K) propensity scores for each treatment
-- X: shape (n, p) confounders
-
-Computes pairwise balance for (0 vs k) for k=1..K-1:
-
-- ATE weights: w_g = D_g / m_g
-- Optional normalization: divide each group's weights by its mean (over all n),
-  mirroring the binary IRM normalization pattern.
-
-Returns SMDs (weighted and unweighted) as DataFrames with:
-
-- rows = confounders
-- columns = comparisons "0_vs_k"
-
-####### `validate_uncofoundedness_balance`
+######## `validate_unconfoundedness_balance`
 
 ```python
-validate_uncofoundedness_balance(effect_estimation: Dict[str, Any] | Any, *, threshold: float = 0.1, normalize: Optional[bool] = None) -> Dict[str, Any]
+validate_unconfoundedness_balance(data: MultiCausalData, estimate: MultiCausalEstimate, *, threshold: float = 0.1, normalize: Optional[bool] = None) -> Dict[str, Any]
 ```
 
-Multitreatment version (one-hot d, matrix m_hat) for ATE only.
+Convenience wrapper returning the balance block only.
 
-Assumes:
+####### `validate_unconfoundedness_balance`
 
-- d: shape (n, K) one-hot treatment indicators (baseline is column 0)
-- m_hat: shape (n, K) propensity scores for each treatment
-- X: shape (n, p) confounders
+```python
+validate_unconfoundedness_balance(data: MultiCausalData, estimate: MultiCausalEstimate, *, threshold: float = 0.1, normalize: Optional[bool] = None) -> Dict[str, Any]
+```
 
-Computes pairwise balance for (0 vs k) for k=1..K-1:
+Convenience wrapper returning the balance block only.
 
-- ATE weights: w_g = D_g / m_g
-- Optional normalization: divide each group's weights by its mean (over all n),
-  mirroring the binary IRM normalization pattern.
+###### `validate_unconfoundedness_balance`
 
-Returns SMDs (weighted and unweighted) as DataFrames with:
+```python
+validate_unconfoundedness_balance(data: MultiCausalData, estimate: MultiCausalEstimate, *, threshold: float = 0.1, normalize: Optional[bool] = None) -> Dict[str, Any]
+```
 
-- rows = confounders
-- columns = comparisons "0_vs_k"
+Convenience wrapper returning the balance block only.
 
 #### `unconfoundedness`
 
@@ -10978,15 +11273,15 @@ SRMResult(status=SRM DETECTED, p_value=0.00006, chi2=16.0000)
 
 **Functions:**
 
-- [**confounders_balance**](#causalis.shared.confounders_balance.confounders_balance) – Compute balance diagnostics for confounders between treatment groups.
+- [**confounders_balance**](#causalis.shared.confounders_balance.confounders_balance) – Compute balance diagnostics for confounders between two treatment groups.
 
 ##### `confounders_balance`
 
 ```python
-confounders_balance(data: CausalData) -> pd.DataFrame
+confounders_balance(data: CausalData | MultiCausalData, treatment_d_0: Optional[str] = None, treatment_d_1: Optional[str] = None) -> pd.DataFrame
 ```
 
-Compute balance diagnostics for confounders between treatment groups.
+Compute balance diagnostics for confounders between two treatment groups.
 
 Produces a DataFrame containing expanded confounder columns (after one-hot
 encoding categorical variables if present) with:
@@ -11000,9 +11295,11 @@ encoding categorical variables if present) with:
 
 **Parameters:**
 
-- **data** (<code>[CausalData](#causalis.dgp.causaldata.CausalData)</code>) – The causal dataset containing the dataframe, treatment, and confounders.
-  Accepts CausalData or any object with `df`, `treatment`, and `confounders`
-  attributes/properties.
+- **data** (<code>[CausalData](#causalis.dgp.causaldata.CausalData) or [MultiCausalData](#causalis.dgp.multicausaldata.MultiCausalData)</code>) – The causal dataset containing the dataframe and confounders.
+- **treatment_d_0** (<code>[str](#str)</code>) – For MultiCausalData, name of the first treatment column to compare.
+  Mapped to output column `mean_d_0`.
+- **treatment_d_1** (<code>[str](#str)</code>) – For MultiCausalData, name of the second treatment column to compare.
+  Mapped to output column `mean_d_1`.
 
 **Returns:**
 
@@ -11017,15 +11314,16 @@ encoding categorical variables if present) with:
 ##### `outcome_outliers`
 
 ```python
-outcome_outliers(data: CausalData, treatment: Optional[str] = None, outcome: Optional[str] = None, *, method: Literal['iqr', 'zscore'] = 'iqr', iqr_k: float = 1.5, z_thresh: float = 3.0, tail: Literal['both', 'lower', 'upper'] = 'both', return_rows: bool = False) -> pd.DataFrame | tuple[pd.DataFrame, pd.DataFrame]
+outcome_outliers(data: CausalData | MultiCausalData, treatment: Optional[str] = None, outcome: Optional[str] = None, *, method: Literal['iqr', 'zscore'] = 'iqr', iqr_k: float = 1.5, z_thresh: float = 3.0, tail: Literal['both', 'lower', 'upper'] = 'both', return_rows: bool = False) -> pd.DataFrame | tuple[pd.DataFrame, pd.DataFrame]
 ```
 
 Detect outcome outliers per treatment group using IQR or z-score rules.
 
 **Parameters:**
 
-- **data** (<code>[CausalData](#causalis.dgp.causaldata.CausalData)</code>) – Causal dataset containing the dataframe and metadata.
-- **treatment** (<code>[str](#str)</code>) – Treatment column name. Defaults to `data.treatment`.
+- **data** (<code>[CausalData](#causalis.dgp.causaldata.CausalData) or [MultiCausalData](#causalis.dgp.multicausaldata.MultiCausalData)</code>) – Causal dataset containing the dataframe and metadata.
+- **treatment** (<code>[str](#str)</code>) – Treatment column name. For MultiCausalData, if not provided, one-hot
+  treatment columns are converted to assigned treatment labels.
 - **outcome** (<code>[str](#str)</code>) – Outcome column name. Defaults to `data.outcome`.
 - **method** (<code>('iqr', 'zscore')</code>) – Outlier detection rule.
 - **iqr_k** (<code>[float](#float)</code>) – Multiplier for the IQR rule.
@@ -11049,7 +11347,7 @@ Bounds are computed within each treatment group.
 #### `outcome_plot_boxplot`
 
 ```python
-outcome_plot_boxplot(data: CausalData, treatment: Optional[str] = None, outcome: Optional[str] = None, figsize: Tuple[float, float] = (9, 5.5), dpi: int = 220, font_scale: float = 1.15, showfliers: bool = True, patch_artist: bool = True, palette: Optional[Union[list, dict]] = None, save: Optional[str] = None, save_dpi: Optional[int] = None, transparent: bool = False) -> plt.Figure
+outcome_plot_boxplot(data: Union[CausalData, MultiCausalData], treatment: Optional[str] = None, outcome: Optional[str] = None, figsize: Tuple[float, float] = (9, 5.5), dpi: int = 220, font_scale: float = 1.15, showfliers: bool = True, patch_artist: bool = True, palette: Optional[Union[list, dict]] = None, save: Optional[str] = None, save_dpi: Optional[int] = None, transparent: bool = False) -> plt.Figure
 ```
 
 Prettified boxplot of the outcome by treatment.
@@ -11066,8 +11364,9 @@ Prettified boxplot of the outcome by treatment.
 
 **Parameters:**
 
-- **data** (<code>[CausalData](#causalis.dgp.causaldata.CausalData)</code>) – The causal dataset containing the dataframe and metadata.
-- **treatment** (<code>[str](#str)</code>) – Treatment column name. Defaults to the one in `data_contracts`.
+- **data** (<code>[CausalData](#causalis.dgp.causaldata.CausalData) or [MultiCausalData](#causalis.dgp.multicausaldata.MultiCausalData)</code>) – The causal dataset containing the dataframe and metadata.
+- **treatment** (<code>[str](#str)</code>) – Treatment column name. For MultiCausalData, if not provided, one-hot
+  treatment columns are converted to assigned treatment labels.
 - **outcome** (<code>[str](#str)</code>) – Outcome column name. Defaults to the one in `data_contracts`.
 - **figsize** (<code>[tuple](#tuple)</code>) – Figure size in inches (width, height).
 - **dpi** (<code>[int](#int)</code>) – Dots per inch for the figure.
@@ -11086,7 +11385,7 @@ Prettified boxplot of the outcome by treatment.
 #### `outcome_plot_dist`
 
 ```python
-outcome_plot_dist(data: CausalData, treatment: Optional[str] = None, outcome: Optional[str] = None, bins: Union[str, int] = 'fd', density: bool = True, alpha: float = 0.45, sharex: bool = True, kde: bool = True, clip: Optional[Tuple[float, float]] = (0.01, 0.99), figsize: Tuple[float, float] = (9, 5.5), dpi: int = 220, font_scale: float = 1.15, palette: Optional[Union[list, dict]] = None, save: Optional[str] = None, save_dpi: Optional[int] = None, transparent: bool = False) -> plt.Figure
+outcome_plot_dist(data: Union[CausalData, MultiCausalData], treatment: Optional[str] = None, outcome: Optional[str] = None, bins: Union[str, int] = 'fd', density: bool = True, alpha: float = 0.45, sharex: bool = True, kde: bool = True, clip: Optional[Tuple[float, float]] = (0.01, 0.99), figsize: Tuple[float, float] = (9, 5.5), dpi: int = 220, font_scale: float = 1.15, palette: Optional[Union[list, dict]] = None, save: Optional[str] = None, save_dpi: Optional[int] = None, transparent: bool = False) -> plt.Figure
 ```
 
 Plot the distribution of the outcome for each treatment on a single, pretty plot.
@@ -11105,8 +11404,9 @@ Plot the distribution of the outcome for each treatment on a single, pretty plot
 
 **Parameters:**
 
-- **data** (<code>[CausalData](#causalis.dgp.causaldata.CausalData)</code>) – The causal dataset containing the dataframe and metadata.
-- **treatment** (<code>[str](#str)</code>) – Treatment column name. Defaults to the one in `data_contracts`.
+- **data** (<code>[CausalData](#causalis.dgp.causaldata.CausalData) or [MultiCausalData](#causalis.dgp.multicausaldata.MultiCausalData)</code>) – The causal dataset containing the dataframe and metadata.
+- **treatment** (<code>[str](#str)</code>) – Treatment column name. For MultiCausalData, if not provided, one-hot
+  treatment columns are converted to assigned treatment labels.
 - **outcome** (<code>[str](#str)</code>) – Outcome column name. Defaults to the one in `data_contracts`.
 - **bins** (<code>[str](#str) or [int](#int)</code>) – Number of bins for histograms (e.g., "fd", "auto", or an integer).
 - **density** (<code>[bool](#bool)</code>) – Whether to normalize histograms to form a density.
@@ -11137,7 +11437,7 @@ Plot the distribution of the outcome for each treatment on a single, pretty plot
 ##### `outcome_plot_boxplot`
 
 ```python
-outcome_plot_boxplot(data: CausalData, treatment: Optional[str] = None, outcome: Optional[str] = None, figsize: Tuple[float, float] = (9, 5.5), dpi: int = 220, font_scale: float = 1.15, showfliers: bool = True, patch_artist: bool = True, palette: Optional[Union[list, dict]] = None, save: Optional[str] = None, save_dpi: Optional[int] = None, transparent: bool = False) -> plt.Figure
+outcome_plot_boxplot(data: Union[CausalData, MultiCausalData], treatment: Optional[str] = None, outcome: Optional[str] = None, figsize: Tuple[float, float] = (9, 5.5), dpi: int = 220, font_scale: float = 1.15, showfliers: bool = True, patch_artist: bool = True, palette: Optional[Union[list, dict]] = None, save: Optional[str] = None, save_dpi: Optional[int] = None, transparent: bool = False) -> plt.Figure
 ```
 
 Prettified boxplot of the outcome by treatment.
@@ -11154,8 +11454,9 @@ Prettified boxplot of the outcome by treatment.
 
 **Parameters:**
 
-- **data** (<code>[CausalData](#causalis.dgp.causaldata.CausalData)</code>) – The causal dataset containing the dataframe and metadata.
-- **treatment** (<code>[str](#str)</code>) – Treatment column name. Defaults to the one in `data_contracts`.
+- **data** (<code>[CausalData](#causalis.dgp.causaldata.CausalData) or [MultiCausalData](#causalis.dgp.multicausaldata.MultiCausalData)</code>) – The causal dataset containing the dataframe and metadata.
+- **treatment** (<code>[str](#str)</code>) – Treatment column name. For MultiCausalData, if not provided, one-hot
+  treatment columns are converted to assigned treatment labels.
 - **outcome** (<code>[str](#str)</code>) – Outcome column name. Defaults to the one in `data_contracts`.
 - **figsize** (<code>[tuple](#tuple)</code>) – Figure size in inches (width, height).
 - **dpi** (<code>[int](#int)</code>) – Dots per inch for the figure.
@@ -11174,7 +11475,7 @@ Prettified boxplot of the outcome by treatment.
 ##### `outcome_plot_dist`
 
 ```python
-outcome_plot_dist(data: CausalData, treatment: Optional[str] = None, outcome: Optional[str] = None, bins: Union[str, int] = 'fd', density: bool = True, alpha: float = 0.45, sharex: bool = True, kde: bool = True, clip: Optional[Tuple[float, float]] = (0.01, 0.99), figsize: Tuple[float, float] = (9, 5.5), dpi: int = 220, font_scale: float = 1.15, palette: Optional[Union[list, dict]] = None, save: Optional[str] = None, save_dpi: Optional[int] = None, transparent: bool = False) -> plt.Figure
+outcome_plot_dist(data: Union[CausalData, MultiCausalData], treatment: Optional[str] = None, outcome: Optional[str] = None, bins: Union[str, int] = 'fd', density: bool = True, alpha: float = 0.45, sharex: bool = True, kde: bool = True, clip: Optional[Tuple[float, float]] = (0.01, 0.99), figsize: Tuple[float, float] = (9, 5.5), dpi: int = 220, font_scale: float = 1.15, palette: Optional[Union[list, dict]] = None, save: Optional[str] = None, save_dpi: Optional[int] = None, transparent: bool = False) -> plt.Figure
 ```
 
 Plot the distribution of the outcome for each treatment on a single, pretty plot.
@@ -11193,8 +11494,9 @@ Plot the distribution of the outcome for each treatment on a single, pretty plot
 
 **Parameters:**
 
-- **data** (<code>[CausalData](#causalis.dgp.causaldata.CausalData)</code>) – The causal dataset containing the dataframe and metadata.
-- **treatment** (<code>[str](#str)</code>) – Treatment column name. Defaults to the one in `data_contracts`.
+- **data** (<code>[CausalData](#causalis.dgp.causaldata.CausalData) or [MultiCausalData](#causalis.dgp.multicausaldata.MultiCausalData)</code>) – The causal dataset containing the dataframe and metadata.
+- **treatment** (<code>[str](#str)</code>) – Treatment column name. For MultiCausalData, if not provided, one-hot
+  treatment columns are converted to assigned treatment labels.
 - **outcome** (<code>[str](#str)</code>) – Outcome column name. Defaults to the one in `data_contracts`.
 - **bins** (<code>[str](#str) or [int](#int)</code>) – Number of bins for histograms (e.g., "fd", "auto", or an integer).
 - **density** (<code>[bool](#bool)</code>) – Whether to normalize histograms to form a density.
@@ -11217,7 +11519,7 @@ Plot the distribution of the outcome for each treatment on a single, pretty plot
 ##### `outcome_plots`
 
 ```python
-outcome_plots(data: CausalData, treatment: Optional[str] = None, outcome: Optional[str] = None, bins: int = 30, density: bool = True, alpha: float = 0.5, figsize: Tuple[float, float] = (7, 4), sharex: bool = True, palette: Optional[Union[list, dict]] = None) -> Tuple[plt.Figure, plt.Figure]
+outcome_plots(data: Union[CausalData, MultiCausalData], treatment: Optional[str] = None, outcome: Optional[str] = None, bins: int = 30, density: bool = True, alpha: float = 0.5, figsize: Tuple[float, float] = (7, 4), sharex: bool = True, palette: Optional[Union[list, dict]] = None) -> Tuple[plt.Figure, plt.Figure]
 ```
 
 Plot the distribution of the outcome for every treatment on one plot,
@@ -11225,7 +11527,7 @@ and also produce a boxplot by treatment to visualize outliers.
 
 **Parameters:**
 
-- **data** (<code>[CausalData](#causalis.dgp.causaldata.CausalData)</code>) – The causal dataset containing the dataframe and metadata.
+- **data** (<code>[CausalData](#causalis.dgp.causaldata.CausalData) or [MultiCausalData](#causalis.dgp.multicausaldata.MultiCausalData)</code>) – The causal dataset containing the dataframe and metadata.
 - **treatment** (<code>[str](#str)</code>) – Treatment column name. Defaults to the one in `data_contracts`.
 - **outcome** (<code>[str](#str)</code>) – Outcome column name. Defaults to the one in `data_contracts`.
 - **bins** (<code>[int](#int)</code>) – Number of bins for histograms when the outcome is numeric.
@@ -11250,7 +11552,7 @@ Outcome shared grouped by treatment for CausalData.
 ##### `outcome_stats`
 
 ```python
-outcome_stats(data: CausalData) -> pd.DataFrame
+outcome_stats(data: CausalData | MultiCausalData) -> pd.DataFrame
 ```
 
 Comprehensive outcome shared grouped by treatment.
@@ -11262,7 +11564,7 @@ data_contracts in a clean DataFrame format suitable for reporting.
 
 **Parameters:**
 
-- **data** (<code>[CausalData](#causalis.dgp.causaldata.CausalData)</code>) – The CausalData object containing treatment and outcome variables.
+- **data** (<code>[CausalData](#causalis.dgp.causaldata.CausalData) or [MultiCausalData](#causalis.dgp.multicausaldata.MultiCausalData)</code>) – The causal dataset containing treatment and outcome variables.
 
 **Returns:**
 

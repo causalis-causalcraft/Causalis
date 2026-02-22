@@ -52,22 +52,24 @@ def plot_m_overlap(
     treatment_names: Optional[List[str]] = None,
 ) -> plt.Figure:
     """
-    Multi-treatment overlap plot for propensity scores m_k(x)=P(D=k|X), ATE diagnostics style.
+    Multi-treatment overlap plot for pairwise conditional propensity scores.
 
-    Делает pairwise-плоты baseline (по умолчанию 0) vs k:
-      - сравниваем распределение m_k(x) среди наблюдений с D=k (treated)
-        и среди наблюдений с D=baseline (control для пары 0 vs k).
+    For each comparison baseline (default 0) vs k, this plots
+    ``P(D=k | X, D in {baseline, k}) = m_k(X) / (m_baseline(X) + m_k(X))``
+    on the observed pair sample ``D in {baseline, k}``, comparing:
+      - units with D=k (treated for the pair),
+      - units with D=baseline (control for the pair).
 
-    Параметры:
+    Parameters:
       - diag.d: (n, K) one-hot
-      - diag.m_hat: (n, K) propensity
+      - diag.m_hat / diag.m_hat_raw: (n, K) propensity
       - treatment_idx:
-          * None -> построить для всех k != baseline_idx (мультипанель)
-          * int -> построить для конкретного k
-          * list[int] -> построить для набора k
-      - ax: поддерживается только для одиночного графика (когда выбран ровно один k)
+          * None -> plot all k != baseline_idx (multi-panel)
+          * int -> plot one comparison
+          * list[int] -> plot selected comparisons
+      - ax: supported only for a single comparison (exactly one k)
 
-    Возвращает matplotlib.figure.Figure.
+    Returns matplotlib.figure.Figure.
     """
 
     # ------- Helpers --------------------------------------------------------
@@ -103,6 +105,25 @@ def plot_m_overlap(
             if fc is not None:
                 return fc
         return fallback
+
+    def _pairwise_scores(
+        m_arr: np.ndarray,
+        d_arr: np.ndarray,
+        *,
+        tr_idx: int,
+        base_idx: int,
+    ) -> Tuple[np.ndarray, np.ndarray]:
+        mask_t = d_arr[:, tr_idx] > 0.5
+        mask_c = d_arr[:, base_idx] > 0.5
+        mask_pair = mask_t | mask_c
+        if not np.any(mask_pair):
+            return np.array([], dtype=float), np.array([], dtype=float)
+
+        m_t = np.clip(m_arr[mask_pair, tr_idx], 0.0, 1.0)
+        m_c = np.clip(m_arr[mask_pair, base_idx], 0.0, 1.0)
+        denom = np.clip(m_t + m_c, 1e-12, None)
+        s_pair = m_t / denom
+        return s_pair[mask_t[mask_pair]], s_pair[mask_c[mask_pair]]
 
     def _plot_one(
         ax1: plt.Axes,
@@ -145,7 +166,7 @@ def plot_m_overlap(
             else:
                 lo, hi = 0.0, 1.0
 
-            xs = np.linspace(0.0, 1.0, 800)
+            xs = np.linspace(lo, hi, 800)
             h_t = _silverman_bandwidth(mtp)
             h_c = _silverman_bandwidth(mcp)
             yt = _kde_reflect(mtp, xs, h_t)
@@ -174,7 +195,13 @@ def plot_m_overlap(
     # ------- Data -----------------------------------------------------------
     diag_resolved = _resolve_overlap_diag(diag)
     d = np.asarray(getattr(diag_resolved, "d"), dtype=float)
-    m = np.asarray(getattr(diag_resolved, "m_hat"), dtype=float)
+    m_post = np.asarray(getattr(diag_resolved, "m_hat"), dtype=float)
+    m_raw = getattr(diag_resolved, "m_hat_raw", None)
+    if m_raw is not None:
+        m_raw_arr = np.asarray(m_raw, dtype=float)
+        m = m_raw_arr if m_raw_arr.shape == m_post.shape else m_post
+    else:
+        m = m_post
 
     if d.ndim != 2 or m.ndim != 2:
         raise ValueError("Expected multi-treatment diag: d and m_hat must be 2D arrays (n, K).")
@@ -187,7 +214,7 @@ def plot_m_overlap(
 
     # treatment names
     if treatment_names is None:
-        treatment_names = getattr(diag, "treatment_names", None) or getattr(diag, "d_names", None)
+        treatment_names = getattr(diag_resolved, "treatment_names", None) or getattr(diag_resolved, "d_names", None)
     if not treatment_names or len(treatment_names) != K:
         treatment_names = [str(k) for k in range(K)]
 
@@ -237,11 +264,7 @@ def plot_m_overlap(
                 except Exception:
                     pass
 
-            mask_t = d[:, k].astype(bool)
-            mask_c = d[:, baseline_idx].astype(bool)
-
-            mt = m[mask_t, k]
-            mc = m[mask_c, k]
+            mt, mc = _pairwise_scores(m, d, tr_idx=k, base_idx=baseline_idx)
 
             if mt.size == 0 or mc.size == 0:
                 raise ValueError(
@@ -252,8 +275,11 @@ def plot_m_overlap(
                 ax1, mt, mc,
                 label_t=f"T={treatment_names[k]} (n={mt.size})",
                 label_c=f"T={treatment_names[baseline_idx]} (n={mc.size})",
-                xlabel=rf"$m_{{{treatment_names[k]}}}(x)=\mathbb{{P}}(D={treatment_names[k]}\mid X)$",
-                title=f"Propensity overlap: {treatment_names[baseline_idx]} vs {treatment_names[k]}",
+                xlabel=(
+                    f"Pairwise score P(D={treatment_names[k]} | X, "
+                    f"D in {{{treatment_names[baseline_idx]}, {treatment_names[k]}}})"
+                ),
+                title=f"Pairwise overlap score: {treatment_names[baseline_idx]} vs {treatment_names[k]}",
             )
 
             fig.tight_layout()
@@ -288,11 +314,7 @@ def plot_m_overlap(
 
         for i, k in enumerate(ks):
             ax1 = axs[i]
-            mask_t = d[:, k].astype(bool)
-            mask_c = d[:, baseline_idx].astype(bool)
-
-            mt = m[mask_t, k]
-            mc = m[mask_c, k]
+            mt, mc = _pairwise_scores(m, d, tr_idx=k, base_idx=baseline_idx)
 
             if mt.size == 0 or mc.size == 0:
                 ax1.set_title(f"{treatment_names[baseline_idx]} vs {treatment_names[k]} (insufficient data)")
@@ -303,8 +325,11 @@ def plot_m_overlap(
                 ax1, mt, mc,
                 label_t=f"T={treatment_names[k]} (n={mt.size})",
                 label_c=f"T={treatment_names[baseline_idx]} (n={mc.size})",
-                xlabel=rf"$m_{{{treatment_names[k]}}}(x)$",
-                title=f"Overlap: {treatment_names[baseline_idx]} vs {treatment_names[k]}",
+                xlabel=(
+                    f"Pairwise score P(D={treatment_names[k]} | X, "
+                    f"D in {{{treatment_names[baseline_idx]}, {treatment_names[k]}}})"
+                ),
+                title=f"Pairwise overlap: {treatment_names[baseline_idx]} vs {treatment_names[k]}",
             )
 
         # turn off unused axes

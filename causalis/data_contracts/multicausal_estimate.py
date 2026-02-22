@@ -54,8 +54,6 @@ class MultiCausalEstimate(BaseModel):
         The date when the estimate was created (YYYY-MM-DD).
     diagnostic_data : DiagnosticData, optional
         Additional diagnostic data_contracts.
-    sensitivity_analysis : dict, optional
-        Results from sensitivity analysis.
     """
 
     model_config = ConfigDict(arbitrary_types_allowed=True)
@@ -83,7 +81,6 @@ class MultiCausalEstimate(BaseModel):
     confounders: List[str] = Field(default_factory=list)
     time: str = Field(default_factory=lambda: datetime.now().strftime("%Y-%m-%d"))
     diagnostic_data: Optional[DiagnosticData] = None
-    sensitivity_analysis: Dict[str, Any] = Field(default_factory=dict)
 
     @staticmethod
     def _as_1d_array(x: Any, n_expected: int, *, name: str) -> np.ndarray:
