@@ -1,0 +1,199 @@
+import numpy as np
+import pandas as pd
+
+from causalis.data_contracts import PanelDataSCM
+from causalis.dgp import generate_scm_data
+from causalis.dgp.panel_data_scm import generate_scm_gamma_data, generate_scm_poisson_data
+from causalis.scenarios.synthetic_control import AugmentedSyntheticControl
+
+
+def test_generate_scm_data_returns_panel_contract_by_default():
+    panel = generate_scm_data(random_state=123)
+
+    assert isinstance(panel, PanelDataSCM)
+    assert panel.treated_unit == "treated"
+    assert len(panel.donor_pool()) == 5
+    assert len(panel.pre_times()) == 20
+    assert len(panel.post_times()) == 10
+    assert tuple(panel.covariate_cols) == ()
+
+
+def test_generate_scm_data_can_return_dataframe():
+    df = generate_scm_data(return_panel_data=False, random_state=123)
+
+    assert isinstance(df, pd.DataFrame)
+    assert {"unit_id", "time_id", "y", "y_cf", "tau_realized_true", "observed"}.issubset(df.columns)
+
+
+def test_generated_data_is_usable_by_ascm():
+    true_effect = 3.5
+    panel = generate_scm_data(
+        n_donors=6,
+        n_pre_periods=24,
+        n_post_periods=8,
+        treatment_effect=true_effect,
+        donor_noise_std=0.10,
+        treated_noise_std=0.02,
+        random_state=7,
+    )
+
+    estimate = AugmentedSyntheticControl(lambda_aug=0.5).fit(panel).estimate()
+
+    assert abs(estimate.att - true_effect) < 1.0
+    assert len(estimate.donor_weights_sc) == 6
+    assert len(estimate.att_by_time) == 8
+
+
+def test_generate_scm_data_missingness_mode_returns_valid_contract():
+    panel = generate_scm_data(
+        n_donors=4,
+        missing_outcome_frac=0.05,
+        missing_cell_frac=0.10,
+        random_state=99,
+    )
+
+    assert isinstance(panel, PanelDataSCM)
+    assert panel.allow_missing_outcome is True
+    assert panel.observed_col == "observed"
+    assert len(panel.donor_pool()) == 4
+
+
+def test_generate_scm_data_reality_knobs_with_structured_missingness():
+    n_donors = 5
+    n_pre = 18
+    n_post = 6
+    panel = generate_scm_data(
+        n_donors=n_donors,
+        n_pre_periods=n_pre,
+        n_post_periods=n_post,
+        dirichlet_alpha=0.2,
+        rho_common=0.6,
+        rho_donor=0.4,
+        n_latent_factors=2,
+        rho_latent=0.5,
+        prefit_mismatch_std=0.15,
+        rho_prefit_mismatch=0.4,
+        missing_block_frac=0.10,
+        missing_block_min_len=2,
+        missing_block_max_len=4,
+        random_state=202,
+    )
+
+    assert isinstance(panel, PanelDataSCM)
+    assert panel.allow_missing_outcome is True
+    assert panel.observed_col == "observed"
+    assert set(panel.df["observed"].unique()).issubset({0, 1})
+    n_full = (n_pre + n_post) * (n_donors + 1)
+    assert len(panel.df) == n_full
+    assert panel.df["y"].isna().any()
+    observed_matches_outcome = (
+        ((panel.df["observed"] == 0) & panel.df["y"].isna())
+        | ((panel.df["observed"] == 1) & panel.df["y"].notna())
+    )
+    assert observed_matches_outcome.all()
+
+
+def test_generate_scm_data_multiplicative_effect_mode_tracks_tau_realized_true():
+    n_pre = 12
+    n_post = 5
+    time_start = 2
+    df = generate_scm_data(
+        n_pre_periods=n_pre,
+        n_post_periods=n_post,
+        time_start=time_start,
+        treatment_effect=0.08,
+        treatment_effect_mode="multiplicative",
+        return_panel_data=False,
+        random_state=11,
+    )
+
+    treated = df[df["unit_id"] == "treated"].copy()
+    intervention_time = time_start + n_pre
+    pre = treated[treated["time_id"] < intervention_time]
+    post = treated[treated["time_id"] >= intervention_time]
+
+    assert np.allclose(df["tau_realized_true"].to_numpy(), (df["y"] - df["y_cf"]).to_numpy())
+    assert np.allclose(pre["tau_realized_true"].to_numpy(), 0.0)
+    assert (post["tau_realized_true"] > 0.0).all()
+
+
+def test_generate_scm_data_can_protect_treated_post_outcomes():
+    n_pre = 10
+    n_post = 6
+    time_start = 1
+    df = generate_scm_data(
+        n_pre_periods=n_pre,
+        n_post_periods=n_post,
+        time_start=time_start,
+        missing_outcome_frac=0.30,
+        missing_cell_frac=0.20,
+        missing_block_frac=0.15,
+        protect_treated_post=True,
+        return_panel_data=False,
+        random_state=101,
+    )
+
+    intervention_time = time_start + n_pre
+    treated_post = df[(df["unit_id"] == "treated") & (df["time_id"] >= intervention_time)]
+    assert not treated_post["y"].isna().any()
+
+
+def test_generate_scm_gamma_data_emits_mean_oracles():
+    df = generate_scm_gamma_data(
+        n=360,
+        n_donors=7,
+        n_pre_periods=16,
+        n_post_periods=6,
+        seed=19,
+        return_panel_data=False,
+    )
+
+    assert {"mu_cf", "mu_treated", "tau_mean_true"}.issubset(df.columns)
+    assert "tau_rate_true" not in df.columns
+    assert np.allclose(df["tau_realized_true"].to_numpy(), (df["y"] - df["y_cf"]).to_numpy())
+    assert np.allclose(df["tau_mean_true"].to_numpy(), (df["mu_treated"] - df["mu_cf"]).to_numpy())
+    donors = df[df["is_treated_unit"] == 0]
+    assert np.allclose(donors["tau_mean_true"].to_numpy(), 0.0)
+
+
+def test_generate_scm_poisson_data_coupled_outcomes_and_mean_oracles():
+    n_pre = 14
+    n_post = 6
+    time_start = 1
+    df = generate_scm_poisson_data(
+        n=360,
+        n_donors=6,
+        n_pre_periods=n_pre,
+        n_post_periods=n_post,
+        treatment_effect_rate=0.18,
+        treatment_effect_slope=0.0,
+        donor_missing_block_frac=0.0,
+        seed=31,
+        return_panel_data=False,
+    )
+
+    assert {"mu_cf", "mu_treated", "tau_mean_true"}.issubset(df.columns)
+    assert "tau_rate_true" not in df.columns
+    assert np.allclose(df["tau_realized_true"].to_numpy(), (df["y"] - df["y_cf"]).to_numpy())
+    assert np.allclose(df["tau_mean_true"].to_numpy(), (df["mu_treated"] - df["mu_cf"]).to_numpy())
+
+    intervention_time = time_start + n_pre
+    treated = df[df["unit_id"] == "treated"].copy()
+    pre = treated[treated["time_id"] < intervention_time]
+    post = treated[treated["time_id"] >= intervention_time]
+    assert np.allclose(pre["tau_realized_true"].to_numpy(), 0.0)
+    assert (post["tau_realized_true"] >= 0.0).all()
+
+
+def test_generate_scm_poisson_data_ignores_base_missing_overrides_on_treated():
+    df = generate_scm_poisson_data(
+        n=360,
+        seed=77,
+        n_donors=6,
+        return_panel_data=False,
+        missing_outcome_frac=0.50,
+        missing_cell_frac=0.40,
+        missing_block_frac=0.30,
+    )
+    treated = df[df["unit_id"] == "treated"]
+    assert not treated["y"].isna().any()

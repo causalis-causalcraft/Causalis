@@ -1,9 +1,11 @@
 from .causaldata import CausalData
 from .multicausaldata import MultiCausalData
 from .causaldata_instrumental import CausalDataInstrumental
+from .panel_data_scm import PanelDataSCM
+from .panel_estimate import PanelEstimate
 from .causal_estimate import CausalEstimate
 from .causal_diagnostic_data import DiagnosticData, UnconfoundednessDiagnosticData
-from .regression_checks import RegressionChecks
+from tests.data.regression_checks import RegressionChecks
 from causalis.dgp import (
     generate_rct,
     generate_classic_rct,
@@ -21,6 +23,8 @@ __all__ = [
     "CausalData",
     "MultiCausalData",
     "CausalDataInstrumental",
+    "PanelDataSCM",
+    "PanelEstimate",
     "CausalEstimate",
     "DiagnosticData",
     "UnconfoundednessDiagnosticData",
