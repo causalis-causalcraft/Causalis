@@ -8,7 +8,7 @@ import statsmodels.api as sm
 
 from causalis.data_contracts.causal_diagnostic_data import CUPEDDiagnosticData
 from causalis.data_contracts.causal_estimate import CausalEstimate
-from causalis.data_contracts.regression_checks import RegressionChecks
+from tests.data.regression_checks import RegressionChecks
 from causalis.dgp.causaldata import CausalData
 
 FLAG_GREEN = "GREEN"

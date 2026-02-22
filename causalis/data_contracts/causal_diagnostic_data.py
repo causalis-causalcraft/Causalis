@@ -3,10 +3,9 @@ from __future__ import annotations
 from typing import Any, Dict, List, Optional, Union
 
 import numpy as np
-import pandas as pd
 from pydantic import BaseModel, ConfigDict
 
-from causalis.data_contracts.regression_checks import RegressionChecks
+from tests.data.regression_checks import RegressionChecks
 
 
 class DiagnosticData(BaseModel):

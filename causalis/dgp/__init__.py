@@ -12,6 +12,7 @@ from .causaldata import (
     generate_cuped_binary, make_cuped_binary_26
 )
 from .causaldata_instrumental import generate_iv_data
+from .panel_data_scm import generate_scm_data
 
 __all__ = [
     "CausalDatasetGenerator",
@@ -27,5 +28,6 @@ __all__ = [
     "make_cuped_tweedie",
     "generate_cuped_tweedie_26",
     "generate_cuped_binary",
-    "make_cuped_binary_26"
+    "make_cuped_binary_26",
+    "generate_scm_data",
 ]
