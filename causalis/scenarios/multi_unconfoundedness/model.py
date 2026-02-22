@@ -910,9 +910,21 @@ class MultiTreatmentIRM(BaseEstimator):
         sigma2 = float(np.mean(sigma2_score_element))
         psi_sigma2 = sigma2_score_element - sigma2
 
+        # Use the same representer normalization as the score when normalize_ipw=True.
+        with np.errstate(divide="ignore", invalid="ignore"):
+            inv_p = 1.0 / m_hat  # (n, K)
+        if bool(getattr(self, "normalize_ipw", False)):
+            h_raw = d * inv_p
+            h_mean = np.mean(h_raw, axis=0)
+            h_mean = np.where(
+                np.isfinite(h_mean) & (np.abs(h_mean) > 1e-12),
+                h_mean,
+                1.0,
+            )
+            inv_p = inv_p / h_mean[None, :]
+
         w_bar = np.ones(n, dtype=float)
 
-        inv_p = 1.0 / m_hat  # (n, K)
         d0 = d[:, [0]]       # baseline indicator (n, 1)
         inv_p0 = inv_p[:, [0]]
         dk = d[:, 1:]        # active treatment indicators (n, K-1)
@@ -945,14 +957,22 @@ class MultiTreatmentIRM(BaseEstimator):
             "psi": psi,
         }
 
-    def sensitivity_analysis(self, cf_y: float, r2_d: float, rho: float = 1.0, H0: float = 0.0,
-                             alpha: float = 0.05) -> "MultiTreatmentIRM":
+    def sensitivity_analysis(
+            self,
+            cf_y: Optional[float] = None,
+            r2_d: Any = 0.0,
+            rho: Any = 1.0,
+            H0: float = 0.0,
+            alpha: float = 0.05,
+            *,
+            r2_y: Optional[float] = None,
+    ) -> "MultiTreatmentIRM":
         from causalis.scenarios.multi_unconfoundedness.refutation.unconfoundedness.sensitivity import (
             sensitivity_analysis as sa_fn,
             get_sensitivity_summary
         )
 
-        res = sa_fn(self, cf_y=cf_y, r2_d=r2_d, rho=rho, H0=H0, alpha=alpha)
+        res = sa_fn(self, cf_y=cf_y, r2_y=r2_y, r2_d=r2_d, rho=rho, H0=H0, alpha=alpha)
 
         self.sensitivity_summary = get_sensitivity_summary({"model": self, "bias_aware": res})
 

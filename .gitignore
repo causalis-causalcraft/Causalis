@@ -98,3 +98,4 @@ Thumbs.db
 /.venv
 /.venv39
 /.pycache_tmp/
+/.local/

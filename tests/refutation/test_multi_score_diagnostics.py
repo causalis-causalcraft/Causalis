@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+import pytest
 
 from sklearn.dummy import DummyRegressor
 from sklearn.linear_model import LogisticRegression
@@ -41,11 +42,12 @@ def _make_multi_causal_data(n: int = 180, seed: int = 42) -> MultiCausalData:
     )
 
 
-def _make_estimate(data: MultiCausalData):
+def _make_estimate(data: MultiCausalData, *, normalize_ipw: bool = False):
     model = MultiTreatmentIRM(
         data=data,
         ml_g=DummyRegressor(strategy="mean"),
         ml_m=LogisticRegression(max_iter=1000),
+        normalize_ipw=normalize_ipw,
         n_folds=3,
         random_state=1,
     ).fit()
@@ -61,7 +63,7 @@ def test_multi_score_diagnostics_runs_and_returns_long_summary():
     assert "summary" in report
     summary = report["summary"]
     assert list(summary.columns) == ["comparison", "metric", "value", "flag"]
-    assert {"d_0 vs d_1", "d_0 vs d_2"}.issubset(set(summary["comparison"]))
+    assert {"d_1 vs d_0", "d_2 vs d_0"}.issubset(set(summary["comparison"]))
     assert {"se_plugin", "max_|t|", "oos_tstat_fold", "oos_tstat_strict"}.issubset(
         set(summary["metric"])
     )
@@ -85,3 +87,15 @@ def test_multi_score_refutation_namespace_exposes_runner():
     import causalis.scenarios.multi_unconfoundedness.refutation as ref
 
     assert hasattr(ref, "run_score_diagnostics")
+
+
+def test_multi_score_diagnostics_warns_and_disables_hajek_for_orthogonality():
+    data = _make_multi_causal_data(seed=71)
+    estimate = _make_estimate(data, normalize_ipw=True)
+
+    with pytest.warns(RuntimeWarning, match="normalize_ipw=False"):
+        report = run_score_diagnostics(data, estimate, return_summary=True)
+
+    assert report["params"]["normalize_ipw"] is True
+    assert report["params"]["orthogonality_normalize_ipw"] is False
+    assert report["meta"]["orthogonality_derivatives_use_score_normalization"] is False

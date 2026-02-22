@@ -69,6 +69,8 @@ class MultiUnconfoundednessDiagnosticData(DiagnosticData):
     m_alpha: Optional[np.ndarray] = None
     psi: Optional[np.ndarray] = None
     score: Optional[str] = None  # ATE or ATTE
+    sensitivity_analysis: Optional[Dict[str, Any]] = None
+    residual_plot_cache: Optional[Dict[str, Any]] = None
 
 
 class DiffInMeansDiagnosticData(DiagnosticData):

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import math
+import warnings
 from typing import Any, Dict, List, Optional, Tuple
 
 import numpy as np
@@ -86,7 +87,40 @@ def _resolve_treatment_names(diag: Any, data: MultiCausalData, k: int) -> List[s
 
 def _comparison_labels(treatment_names: List[str]) -> List[str]:
     baseline = str(treatment_names[0])
-    return [f"{baseline} vs {name}" for name in treatment_names[1:]]
+    return [f"{name} vs {baseline}" for name in treatment_names[1:]]
+
+
+def _normalize_rows_to_simplex(p: np.ndarray) -> np.ndarray:
+    p = np.asarray(p, dtype=float)
+    p = np.maximum(p, 1e-12)
+    row_sums = p.sum(axis=1, keepdims=True)
+    if np.any(np.isfinite(row_sums) & (row_sums <= 1e-12)):
+        raise RuntimeError("Propensity matrix contains rows with zero total probability.")
+    safe_sums = np.where(np.isfinite(row_sums) & (row_sums > 1e-12), row_sums, 1.0)
+    return p / safe_sums
+
+
+def _trim_multiclass_propensity(p: np.ndarray, trimming_threshold: float) -> np.ndarray:
+    """Lower-trim multiclass propensity and renormalize rows to sum to 1."""
+    p = np.asarray(p, dtype=float)
+    if p.ndim != 2:
+        raise ValueError(f"Propensity matrix must be 2D (n, K). Got shape {p.shape}.")
+    n_treatments = p.shape[1]
+    if n_treatments < 2:
+        raise ValueError("Need at least 2 treatment columns for multiclass propensity.")
+
+    thr = float(trimming_threshold)
+    if not np.isfinite(thr) or not (0.0 <= thr < (1.0 / n_treatments)):
+        raise ValueError(
+            f"trimming_threshold must be finite and in [0, 1/K) for K={n_treatments}; got {thr}."
+        )
+
+    p_simplex = _normalize_rows_to_simplex(p)
+    if thr <= 0.0:
+        return p_simplex
+
+    p_trim = np.maximum(p_simplex, thr)
+    return _normalize_rows_to_simplex(p_trim)
 
 
 def _build_basis(x: np.ndarray, n_basis_funcs: Optional[int]) -> np.ndarray:
@@ -466,7 +500,7 @@ def run_score_diagnostics(
         raise ValueError("Need at least 2 treatment columns for multi-treatment score diagnostics.")
 
     d = (d > 0.5).astype(float)
-    m = np.clip(m, 1e-12, 1.0 - 1e-12)
+    m = _normalize_rows_to_simplex(m)
 
     comparison_labels = _comparison_labels(_resolve_treatment_names(diag=diag, data=data, k=k))
     j = len(comparison_labels)
@@ -474,16 +508,32 @@ def run_score_diagnostics(
 
     trimming_thr = _resolve_trimming_threshold(trimming_threshold, diag, estimate)
     normalize_ipw = _resolve_normalize_ipw(diag, estimate)
+    m_diag = _trim_multiclass_propensity(m, trimming_thr)
 
     x_basis = _build_basis(x=x, n_basis_funcs=n_basis_funcs)
 
-    psi_comp, psi_b_comp, h, u = _compute_psi_from_nuisances(
+    psi_comp, psi_b_comp, _, u = _compute_psi_from_nuisances(
         y=y,
         d=d,
         g_hat=g_hat,
-        m=np.clip(m, trimming_thr, 1.0 - trimming_thr),
+        m=m_diag,
         theta=theta,
         normalize_ipw=normalize_ipw,
+    )
+
+    normalize_ipw_for_orthogonality = bool(normalize_ipw)
+    if normalize_ipw_for_orthogonality:
+        warnings.warn(
+            "Orthogonality derivatives are computed with normalize_ipw=False because "
+            "m-derivatives for Hajek-normalized IPW are not implemented.",
+            RuntimeWarning,
+            stacklevel=2,
+        )
+        normalize_ipw_for_orthogonality = False
+    h_ortho = _normalize_ipw_terms(
+        d=d,
+        m=m_diag,
+        normalize_ipw=normalize_ipw_for_orthogonality,
     )
 
     psi_override = getattr(diag, "psi", None)
@@ -519,10 +569,11 @@ def run_score_diagnostics(
         np.isfinite(y)
         & np.all(np.isfinite(d), axis=1)
         & np.all(np.isfinite(g_hat), axis=1)
-        & np.all(np.isfinite(m), axis=1)
+        & np.all(np.isfinite(m_diag), axis=1)
         & np.all(np.isfinite(x_basis), axis=1)
         & np.all(np.isfinite(psi), axis=1)
         & np.all(np.isfinite(psi_b), axis=1)
+        & np.all(np.isfinite(h_ortho), axis=1)
     )
     if folds_arr is not None and folds_arr.size == n:
         finite_rows = finite_rows & np.isfinite(folds_arr.astype(float))
@@ -530,26 +581,26 @@ def run_score_diagnostics(
     y = y[finite_rows]
     d = d[finite_rows]
     g_hat = g_hat[finite_rows]
-    m = m[finite_rows]
+    m_diag = m_diag[finite_rows]
     x_basis = x_basis[finite_rows]
     psi = psi[finite_rows]
     psi_b = psi_b[finite_rows]
-    h = h[finite_rows]
+    h_ortho = h_ortho[finite_rows]
     u = u[finite_rows]
     folds_arr = folds_arr[finite_rows] if folds_arr is not None and folds_arr.size == n else None
 
     ortho_df, ortho_max = _orthogonality_derivatives(
         x_basis=x_basis,
         d=d,
-        m=np.clip(m, trimming_thr, 1.0 - trimming_thr),
-        h=h,
+        m=m_diag,
+        h=h_ortho,
         u=u,
         comparison_labels=comparison_labels,
     )
 
     infl_df, top_influential = _influence_summary(
         psi=psi,
-        m=np.clip(m, trimming_thr, 1.0 - trimming_thr),
+        m=m_diag,
         u=u,
         comparison_labels=comparison_labels,
     )
@@ -651,6 +702,7 @@ def run_score_diagnostics(
             "score": "ATE",
             "trimming_threshold": float(trimming_thr),
             "normalize_ipw": bool(normalize_ipw),
+            "orthogonality_normalize_ipw": bool(normalize_ipw_for_orthogonality),
         },
         "orthogonality_derivatives": ortho_df,
         "orthogonality_max_t": ortho_max,
@@ -668,6 +720,9 @@ def run_score_diagnostics(
             "K": int(k),
             "comparisons": list(comparison_labels),
             "used_estimator_psi": bool(used_estimator_psi),
+            "orthogonality_derivatives_use_score_normalization": bool(
+                normalize_ipw_for_orthogonality == normalize_ipw
+            ),
         },
     }
 
