@@ -189,3 +189,36 @@ def test_cuped_relative_ci_bootstrap_produces_finite_interval():
     assert np.isfinite(estimate.ci_lower_relative)
     assert np.isfinite(estimate.ci_upper_relative)
     assert estimate.ci_lower_relative <= estimate.ci_upper_relative
+
+
+def test_cuped_reports_observed_and_adjusted_means_separately():
+    data = _make_cuped_data(n=260, seed=101)
+    for denominator in ["adjusted_control", "raw_control"]:
+        model = CUPEDModel(relative_denominator=denominator).fit(
+            data, covariates=["x1", "x2"], run_checks=False,
+        )
+        effect = model.estimate(diagnostic_data=False)
+        params = np.asarray(model._result.params)
+        assert np.isclose(effect.control_mean, data.df.loc[data.df.d == 0, "y"].mean())
+        assert np.isclose(effect.treatment_mean, data.df.loc[data.df.d == 1, "y"].mean())
+        assert np.isclose(effect.adjusted_control_mean, params[0])
+        assert np.isclose(effect.adjusted_treatment_mean, params[0] + params[1])
+        assert np.isclose(effect.adjusted_treatment_mean - effect.adjusted_control_mean, effect.value)
+        assert not np.isclose(effect.treatment_mean - effect.control_mean, effect.value)
+        expected_denominator = effect.adjusted_control_mean if denominator == "adjusted_control" else effect.control_mean
+        assert np.isclose(effect.value_relative, 100 * effect.value / expected_denominator)
+        table = effect.summary()
+        assert table.loc["adjusted_control_mean", "value"] == f"{effect.adjusted_control_mean:.4f}"
+        assert table.loc["adjusted_treatment_mean", "value"] == f"{effect.adjusted_treatment_mean:.4f}"
+        assert table.loc["relative_denominator", "value"] == denominator
+        summary = model.summary_dict()
+        for name in ["treatment_mean", "control_mean", "adjusted_treatment_mean", "adjusted_control_mean"]:
+            assert summary[name] == getattr(effect, name)
+            assert effect.model_dump()[name] == getattr(effect, name)
+
+
+def test_unadjusted_cuped_means_match_observed_means():
+    data = _make_cuped_data()
+    effect = CUPEDModel().fit(data, covariates=[], run_checks=False).estimate()
+    assert np.isclose(effect.adjusted_control_mean, effect.control_mean)
+    assert np.isclose(effect.adjusted_treatment_mean, effect.treatment_mean)

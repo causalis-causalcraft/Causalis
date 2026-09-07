@@ -59,6 +59,225 @@ result = model.estimate(score='ATTE')
 result.summary()
 ```
 
+## RCT data with multiple outcomes and treatment arms
+
+```python
+from causalis.data_contracts import RctCausalData
+
+data = RctCausalData.from_df(
+    df,
+    treatment="treated",
+    outcomes=["revenue", "purchases", "retention"],
+    confounders=["age", "prior_spend"],
+    user_id="customer_id",  # optional
+)
+Y = data.Y  # DataFrame, including when only one outcome is specified
+X = data.X
+revenue_data = data.for_outcome("revenue")  # CausalData for existing estimators
+```
+
+For multiple arms, supply one-hot columns including the control arm:
+
+```python
+data = RctCausalData.from_df(
+    df,
+    treatment_names=["variant_a", "control", "variant_b"],
+    control_treatment="control",
+    outcomes=["revenue", "purchases", "retention"],
+    confounders=["age", "prior_spend"],
+)
+D = data.D  # treatment matrix, with control first
+revenue_data = data.for_outcome("revenue")  # MultiCausalData for multiple arms
+```
+
+Every row must belong to exactly one arm, and every arm must be represented.
+A single binary column uses 0 as control; omit `control_treatment` in that case.
+
+This contract stores one independent copy of the selected columns and validates
+shared treatment/confounders once. It checks missing values column by column and
+screens duplicate columns with fingerprints before exact comparisons. Outcomes
+and confounders must be finite, real numeric or boolean, and non-constant;
+each treatment column must contain both 0 and 1. Identical columns are rejected.
+`Y`, `D`, `X`, and `get_df()` return copies; `for_outcome()` copies and validates a
+single-outcome subset using the destination contract's constraints, including
+`MultiCausalData`'s limit of 15 arms. Existing estimators consume that
+`CausalData` or `MultiCausalData` subset. Validation checks data structure;
+it does not establish that treatment assignment was randomized.
+
+To measure construction time and retained data size on your machine, run
+`.venv/bin/python benchmarks/rct_causal_data.py --rows 1000000 --outcomes 32 --arms 3`.
+
+### CUPED with RCT data
+
+Generate a reproducible experiment using the internal DGP outcome families and
+covariate samplers:
+
+```python
+from causalis.dgp import generate_rct_causal_data
+
+data = generate_rct_causal_data(
+    n=20_000,
+    n_treatments=3,
+    d_names=["control", "variant_a", "variant_b"],
+    confounder_specs=[{"name": "prior_spend", "dist": "normal"}],
+    outcome_specs=[
+        {"name": "revenue", "alpha_y": 20, "beta_y": [3], "theta": [1, 2]},
+        {"name": "purchases", "alpha_y": 10, "beta_y": [2], "theta": [0.5, 1]},
+    ],
+    seed=42,
+)
+```
+
+Each outcome supports `continuous`, `binary`, `poisson`, or `gamma`. `theta`
+sets arm effects on the family's link scale; the example uses continuous
+outcomes, so revenue effects are exactly 1 and 2. For a binary treatment column,
+set `n_treatments=2, treatment_encoding="binary"`. Use
+`return_causal_data=False, include_oracle=True` for a DataFrame containing
+allocation probabilities, potential-outcome means, and natural-scale effects.
+Random assignment is shared across outcomes; rare missing arms raise an error
+instead of changing sampled assignments.
+
+```python
+from causalis.scenarios.cuped import CUPEDModel
+
+model = CUPEDModel().fit(data, covariates=["prior_spend"])
+estimates = model.estimate()  # estimates[outcome][active_arm]
+estimates.summary(outcome="revenue")  # formatted comparisons, side by side
+revenue_a = estimates["revenue"]["variant_a"]
+
+# Fit just one comparison when needed:
+revenue_model = CUPEDModel().fit(
+    data, covariates=["prior_spend"], outcome="revenue", treatment="variant_a",
+)
+revenue_a = revenue_model.estimate()  # CausalEstimate
+```
+
+CUPED compares each active arm only against the declared control and centers
+covariates over those two arms. It shares the design matrix and decomposition
+across outcomes within each comparison. Pass `covariates=[]` for unadjusted
+estimates. One fitted comparison returns a `CausalEstimate`; multiple comparisons
+return `RctEstimates`, preserving nested outcome/arm dictionary access.
+`estimates.summary(outcome="revenue")` displays all arms for an outcome using
+the same field and confidence-interval formatting as `CausalEstimate.summary()`.
+Omit `outcome` to show every outcome, or add `treatment` to select an arm.
+The same selectors work in `estimate()` and
+`summary_dict()`. Batch `assumptions_table()` adds outcome and treatment columns.
+Confidence intervals and p-values are per comparison, without multiplicity
+adjustment. Existing `CausalData` inputs retain their single-estimate behavior.
+
+CUPED keeps `treatment_mean` and `control_mean` as raw observed group means.
+The additional `adjusted_control_mean` (regression intercept) and
+`adjusted_treatment_mean` (intercept plus treatment coefficient) are evaluated
+at the comparison sample's mean covariates. Their difference equals the adjusted
+ATE; the difference of raw means may not. Both pairs appear in the summary.
+The default relative effect is `100 * ATE / adjusted_control_mean`.
+Choose `relative_denominator="raw_control"` explicitly to divide by the observed
+control mean instead; the summary reports which denominator was selected.
+CUPED preserves consistency and asymptotic unbiasedness under randomization
+and standard regularity conditions; finite-sample bias need not be zero.
+
+The comparison benchmark is
+`.venv/bin/python benchmarks/cuped_rct.py --rows 100000 --outcomes 8`.
+It disables optional regression checks with `run_checks=False`; ordinary fits
+keep their configured checks.
+
+### Plan an experiment: sample size and MDE
+
+Use a past `RctCausalData` to estimate future sample size or sensitivity from
+**historical control rows only**. Both calculators require one explicit `outcome`.
+Omitted covariates, `None`, and `[]` use classic unadjusted planning, even when
+the data declares confounders. Pass an explicit list to enable CUPED. With the
+`data` from the example above:
+
+```python
+from causalis.shared.rct_design import calculate_mde, calculate_sample_size
+
+allocation = {"control": 0.5, "variant_a": 0.25, "variant_b": 0.25}
+
+# Classic planning: separate experiments for relative MDEs [0.5, 1, 5, 10, 20]%.
+sizes = calculate_sample_size(data, outcome="revenue", allocation=allocation)
+
+# Custom relative targets: 1 means 1%, not 100%.
+custom = calculate_sample_size(
+    data, outcome="revenue", scenario="user", mde_type="relative",
+    mde=[1, 3, 5], allocation=allocation,
+)
+
+# CUPED sample-size planning with absolute effects in revenue units.
+adjusted_sizes = calculate_sample_size(
+    data, outcome="revenue", covariates=["prior_spend"],
+    scenario="user", mde_type="absolute", mde=[0.5, 1, 2],
+    allocation=allocation, include_details=True,
+)
+
+# Classic sensitivity for an exact total audience of 30,000 participants.
+sensitivity = calculate_mde(
+    data, outcome="revenue", sample_size=30_000, allocation=allocation,
+)
+
+# CUPED sensitivity for the same audience and allocation.
+adjusted_sensitivity = calculate_mde(
+    data, outcome="revenue", sample_size=30_000, covariates=["prior_spend"],
+    allocation=allocation, include_details=True,
+)
+
+# Format for presentation without rounding the underlying numeric results.
+print(sizes.to_string(index=False, formatters={
+    "mde_relative": "{:.1f}%".format,
+    "mde_absolute": "{:.3f}".format,
+    "n_control": "{:,.0f}".format,
+    "n_treatment": "{:,.0f}".format,
+    "n_total": "{:,.0f}".format,
+}))
+```
+
+`calculate_sample_size` takes MDE targets and returns required sample sizes.
+`scenario="default"` uses the preset percentages and rejects custom `mde` or
+`mde_type`. `scenario="user"` requires both a type and a nonempty sequence of
+finite positive targets; input order and duplicates are preserved.
+`calculate_mde` takes one positive integer `sample_size` across all future groups
+and returns absolute and relative MDE for each active arm.
+
+Both return unrounded numeric DataFrames with compact columns `outcome`,
+`control`, `treatment`, `mde_relative`, `mde_absolute`, `n_control`, `n_treatment`,
+and `n_total`. The MDE columns describe **requested targets** in sample-size
+results and **calculated sensitivity** in MDE results. Relative values are
+percentages of the raw historical control mean: with baseline 10, a relative
+input of 1 corresponds to an absolute difference of 0.1. Relative target planning
+requires a positive mean. Absolute target planning and MDE calculation remain
+available for nonpositive means, with relative output set to NaN.
+
+`include_details=True` appends `baseline_mean`, `variance_raw`, `variance_used`,
+`variance_reduction_pct`, `n_reference`, `alpha`, and `power`. Sample-size results
+also include `achieved_power` after rounding. Classic planning uses raw sample
+variance (`ddof=1`) without fitting a regression; `variance_used` equals
+`variance_raw` and variance reduction is zero. CUPED uses only explicitly selected
+pre-treatment confounders and residual variance `SSE / (n_reference - design_rank)`.
+Historical variance is estimated once for all targets.
+
+All declared groups participate in each future experiment. Allocation defaults
+to equal shares; custom shares must be positive and sum to one. For a binary
+treatment column `d`, use keys `"d=0"` and `"d=1"`. For each sample-size target,
+take the largest continuous requirement across active arms and round every group
+up. MDE calculations preserve the supplied total using largest remainders, with
+ties resolved in contract order, control first. Every group needs at least one
+participant. `n_total` counts shared control once; do not sum it across rows.
+
+Planning uses deterministic, two-sided normal power and assumes independently
+randomized units with the same historical-control variance in every future arm.
+Binary outcomes also use this fixed-variance approximation. `alpha` and `power`
+are per comparison, without multiple-testing correction or a joint detection
+guarantee. Control-constant covariates are dropped with a warning; singular CUPED
+fits, insufficient residual degrees of freedom, and zero or non-finite variance
+raise errors. Estimated variance reduction can be negative and is not clipped.
+
+**Breaking API change:** the old `calculate_cuped_mde` and
+`calculate_cuped_sample_size` names and CUPED design module are removed. Use the
+shared calculators above; there are no aliases or deprecation wrappers. The old
+shared summary-statistics `calculate_mde` API (`baseline_rate`, `variance`,
+`ratio`, and `data_type`) is also removed. Both new APIs require `RctCausalData`
+and a single `outcome`; the previous multi-outcome mapping interface is removed.
+
 ## Binary sensitivity protocol for observational DML/IRM
 
 Pre-specify a practically meaningful effect boundary and one or more

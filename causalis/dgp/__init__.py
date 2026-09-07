@@ -18,6 +18,8 @@ The most commonly used entry points are:
 - ``generate_did_data`` for simultaneous-adoption panel data with treated and
   never-treated groups.
 - ``generate_multitreatment`` for one-hot multi-arm treatment assignment.
+- ``generate_rct_causal_data`` for multiple outcomes sharing a randomized
+  assignment, directly usable with ``RctCausalData`` and CUPED.
 
 Notes
 -----
@@ -60,6 +62,7 @@ True
 """
 
 from .base import _sigmoid, _logit
+from .rct_causal_data import generate_rct_causal_data
 from .causaldata import (
     CausalDatasetGenerator,
     generate_rct,
@@ -86,6 +89,7 @@ from .panel_data_did import (
 )
 
 __all__ = [
+    "generate_rct_causal_data",
     "CausalDatasetGenerator",
     "generate_rct",
     "generate_classic_rct",

@@ -1,0 +1,86 @@
+[
+  {
+    "rule_id": "rule_1",
+    "conditions": "spend_last_month <= 45.97638034098034 AND age_years <= 35.00084886586084",
+    "predicates": [
+      [
+        "spend_last_month",
+        "<=",
+        45.97638034098034
+      ],
+      [
+        "age_years",
+        "<=",
+        35.00084886586084
+      ]
+    ],
+    "action": 1,
+    "n_train": 9778,
+    "n_treated_train": 780,
+    "n_control_train": 8998,
+    "train_mean_uplift_descriptive": 12.83122474026028
+  },
+  {
+    "rule_id": "rule_2",
+    "conditions": "spend_last_month <= 45.97638034098034 AND age_years > 35.00084886586084",
+    "predicates": [
+      [
+        "spend_last_month",
+        "<=",
+        45.97638034098034
+      ],
+      [
+        "age_years",
+        ">",
+        35.00084886586084
+      ]
+    ],
+    "action": 0,
+    "n_train": 13197,
+    "n_treated_train": 765,
+    "n_control_train": 12432,
+    "train_mean_uplift_descriptive": -31.046663845263144
+  },
+  {
+    "rule_id": "rule_3",
+    "conditions": "spend_last_month > 45.97638034098034 AND tenure_months <= 58.841930970952646",
+    "predicates": [
+      [
+        "spend_last_month",
+        ">",
+        45.97638034098034
+      ],
+      [
+        "tenure_months",
+        "<=",
+        58.841930970952646
+      ]
+    ],
+    "action": 1,
+    "n_train": 34001,
+    "n_treated_train": 1363,
+    "n_control_train": 32638,
+    "train_mean_uplift_descriptive": 40.34954853055893
+  },
+  {
+    "rule_id": "rule_4",
+    "conditions": "spend_last_month > 45.97638034098034 AND tenure_months > 58.841930970952646",
+    "predicates": [
+      [
+        "spend_last_month",
+        ">",
+        45.97638034098034
+      ],
+      [
+        "tenure_months",
+        ">",
+        58.841930970952646
+      ]
+    ],
+    "action": 0,
+    "n_train": 3024,
+    "n_treated_train": 75,
+    "n_control_train": 2949,
+    "train_mean_uplift_descriptive": -59.37807996534272
+  }
+]

@@ -896,6 +896,12 @@ class IRM(BaseEstimator):
         self.overlap_n_dropped_ = int(overlap_mask.size - int(np.sum(overlap_mask)))
 
         raw_m_hat = np.asarray(m_hat, dtype=float).ravel()
+        self._fit_overlap_policy_ = self.overlap_policy
+        self._fit_overlap_threshold_ = self.overlap_threshold
+        self.overlap_n_clipped_ = (
+            int(np.count_nonzero(raw_m_hat != m_policy))
+            if self.overlap_policy == "clip" else 0
+        )
         if self.overlap_policy == "drop":
             if not np.any(overlap_mask):
                 raise ValueError(
@@ -943,6 +949,13 @@ class IRM(BaseEstimator):
 
     def _store_fit_sample(self, X: np.ndarray, y: np.ndarray, d: np.ndarray) -> None:
         """Persist immutable fit-time targets and optional diagnostic covariates."""
+        self._fit_data_roles_ = (
+            self.data.outcome.name,
+            self.data.treatment.name,
+            tuple(self.data.confounders),
+            self.data.user_id_name,
+        )
+        self._fit_weights_used_ = self.weights is not None
         self._fit_sample_fingerprint_ = self._compute_sample_fingerprint(X=X, y=y, d=d)
         if getattr(self.data, "user_id_name", None):
             self._fit_index_ = pd.Index(

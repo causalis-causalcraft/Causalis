@@ -6,7 +6,7 @@ from typing import Any, Dict, List, Optional
 import pandas as pd
 from pydantic import BaseModel, ConfigDict, Field
 
-from causalis.data_contracts.causal_diagnostic_data import DiagnosticData
+from causalis.data_contracts.causal_diagnostic_data import CUPEDDiagnosticData, DiagnosticData
 
 
 class CausalEstimate(BaseModel):
@@ -44,9 +44,19 @@ class CausalEstimate(BaseModel):
     n_control : int
         Number of units in the control group.
     treatment_mean : float
-        Mean outcome in the treatment group.
+        Mean outcome in the treatment group. For CUPED this is the raw observed
+        mean, so treatment_mean - control_mean need not equal the adjusted ATE.
     control_mean : float
-        Mean outcome in the control group.
+        Mean outcome in the control group; raw observed mean for CUPED.
+    adjusted_treatment_mean : float, optional
+        Regression-adjusted treatment mean when supplied by the estimator.
+        CUPED evaluates this at the analysis-sample covariate mean (intercept
+        plus treatment coefficient).
+    adjusted_control_mean : float, optional
+        Regression-adjusted control mean when supplied by the estimator.
+        For CUPED this is the intercept; the difference of adjusted means is
+        the adjusted ATE. For multiple arms the analysis sample is the selected
+        active arm and control pair.
     outcome : str
         The name of the outcome variable.
     treatment : str
@@ -77,6 +87,8 @@ class CausalEstimate(BaseModel):
     n_control: int
     treatment_mean: float
     control_mean: float
+    adjusted_treatment_mean: Optional[float] = None
+    adjusted_control_mean: Optional[float] = None
     outcome: str
     treatment: str
     confounders: List[str] = Field(default_factory=list)
@@ -86,6 +98,10 @@ class CausalEstimate(BaseModel):
     def summary(self) -> pd.DataFrame:
         """
         Return a summary DataFrame of the results.
+
+        CUPED estimates with diagnostics include variance reduction in percent,
+        comparing adjusted and unadjusted effect variances with the same
+        covariance estimator. Negative reductions are retained.
 
         Returns
         -------
@@ -121,6 +137,15 @@ class CausalEstimate(BaseModel):
             "n_control": self.n_control,
             "treatment_mean": _fmt_float(self.treatment_mean),
             "control_mean": _fmt_float(self.control_mean),
+            **({"adjusted_treatment_mean": _fmt_float(self.adjusted_treatment_mean)}
+               if self.adjusted_treatment_mean is not None else {}),
+            **({"adjusted_control_mean": _fmt_float(self.adjusted_control_mean)}
+               if self.adjusted_control_mean is not None else {}),
+            **({"relative_denominator": self.model_options["relative_denominator"]}
+               if "relative_denominator" in self.model_options else {}),
+            **({"variance_reduction_pct_same_cov": _fmt_float(
+                self.diagnostic_data.variance_reduction_pct_same_cov
+            )} if isinstance(self.diagnostic_data, CUPEDDiagnosticData) else {}),
             "time": self.time,
         }
         return pd.DataFrame({"field": list(summary.keys()), "value": list(summary.values())}).set_index("field")

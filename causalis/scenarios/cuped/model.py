@@ -10,12 +10,15 @@ which is a robust generalization of the canonical CUPED estimator.
 from __future__ import annotations
 
 from collections import Counter
+from copy import copy
 from typing import Any, Dict, Optional, Sequence, List, Literal, Tuple
 
 import numpy as np
 import pandas as pd
 
 from causalis.dgp.causaldata import CausalData
+from causalis.data_contracts.rct_causal_data import RctCausalData
+from causalis.data_contracts.rct_estimates import RctEstimates
 from causalis.data_contracts.causal_estimate import CausalEstimate
 from causalis.data_contracts.causal_diagnostic_data import CUPEDDiagnosticData
 from causalis.scenarios.cuped.refutation.config import CUPEDRefutationConfig
@@ -39,7 +42,9 @@ class CUPEDModel:
     CUPED-style regression adjustment estimator for ATE/ITT in randomized experiments.
 
     The CUPED estimator uses pre-experiment data (covariates) to reduce the
-    variance of the treatment effect estimate without introducing bias. While
+    variance of the treatment effect estimate while preserving consistency and
+    asymptotic unbiasedness under randomization and standard regularity
+    conditions. Finite-sample bias need not be zero. While
     the canonical CUPED estimator uses a single variance-reduction parameter $\theta$,
     this implementation follows Lin (2013) and uses a fully interacted OLS
     specification.
@@ -194,12 +199,102 @@ class CUPEDModel:
         self._data: Optional[CausalData] = None
         self._regression_checks: Optional[RegressionChecks] = None
         self._regression_assumptions_table: Optional[pd.DataFrame] = None
+        self._comparison_models: Dict[str, Dict[str, CUPEDModel]] = {}
+        self._control_treatment: Optional[str] = None
 
     def fit(
+        self,
+        data: CausalData | RctCausalData,
+        covariates: Optional[Sequence[str]] = None,
+        run_checks: Optional[bool] = None,
+        *,
+        outcome: Optional[str] = None,
+        treatment: Optional[str] = None,
+    ) -> CUPEDModel:
+        """Fit one binary comparison or all RCT outcome/arm comparisons.
+
+        ``covariates`` must explicitly select pre-treatment confounders; use
+        ``[]`` for an unadjusted fit. For ``RctCausalData``, omitted selectors
+        include every outcome and every active arm. Each active arm is compared
+        only with the declared control, centering over that pair's observations.
+        A binary treatment uses 0 as control. Regression designs and their
+        decompositions are reused across outcomes within each arm comparison.
+
+        One comparison retains the usual ``CausalEstimate`` return from
+        ``estimate()``. Multiple comparisons return an ordered nested mapping
+        ``estimates[outcome][treatment]`` via ``RctEstimates``, with
+        ``estimates.summary(outcome="y1")`` for a combined table.
+        Inference is per comparison, without
+        multiple-testing adjustment. Select a single fitted comparison with
+        ``estimate(outcome=..., treatment=...)``. ``run_checks`` overrides the
+        configured regression checks for every comparison.
+        """
+        self._is_fitted = False
+        self._result = self._result_naive = self._data = None
+        self._comparison_models = {}
+        self._control_treatment = None
+        self._regression_checks = self._regression_assumptions_table = None
+        self._covariate_names = []
+        self._dropped_covariates = []
+        self._p = 0
+        self._use_t_effective = None
+        if not isinstance(data, (CausalData, RctCausalData)):
+            raise TypeError("data must be CausalData or RctCausalData.")
+        if isinstance(data, CausalData):
+            if outcome is not None and outcome != data.outcome_name:
+                raise ValueError(f"Unknown outcome: {outcome!r}.")
+            if treatment is not None and treatment != data.treatment_name:
+                raise ValueError(f"Unknown treatment: {treatment!r}.")
+            return self._fit_single(data, covariates, run_checks)
+
+        outcomes = data.outcome_names if outcome is None else [outcome]
+        active = data.treatment_names if len(data.treatment_names) == 1 else data.treatment_names[1:]
+        treatments = active if treatment is None else [treatment]
+        if any(name not in data.outcome_names for name in outcomes):
+            raise ValueError(f"Unknown outcome: {outcome!r}.")
+        if any(name not in active for name in treatments):
+            raise ValueError(f"Treatment must be an active arm in {active}; got {treatment!r}.")
+
+        comparisons: Dict[str, Dict[str, CUPEDModel]] = {name: {} for name in outcomes}
+        for arm in treatments:
+            # Select rows once per arm. Share the validated projection across
+            # outcomes rather than rebuilding/revalidating contracts per fit.
+            names = list(dict.fromkeys(outcomes + [arm] + data.confounders_names))
+            if data.control_treatment is None:
+                pair_df = pd.DataFrame({name: data.df[name] for name in names}, copy=False)
+            else:
+                positions = np.flatnonzero(
+                    (data.df[arm].to_numpy() == 1)
+                    | (data.df[data.control_treatment].to_numpy() == 1)
+                )
+                pair_df = pd.DataFrame(
+                    {name: data.df[name].iloc[positions] for name in names}, copy=False,
+                )
+            design_source = None
+            for name in outcomes:
+                projection = CausalData.model_construct(
+                    df=pair_df, treatment_name=arm, outcome_name=name,
+                    confounders_names=list(data.confounders_names), user_id_name=None,
+                )
+                child = copy(self)
+                child._control_treatment = data.control_treatment
+                child._fit_single(projection, covariates, run_checks, design_source)
+                comparisons[name][arm] = child
+                design_source = child
+
+        if len(outcomes) == len(treatments) == 1:
+            self.__dict__.update(comparisons[outcomes[0]][treatments[0]].__dict__)
+        else:
+            self._comparison_models = comparisons
+            self._is_fitted = True
+        return self
+
+    def _fit_single(
         self,
         data: CausalData,
         covariates: Optional[Sequence[str]] = None,
         run_checks: Optional[bool] = None,
+        design_source: Optional[CUPEDModel] = None,
     ) -> CUPEDModel:
         """
         Fit CUPED-style regression adjustment (Lin-interacted OLS) on a CausalData object.
@@ -270,77 +365,84 @@ class CUPEDModel:
         y = df[y_name].astype(float)
         d = df[t_name].astype(float).to_numpy(dtype=float)
 
-        if len(x_names) > 0:
-            x_df = df[x_names].astype(float)
-            x_df, dropped = self._drop_near_zero_variance_covariates(
-                covariates=x_df,
-                variance_min=self.covariate_variance_min,
-            )
-            if dropped:
-                self._check_signal(
-                    "Dropped near-zero variance CUPED covariates: "
-                    f"{dropped} (variance <= {self.covariate_variance_min:.3e}).",
-                )
-            x_names = list(x_df.columns)
-            self._dropped_covariates = dropped
-        else:
-            self._dropped_covariates = []
-
         n = len(y)
-        if n == 0:
-            raise ValueError("CUPEDModel requires at least one observation.")
         cfg = self.refutation_config
         do_checks = cfg.run_regression_checks if run_checks is None else bool(run_checks)
         self._regression_checks = None
         self._regression_assumptions_table = None
+        if design_source is None:
+            if len(x_names) > 0:
+                x_df = df[x_names].astype(float)
+                x_df, dropped = self._drop_near_zero_variance_covariates(
+                    covariates=x_df,
+                    variance_min=self.covariate_variance_min,
+                )
+                if dropped:
+                    self._check_signal(
+                        "Dropped near-zero variance CUPED covariates: "
+                        f"{dropped} (variance <= {self.covariate_variance_min:.3e}).",
+                    )
+                x_names = list(x_df.columns)
+                self._dropped_covariates = dropped
+            else:
+                self._dropped_covariates = []
 
-        # Global (full-sample) centering only. Do not center within treatment groups.
-        if len(x_names) > 0:
-            Xc = self._center_covariates_global(x_df)
-            centered_names = [f"{c}__centered" for c in x_names]
-            Xc.columns = centered_names
-            p = Xc.shape[1]
+            if n == 0:
+                raise ValueError("CUPEDModel requires at least one observation.")
+
+            # Global (full-sample) centering only. Do not center within treatment groups.
+            if len(x_names) > 0:
+                Xc = self._center_covariates_global(x_df)
+                centered_names = [f"{c}__centered" for c in x_names]
+                Xc.columns = centered_names
+                p = Xc.shape[1]
+            else:
+                Xc = pd.DataFrame(index=df.index)
+                centered_names = []
+                p = 0
+
+            # Design matrix with explicit names: [intercept, D, Xc, D*Xc]
+            design_columns = {"intercept": np.ones(n, dtype=float), t_name: d}
+            if p > 0:
+                for raw_name, centered_name in zip(x_names, centered_names):
+                    centered_values = Xc[centered_name].to_numpy(dtype=float)
+                    design_columns[centered_name] = centered_values
+                    design_columns[f"{t_name}:{raw_name}"] = d * centered_values
+            design = pd.DataFrame(design_columns, index=df.index)
+
+            k_design, rank_design, full_rank_design, cond_number = design_matrix_checks(design)
+            if not full_rank_design:
+                raise ValueError(
+                    f"Design matrix is rank deficient: rank={rank_design}, k={k_design}. "
+                    "Likely perfect multicollinearity from duplicate covariates/interactions."
+                )
+            if not np.isfinite(cond_number) or cond_number > cfg.condition_number_warn_threshold:
+                self._check_signal(
+                    "CUPED design matrix is ill-conditioned "
+                    f"(condition_number={cond_number:.3e}, "
+                    f"threshold={cfg.condition_number_warn_threshold:.3e}). "
+                    "Inference may be unstable.",
+                )
+
         else:
-            Xc = pd.DataFrame(index=df.index)
-            centered_names = []
-            p = 0
-
-        # Design matrix with explicit names: [intercept, D, Xc, D*Xc]
-        design = pd.DataFrame(
-            {"intercept": np.ones(n, dtype=float), t_name: d},
-            index=df.index,
-        )
-        if p > 0:
-            for raw_name, centered_name in zip(x_names, centered_names):
-                centered_values = Xc[centered_name].to_numpy(dtype=float)
-                design[centered_name] = centered_values
-                design[f"{t_name}:{raw_name}"] = d * centered_values
-
-        k_design, rank_design, full_rank_design, cond_number = design_matrix_checks(design)
-        if not full_rank_design:
-            raise ValueError(
-                f"Design matrix is rank deficient: rank={rank_design}, k={k_design}. "
-                "Likely perfect multicollinearity from duplicate covariates/interactions."
-            )
-        if not np.isfinite(cond_number) or cond_number > cfg.condition_number_warn_threshold:
-            self._check_signal(
-                "CUPED design matrix is ill-conditioned "
-                f"(condition_number={cond_number:.3e}, "
-                f"threshold={cfg.condition_number_warn_threshold:.3e}). "
-                "Inference may be unstable.",
-            )
+            design = design_source._result.model.data.orig_exog
+            x_names = list(design_source._covariate_names)
+            self._dropped_covariates = list(design_source._dropped_covariates)
+            p = design_source._p
 
         # Fit adjusted model with requested covariance estimator
         use_t_fit = self._resolve_use_t(n=n)
         model = sm.OLS(y, design)
+        self._reuse_design_decomposition(model, design_source._result if design_source else None)
         self._result = model.fit(cov_type=self.cov_type, use_t=use_t_fit)
 
         # Fit naive model: Y ~ 1 + D
-        design_naive = pd.DataFrame(
-            {"intercept": np.ones(n, dtype=float), t_name: d},
-            index=df.index,
+        design_naive = (
+            design_source._result_naive.model.data.orig_exog if design_source else
+            pd.DataFrame({"intercept": np.ones(n, dtype=float), t_name: d}, index=df.index)
         )
         model_naive = sm.OLS(y, design_naive)
+        self._reuse_design_decomposition(model_naive, design_source._result_naive if design_source else None)
         self._result_naive = model_naive.fit(cov_type=self.cov_type, use_t=use_t_fit)
         self._use_t_effective = use_t_fit
 
@@ -375,7 +477,25 @@ class CUPEDModel:
         self._is_fitted = True
         return self
 
-    def estimate(self, alpha: Optional[float] = None, diagnostic_data: bool = True) -> CausalEstimate:
+    @staticmethod
+    def _reuse_design_decomposition(model: Any, source_result: Any) -> None:
+        """Reuse statsmodels' pinv fit cache for an identical design only.
+
+        These cached quantities depend on exog, not on the outcome. If a
+        statsmodels version does not expose the cache, fall back to its fit.
+        """
+        if source_result is None:
+            return
+        source = source_result.model
+        names = ("pinv_wexog", "normalized_cov_params", "rank", "wexog_singular_values")
+        if all(hasattr(source, name) for name in names):
+            for name in names:
+                setattr(model, name, getattr(source, name))
+
+    def estimate(
+        self, alpha: Optional[float] = None, diagnostic_data: bool = True,
+        *, outcome: Optional[str] = None, treatment: Optional[str] = None,
+    ) -> CausalEstimate | RctEstimates:
         """
         Return the adjusted ATE/ITT estimate and inference.
 
@@ -388,10 +508,23 @@ class CUPEDModel:
 
         Returns
         -------
-        CausalEstimate
-            A results object containing effect estimates and inference.
+        CausalEstimate or RctEstimates
+            One results object, or outcome-to-treatment mappings for multiple
+            comparisons. Selectors restrict results to fitted comparisons.
         """
         self._require_fitted()
+
+        if self._comparison_models:
+            selected = self._select_comparisons(outcome, treatment)
+            if sum(len(arms) for arms in selected.values()) == 1:
+                child = next(iter(next(iter(selected.values())).values()))
+                return child.estimate(alpha=alpha, diagnostic_data=diagnostic_data)
+            return RctEstimates({
+                name: {arm: child.estimate(alpha=alpha, diagnostic_data=diagnostic_data)
+                       for arm, child in arms.items()}
+                for name, arms in selected.items()
+            })
+        self._validate_single_selection(outcome, treatment)
 
         a = self._validate_alpha(self.alpha if alpha is None else alpha)
 
@@ -410,8 +543,9 @@ class CUPEDModel:
         ci_high = float(ci_arr[1, 1])
 
         # Relative effect: adjusted ATE divided by the configured denominator.
-        # By default this preserves the historical business-reporting convention:
-        # adjusted numerator over the raw observed control mean.
+        # By default, both numerator and denominator are regression-adjusted:
+        # 100 * tau / intercept, evaluated at the analysis-sample covariate mean.
+        # raw_control instead uses the observed control-group outcome mean.
         y_internal = np.asarray(self._result.model.endog, dtype=float)
         design_internal = np.asarray(self._result.model.exog, dtype=float)
         d_internal = np.asarray(design_internal[:, 1], dtype=float)
@@ -510,6 +644,9 @@ class CUPEDModel:
                 "relative_denominator": self.relative_denominator,
                 "dropped_covariates": list(self._dropped_covariates),
                 "refutation_config": self.refutation_config.to_model_options(),
+                **({"control_treatment": self._control_treatment,
+                    "comparison_scope": "treatment_vs_control"}
+                   if self._control_treatment is not None else {}),
             },
             value=tau,
             ci_upper_absolute=ci_high,
@@ -524,13 +661,18 @@ class CUPEDModel:
             n_control=int(np.sum(self._result.model.exog[:, 1] == 0)),
             treatment_mean=mu_t,
             control_mean=mu_c,
+            adjusted_control_mean=float(params[0]),
+            adjusted_treatment_mean=float(params[0] + params[1]),
             outcome=str(self._data.outcome_name) if self._data is not None else "outcome",
             treatment=str(self._data.treatment_name) if self._data is not None else "treatment",
             confounders=list(self._covariate_names),
             diagnostic_data=diag,
         )
 
-    def summary_dict(self, alpha: Optional[float] = None) -> Dict[str, Any]:
+    def summary_dict(
+        self, alpha: Optional[float] = None, *,
+        outcome: Optional[str] = None, treatment: Optional[str] = None,
+    ) -> Dict[str, Any]:
         """
         Convenience JSON/logging output.
 
@@ -544,6 +686,16 @@ class CUPEDModel:
         dict
             Dictionary with estimates, inference, and refutation checks.
         """
+        self._require_fitted()
+        if self._comparison_models:
+            selected = self._select_comparisons(outcome, treatment)
+            if sum(len(arms) for arms in selected.values()) == 1:
+                return next(iter(next(iter(selected.values())).values())).summary_dict(alpha=alpha)
+            return {
+                name: {arm: child.summary_dict(alpha=alpha) for arm, child in arms.items()}
+                for name, arms in selected.items()
+            }
+        self._validate_single_selection(outcome, treatment)
         eff = self.estimate(alpha=alpha)
         diag: CUPEDDiagnosticData = eff.diagnostic_data
         return {
@@ -551,6 +703,10 @@ class CUPEDModel:
             "adjustment": diag.adj_type,
             "ate": eff.value,
             "ate_relative_%": eff.value_relative,
+            "treatment_mean": eff.treatment_mean,
+            "control_mean": eff.control_mean,
+            "adjusted_treatment_mean": eff.adjusted_treatment_mean,
+            "adjusted_control_mean": eff.adjusted_control_mean,
             "p_value": eff.p_value,
             "ci_low": eff.ci_lower_absolute,
             "ci_high": eff.ci_upper_absolute,
@@ -587,12 +743,43 @@ class CUPEDModel:
             ),
         }
 
-    def assumptions_table(self) -> Optional[pd.DataFrame]:
-        """Return fitted regression assumptions table (GREEN/YELLOW/RED) when available."""
+    def assumptions_table(
+        self, *, outcome: Optional[str] = None, treatment: Optional[str] = None,
+    ) -> Optional[pd.DataFrame]:
+        """Return regression checks; batch tables include outcome/treatment columns."""
         self._require_fitted()
+        if self._comparison_models:
+            tables = []
+            for name, arms in self._select_comparisons(outcome, treatment).items():
+                for arm, child in arms.items():
+                    table = child.assumptions_table()
+                    if table is not None:
+                        tables.append(table.assign(outcome=name, treatment=arm))
+            return pd.concat(tables, ignore_index=True) if tables else None
+        self._validate_single_selection(outcome, treatment)
         if self._regression_assumptions_table is None:
             return None
         return self._regression_assumptions_table.copy()
+
+    def _validate_single_selection(self, outcome: Optional[str], treatment: Optional[str]) -> None:
+        if outcome is not None and outcome != self._data.outcome_name:
+            raise ValueError(f"Unknown fitted outcome: {outcome!r}.")
+        if treatment is not None and treatment != self._data.treatment_name:
+            raise ValueError(f"Unknown fitted treatment: {treatment!r}.")
+
+    def _select_comparisons(
+        self, outcome: Optional[str], treatment: Optional[str],
+    ) -> Dict[str, Dict[str, CUPEDModel]]:
+        names = list(self._comparison_models) if outcome is None else [outcome]
+        if any(name not in self._comparison_models for name in names):
+            raise ValueError(f"Unknown fitted outcome: {outcome!r}.")
+        selected = {}
+        for name in names:
+            arms = self._comparison_models[name]
+            if treatment is not None and treatment not in arms:
+                raise ValueError(f"Unknown fitted treatment: {treatment!r}.")
+            selected[name] = arms if treatment is None else {treatment: arms[treatment]}
+        return selected
 
     def _signal_assumption_flags(
         self,
@@ -1024,7 +1211,7 @@ class CUPEDModel:
         return beta_cov, gamma_cov
 
     def _require_fitted(self) -> None:
-        if not self._is_fitted or self._result is None:
+        if not self._is_fitted or (self._result is None and not self._comparison_models):
             raise RuntimeError(
                 "CUPEDModel is not fitted. "
                 "Call .fit(causaldata, covariates=[...]) first."

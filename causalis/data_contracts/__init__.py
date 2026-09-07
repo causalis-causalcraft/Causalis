@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 from .causaldata import CausalData
+from .rct_causal_data import RctCausalData
+from .rct_estimates import RctEstimates
 from .iv_causal_data import IVCausalData
 from .multicausaldata import MultiCausalData
 from .panel_data_did import PanelDataDID
@@ -38,6 +40,8 @@ _DGP_EXPORTS = {
 
 __all__ = [
     "CausalData",
+    "RctCausalData",
+    "RctEstimates",
     "IVCausalData",
     "MultiCausalData",
     "PanelDataDID",
