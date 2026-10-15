@@ -59,7 +59,7 @@ Examples
 >>> report = run_unconfoundedness_diagnostics(data, estimate)
 >>> report["balance"]["worst_features"].head()  # doctest: +SKIP
 >>> fig = love_plot(data, estimate)  # doctest: +SKIP
->>> sensitivity_analysis(estimate, r2_y=0.02, r2_d=0.02, rho=1.0)  # doctest: +SKIP
+>>> sensitivity_analysis(estimate, cf_y=0.02, cf_d=0.02, rho=1.0)  # doctest: +SKIP
 """
 
 from .love_plot import love_plot
