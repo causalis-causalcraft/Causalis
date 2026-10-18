@@ -323,7 +323,7 @@ def rank_confounder_clusters(
     Ranking reuses native feature importances without fitting additional
     models. These importances are screening heuristics, not calibrated
     sensitivity strengths; mixed ranking does not guarantee higher benchmark
-    ``r2_d``.
+    ``cf_d``.
 
     Examples
     --------

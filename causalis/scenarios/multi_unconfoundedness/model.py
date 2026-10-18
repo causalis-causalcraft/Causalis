@@ -1295,12 +1295,13 @@ class MultiTreatmentIRM(BaseEstimator):
     def sensitivity_analysis(
             self,
             cf_y: Optional[float] = None,
-            r2_d: Any = 0.0,
+            cf_d: Any = None,
             rho: Any = 1.0,
             H0: float = 0.0,
             alpha: float = 0.05,
             *,
             r2_y: Optional[float] = None,
+            r2_d: Any = None,
     ) -> "MultiTreatmentIRM":
         if str(getattr(self, "score", "ATE")).upper() != "ATE":
             raise RuntimeError("Sensitivity analysis is currently supported only for score='ATE' in MultiTreatmentIRM.")
@@ -1309,7 +1310,7 @@ class MultiTreatmentIRM(BaseEstimator):
             get_sensitivity_summary
         )
 
-        res = sa_fn(self, cf_y=cf_y, r2_y=r2_y, r2_d=r2_d, rho=rho, H0=H0, alpha=alpha)
+        res = sa_fn(self, cf_y=cf_y, cf_d=cf_d, r2_y=r2_y, r2_d=r2_d, rho=rho, H0=H0, alpha=alpha)
 
         self.sensitivity_result = res
         self.sensitivity_summary = get_sensitivity_summary({"model": self, "bias_aware": res})

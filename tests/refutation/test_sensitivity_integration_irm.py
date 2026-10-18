@@ -49,10 +49,10 @@ def test_sensitivity_respects_overlap_policy_for_model_and_estimate(overlap_poli
     estimate = model.estimate(score=score)
 
     model_result = sensitivity_analysis(
-        model, r2_y=0.02, r2_d=0.03, rho=0.8
+        model, cf_y=0.02, cf_d=0.03, rho=0.8
     )
     estimate_result = sensitivity_analysis(
-        estimate, r2_y=0.02, r2_d=0.03, rho=0.8
+        estimate, cf_y=0.02, cf_d=0.03, rho=0.8
     )
     elements = model._sensitivity_element_est()
     diagnostic = estimate.diagnostic_data
@@ -89,7 +89,7 @@ def test_sensitivity_with_dml_ate_runs_and_returns_dict():
 
     res = IRM(cd, ml_g=ml_g, ml_m=ml_m, n_folds=3).fit()
     res.estimate(score="ATE")
-    out = sensitivity_analysis(res, r2_y=0.02, r2_d=0.03, rho=1.0)
+    out = sensitivity_analysis(res, cf_y=0.02, cf_d=0.03, rho=1.0)
 
     assert isinstance(out, dict)
     summary_df = out.summary()
@@ -126,7 +126,7 @@ def test_sensitivity_with_dml_att_runs_and_returns_dict():
 
     res = IRM(cd, ml_g=ml_g, ml_m=ml_m, n_folds=3).fit()
     res.estimate(score="ATTE")
-    out = sensitivity_analysis(res, r2_y=0.01, r2_d=0.04, rho=0.8)
+    out = sensitivity_analysis(res, cf_y=0.01, cf_d=0.04, rho=0.8)
 
     assert isinstance(out, dict)
     assert isinstance(out.summary(), pd.DataFrame)

@@ -8,6 +8,11 @@ from scipy.stats import norm
 
 from causalis.data_contracts.multicausaldata import MultiCausalData
 from causalis.data_contracts.sensitivity_analysis_result import SensitivityAnalysisResult
+from causalis.shared.sensitivity_params import (
+    bias_factor as _bias_factor,
+    resolve_strength_aliases as _resolve_strength_aliases,
+    robustness_value as _robustness_value,
+)
 
 __all__ = [
     "sensitivity_analysis",
@@ -459,14 +464,12 @@ def combine_nu2(
     m_alpha: np.ndarray,
     rr: np.ndarray,
     cf_y: float,
-    r2_d: Union[float, np.ndarray],
+    cf_d: Union[float, np.ndarray],
     rho: Union[float, np.ndarray],
     use_signed_rr: bool = False,
 ) -> Tuple[Union[float, np.ndarray], np.ndarray]:
     cf_y = float(cf_y)
-
-    if cf_y < 0.0:
-        raise ValueError("cf_y must be >= 0.")
+    _bias_factor(cf_y, 0.0)
 
     m_alpha_arr = _ensure_2d(m_alpha, name="m_alpha")
     rr_arr = _ensure_2d(rr, name="rr")
@@ -477,21 +480,18 @@ def combine_nu2(
         )
     j = m_alpha_arr.shape[1]
 
-    r2_d_arr = _broadcast_to_length(r2_d, j, name="r2_d")
+    cf_d_arr = _broadcast_to_length(cf_d, j, name="cf_d")
     rho_arr = _broadcast_to_length(rho, j, name="rho")
     rho_arr = np.clip(rho_arr, -1.0, 1.0)
+    _bias_factor(cf_y, cf_d_arr)
 
-    if np.any(~np.isfinite(r2_d_arr)) or np.any(r2_d_arr < 0.0):
-        raise ValueError("r2_d must be finite and >= 0.")
-    if np.any(r2_d_arr >= 1.0):
-        raise ValueError("r2_d must be < 1.0.")
-
-    cf_d = r2_d_arr / (1.0 - r2_d_arr)
+    # The treatment sensitivity parameter enters on the odds scale.
+    k_d = cf_d_arr / (1.0 - cf_d_arr)
     a = np.sqrt(2.0 * np.maximum(m_alpha_arr, 0.0))
     b = rr_arr if use_signed_rr else np.abs(rr_arr)
 
-    cross_scale = np.sqrt(cf_y * cf_d)
-    base = (a * a) * cf_y + (b * b) * cf_d[None, :] + 2.0 * rho_arr[None, :] * cross_scale[None, :] * a * b
+    cross_scale = np.sqrt(cf_y * k_d)
+    base = (a * a) * cf_y + (b * b) * k_d[None, :] + 2.0 * rho_arr[None, :] * cross_scale[None, :] * a * b
     base = np.maximum(base, 0.0)
 
     nu2 = base.mean(axis=0)
@@ -505,12 +505,12 @@ def _combine_nu2_local(
     m_alpha: np.ndarray,
     rr: np.ndarray,
     cf_y: float,
-    r2_d: Union[float, np.ndarray],
+    cf_d: Union[float, np.ndarray],
     rho: Union[float, np.ndarray],
     _unused: Any = None,
     use_signed_rr: bool = False,
 ) -> Tuple[Union[float, np.ndarray], np.ndarray]:
-    return combine_nu2(m_alpha, rr, cf_y, r2_d, rho, use_signed_rr=use_signed_rr)
+    return combine_nu2(m_alpha, rr, cf_y, cf_d, rho, use_signed_rr=use_signed_rr)
 
 
 def pulltheta_se_ci(
@@ -523,17 +523,21 @@ def pulltheta_se_ci(
 def compute_bias_aware_ci(
     effect_estimation: Dict[str, Any] | Any,
     _=None,
-    cf_y: float = 0.0,
-    r2_d: Union[float, np.ndarray] = 0.0,
+    cf_y: Optional[float] = None,
+    cf_d: Optional[Union[float, np.ndarray]] = None,
     rho: Union[float, np.ndarray] = 1.0,
     H0: float = 0.0,
     alpha: float = 0.05,
     use_signed_rr: bool = False,
+    *,
+    r2_y: Optional[float] = None,
+    r2_d: Optional[Union[float, np.ndarray]] = None,
 ) -> Dict[str, Any]:
     if not (0.0 < alpha < 1.0):
         raise ValueError(f"alpha must be in (0, 1), got {alpha}.")
-    if cf_y < 0.0:
-        raise ValueError("cf_y must be >= 0.")
+    cf_y, cf_d = _resolve_strength_aliases(cf_y=cf_y, cf_d=cf_d, r2_y=r2_y, r2_d=r2_d, default=0.0)
+    cf_y = float(cf_y)
+    _bias_factor(cf_y, 0.0)
 
     ctx = _resolve_input_context(effect_estimation, context=_)
     model = ctx["model"]
@@ -572,14 +576,10 @@ def compute_bias_aware_ci(
     j = theta_arr.size
     se_arr = _broadcast_to_length(se, j, name="se")
     sampling_ci_2d = _ci_to_2d(sampling_ci, j)
-    r2_d_arr = _broadcast_to_length(r2_d, j, name="r2_d")
+    cf_d_arr = _broadcast_to_length(cf_d, j, name="cf_d")
     rho_arr = _broadcast_to_length(rho, j, name="rho")
     rho_clip_arr = np.clip(rho_arr, -1.0, 1.0)
-
-    if np.any(~np.isfinite(r2_d_arr)) or np.any(r2_d_arr < 0.0):
-        raise ValueError("r2_d must be finite and >= 0.")
-    if np.any(r2_d_arr >= 1.0):
-        raise ValueError("r2_d must be < 1.0.")
+    bias_factor_arr = _broadcast_to_length(_bias_factor(cf_y, cf_d_arr), j, name="bias_factor")
 
     if data is not None:
         expected = len(data.treatment_names) - 1
@@ -629,7 +629,7 @@ def compute_bias_aware_ci(
                     m_alpha=m_alpha,
                     rr=rr,
                     cf_y=cf_y,
-                    r2_d=r2_d_arr,
+                    cf_d=cf_d_arr,
                     rho=rho_clip_arr,
                     use_signed_rr=True,
                 )
@@ -644,30 +644,17 @@ def compute_bias_aware_ci(
                 use_signed_rr_effective = False
 
         if not use_signed_rr_effective:
-            bias_factor = np.zeros(j, dtype=float)
-            if cf_y > 0.0:
-                positive = r2_d_arr > 0.0
-                bias_factor[positive] = np.sqrt(cf_y * r2_d_arr[positive] / (1.0 - r2_d_arr[positive]))
             max_bias_base = np.sqrt(np.maximum(sigma2 * nu2, 0.0))
-            max_bias = max_bias_base * bias_factor
+            max_bias = max_bias_base * bias_factor_arr
             bound_width = np.abs(rho_clip_arr) * max_bias
-            correction_scale = np.abs(rho_clip_arr) * bias_factor
+            correction_scale = np.abs(rho_clip_arr) * bias_factor_arr
 
+            # RV: common v = cf_y = cf_d at which the bound reaches |theta - H0|.
+            rv_scale = np.abs(rho_clip_arr) * max_bias_base
             delta_theta = np.abs(theta_arr - float(H0))
-            denom_rv = np.abs(rho_clip_arr) * max_bias_base * np.sqrt(cf_y)
-
-            good = np.isfinite(denom_rv) & (denom_rv > 1e-16) & (delta_theta > 0.0)
-            D = np.zeros(j, dtype=float)
-            D[good] = (delta_theta[good] / denom_rv[good]) ** 2
-            rv[good] = D[good] / (1.0 + D[good])
-            rv[delta_theta == 0.0] = 0.0
-
+            rv = _robustness_value(delta_theta, rv_scale)
             delta_theta_a = np.maximum(delta_theta - z * se_arr, 0.0)
-            good_a = np.isfinite(denom_rv) & (denom_rv > 1e-16) & (delta_theta_a > 0.0)
-            Da = np.zeros(j, dtype=float)
-            Da[good_a] = (delta_theta_a[good_a] / denom_rv[good_a]) ** 2
-            rva[good_a] = Da[good_a] / (1.0 + Da[good_a])
-            rva[delta_theta_a == 0.0] = 0.0
+            rva = _robustness_value(delta_theta_a, rv_scale)
     else:
         delta_theta = np.abs(theta_arr - float(H0))
         rv[delta_theta == 0.0] = 0.0
@@ -760,7 +747,7 @@ def compute_bias_aware_ci(
         "contrast_labels": contrast_labels,
         "params": {
             "cf_y": float(cf_y),
-            "r2_d": _maybe_squeeze_scalar(r2_d_arr, j=j),
+            "cf_d": _maybe_squeeze_scalar(cf_d_arr, j=j),
             "rho": _maybe_squeeze_scalar(rho_clip_arr, j=j),
             "use_signed_rr": bool(use_signed_rr_effective),
         },
@@ -868,7 +855,7 @@ def format_bias_aware_summary(res: Dict[str, Any], label: str | None = None) -> 
     lines.append(
         "Sensitivity parameters: "
         f"cf_y={params.get('cf_y', 0.0)}; "
-        f"r2_d={params.get('r2_d', 0.0)}, "
+        f"cf_d={params.get('cf_d', 0.0)}, "
         f"rho={params.get('rho', 0.0)}, "
         f"use_signed_rr={params.get('use_signed_rr', False)}"
     )
@@ -938,7 +925,7 @@ def get_sensitivity_summary(
             "rv": np.full(j, np.nan, dtype=float),
             "rva": np.full(j, np.nan, dtype=float),
             "contrast_labels": contrast_labels,
-            "params": {"cf_y": 0.0, "r2_d": 0.0, "rho": 0.0, "use_signed_rr": False},
+            "params": {"cf_y": 0.0, "cf_d": 0.0, "rho": 0.0, "use_signed_rr": False},
         }
         res = _squeeze_result_if_scalar(fallback, j=j)
 
@@ -956,7 +943,12 @@ def sensitivity_benchmark(
 
     This function intentionally performs the short-model refit because
     ``theta_short`` and ``delta`` are defined by that re-estimation step.
-    The residual-based strengths alone are not enough to recover those values.
+    Relative benchmark gains per contrast are
+    ``gain_y = (sigma2_short - sigma2_long) / sigma2_long`` and
+    ``gain_d = (nu2_long - nu2_short) / nu2_short``, as in DoubleML. They are
+    clipped to [0, 1] as ``cf_y``/``cf_d``; values at 1 are uncalibratable for
+    the sensitivity API. The adversity parameter is
+    ``rho = (theta_short - theta_long) / sqrt(gap_y * gap_d)``.
 
     Parameters
     ----------
@@ -967,16 +959,15 @@ def sensitivity_benchmark(
         Confounders to remove from the short model.
     fit_args : dict, optional
         Additional keyword arguments passed to ``MultiTreatmentIRM.estimate(...)``
-        on the short model. Runtime is typically dominated by the short-model
-        ``fit()`` rather than the residual-regression calculations below. To
-        reduce wall-clock time without changing semantics, fit the original long
+        on the short model. Runtime is dominated by the short-model
+        ``fit()``. To reduce wall-clock time without changing semantics, fit the original long
         model with a suitable ``n_jobs`` value; that setting is forwarded into
         the short refit.
 
     Returns
     -------
     pandas.DataFrame
-        A contrast-indexed DataFrame containing ``cf_y``, ``r2_y``, ``r2_d``,
+        A contrast-indexed DataFrame containing ``cf_y``, ``cf_d``, ``r2_y``, ``r2_d`` (aliases),
         ``rho``, ``theta_long``, ``theta_short``, and ``delta``.
     """
     model = None
@@ -1067,7 +1058,7 @@ def sensitivity_benchmark(
     if "score" not in estimate_args:
         estimate_args["score"] = getattr(model, "score", "ATE")
     if "diagnostic_data" not in estimate_args:
-        # Benchmarking only needs short-model point estimates.
+        # Point estimates suffice; sensitivity elements come from the fitted nuisances.
         estimate_args["diagnostic_data"] = False
     irm_short.estimate(**estimate_args)
 
@@ -1079,154 +1070,72 @@ def sensitivity_benchmark(
             f"{theta_long.size} vs {theta_short.size}."
         )
 
-    y = np.asarray(getattr(model, "_y", df_long[data_long.outcome].to_numpy(dtype=float)), dtype=float).reshape(-1)
-    d = np.asarray(
-        getattr(model, "_d", df_long[list(data_long.treatments.columns)].to_numpy(dtype=int)),
-        dtype=float,
+    from causalis.scenarios.unconfoundedness.refutation.unconfoundedness.sensitivity import (
+        _calibrate_benchmark_gain_statistics,
     )
-    g_hat = np.asarray(model.g_hat_, dtype=float)
-    m_hat = np.asarray(model.m_hat_, dtype=float)
-    z = df_long[benchmarking_set].to_numpy(dtype=float)
 
-    if d.ndim != 2:
-        raise RuntimeError(f"Expected one-hot treatment matrix with shape (n, K). Got shape {d.shape}.")
-    n, k = d.shape
-    if theta_long.size != k - 1:
-        raise RuntimeError(
-            f"Expected {k - 1} treatment contrasts from one-hot treatment matrix. Got {theta_long.size}."
+    # Gain statistics (Chernozhukov et al., 2022): compare sigma2/nu2 of the
+    # long and short models per contrast instead of in-sample partial R^2.
+    elems_long = model._sensitivity_element_est()
+    elems_short = irm_short._sensitivity_element_est()
+    j = theta_long.size
+    sigma2_long = float(elems_long["sigma2"])
+    sigma2_short = float(elems_short["sigma2"])
+    nu2_long = _broadcast_to_length(elems_long["nu2"], j, name="nu2_long")
+    nu2_short = _broadcast_to_length(elems_short["nu2"], j, name="nu2_short")
+
+    rows = [
+        _calibrate_benchmark_gain_statistics(
+            theta_long=float(theta_long[i]),
+            theta_short=float(theta_short[i]),
+            sigma2_long=sigma2_long,
+            sigma2_short=sigma2_short,
+            nu2_long=float(nu2_long[i]),
+            nu2_short=float(nu2_short[i]),
         )
-
-    # Outcome residual under observed arm.
-    g_obs = np.sum(d * g_hat, axis=1)
-    r_y = y - g_obs
-
-    # Multi-arm treatment residuals as pairwise contrasts vs baseline.
-    r_d = d - m_hat
-    r_d_contrast = r_d[:, 1:] - r_d[:, [0]]
-
-    def _ols_r2_and_fit(target: np.ndarray, features: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
-        target_arr = np.asarray(target, dtype=float)
-        if target_arr.ndim == 1:
-            target_arr = target_arr.reshape(-1, 1)
-        features_arr = np.asarray(features, dtype=float)
-        if features_arr.ndim == 1:
-            features_arr = features_arr.reshape(-1, 1)
-
-        features_centered = features_arr - np.nanmean(features_arr, axis=0, keepdims=True)
-        feature_std = np.nanstd(features_centered, axis=0, ddof=0)
-        valid_cols = np.isfinite(feature_std) & (feature_std > 1e-12)
-        if not np.any(valid_cols):
-            return np.zeros(target_arr.shape[1], dtype=float), np.zeros_like(target_arr)
-
-        features_scaled = features_centered[:, valid_cols] / feature_std[valid_cols]
-        features_scaled = np.nan_to_num(features_scaled, nan=0.0, posinf=0.0, neginf=0.0)
-
-        target_centered = target_arr - np.nanmean(target_arr, axis=0, keepdims=True)
-        target_centered = np.nan_to_num(target_centered, nan=0.0, posinf=0.0, neginf=0.0)
-
-        from numpy.linalg import lstsq
-
-        beta, *_ = lstsq(features_scaled, target_centered, rcond=1e-12)
-        target_hat = features_scaled @ beta
-
-        denom = np.sum(target_centered * target_centered, axis=0)
-        num = np.sum(target_hat * target_hat, axis=0)
-        valid = np.isfinite(denom) & (denom > 1e-12) & np.isfinite(num) & (num >= 0.0)
-        r2 = np.zeros(target_arr.shape[1], dtype=float)
-        r2[valid] = np.clip(num[valid] / denom[valid], 0.0, 1.0)
-        return r2, target_hat
-
-    def _safe_corr(u: np.ndarray, v: np.ndarray) -> float:
-        u_arr = np.asarray(u, dtype=float).reshape(-1)
-        v_arr = np.asarray(v, dtype=float).reshape(-1)
-        if u_arr.size != v_arr.size:
-            raise ValueError("Correlation inputs must have the same length.")
-
-        u_c = u_arr - np.mean(u_arr)
-        v_c = v_arr - np.mean(v_arr)
-        su = float(np.std(u_c))
-        sv = float(np.std(v_c))
-        if not (np.isfinite(su) and np.isfinite(sv)) or su <= 0.0 or sv <= 0.0:
-            return 0.0
-        val = float(np.corrcoef(u_c, v_c)[0, 1])
-        return float(np.clip(val, -1.0, 1.0))
-
-    r2_y_arr, yhat_u = _ols_r2_and_fit(r_y, z)
-    r2_y = float(r2_y_arr[0])
-    cf_y = float(r2_y / (1.0 - r2_y)) if r2_y < 1.0 else np.inf
-
-    r2_d, dhat_u = _ols_r2_and_fit(r_d_contrast, z)
-    rho = np.array([_safe_corr(yhat_u[:, 0], dhat_u[:, j]) for j in range(theta_long.size)], dtype=float)
-
-    delta = theta_long - theta_short
+        for i in range(j)
+    ]
 
     treatment_cols = list(data_long.treatments.columns)
     baseline = str(treatment_cols[0]) if treatment_cols else "d0"
     idx = [f"{str(name)} vs {baseline}" for name in treatment_cols[1:]]
-    if len(idx) != theta_long.size:
-        idx = [f"contrast_{j + 1}" for j in range(theta_long.size)]
+    if len(idx) != j:
+        idx = [f"contrast_{i + 1}" for i in range(j)]
 
-    return pd.DataFrame(
-        {
-            "cf_y": np.repeat(cf_y, theta_long.size),
-            "r2_y": np.repeat(r2_y, theta_long.size),
-            "r2_d": r2_d,
-            "rho": rho,
-            "theta_long": theta_long,
-            "theta_short": theta_short,
-            "delta": delta,
-        },
-        index=idx,
-    )
-
-
-def _resolve_cf_y_alias(
-    *,
-    cf_y: Optional[float],
-    r2_y: Optional[float],
-) -> float:
-    cf_y_value = 0.0 if cf_y is None else float(cf_y)
-    if cf_y_value < 0.0:
-        raise ValueError("cf_y must be >= 0.")
-
-    if r2_y is None:
-        return cf_y_value
-
-    r2_y_value = float(r2_y)
-    if not (0.0 <= r2_y_value < 1.0):
-        raise ValueError("r2_y must be in [0, 1).")
-
-    cf_y_from_r2 = r2_y_value / (1.0 - r2_y_value)
-
-    if cf_y is None:
-        return cf_y_from_r2
-
-    if not np.isclose(cf_y_value, cf_y_from_r2, rtol=1e-10, atol=1e-12):
-        raise ValueError(
-            "cf_y and r2_y are both set but inconsistent. "
-            f"Expected cf_y={cf_y_from_r2:.12g} from r2_y={r2_y_value:.12g}, got cf_y={cf_y_value:.12g}."
-        )
-    return cf_y_value
+    out = pd.DataFrame(rows, index=idx)
+    out["theta_long"] = theta_long
+    out["theta_short"] = theta_short
+    out["delta"] = theta_long - theta_short
+    lead = ["cf_y", "cf_d", "rho", "theta_long", "theta_short", "delta", "r2_y", "r2_d", "gain_y", "gain_d"]
+    return out[lead + [c for c in out.columns if c not in lead]]
 
 
 def sensitivity_analysis(
     effect_estimation: Dict[str, Any] | Any,
     _=None,
     cf_y: Optional[float] = None,
-    r2_y: Optional[float] = None,
-    r2_d: Union[float, np.ndarray] = 0.0,
+    cf_d: Optional[Union[float, np.ndarray]] = None,
     rho: Union[float, np.ndarray] = 1.0,
     H0: float = 0.0,
     alpha: float = 0.05,
     use_signed_rr: bool = False,
+    *,
+    r2_y: Optional[float] = None,
+    r2_d: Optional[Union[float, np.ndarray]] = None,
 ) -> Dict[str, Any]:
-    cf_y_resolved = _resolve_cf_y_alias(cf_y=cf_y, r2_y=r2_y)
+    """Bias-aware sensitivity analysis per contrast (Chernozhukov et al., 2022).
+
+    ``cf_y`` is R^2_{Y-g_s ~ g-g_s} and ``cf_d`` is 1 - R^2_{alpha ~ alpha_s}
+    (scalar or one value per contrast), both in [0, 1). ``r2_y``/``r2_d`` are
+    deprecated aliases used as-is. Missing strengths default to 0.
+    """
+    cf_y, cf_d = _resolve_strength_aliases(cf_y=cf_y, cf_d=cf_d, r2_y=r2_y, r2_d=r2_d, default=0.0)
 
     raw_res = compute_bias_aware_ci(
         effect_estimation,
         _=_,
-        cf_y=cf_y_resolved,
-        r2_d=r2_d,
+        cf_y=cf_y,
+        cf_d=cf_d,
         rho=rho,
         H0=H0,
         alpha=alpha,

@@ -2,20 +2,25 @@ r"""
 Sensitivity analysis and benchmarking for unconfoundedness.
 
 This module provides tools to assess the robustness of causal estimates to
-potential unobserved confounding. It implements the sensitivity framework
-based on partial $R^2$ as described in Cinelli & Hazlett (2020), adapted for
-non-linear and semi-parametric models via influence functions.
+potential unobserved confounding. It implements the omitted-variable-bias
+framework of Chernozhukov, Cinelli, Newey, Sharma & Syrgkanis (2022), "Long
+Story Short", as in DoubleML's sensitivity bound. For IRM, the treatment
+channel is measured through the Riesz representer :math:`\alpha`, rather than
+a partial :math:`R^2` of the treatment.
 
-The framework assumes the existence of an unobserved confounder $U$ and
-quantifies the bias as a function of:
-- $R^2_{Y \sim U | D, X}$: How much of the outcome variance $U$ explains.
-- $R^2_{D \sim U | X}$: How much of the treatment variance $U$ explains.
+The strength of an omitted confounder is quantified by:
+- ``cf_y`` = :math:`R^2_{Y - g_s \sim g - g_s}`: share of the residual outcome
+  variance (short model) explained by the confounder.
+- ``cf_d`` = :math:`1 - R^2_{\alpha \sim \alpha_s}`: share of the variance of the
+  long Riesz representer not explained by the short one.
 
 The bias-aware estimate is then:
 
 .. math::
 
-    \hat{\tau}_{adj} = \hat{\tau} \pm \text{bias}(R^2_{Y \sim U}, R^2_{D \sim U})
+    \hat{\theta} \pm |\rho| \sqrt{cf_y \frac{cf_d}{1 - cf_d}} \sqrt{\sigma^2 \nu^2}
+
+with :math:`\sigma^2 = E[(Y - g)^2]` and :math:`\nu^2 = E[\alpha^2]`.
 """
 from __future__ import annotations
 
@@ -28,6 +33,11 @@ from causalis.data_contracts.causal_diagnostic_data import UnconfoundednessDiagn
 from causalis.data_contracts.sensitivity_analysis_result import SensitivityAnalysisResult
 from causalis.dgp.causaldata import CausalData
 from causalis.scenarios.unconfoundedness._score_utils import _compute_ipw_components
+from causalis.shared.sensitivity_params import (
+    bias_factor as _bias_factor,
+    resolve_strength_aliases as _resolve_strength_aliases,
+    robustness_value as _robustness_value,
+)
 
 __all__ = [
     "sensitivity_analysis",
@@ -259,11 +269,11 @@ def _compute_sensitivity_bias(
     return _compute_sensitivity_bias_unified(sigma2, nu2, psi_sigma2, psi_nu2)
 
 
-def _combine_nu2(m_alpha: np.ndarray, rr: np.ndarray, r2_y: float, r2_d: float, rho: float) -> tuple[float, np.ndarray]:
+def _combine_nu2(m_alpha: np.ndarray, rr: np.ndarray, cf_y: float, cf_d: float, rho: float) -> tuple[float, np.ndarray]:
     """Combine sensitivity levers into nu2 via per-unit quadratic form.
 
-    nu2_i = (sqrt(2*m_alpha_i))^2 * cf_y + (|rr_i|)^2 * (r2_d/(1-r2_d)) + 2*rho*sqrt(cf_y*r2_d/(1-r2_d))*|rr_i|*sqrt(2*m_alpha_i)
-    with cf_y = r2_y / (1 - r2_y).
+    nu2_i = (sqrt(2*m_alpha_i))^2 * cf_y + (|rr_i|)^2 * k_d + 2*rho*sqrt(cf_y*k_d)*|rr_i|*sqrt(2*m_alpha_i)
+    with k_d = cf_d / (1 - cf_d).
     Returns (nu2, psi_nu2) with psi_nu2 centered.
 
     Note: we use abs(rr) for a conservative worst-case cross-term; the quadratic
@@ -275,10 +285,10 @@ def _combine_nu2(m_alpha: np.ndarray, rr: np.ndarray, r2_y: float, r2_d: float, 
         Component for the representer variance.
     rr : np.ndarray
         Riesz representer.
-    r2_y : float
-        Sensitivity parameter for the outcome (R^2 form, R_Y^2; converted to odds form internally).
-    r2_d : float
-        Sensitivity parameter for the treatment (R^2 form, R_D^2).
+    cf_y : float
+        Outcome strength, R^2_{Y-g_s ~ g-g_s}, in [0, 1).
+    cf_d : float
+        Treatment strength via the Riesz representer, 1 - R^2_{alpha ~ alpha_s}, in [0, 1).
     rho : float
         Correlation parameter.
 
@@ -289,31 +299,12 @@ def _combine_nu2(m_alpha: np.ndarray, rr: np.ndarray, r2_y: float, r2_d: float, 
     psi_nu2 : np.ndarray
         The centered influence function for nu2.
     """
-    r2_y = float(r2_y)
-    r2_d = float(r2_d)
-    rho = float(np.clip(rho, -1.0, 1.0))
-    if r2_y < 0 or r2_d < 0:
-        raise ValueError("r2_y and r2_d must be >= 0.")
-    if r2_y >= 1.0:
-        raise ValueError("r2_y must be < 1.0.")
-    if r2_d >= 1.0:
-        raise ValueError("r2_d must be < 1.0.")
-    
-    cf_y = r2_y / (1.0 - r2_y)
-    cf_d = r2_d / (1.0 - r2_d)
-    a = np.sqrt(2.0 * np.maximum(np.asarray(m_alpha, dtype=float), 0.0))
-    b = np.abs(np.asarray(rr, dtype=float))
-    base = (a * a) * cf_y + (b * b) * cf_d + 2.0 * rho * np.sqrt(cf_y * cf_d) * a * b
-    # numeric PSD clamp
-    base = np.maximum(base, 0.0)
-    nu2 = float(np.mean(base))
-    psi_nu2 = base - nu2
-    return nu2, psi_nu2
+    return _combine_nu2_local(m_alpha, rr, cf_y, cf_d, rho, use_signed_rr=False)
 
 
 # ---------------- Bias-aware helpers (local variants + pullers) ----------------
 
-def _combine_nu2_local(m_alpha: np.ndarray, rr: np.ndarray, r2_y: float, r2_d: float, rho: float, *, use_signed_rr: bool) -> tuple[float, np.ndarray]:
+def _combine_nu2_local(m_alpha: np.ndarray, rr: np.ndarray, cf_y: float, cf_d: float, rho: float, *, use_signed_rr: bool) -> tuple[float, np.ndarray]:
     """Nu^2 via per-unit quadratic form with optional sign-preserving rr.
 
     Parameters
@@ -322,10 +313,10 @@ def _combine_nu2_local(m_alpha: np.ndarray, rr: np.ndarray, r2_y: float, r2_d: f
         Component for the representer variance.
     rr : np.ndarray
         Riesz representer.
-    r2_y : float
-        Sensitivity parameter for the outcome (R^2 form, R_Y^2).
-    r2_d : float
-        Sensitivity parameter for the treatment (R^2 form, R_D^2).
+    cf_y : float
+        Outcome strength, R^2_{Y-g_s ~ g-g_s}, in [0, 1).
+    cf_d : float
+        Treatment strength via the Riesz representer, 1 - R^2_{alpha ~ alpha_s}, in [0, 1).
     rho : float
         Correlation parameter.
     use_signed_rr : bool
@@ -338,21 +329,15 @@ def _combine_nu2_local(m_alpha: np.ndarray, rr: np.ndarray, r2_y: float, r2_d: f
     psi_nu2 : np.ndarray
         The centered influence function for nu2.
     """
-    r2_y = float(r2_y); r2_d = float(r2_d); rho = float(np.clip(rho, -1.0, 1.0))
-    if r2_y < 0 or r2_d < 0:
-        raise ValueError("r2_y and r2_d must be >= 0.")
-    if r2_y >= 1.0:
-        raise ValueError("r2_y must be < 1.0.")
-    if r2_d >= 1.0:
-        raise ValueError("r2_d must be < 1.0.")
-    
-    cf_y = r2_y / (1.0 - r2_y)
-    cf_d = r2_d / (1.0 - r2_d)
+    rho = float(np.clip(rho, -1.0, 1.0))
+    _bias_factor(cf_y, cf_d)  # validates both in [0, 1)
+    cf_y = float(cf_y)
+    k_d = float(cf_d) / (1.0 - float(cf_d))
     a = np.sqrt(2.0 * np.maximum(np.asarray(m_alpha, float), 0.0))
     b = np.asarray(rr, float)
     if not use_signed_rr:
         b = np.abs(b)  # worst-case sign
-    base = (a * a) * cf_y + (b * b) * cf_d + 2.0 * rho * np.sqrt(cf_y * cf_d) * a * b
+    base = (a * a) * cf_y + (b * b) * k_d + 2.0 * rho * np.sqrt(cf_y * k_d) * a * b
     base = np.maximum(base, 0.0)
     nu2 = float(np.mean(base))
     psi_nu2 = base - nu2
@@ -475,12 +460,14 @@ def _pull_theta_se_ci(effect_estimation: Any, alpha: float) -> tuple[float, floa
 def compute_bias_aware_ci(
     effect_estimation: Dict[str, Any] | Any,
     *,
-    r2_y: float,
-    r2_d: float,
+    cf_y: Optional[float] = None,
+    cf_d: Optional[float] = None,
     rho: float = 1.0,
     H0: float = 0.0,
     alpha: float = 0.05,
-    use_signed_rr: bool = False
+    use_signed_rr: bool = False,
+    r2_y: Optional[float] = None,
+    r2_d: Optional[float] = None,
 ) -> Dict[str, Any]:
     """Compute bias-aware confidence intervals.
 
@@ -495,10 +482,10 @@ def compute_bias_aware_ci(
     ----------
     effect_estimation : Dict[str, Any] or Any
         The effect estimation object.
-    r2_y : float
-        Sensitivity parameter for the outcome (R^2 form, R_Y^2).
-    r2_d : float
-        Sensitivity parameter for the treatment (R^2 form, R_D^2).
+    cf_y : float
+        Outcome strength, R^2_{Y-g_s ~ g-g_s}, in [0, 1).
+    cf_d : float
+        Treatment strength via the Riesz representer, 1 - R^2_{alpha ~ alpha_s}, in [0, 1).
     rho : float, default 1.0
         Correlation parameter.
     H0 : float, default 0.0
@@ -509,6 +496,8 @@ def compute_bias_aware_ci(
         Whether to use signed rr in the quadratic combination of sensitivity components.
         If True and m_alpha/rr are available, the bias bound is computed via the
         per-unit quadratic form and RV/RVa are not reported.
+    r2_y, r2_d : float, optional
+        Deprecated aliases for ``cf_y`` and ``cf_d`` (used as-is).
 
     Returns
     -------
@@ -517,14 +506,12 @@ def compute_bias_aware_ci(
     """
     from scipy.stats import norm as _norm
 
+    cf_y, cf_d = _resolve_strength_aliases(cf_y=cf_y, cf_d=cf_d, r2_y=r2_y, r2_d=r2_d)
     if not (0.0 < alpha < 1.0):
         raise ValueError(f"alpha must be in (0, 1), got {alpha}")
-    if r2_y < 0 or r2_d < 0:
-        raise ValueError("r2_y and r2_d must be >= 0")
-    if r2_y >= 1.0:
-        raise ValueError("r2_y must be < 1.0 for the bias factor to be well-defined")
-    if r2_d >= 1.0:
-        raise ValueError("r2_d must be < 1.0 for the bias factor to be well-defined")
+    cf_y = float(cf_y)
+    cf_d = float(cf_d)
+    bias_factor = float(_bias_factor(cf_y, cf_d))
 
     if isinstance(effect_estimation, dict):
         if 'model' not in effect_estimation:
@@ -576,13 +563,13 @@ def compute_bias_aware_ci(
         psi_sigma2 = elems.get("psi_sigma2", None)
         psi_nu2 = elems.get("psi_nu2", None)
 
-        # Optional signed-rr quadratic form (uses r2_y/r2_d/rho internally).
+        # Optional signed-rr quadratic form (uses cf_y/cf_d/rho internally).
         if use_signed_rr_effective:
             m_alpha = elems.get("m_alpha", None)
             rr = elems.get("riesz_rep", None)
             if m_alpha is not None and rr is not None:
                 nu2, psi_nu2 = _combine_nu2_local(
-                    m_alpha, rr, r2_y, r2_d, rho, use_signed_rr=True
+                    m_alpha, rr, cf_y, cf_d, rho, use_signed_rr=True
                 )
                 max_bias_base = np.sqrt(max(sigma2 * nu2, 0.0))
                 max_bias = max_bias_base
@@ -595,33 +582,18 @@ def compute_bias_aware_ci(
                 use_signed_rr_effective = False
 
         if not use_signed_rr_effective:
-            # Bias component: |rho| * sqrt(sigma2 * nu2) * sqrt(cf_y * r2_d / (1 - r2_d))
-            cf_y = r2_y / (1.0 - r2_y)
-            bias_factor = np.sqrt(cf_y * r2_d / (1.0 - r2_d))
+            # Bias component: |rho| * sqrt(sigma2 * nu2) * sqrt(cf_y * cf_d / (1 - cf_d))
             max_bias_base = np.sqrt(max(sigma2 * nu2, 0.0))
             max_bias = max_bias_base * bias_factor
             bound_width = abs(rho) * max_bias
             correction_scale = abs(rho) * bias_factor
 
             # Robustness Values (RV/RVa)
-            # RV is the confounding strength that makes the bound include H0:
-            # |theta - H0| = |rho| * sqrt(sigma2 * nu2) * RV / (1 - RV)
-            delta_theta = abs(theta - H0)
+            # RV is the common strength v = cf_y = cf_d that makes the bound reach H0:
+            # |theta - H0| = |rho| * sqrt(sigma2 * nu2) * v / sqrt(1 - v)
             denom_rv = abs(rho) * max_bias_base
-            if denom_rv > 1e-16 and delta_theta > 0:
-                D = delta_theta / denom_rv
-                rv = D / (1.0 + D)
-            else:
-                rv = 0.0 if delta_theta == 0 else np.nan
-
-            delta_theta_a = max(abs(theta - H0) - z * se, 0.0)
-            if denom_rv > 1e-16 and delta_theta_a > 0:
-                Da = delta_theta_a / denom_rv
-                rva = Da / (1.0 + Da)
-            elif delta_theta_a == 0:
-                rva = 0.0
-            else:
-                rva = np.nan
+            rv = float(_robustness_value(abs(theta - H0), denom_rv))
+            rva = float(_robustness_value(max(abs(theta - H0) - z * se, 0.0), denom_rv))
     else:
         # No cofounding info: keep max_bias=0; RV/RVa undefined unless delta=0
         delta_theta = abs(theta - H0)
@@ -682,7 +654,7 @@ def compute_bias_aware_ci(
         nu2=float(nu2),
         rv=float(rv),
         rva=float(rva),
-        params=dict(r2_y=float(r2_y), r2_d=float(r2_d), rho=float(np.clip(rho, -1.0, 1.0)), use_signed_rr=bool(use_signed_rr_effective)),
+        params=dict(cf_y=cf_y, cf_d=cf_d, rho=float(np.clip(rho, -1.0, 1.0)), use_signed_rr=bool(use_signed_rr_effective)),
     )
 
 
@@ -777,7 +749,7 @@ def format_bias_aware_summary(res: Dict[str, Any], label: str | None = None) -> 
     lines.append("------------------ Scenario          ------------------")
     lines.append(f"Significance Level: alpha={alpha}")
     lines.append(f"Null Hypothesis: H0={res.get('H0', 0.0)}")
-    lines.append(f"Sensitivity parameters: r2_y={cf['r2_y']}; r2_d={cf['r2_d']}, rho={cf['rho']}, use_signed_rr={cf['use_signed_rr']}")
+    lines.append(f"Sensitivity parameters: cf_y={cf['cf_y']}; cf_d={cf['cf_d']}, rho={cf['rho']}, use_signed_rr={cf['use_signed_rr']}")
     lines.append("")
     lines.append(_format_summary_table(summary_df))
 
@@ -802,8 +774,8 @@ def _wrap_sensitivity_result(
 
 def _format_sensitivity_summary(
     summary: pd.DataFrame,
-    r2_y: float,
-    r2_d: float,
+    cf_y: float,
+    cf_d: float,
     rho: float,
     alpha: float
 ) -> str:
@@ -814,10 +786,10 @@ def _format_sensitivity_summary(
     ----------
     summary : pd.DataFrame
         The sensitivity summary DataFrame
-    r2_y : float
-        Sensitivity parameter for the outcome equation (R^2 form, R_Y^2; converted to odds form internally)
-    r2_d : float
-        Sensitivity parameter for the treatment equation (R^2 form, R_D^2)
+    cf_y : float
+        Sensitivity parameter for the outcome equation (R^2_{Y-g_s ~ g-g_s})
+    cf_d : float
+        Sensitivity parameter for the treatment equation (1 - R^2_{alpha ~ alpha_s})
     rho : float
         Correlation parameter
     alpha : float
@@ -834,7 +806,7 @@ def _format_sensitivity_summary(
     output_lines.append("")
     output_lines.append("------------------ Scenario          ------------------")
     output_lines.append(f"Significance Level: alpha={alpha}")
-    output_lines.append(f"Sensitivity parameters: r2_y={r2_y}; r2_d={r2_d}, rho={rho}")
+    output_lines.append(f"Sensitivity parameters: cf_y={cf_y}; cf_d={cf_d}, rho={rho}")
     output_lines.append("")
 
     # Bounds with CI section
@@ -927,7 +899,7 @@ def get_sensitivity_summary(
     --------
     >>> from causalis.scenarios.unconfoundedness.refutation.unconfoundedness import sensitivity_analysis, get_sensitivity_summary
     >>> # Assuming 'estimate' is a fitted CausalEstimate from IRM
-    >>> res = sensitivity_analysis(estimate, r2_y=0.05, r2_d=0.05) # doctest: +SKIP
+    >>> res = sensitivity_analysis(estimate, cf_y=0.05, cf_d=0.05) # doctest: +SKIP
     >>> summary = get_sensitivity_summary(estimate) # doctest: +SKIP
     >>> print(summary) # doctest: +SKIP
     """
@@ -1001,7 +973,7 @@ def get_sensitivity_summary(
             nu2=np.nan,
             rv=np.nan,
             rva=np.nan,
-            params=dict(r2_y=0.0, r2_d=0.0, rho=0.0, use_signed_rr=False),
+            params=dict(cf_y=0.0, cf_d=0.0, rho=0.0, use_signed_rr=False),
         )
 
     # Single clean summary (reuse the one definitive formatter)
@@ -1011,14 +983,16 @@ def get_sensitivity_summary(
 # ---------------- Benchmarking sensitivity (short vs long model) ----------------
 
 _BENCHMARK_RESULT_COLUMNS = [
-    "r2_y",
-    "r2_d",
+    "cf_y",
+    "cf_d",
     "rho",
     "theta_long",
     "theta_short",
     "delta",
-    "cf_y",
-    "cf_d",
+    "r2_y",
+    "r2_d",
+    "gain_y",
+    "gain_d",
     "cf_y_raw",
     "cf_d_raw",
     "sigma2_long",
@@ -1101,22 +1075,39 @@ def _calibrate_benchmark_gain_statistics(
     nu2_short: float,
     element_issue: str | None = None,
 ) -> dict[str, Any]:
-    """Calibrate DoubleML-compatible gain statistics and Causalis R2 inputs.
+    """Calibrate relative benchmark gains for sensitivity of the full model.
 
-    Raw ``cf_y`` and ``cf_d`` follow the long/short gain-statistic definitions.
-    As in DoubleML, both are clipped to ``[0, 1]``. If the denominator for
-    ``rho`` is not positive, ``rho`` falls back to the sign of the long/short
-    effect shift (and therefore has magnitude one unless the shift is zero).
-    The existing Causalis sensitivity API expects an R2 value for the outcome
-    channel and converts it to odds internally, so ``r2_y`` is the inverse-odds
-    representation of ``cf_y``. ``r2_d`` already has the required form.
+    Following Chernozhukov et al. (2022), with ``gap_y = sigma2_short - sigma2_long``
+    and ``gap_d = nu2_long - nu2_short``:
+
+    - ``gain_y = gap_y / sigma2_long``,
+    - ``gain_d = gap_d / nu2_short``,
+    - ``rho = (theta_short - theta_long) / sqrt(gap_y * gap_d)`` clipped to [-1, 1].
+
+    These are the relative-strength gains in Appendix F, equations (22)-(23),
+    of Chernozhukov et al. They calibrate a hypothetical omitted confounder
+    relative to the model with all observed covariates, as in DoubleML's
+    ``gain_statistics``. Normalizing by ``sigma2_short`` and ``nu2_long`` would
+    instead describe the effect of adding the observed benchmark to the short
+    model, which is a different sensitivity scenario.
+
+    ``cf_y`` and ``cf_d`` are the raw relative gains clipped to [0, 1], matching
+    DoubleML. A value of 1 is retained for auditing but marked uncalibratable
+    because this sensitivity API requires both strengths to be below 1.
+    ``gain_y``/``gain_d`` retain nonnegative gains before upper clipping.
+    If the denominator for ``rho`` is not positive, ``rho`` falls back to the
+    sign of the long/short effect shift.
+    ``cf_y_raw``/``cf_d_raw`` hold the unclipped values; ``r2_y``/``r2_d`` are
+    deprecated copies of ``cf_y``/``cf_d``.
     """
     result: dict[str, Any] = {
-        "r2_y": np.nan,
-        "r2_d": np.nan,
-        "rho": np.nan,
         "cf_y": np.nan,
         "cf_d": np.nan,
+        "rho": np.nan,
+        "r2_y": np.nan,
+        "r2_d": np.nan,
+        "gain_y": np.nan,
+        "gain_d": np.nan,
         "cf_y_raw": np.nan,
         "cf_d_raw": np.nan,
         "sigma2_long": float(sigma2_long),
@@ -1146,24 +1137,26 @@ def _calibrate_benchmark_gain_statistics(
     if not np.isfinite(scalar_values).all():
         issues.append("long/short estimates and sensitivity elements must be finite")
 
-    if np.isfinite(sigma2_long) and sigma2_long <= 0.0:
-        issues.append("sigma2_long must be positive")
-    if np.isfinite(nu2_long) and nu2_long <= 0.0:
-        issues.append("nu2_long must be positive")
-    if np.isfinite(nu2_short) and nu2_short <= 0.0:
-        issues.append("nu2_short must be positive")
+    for name, value in (
+        ("sigma2_long", sigma2_long),
+        ("sigma2_short", sigma2_short),
+        ("nu2_long", nu2_long),
+        ("nu2_short", nu2_short),
+    ):
+        if np.isfinite(value) and value <= 0.0:
+            issues.append(f"{name} must be positive")
 
     gap_y = float(sigma2_short - sigma2_long)
     gap_d = float(nu2_long - nu2_short)
 
     if not issues:
-        cf_y_raw = float(gap_y / sigma2_long)
-        cf_d_raw = float(gap_d / nu2_short)
-        result["cf_y_raw"] = cf_y_raw
-        result["cf_d_raw"] = cf_d_raw
-        if not np.isfinite(cf_y_raw):
+        result["cf_y_raw"] = float(gap_y / sigma2_long)
+        result["cf_d_raw"] = float(gap_d / nu2_short)
+        result["gain_y"] = float(max(gap_y, 0.0) / sigma2_long)
+        result["gain_d"] = float(max(gap_d, 0.0) / nu2_short)
+        if not np.isfinite(result["cf_y_raw"]):
             issues.append("cf_y_raw must be finite")
-        if not np.isfinite(cf_d_raw):
+        if not np.isfinite(result["cf_d_raw"]):
             issues.append("cf_d_raw must be finite")
 
     if not issues:
@@ -1175,7 +1168,7 @@ def _calibrate_benchmark_gain_statistics(
             {
                 "cf_y": cf_y,
                 "cf_d": cf_d,
-                "r2_y": float(cf_y / (1.0 + cf_y)),
+                "r2_y": cf_y,
                 "r2_d": cf_d,
                 "cf_y_clipped": cf_y_clipped,
                 "cf_d_clipped": cf_d_clipped,
@@ -1190,10 +1183,8 @@ def _calibrate_benchmark_gain_statistics(
                 f"cf_d_raw={result['cf_d_raw']:.6g} was clipped to {cf_d:.6g}"
             )
 
-        if cf_d >= 1.0:
-            issues.append(
-                "DoubleML-clipped cf_d=1 is outside the finite Causalis sensitivity domain"
-            )
+        if cf_y >= 1.0 or cf_d >= 1.0:
+            issues.append("calibrated cf_y/cf_d must be < 1; benchmark gains reach the upper boundary")
         else:
             result["strengths_valid"] = True
 
@@ -1230,6 +1221,8 @@ def _calibrate_benchmark_gain_statistics(
         result["cf_y_clipped"]
         or result["cf_d_clipped"]
         or result["rho_fallback"]
+        or result["cf_y"] == 1.0
+        or result["cf_d"] == 1.0
     )
     result["calibration_valid"] = bool(
         not issues
@@ -1287,9 +1280,13 @@ def _sensitivity_benchmark_refits(
 
     Notes
     -----
-    The gain statistics follow the long/short benchmarking construction and
-    boundary handling used by DoubleML. Raw ``cf_y`` and ``cf_d`` are clipped
-    to ``[0, 1]``. ``rho`` is estimated from the effect shift divided by the
+    The gain statistics follow the long/short construction of Chernozhukov et
+    al. (2022), Appendix F: ``gain_y = (sigma2_short - sigma2_long) / sigma2_long``
+    and ``gain_d = (nu2_long - nu2_short) / nu2_short``. These relative gains
+    calibrate an additional omitted confounder for the full model, matching
+    DoubleML's ``gain_statistics``. ``cf_y``/``cf_d`` are clipped to [0, 1];
+    upper-boundary values are reported but marked uncalibratable for this API.
+    ``rho`` is estimated from the effect shift divided by the
     geometric mean of positive outcome- and Riesz-representer gains; if either
     gain is not positive, DoubleML's fallback uses the sign of the effect shift
     (magnitude one unless the shift is zero).
@@ -1305,7 +1302,7 @@ def _sensitivity_benchmark_refits(
     >>> estimate = irm.estimate()
     >>> # 2. Benchmark specific confounders
     >>> benchmarks = sensitivity_benchmark(estimate, data, benchmarking_set=['x1', 'x2']) # doctest: +SKIP
-    >>> print(benchmarks[['benchmark_confounder', 'r2_y', 'r2_d']]) # doctest: +SKIP
+    >>> print(benchmarks[['benchmark_confounder', 'cf_y', 'cf_d', 'rho']]) # doctest: +SKIP
     """
     model = None
     if isinstance(effect_estimation, dict):
@@ -1587,7 +1584,7 @@ def sensitivity_benchmark_group(
     Returns
     -------
     pandas.DataFrame
-        One-row DataFrame retaining ``benchmark_group``, ``r2_y``, ``r2_d``,
+        One-row DataFrame retaining ``benchmark_group``, ``cf_y``, ``cf_d``,
         ``rho``, ``theta_long``, ``theta_short``, and ``delta`` and appending
         element-based gain statistics and calibration audit fields. The group
         is stored as a tuple in ``benchmark_group``.
@@ -1617,23 +1614,25 @@ def sensitivity_benchmark_group(
 def sensitivity_analysis(
     effect_estimation: Dict[str, Any] | Any,
     *,
-    r2_y: float,
-    r2_d: float,
+    cf_y: Optional[float] = None,
+    cf_d: Optional[float] = None,
     rho: float = 1.0,
     H0: float = 0.0,
     alpha: float = 0.05,
     use_signed_rr: bool = False,
+    r2_y: Optional[float] = None,
+    r2_d: Optional[float] = None,
 ) -> Dict[str, Any]:
     r"""Compute bias-aware components and cache them.
 
     This function turns a fitted estimate into a simple hidden-confounding
-    stress test. In the default mode, the bound width is
+    stress test (Chernozhukov et al., 2022). In the default mode, the bound width is
 
     .. math::
 
         |\rho| \cdot \sqrt{\sigma^2 \nu^2}
         \cdot
-        \sqrt{\frac{r2_y}{1-r2_y}\frac{r2_d}{1-r2_d}},
+        \sqrt{cf_y \frac{cf_d}{1-cf_d}},
 
     so the reported confounding interval is
 
@@ -1641,19 +1640,21 @@ def sensitivity_analysis(
 
         [\theta - \text{bound\_width}, \theta + \text{bound\_width}].
 
-    Here :math:`r2_y` controls how much residual outcome variation an omitted
-    confounder could explain, :math:`r2_d` does the same for treatment
-    assignment, and :math:`\rho` sets the sign and strength alignment between
-    the two channels.
+    Here :math:`cf_y = R^2_{Y-g_s \sim g-g_s}` is the share of residual outcome
+    variation an omitted confounder could explain, :math:`cf_d = 1 - R^2_{\alpha \sim \alpha_s}`
+    is the share of the long Riesz representer's variation it adds (this
+    measures treatment strength through the representer rather than the
+    partial :math:`R^2` of treatment), and :math:`\rho` sets the sign and strength alignment
+    between the two channels.
 
     Parameters
     ----------
     effect_estimation : Dict[str, Any] or Any
         The effect estimation object.
-    r2_y : float
-        Sensitivity parameter for the outcome (R^2 form, R_Y^2; converted to odds form internally).
-    r2_d : float
-        Sensitivity parameter for the treatment (R^2 form, R_D^2).
+    cf_y : float
+        Outcome strength, R^2_{Y-g_s ~ g-g_s}, in [0, 1).
+    cf_d : float
+        Treatment strength via the Riesz representer, 1 - R^2_{alpha ~ alpha_s}, in [0, 1).
     rho : float, default 1.0
         Correlation parameter.
     H0 : float, default 0.0
@@ -1674,7 +1675,7 @@ def sensitivity_analysis(
           - theta_bounds_cofounding = (theta - bound_width, theta + bound_width)
           - bias_aware_ci = faithful CI for the bounds
           - max_bias and components (sigma2, nu2)
-          - params (r2_y, r2_d, rho, use_signed_rr)
+          - params (cf_y, cf_d, rho, use_signed_rr)
 
     Examples
     --------
@@ -1705,14 +1706,15 @@ def sensitivity_analysis(
     ...     random_state=3141,
     ... )
     >>> estimate = irm.fit().estimate(score="ATE")
-    >>> out = sensitivity_analysis(estimate, r2_y=0.02, r2_d=0.02, rho=1.0)
+    >>> out = sensitivity_analysis(estimate, cf_y=0.02, cf_d=0.02, rho=1.0)
     >>> out["theta_bounds_cofounding"]  # doctest: +SKIP
     >>> out["bias_aware_ci"]  # doctest: +SKIP
     """
+    cf_y, cf_d = _resolve_strength_aliases(cf_y=cf_y, cf_d=cf_d, r2_y=r2_y, r2_d=r2_d)
     raw_res = compute_bias_aware_ci(
         effect_estimation,
-        r2_y=r2_y,
-        r2_d=r2_d,
+        cf_y=cf_y,
+        cf_d=cf_d,
         rho=rho,
         H0=H0,
         alpha=alpha,
@@ -1747,12 +1749,14 @@ def sensitivity_analysis(
 def interpret_sensitivity_analysis(
     effect_estimation: Dict[str, Any] | Any,
     *,
-    r2_y: float,
-    r2_d: float,
+    cf_y: Optional[float] = None,
+    cf_d: Optional[float] = None,
     rho: float = 1.0,
     H0: float = 0.0,
     alpha: float = 0.05,
     use_signed_rr: bool = False,
+    r2_y: Optional[float] = None,
+    r2_d: Optional[float] = None,
 ) -> Dict[str, Any]:
     """Run sensitivity analysis and return a structured interpretation.
 
@@ -1760,10 +1764,10 @@ def interpret_sensitivity_analysis(
     ----------
     effect_estimation : Dict[str, Any] or Any
         The effect estimation object.
-    r2_y : float
-        Sensitivity parameter for outcome residual confounding strength.
-    r2_d : float
-        Sensitivity parameter for treatment residual confounding strength.
+    cf_y : float
+        Outcome strength, R^2_{Y-g_s ~ g-g_s}, in [0, 1).
+    cf_d : float
+        Treatment strength via the Riesz representer, 1 - R^2_{alpha ~ alpha_s}, in [0, 1).
     rho : float, default 1.0
         Correlation parameter for unobserved confounding.
     H0 : float, default 0.0
@@ -1791,13 +1795,14 @@ def interpret_sensitivity_analysis(
     --------
     >>> from causalis.scenarios.unconfoundedness.refutation.unconfoundedness import interpret_sensitivity_analysis
     >>> # Assuming 'estimate' is a fitted CausalEstimate
-    >>> interpretation = interpret_sensitivity_analysis(estimate, r2_y=0.01, r2_d=0.01) # doctest: +SKIP
+    >>> interpretation = interpret_sensitivity_analysis(estimate, cf_y=0.01, cf_d=0.01) # doctest: +SKIP
     >>> print(interpretation["summary"]) # doctest: +SKIP
     """
+    cf_y, cf_d = _resolve_strength_aliases(cf_y=cf_y, cf_d=cf_d, r2_y=r2_y, r2_d=r2_d)
     res = sensitivity_analysis(
         effect_estimation,
-        r2_y=r2_y,
-        r2_d=r2_d,
+        cf_y=cf_y,
+        cf_d=cf_d,
         rho=rho,
         H0=H0,
         alpha=alpha,
@@ -1872,8 +1877,8 @@ _PROTOCOL_SCENARIO_COLUMNS = [
     "benchmark_group",
     "scenario",
     "multiplier",
-    "r2_y",
-    "r2_d",
+    "cf_y",
+    "cf_d",
     "rho",
     "theta_long",
     "theta_short",
@@ -1891,14 +1896,22 @@ _PROTOCOL_SCENARIO_COLUMNS = [
 ]
 
 
-def _scale_partial_r2(r2: float, multiplier: float) -> float:
-    """Scale a partial R-squared on the Cohen f-squared (odds) scale."""
-    r2 = float(r2)
-    if not np.isfinite(r2) or not (0.0 <= r2 < 1.0):
-        raise ValueError(f"Benchmark partial R-squared must be in [0, 1). Got {r2!r}.")
-    f2 = r2 / (1.0 - r2)
-    scaled_f2 = float(multiplier) * f2
-    return float(scaled_f2 / (1.0 + scaled_f2))
+def _scale_strengths(cf_y: float, cf_d: float, multiplier: float) -> tuple[float, float]:
+    """Scale benchmark strengths as a confounder ``multiplier`` times as strong.
+
+    The variance gains are multiplied: ``gap_y -> k * gap_y`` (so ``cf_y`` scales
+    linearly) and ``gap_d -> k * gap_d`` (so ``cf_d / (1 - cf_d)`` scales linearly).
+    The bias bound then scales by ``k``. ``cf_y`` is capped just below one.
+    """
+    cf_y = float(cf_y)
+    cf_d = float(cf_d)
+    k = float(multiplier)
+    for name, value in (("cf_y", cf_y), ("cf_d", cf_d)):
+        if not np.isfinite(value) or not (0.0 <= value < 1.0):
+            raise ValueError(f"Benchmark {name} must be in [0, 1). Got {value!r}.")
+    scaled_cf_y = float(min(k * cf_y, 1.0 - 1e-12))
+    odds_d = k * cf_d / (1.0 - cf_d)
+    return scaled_cf_y, float(odds_d / (1.0 + odds_d))
 
 
 def _protocol_ci_passes(
@@ -1924,8 +1937,8 @@ def _protocol_scenario(
     benchmark_row: pd.Series,
     scenario: str,
     multiplier: float,
-    r2_y: float,
-    r2_d: float,
+    cf_y: float,
+    cf_d: float,
     rho: float,
     direction: Literal["positive", "negative"],
     decision_threshold: float,
@@ -1934,8 +1947,8 @@ def _protocol_scenario(
     """Evaluate one sensitivity scenario and return its table row and raw result."""
     interpreted = interpret_sensitivity_analysis(
         effect_estimation,
-        r2_y=float(r2_y),
-        r2_d=float(r2_d),
+        cf_y=float(cf_y),
+        cf_d=float(cf_d),
         rho=float(rho),
         H0=float(decision_threshold),
         alpha=float(alpha),
@@ -1952,8 +1965,8 @@ def _protocol_scenario(
         "benchmark_group": benchmark_group,
         "scenario": scenario,
         "multiplier": float(multiplier),
-        "r2_y": float(r2_y),
-        "r2_d": float(r2_d),
+        "cf_y": float(cf_y),
+        "cf_d": float(cf_d),
         "rho": float(rho),
         "theta_long": theta_long,
         "theta_short": float(benchmark_row["theta_short"]),
@@ -1983,8 +1996,8 @@ def _invalid_protocol_scenario(
     benchmark_row: pd.Series,
     scenario: str,
     multiplier: float,
-    r2_y: float,
-    r2_d: float,
+    cf_y: float,
+    cf_d: float,
     rho: float,
     issue: str,
 ) -> tuple[dict[str, Any], Dict[str, Any]]:
@@ -1997,8 +2010,8 @@ def _invalid_protocol_scenario(
         "benchmark_group": benchmark_group,
         "scenario": scenario,
         "multiplier": float(multiplier),
-        "r2_y": float(r2_y),
-        "r2_d": float(r2_d),
+        "cf_y": float(cf_y),
+        "cf_d": float(cf_d),
         "rho": float(rho),
         "theta_long": theta_long,
         "theta_short": float(benchmark_row["theta_short"]),
@@ -2063,8 +2076,9 @@ def run_sensitivity_protocol(
     alpha : float, default 0.05
         Two-sided significance level used for bias-aware confidence intervals.
     stress_multiplier : float, default 2.0
-        Strength multiplier for the secondary stress scenario. Each partial
-        R-squared is multiplied on the odds/Cohen-f-squared scale.
+        Strength multiplier for the secondary stress scenario. Both variance
+        gains are multiplied (``cf_y`` and ``cf_d / (1 - cf_d)`` scale linearly),
+        so the bias bound scales by the multiplier.
     preconditions_passed : bool, default True
         External design gate covering the causal adjustment set, overlap,
         nuisance-model quality, and estimator stability. ``False`` forces the
@@ -2208,8 +2222,8 @@ def run_sensitivity_protocol(
                 f"calibration: {boundary_warning}."
             )
 
-        r2_y = float(benchmark_row["r2_y"])
-        r2_d = float(benchmark_row["r2_d"])
+        cf_y = float(benchmark_row["cf_y"])
+        cf_d = float(benchmark_row["cf_d"])
         rho = float(benchmark_row["rho"])
         strengths_valid = bool(benchmark_row.get("strengths_valid", True))
         calibration_valid = bool(benchmark_row.get("calibration_valid", True))
@@ -2221,11 +2235,10 @@ def run_sensitivity_protocol(
             warnings.append(f"Benchmark {benchmark_name!r} is not calibratable: {calibration_issue}.")
 
         if strengths_valid:
-            stress_r2_y = _scale_partial_r2(r2_y, float(stress_multiplier))
-            stress_r2_d = _scale_partial_r2(r2_d, float(stress_multiplier))
+            stress_cf_y, stress_cf_d = _scale_strengths(cf_y, cf_d, float(stress_multiplier))
         else:
-            stress_r2_y = np.nan
-            stress_r2_d = np.nan
+            stress_cf_y = np.nan
+            stress_cf_d = np.nan
 
         # Evaluate secondary scenarios first so the final cached analysis on the
         # estimate corresponds to the primary scenario used for the decision.
@@ -2237,8 +2250,8 @@ def run_sensitivity_protocol(
                 benchmark_row=benchmark_row,
                 scenario=f"{float(stress_multiplier):g}x",
                 multiplier=float(stress_multiplier),
-                r2_y=stress_r2_y,
-                r2_d=stress_r2_d,
+                cf_y=stress_cf_y,
+                cf_d=stress_cf_d,
                 rho=rho,
                 direction=direction,
                 decision_threshold=float(decision_threshold),
@@ -2251,8 +2264,8 @@ def run_sensitivity_protocol(
                 benchmark_row=benchmark_row,
                 scenario=f"{float(stress_multiplier):g}x",
                 multiplier=float(stress_multiplier),
-                r2_y=stress_r2_y,
-                r2_d=stress_r2_d,
+                cf_y=stress_cf_y,
+                cf_d=stress_cf_d,
                 rho=rho,
                 issue=calibration_issue,
             )
@@ -2265,8 +2278,8 @@ def run_sensitivity_protocol(
                 benchmark_row=benchmark_row,
                 scenario="adversarial",
                 multiplier=1.0,
-                r2_y=r2_y,
-                r2_d=r2_d,
+                cf_y=cf_y,
+                cf_d=cf_d,
                 rho=1.0,
                 direction=direction,
                 decision_threshold=float(decision_threshold),
@@ -2279,8 +2292,8 @@ def run_sensitivity_protocol(
                 benchmark_row=benchmark_row,
                 scenario="adversarial",
                 multiplier=1.0,
-                r2_y=r2_y,
-                r2_d=r2_d,
+                cf_y=cf_y,
+                cf_d=cf_d,
                 rho=1.0,
                 issue=calibration_issue,
             )
@@ -2293,8 +2306,8 @@ def run_sensitivity_protocol(
                 benchmark_row=benchmark_row,
                 scenario="primary",
                 multiplier=1.0,
-                r2_y=r2_y,
-                r2_d=r2_d,
+                cf_y=cf_y,
+                cf_d=cf_d,
                 rho=rho,
                 direction=direction,
                 decision_threshold=float(decision_threshold),
@@ -2307,8 +2320,8 @@ def run_sensitivity_protocol(
                 benchmark_row=benchmark_row,
                 scenario="primary",
                 multiplier=1.0,
-                r2_y=r2_y,
-                r2_d=r2_d,
+                cf_y=cf_y,
+                cf_d=cf_d,
                 rho=rho,
                 issue=calibration_issue,
             )

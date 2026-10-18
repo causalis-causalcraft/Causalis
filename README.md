@@ -353,7 +353,7 @@ and a single `outcome`; the previous multi-outcome mapping interface is removed.
 Pre-specify a practically meaningful effect boundary and one or more
 domain-justified groups of observed **pre-treatment** confounders. The primary
 decision uses element-based long/short gain statistics for the benchmark
-group. Its `r2_y`, `r2_d`, and `rho` are calibrated jointly from the outcome
+group. Its `cf_y`, `cf_d`, and `rho` are calibrated jointly from the outcome
 variance, Riesz-representer variance, and actual effect shift. The 2× strength
 and forced `rho=1` scenarios are reported as secondary stress tests.
 
@@ -397,13 +397,53 @@ to the threshold does not pass. Use explicit `direction="positive"` or
 never overridden. Significance before sensitivity analysis alone does not
 guarantee a pass.
 
-Benchmark boundary handling matches DoubleML: raw `cf_y` and `cf_d` are
-clipped to `[0, 1]`. If either long/short gain is not strictly positive,
+Benchmark strengths use the relative gains
+`gain_y = (sigma2_short - sigma2_long) / sigma2_long` and
+`gain_d = (nu2_long - nu2_short) / nu2_short`, as in DoubleML and the paper's
+relative-strength construction. These calibrate an additional omitted
+confounder for the full model. Gains are clipped to `[0, 1]` as `cf_y` and
+`cf_d`; values at 1 are retained for auditing but marked uncalibratable because
+the sensitivity API requires strengths in `[0, 1)`. Such primary scenarios
+produce `FAIL`. If either long/short gain is not strictly positive,
 primary and stress use `rho=sign(theta_short-theta_long)`; the adversarial
 scenario still forces `rho=1`. `protocol["benchmarks"]` retains raw gains,
 clipping/fallback flags, long/short elements, and warnings for auditability.
 In particular, a negative `cf_d_raw` becomes a numerical `cf_d=0` boundary
 benchmark rather than a missing scenario.
+
+### Sensitivity parameter migration
+
+Binary `IRM` and `MultiTreatmentIRM` use `cf_y` and `cf_d` in `[0, 1)`:
+`cf_y` is the share of residual outcome variation explained by an omitted
+confounder, and `cf_d` measures its contribution to the Riesz representer's
+variation. In the default unsigned mode, the confounding bound is
+`abs(rho) * sqrt(sigma2 * nu2) * sqrt(cf_y * cf_d / (1 - cf_d))`.
+
+```python
+model.sensitivity_analysis(cf_y=0.02, cf_d=0.02, rho=1.0)
+```
+
+**Numerical compatibility:** deprecated `r2_y` and `r2_d` keywords are accepted
+with a `DeprecationWarning` and copied directly to `cf_y` and `cf_d`. They do
+not retain the previous outcome odds conversion. Re-running an old call can
+therefore change the sensitivity bounds and robustness values. Passing both a
+new keyword and its alias raises `ValueError`. Result `params` and protocol
+scenario tables use the new names; benchmark tables retain the old names as
+copies of `cf_y` and `cf_d`.
+
+Benchmark tables also report the nonnegative relative gains `gain_y` and
+`gain_d` before upper clipping, along with signed raw gains and calibration
+validity flags. Check `calibration_valid` before using `cf_y` and `cf_d` as
+sensitivity inputs. The benchmark uses the relative-strength construction of
+[Chernozhukov et al., Appendix F, equations (22)-(23)](https://arxiv.org/html/2112.13398v5#A6.SS5)
+and [DoubleML](https://docs.doubleml.org/stable/guide/sensitivity.html#benchmarking).
+
+The stress multiplier scales `cf_y` and `cf_d / (1 - cf_d)` linearly, so the
+default bound scales by that multiplier until `cf_y` is capped below one.
+`RV` is the common strength `cf_y = cf_d` needed for the confounding bounds to
+reach `H0`. `RVa` uses the original sampling standard error to approximate the
+corresponding threshold with sampling uncertainty; it does not solve for the
+threshold of the recalculated bound-specific confidence interval.
 
 # Pick your scenario
 

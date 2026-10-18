@@ -1831,20 +1831,25 @@ class IRM(BaseEstimator):
 
     def sensitivity_analysis(
         self,
-        r2_y: float,
-        r2_d: float,
+        cf_y: Optional[float] = None,
+        cf_d: Optional[float] = None,
         rho: float = 1.0,
         H0: float = 0.0,
         alpha: float = 0.05,
+        *,
+        r2_y: Optional[float] = None,
+        r2_d: Optional[float] = None,
     ) -> "IRM":
         """Compute a sensitivity analysis following Chernozhukov et al. (2022).
 
         Parameters
         ----------
-        r2_y : float
-            Sensitivity parameter for outcome equation (R^2 form, R_Y^2; converted to odds form internally).
-        r2_d : float
-            Sensitivity parameter for treatment equation (R^2 form, R_D^2).
+        cf_y : float
+            Outcome strength, R^2_{Y-g_s ~ g-g_s}, in [0, 1).
+        cf_d : float
+            Treatment strength via the Riesz representer, 1 - R^2_{alpha ~ alpha_s}, in [0, 1).
+        r2_y, r2_d : float, optional
+            Deprecated aliases for ``cf_y`` and ``cf_d`` (used as-is).
         rho : float, default 1.0
             Correlation between unobserved components.
         H0 : float, default 0.0
@@ -1860,7 +1865,7 @@ class IRM(BaseEstimator):
         check_is_fitted(self, attributes=["coef_", "se_", "psi_"])
 
         # Execute sensitivity analysis using the centralized module logic
-        res = sa_fn(self, r2_y=r2_y, r2_d=r2_d, rho=rho, H0=H0, alpha=alpha)
+        res = sa_fn(self, cf_y=cf_y, cf_d=cf_d, r2_y=r2_y, r2_d=r2_d, rho=rho, H0=H0, alpha=alpha)
 
         self.sensitivity_result = res
         # Cache the summary string for display

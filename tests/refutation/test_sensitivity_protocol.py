@@ -30,8 +30,8 @@ def _install_benchmarks(monkeypatch, payload: dict[tuple[str, ...], dict]) -> No
             [
                 {
                     "benchmark_group": group,
-                    "r2_y": values["r2_y"],
-                    "r2_d": values["r2_d"],
+                    "cf_y": values["cf_y"],
+                    "cf_d": values["cf_d"],
                     "rho": values["rho"],
                     "theta_long": values.get("theta_long", 0.3),
                     "theta_short": values.get("theta_short", 0.31),
@@ -58,8 +58,8 @@ def test_protocol_passes_primary_and_reports_limited_stress_margin(monkeypatch):
         monkeypatch,
         {
             ("x1", "x2"): {
-                "r2_y": 0.1,
-                "r2_d": 0.1,
+                "cf_y": 0.1,
+                "cf_d": 0.1,
                 "rho": 0.2,
             }
         },
@@ -91,8 +91,8 @@ def test_protocol_fails_if_any_primary_benchmark_crosses_threshold(monkeypatch, 
     _install_benchmarks(
         monkeypatch,
         {
-            ("x1", "x2"): {"r2_y": 0.01, "r2_d": 0.01, "rho": 0.1},
-            ("x3", "x4"): {"r2_y": 0.1, "r2_d": 0.1, "rho": 1.0},
+            ("x1", "x2"): {"cf_y": 0.01, "cf_d": 0.01, "rho": 0.1},
+            ("x3", "x4"): {"cf_y": 0.1, "cf_d": 0.1, "rho": 1.0},
         },
     )
     model = _DummyIRM(theta=theta, se=0.1)
@@ -117,8 +117,8 @@ def test_protocol_auto_direction_matches_explicit_direction(monkeypatch, theta, 
         monkeypatch,
         {
             ("x1", "x2"): {
-                "r2_y": 0.1,
-                "r2_d": 0.1,
+                "cf_y": 0.1,
+                "cf_d": 0.1,
                 "rho": 0.2,
                 "theta_long": theta,
                 "theta_short": -theta,
@@ -147,7 +147,7 @@ def test_protocol_auto_direction_matches_explicit_direction(monkeypatch, theta, 
 def test_protocol_negative_auto_requires_ci_strictly_below_zero(monkeypatch, ci_upper):
     _install_benchmarks(
         monkeypatch,
-        {("x1",): {"r2_y": 0.0, "r2_d": 0.0, "rho": 0.2}},
+        {("x1",): {"cf_y": 0.0, "cf_d": 0.0, "rho": 0.2}},
     )
     # Zero confounding makes the upper endpoint exactly zero in the touching case.
     theta = -norm.ppf(0.975) * 0.1 + ci_upper
@@ -182,7 +182,7 @@ def test_protocol_auto_direction_is_relative_to_threshold(
 ):
     _install_benchmarks(
         monkeypatch,
-        {("x1",): {"r2_y": 0.01, "r2_d": 0.01, "rho": 0.2}},
+        {("x1",): {"cf_y": 0.01, "cf_d": 0.01, "rho": 0.2}},
     )
     report = run_sensitivity_protocol(
         _DummyIRM(theta=theta, se=0.1),
@@ -206,7 +206,7 @@ def test_protocol_auto_direction_is_relative_to_threshold(
 def test_protocol_does_not_override_explicit_direction(monkeypatch, theta, direction, rule):
     _install_benchmarks(
         monkeypatch,
-        {("x1",): {"r2_y": 0.01, "r2_d": 0.01, "rho": 0.2}},
+        {("x1",): {"cf_y": 0.01, "cf_d": 0.01, "rho": 0.2}},
     )
     report = run_sensitivity_protocol(
         _DummyIRM(theta=theta, se=0.1),
@@ -227,7 +227,7 @@ def test_protocol_does_not_override_explicit_direction(monkeypatch, theta, direc
 def test_protocol_auto_direction_uses_dict_coefficient(monkeypatch):
     _install_benchmarks(
         monkeypatch,
-        {("x1",): {"r2_y": 0.01, "r2_d": 0.01, "rho": 0.2}},
+        {("x1",): {"cf_y": 0.01, "cf_d": 0.01, "rho": 0.2}},
     )
     report = run_sensitivity_protocol(
         {"model": _DummyIRM(theta=1.0, se=0.1), "coefficient": -1.0},
@@ -252,10 +252,10 @@ def test_protocol_auto_direction_rejects_nonfinite_theta(theta):
         )
 
 
-def test_protocol_scales_two_times_scenario_on_odds_scale(monkeypatch):
+def test_protocol_scales_two_times_scenario_cf_y_linear_cf_d_on_odds_scale(monkeypatch):
     _install_benchmarks(
         monkeypatch,
-        {("x1", "x2"): {"r2_y": 0.2, "r2_d": 0.4, "rho": 0.5}},
+        {("x1", "x2"): {"cf_y": 0.2, "cf_d": 0.4, "rho": 0.5}},
     )
     model = _DummyIRM(theta=5.0, se=0.1)
 
@@ -268,8 +268,8 @@ def test_protocol_scales_two_times_scenario_on_odds_scale(monkeypatch):
     )
 
     stress = report["stress"].iloc[0]
-    assert stress["r2_y"] == pytest.approx(1.0 / 3.0)
-    assert stress["r2_d"] == pytest.approx(4.0 / 7.0)
+    assert stress["cf_y"] == pytest.approx(0.4)
+    assert stress["cf_d"] == pytest.approx(4.0 / 7.0)
     assert stress["multiplier"] == 2.0
 
 
@@ -278,8 +278,8 @@ def test_protocol_fails_closed_for_uncalibratable_primary(monkeypatch):
         monkeypatch,
         {
             ("x1",): {
-                "r2_y": np.nan,
-                "r2_d": np.nan,
+                "cf_y": np.nan,
+                "cf_d": np.nan,
                 "rho": np.nan,
                 "strengths_valid": False,
                 "calibration_valid": False,
@@ -306,13 +306,43 @@ def test_protocol_fails_closed_for_uncalibratable_primary(monkeypatch):
     assert any("not calibratable" in warning for warning in report["warnings"])
 
 
+@pytest.mark.parametrize(
+    ("sigma2_short", "nu2_long"),
+    [(3.0, 1.5), (1.5, 3.0)],
+)
+def test_protocol_rejects_upper_boundary_relative_benchmark(
+    monkeypatch, sigma2_short, nu2_long
+):
+    calibrated = sensitivity_module._calibrate_benchmark_gain_statistics(
+        theta_long=2.0,
+        theta_short=2.3,
+        sigma2_long=1.0,
+        sigma2_short=sigma2_short,
+        nu2_long=nu2_long,
+        nu2_short=1.0,
+    )
+    _install_benchmarks(monkeypatch, {("x1",): calibrated})
+    report = run_sensitivity_protocol(
+        _DummyIRM(theta=2.0, se=0.01),
+        object(),  # type: ignore[arg-type]
+        benchmark_groups={"upper_boundary": ["x1"]},
+        decision_threshold=0.0,
+        direction="positive",
+    )
+    assert report["status"] == "FAIL"
+    for scenario in ("primary", "stress", "adversarial"):
+        assert not bool(report[scenario].loc[0, "scenario_valid"])
+        assert not bool(report[scenario].loc[0, "passed"])
+    assert "must be < 1" in report["primary"].loc[0, "scenario_issue"]
+
+
 def test_protocol_keeps_adversarial_when_only_rho_is_invalid(monkeypatch):
     _install_benchmarks(
         monkeypatch,
         {
             ("x1",): {
-                "r2_y": 0.02,
-                "r2_d": 0.03,
+                "cf_y": 0.02,
+                "cf_d": 0.03,
                 "rho": np.nan,
                 "strengths_valid": True,
                 "calibration_valid": False,
@@ -341,8 +371,8 @@ def test_protocol_evaluates_doubleml_boundary_benchmark(monkeypatch):
         monkeypatch,
         {
             ("x1",): {
-                "r2_y": 0.05,
-                "r2_d": 0.0,
+                "cf_y": 0.05,
+                "cf_d": 0.0,
                 "rho": 1.0,
                 "rho_raw": np.nan,
                 "cf_d_clipped": True,
@@ -367,7 +397,7 @@ def test_protocol_evaluates_doubleml_boundary_benchmark(monkeypatch):
     assert report["status"] == "PASS"
     assert bool(report["primary"].loc[0, "scenario_valid"]) is True
     assert bool(report["primary"].loc[0, "passed"]) is True
-    assert report["stress"].loc[0, "r2_d"] == 0.0
+    assert report["stress"].loc[0, "cf_d"] == 0.0
     assert report["adversarial"].loc[0, "rho"] == 1.0
     assert report["boundary_benchmarks"] == ["boundary"]
     assert "boundary calibration" in report["summary"]
@@ -379,8 +409,8 @@ def test_protocol_warns_when_calibrated_rho_is_clipped(monkeypatch):
         monkeypatch,
         {
             ("x1",): {
-                "r2_y": 0.01,
-                "r2_d": 0.01,
+                "cf_y": 0.01,
+                "cf_d": 0.01,
                 "rho": -1.0,
                 "rho_raw": -1.4,
                 "rho_clipped": True,
@@ -404,7 +434,7 @@ def test_protocol_warns_when_calibrated_rho_is_clipped(monkeypatch):
 def test_protocol_supports_negative_claims(monkeypatch):
     _install_benchmarks(
         monkeypatch,
-        {("x1", "x2"): {"r2_y": 0.01, "r2_d": 0.01, "rho": 0.2}},
+        {("x1", "x2"): {"cf_y": 0.01, "cf_d": 0.01, "rho": 0.2}},
     )
     model = _DummyIRM(theta=-1.0, se=0.1)
 
@@ -439,7 +469,7 @@ def test_protocol_empty_benchmarks_and_failed_preconditions_return_fail(monkeypa
 
     _install_benchmarks(
         monkeypatch,
-        {("x1", "x2"): {"r2_y": 0.01, "r2_d": 0.01, "rho": 0.1}},
+        {("x1", "x2"): {"cf_y": 0.01, "cf_d": 0.01, "rho": 0.1}},
     )
     failed = run_sensitivity_protocol(
         model,
