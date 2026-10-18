@@ -1,6 +1,25 @@
 import numpy as np
+import pandas as pd
+import pytest
 
 from causalis.scenarios.multi_unconfoundedness.dgp import generate_multitreatment_gamma_26
+
+
+@pytest.mark.parametrize("include_oracle", [False, True])
+def test_gamma_26_preserves_stable_user_ids_in_dataframe_and_contract(include_oracle):
+    kwargs = dict(n=256, seed=7, include_oracle=include_oracle)
+    df = generate_multitreatment_gamma_26(**kwargs, return_causal_data=False)
+    repeated = generate_multitreatment_gamma_26(**kwargs, return_causal_data=False)
+    data = generate_multitreatment_gamma_26(**kwargs, return_causal_data=True)
+
+    assert df["user_id"].is_unique
+    assert df["user_id"].notna().all()
+    assert df["user_id"].map(lambda value: isinstance(value, str) and bool(value)).all()
+    pd.testing.assert_frame_equal(df, repeated)
+    assert data.user_id == "user_id"
+    assert "user_id" not in data.confounders
+    contract_df = data.get_df(include_user_id=True)
+    pd.testing.assert_frame_equal(contract_df, df[contract_df.columns], check_dtype=False)
 
 
 def test_gamma_26_oracle_g_and_cate_columns_are_consistent():

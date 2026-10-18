@@ -1,0 +1,227 @@
+# {py:mod}`causalis.data_contracts.rct_causal_data`
+
+```{py:module} causalis.data_contracts.rct_causal_data
+```
+
+```{autodoc2-docstring} causalis.data_contracts.rct_causal_data
+:allowtitles:
+```
+
+## Module Contents
+
+### Classes
+
+````{list-table}
+:class: autosummary longtable
+:align: left
+
+* - {py:obj}`RctCausalData <causalis.data_contracts.rct_causal_data.RctCausalData>`
+  - ```{autodoc2-docstring} causalis.data_contracts.rct_causal_data.RctCausalData
+    :summary:
+    ```
+````
+
+### API
+
+`````{py:class} RctCausalData(/, **data: typing.Any)
+:canonical: causalis.data_contracts.rct_causal_data.RctCausalData
+
+Bases: {py:obj}`pydantic.BaseModel`
+
+```{autodoc2-docstring} causalis.data_contracts.rct_causal_data.RctCausalData
+```
+
+```{rubric} Initialization
+```
+
+```{autodoc2-docstring} causalis.data_contracts.rct_causal_data.RctCausalData.__init__
+```
+
+````{py:attribute} model_config
+:canonical: causalis.data_contracts.rct_causal_data.RctCausalData.model_config
+:value: >
+   'ConfigDict(...)'
+
+```{autodoc2-docstring} causalis.data_contracts.rct_causal_data.RctCausalData.model_config
+```
+
+````
+
+````{py:attribute} df
+:canonical: causalis.data_contracts.rct_causal_data.RctCausalData.df
+:type: pandas.DataFrame
+:value: >
+   None
+
+```{autodoc2-docstring} causalis.data_contracts.rct_causal_data.RctCausalData.df
+```
+
+````
+
+````{py:attribute} treatment_names
+:canonical: causalis.data_contracts.rct_causal_data.RctCausalData.treatment_names
+:type: list[str]
+:value: >
+   'Field(...)'
+
+```{autodoc2-docstring} causalis.data_contracts.rct_causal_data.RctCausalData.treatment_names
+```
+
+````
+
+````{py:attribute} control_treatment
+:canonical: causalis.data_contracts.rct_causal_data.RctCausalData.control_treatment
+:type: str | None
+:value: >
+   None
+
+```{autodoc2-docstring} causalis.data_contracts.rct_causal_data.RctCausalData.control_treatment
+```
+
+````
+
+````{py:attribute} outcome_names
+:canonical: causalis.data_contracts.rct_causal_data.RctCausalData.outcome_names
+:type: list[str]
+:value: >
+   'Field(...)'
+
+```{autodoc2-docstring} causalis.data_contracts.rct_causal_data.RctCausalData.outcome_names
+```
+
+````
+
+````{py:attribute} confounders_names
+:canonical: causalis.data_contracts.rct_causal_data.RctCausalData.confounders_names
+:type: list[str]
+:value: >
+   'Field(...)'
+
+```{autodoc2-docstring} causalis.data_contracts.rct_causal_data.RctCausalData.confounders_names
+```
+
+````
+
+````{py:attribute} user_id_name
+:canonical: causalis.data_contracts.rct_causal_data.RctCausalData.user_id_name
+:type: str | None
+:value: >
+   'Field(...)'
+
+```{autodoc2-docstring} causalis.data_contracts.rct_causal_data.RctCausalData.user_id_name
+```
+
+````
+
+````{py:method} from_df(df: pandas.DataFrame, treatment: str | list[str] | None = None, outcomes: str | list[str] | None = None, confounders: str | list[str] | None = None, user_id: str | None = None, **kwargs: typing.Any) -> causalis.data_contracts.rct_causal_data.RctCausalData
+:canonical: causalis.data_contracts.rct_causal_data.RctCausalData.from_df
+:classmethod:
+
+```{autodoc2-docstring} causalis.data_contracts.rct_causal_data.RctCausalData.from_df
+```
+
+````
+
+````{py:property} outcomes
+:canonical: causalis.data_contracts.rct_causal_data.RctCausalData.outcomes
+:type: pandas.DataFrame
+
+```{autodoc2-docstring} causalis.data_contracts.rct_causal_data.RctCausalData.outcomes
+```
+
+````
+
+````{py:property} Y
+:canonical: causalis.data_contracts.rct_causal_data.RctCausalData.Y
+:type: pandas.DataFrame
+
+```{autodoc2-docstring} causalis.data_contracts.rct_causal_data.RctCausalData.Y
+```
+
+````
+
+````{py:property} treatment
+:canonical: causalis.data_contracts.rct_causal_data.RctCausalData.treatment
+:type: pandas.Series | pandas.DataFrame
+
+```{autodoc2-docstring} causalis.data_contracts.rct_causal_data.RctCausalData.treatment
+```
+
+````
+
+````{py:property} treatment_name
+:canonical: causalis.data_contracts.rct_causal_data.RctCausalData.treatment_name
+:type: str
+
+```{autodoc2-docstring} causalis.data_contracts.rct_causal_data.RctCausalData.treatment_name
+```
+
+````
+
+````{py:property} treatments
+:canonical: causalis.data_contracts.rct_causal_data.RctCausalData.treatments
+:type: pandas.DataFrame
+
+```{autodoc2-docstring} causalis.data_contracts.rct_causal_data.RctCausalData.treatments
+```
+
+````
+
+````{py:property} D
+:canonical: causalis.data_contracts.rct_causal_data.RctCausalData.D
+:type: pandas.DataFrame
+
+```{autodoc2-docstring} causalis.data_contracts.rct_causal_data.RctCausalData.D
+```
+
+````
+
+````{py:property} confounders
+:canonical: causalis.data_contracts.rct_causal_data.RctCausalData.confounders
+:type: list[str]
+
+```{autodoc2-docstring} causalis.data_contracts.rct_causal_data.RctCausalData.confounders
+```
+
+````
+
+````{py:property} X
+:canonical: causalis.data_contracts.rct_causal_data.RctCausalData.X
+:type: pandas.DataFrame
+
+```{autodoc2-docstring} causalis.data_contracts.rct_causal_data.RctCausalData.X
+```
+
+````
+
+````{py:property} user_id
+:canonical: causalis.data_contracts.rct_causal_data.RctCausalData.user_id
+:type: pandas.Series
+
+```{autodoc2-docstring} causalis.data_contracts.rct_causal_data.RctCausalData.user_id
+```
+
+````
+
+````{py:method} get_df(columns: list[str] | None = None, include_treatment: bool = True, include_outcomes: bool = True, include_confounders: bool = True, include_user_id: bool = False) -> pandas.DataFrame
+:canonical: causalis.data_contracts.rct_causal_data.RctCausalData.get_df
+
+```{autodoc2-docstring} causalis.data_contracts.rct_causal_data.RctCausalData.get_df
+```
+
+````
+
+````{py:method} for_outcome(outcome: str) -> causalis.data_contracts.causaldata.CausalData | causalis.data_contracts.multicausaldata.MultiCausalData
+:canonical: causalis.data_contracts.rct_causal_data.RctCausalData.for_outcome
+
+```{autodoc2-docstring} causalis.data_contracts.rct_causal_data.RctCausalData.for_outcome
+```
+
+````
+
+````{py:method} __repr__() -> str
+:canonical: causalis.data_contracts.rct_causal_data.RctCausalData.__repr__
+
+````
+
+`````

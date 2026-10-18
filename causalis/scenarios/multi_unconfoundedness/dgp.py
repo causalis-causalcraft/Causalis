@@ -5,6 +5,7 @@ import pandas as pd
 from typing import Callable, List, Optional, Union
 
 from causalis.data_contracts.multicausaldata import MultiCausalData
+from causalis.dgp.base import _deterministic_ids
 from causalis.dgp.multicausaldata.functional import generate_multitreatment
 
 # Shared defaults across the 26 multi-treatment scenarios.
@@ -286,6 +287,7 @@ def generate_multitreatment_gamma_26(
     - 3 treatment classes: ``d_0`` (control), ``d_1``, ``d_2``
     - 8 confounders with realistic marginals sampled through a Gaussian copula
     - Gamma outcome with log-link confounding and heterogeneous arm effects
+    - Stable, unique ``user_id`` values, registered in ``MultiCausalData`` when returned
 
     Examples
     --------
@@ -397,7 +399,7 @@ def generate_multitreatment_gamma_26(
 
     tau = [None, tau_d1, tau_d2]
 
-    return _run_multitreatment_26(
+    df = _run_multitreatment_26(
         n=n,
         outcome_type="gamma",
         confounder_specs=confounder_specs,
@@ -409,7 +411,20 @@ def generate_multitreatment_gamma_26(
         gamma_shape=2.0,
         seed=seed,
         include_oracle=include_oracle,
-        return_causal_data=return_causal_data,
+        return_causal_data=False,
+    )
+    df.insert(0, "user_id", _deterministic_ids(np.random.default_rng(seed), len(df)))
+
+    if not return_causal_data:
+        return df
+
+    return MultiCausalData(
+        df=df,
+        outcome="y",
+        treatment_names=_D_NAMES,
+        confounders=[spec["name"] for spec in confounder_specs],
+        control_treatment=_D_NAMES[0],
+        user_id="user_id",
     )
 
 

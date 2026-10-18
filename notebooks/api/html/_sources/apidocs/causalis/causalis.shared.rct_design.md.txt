@@ -13,6 +13,7 @@
 :titlesonly:
 :maxdepth: 1
 
+causalis.shared.rct_design.enrichment
 causalis.shared.rct_design.design
 causalis.shared.rct_design.split
 ```
@@ -36,7 +37,7 @@ causalis.shared.rct_design.split
 ````{py:data} __all__
 :canonical: causalis.shared.rct_design.__all__
 :value: >
-   ['calculate_mde', 'calculate_sample_size', 'assign_variants_df', 'SRMResult', 'check_srm']
+   ['calculate_mde', 'calculate_sample_size', 'assign_variants_df', 'SRMResult', 'check_srm', 'Prognost...
 
 ```{autodoc2-docstring} causalis.shared.rct_design.__all__
 ```

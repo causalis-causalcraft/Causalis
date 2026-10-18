@@ -44,6 +44,76 @@ print("SRM detected?", srm.is_srm, "p=", srm.p_value, "chi2=", srm.chi2)
 result = DiffInMeans().fit(data).estimate(method="ttest", alpha=0.05)
 result.summary()
 ```
+
+### Select a prognostic segment with a held-out evaluation sample
+
+When historical outcomes are unavailable, train an outcome model on one part
+of the experiment and estimate effects on different users. Baseline features
+must still have been recorded **before experimental assignment**. The example
+below learns utilization probability with communication from treatment training
+users; it predicts an outcome, not incremental uplift.
+
+```python
+from sklearn.linear_model import LogisticRegression
+from sklearn.pipeline import make_pipeline
+from sklearn.preprocessing import StandardScaler
+from causalis.data_contracts import CausalData
+from causalis.shared.rct_design import PrognosticEnrichment
+from causalis.scenarios.classic_rct import DiffInMeans
+
+data = CausalData.from_df(
+    df, treatment="treated", outcome="utilized",
+    confounders=["prior_activity", "prior_spend"], user_id="user_id",
+)
+rule = PrognosticEnrichment(
+    estimator=make_pipeline(StandardScaler(), LogisticRegression(max_iter=1000)),
+    training_source="treatment",  # alternatively: "control"
+    train_fraction=0.3,
+    top_fraction=0.2,
+    split_seed=42,
+).fit(data, features=["prior_activity", "prior_spend"])
+
+# Supply the original planned experiment allocation; do not infer it from counts.
+report = rule.diagnostics(target_allocation={0: 0.5, 1: 0.5})
+print(report.counts)
+print(report.srm_evaluation, report.srm_selected)
+print(report.balance)
+print(report.warnings)
+
+selected = rule.select()  # CausalData containing only selected evaluation users
+effect = DiffInMeans().fit(selected).estimate(method="conversion_ztest")
+effect.summary()
+```
+
+The hash split uses user IDs and a separate analysis seed independently of
+treatment/outcome. Actual train/evaluation proportions may vary. The estimator
+is cloned and fitted only on the chosen training arm. A **single frozen cutoff**
+is the 80th percentile of predicted scores across both training arms; evaluation
+outcomes are never used to train the model or choose this cutoff. Evaluation users
+in both arms are selected with `score >= cutoff`. Ties are included, and the
+selected evaluation share need not be exactly 20%. For a fixed cutoff, use
+`top_fraction=None, threshold=0.1`. `get_partition()` returns a copy with
+`user_id`, `sample`, `score`, and `selected` columns for auditing; the ID column
+is named `user_id` even if the input uses another name.
+
+`select()` returns a contract for existing RCT estimators, including CUPED, and
+omits confounders that are constant in the selected segment. Diagnostic balance
+still includes those columns and the score. Empty/single-arm segments and
+constant outcomes cannot be converted to `CausalData`; `get_selected_df()` and
+`diagnostics()` remain usable for inspecting counts. A conversion z-test requires
+sufficient events and non-events; the report flags sparse segments. Do not change
+the cutoff to repair SRM, balance, or significance after examining evaluation.
+
+For binary-treatment `RctCausalData`, pass `outcome="utilized"` to `fit()` when
+multiple outcomes are declared. Multiple treatment columns are not supported.
+The workflow assumes independently randomized users; clustered or blocked
+experiments need a split and inference appropriate to their assignment design.
+The estimated effect targets the selected population, not the full audience,
+and enrichment does not guarantee a power gain. If evaluation outcomes have
+already guided model or subgroup selection, treat the analysis as exploratory
+and confirm it in a new experiment. The API cannot verify historical feature
+timestamps or enforce that users have not already examined evaluation results.
+
 # Quickstart: Observational study (Unconfoundedness / DML IRM)
 ```python
 from causalis.scenarios.unconfoundedness.dgp import generate_obs_hte_26

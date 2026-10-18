@@ -1,0 +1,12 @@
+---
+orphan: true
+---
+
+# {py:mod}`causalis.scenarios._orthogonal`
+
+```{py:module} causalis.scenarios._orthogonal
+```
+
+```{autodoc2-docstring} causalis.scenarios._orthogonal
+:allowtitles:
+```

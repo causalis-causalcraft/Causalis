@@ -1,0 +1,12 @@
+---
+orphan: true
+---
+
+# {py:mod}`causalis.scenarios._group_alignment`
+
+```{py:module} causalis.scenarios._group_alignment
+```
+
+```{autodoc2-docstring} causalis.scenarios._group_alignment
+:allowtitles:
+```

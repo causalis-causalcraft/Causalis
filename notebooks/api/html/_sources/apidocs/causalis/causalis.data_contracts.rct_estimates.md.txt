@@ -1,0 +1,48 @@
+# {py:mod}`causalis.data_contracts.rct_estimates`
+
+```{py:module} causalis.data_contracts.rct_estimates
+```
+
+```{autodoc2-docstring} causalis.data_contracts.rct_estimates
+:allowtitles:
+```
+
+## Module Contents
+
+### Classes
+
+````{list-table}
+:class: autosummary longtable
+:align: left
+
+* - {py:obj}`RctEstimates <causalis.data_contracts.rct_estimates.RctEstimates>`
+  - ```{autodoc2-docstring} causalis.data_contracts.rct_estimates.RctEstimates
+    :summary:
+    ```
+````
+
+### API
+
+`````{py:class} RctEstimates()
+:canonical: causalis.data_contracts.rct_estimates.RctEstimates
+
+Bases: {py:obj}`dict`\[{py:obj}`str`\, {py:obj}`dict`\[{py:obj}`str`\, {py:obj}`causalis.data_contracts.causal_estimate.CausalEstimate`\]\]
+
+```{autodoc2-docstring} causalis.data_contracts.rct_estimates.RctEstimates
+```
+
+```{rubric} Initialization
+```
+
+```{autodoc2-docstring} causalis.data_contracts.rct_estimates.RctEstimates.__init__
+```
+
+````{py:method} summary(outcome: str | None = None, treatment: str | None = None) -> pandas.DataFrame
+:canonical: causalis.data_contracts.rct_estimates.RctEstimates.summary
+
+```{autodoc2-docstring} causalis.data_contracts.rct_estimates.RctEstimates.summary
+```
+
+````
+
+`````

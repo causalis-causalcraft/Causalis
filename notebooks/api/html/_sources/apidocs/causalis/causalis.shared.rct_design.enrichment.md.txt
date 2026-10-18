@@ -1,0 +1,178 @@
+# {py:mod}`causalis.shared.rct_design.enrichment`
+
+```{py:module} causalis.shared.rct_design.enrichment
+```
+
+```{autodoc2-docstring} causalis.shared.rct_design.enrichment
+:allowtitles:
+```
+
+## Module Contents
+
+### Classes
+
+````{list-table}
+:class: autosummary longtable
+:align: left
+
+* - {py:obj}`EnrichmentDiagnostics <causalis.shared.rct_design.enrichment.EnrichmentDiagnostics>`
+  - ```{autodoc2-docstring} causalis.shared.rct_design.enrichment.EnrichmentDiagnostics
+    :summary:
+    ```
+* - {py:obj}`PrognosticEnrichment <causalis.shared.rct_design.enrichment.PrognosticEnrichment>`
+  - ```{autodoc2-docstring} causalis.shared.rct_design.enrichment.PrognosticEnrichment
+    :summary:
+    ```
+````
+
+### API
+
+`````{py:class} EnrichmentDiagnostics
+:canonical: causalis.shared.rct_design.enrichment.EnrichmentDiagnostics
+
+```{autodoc2-docstring} causalis.shared.rct_design.enrichment.EnrichmentDiagnostics
+```
+
+````{py:attribute} counts
+:canonical: causalis.shared.rct_design.enrichment.EnrichmentDiagnostics.counts
+:type: pandas.DataFrame
+:value: >
+   None
+
+```{autodoc2-docstring} causalis.shared.rct_design.enrichment.EnrichmentDiagnostics.counts
+```
+
+````
+
+````{py:attribute} srm_full
+:canonical: causalis.shared.rct_design.enrichment.EnrichmentDiagnostics.srm_full
+:type: causalis.shared.srm.SRMResult
+:value: >
+   None
+
+```{autodoc2-docstring} causalis.shared.rct_design.enrichment.EnrichmentDiagnostics.srm_full
+```
+
+````
+
+````{py:attribute} srm_evaluation
+:canonical: causalis.shared.rct_design.enrichment.EnrichmentDiagnostics.srm_evaluation
+:type: causalis.shared.srm.SRMResult
+:value: >
+   None
+
+```{autodoc2-docstring} causalis.shared.rct_design.enrichment.EnrichmentDiagnostics.srm_evaluation
+```
+
+````
+
+````{py:attribute} srm_selected
+:canonical: causalis.shared.rct_design.enrichment.EnrichmentDiagnostics.srm_selected
+:type: causalis.shared.srm.SRMResult | None
+:value: >
+   None
+
+```{autodoc2-docstring} causalis.shared.rct_design.enrichment.EnrichmentDiagnostics.srm_selected
+```
+
+````
+
+````{py:attribute} balance
+:canonical: causalis.shared.rct_design.enrichment.EnrichmentDiagnostics.balance
+:type: pandas.DataFrame
+:value: >
+   None
+
+```{autodoc2-docstring} causalis.shared.rct_design.enrichment.EnrichmentDiagnostics.balance
+```
+
+````
+
+````{py:attribute} threshold
+:canonical: causalis.shared.rct_design.enrichment.EnrichmentDiagnostics.threshold
+:type: float
+:value: >
+   None
+
+```{autodoc2-docstring} causalis.shared.rct_design.enrichment.EnrichmentDiagnostics.threshold
+```
+
+````
+
+````{py:attribute} selected_fraction
+:canonical: causalis.shared.rct_design.enrichment.EnrichmentDiagnostics.selected_fraction
+:type: float
+:value: >
+   None
+
+```{autodoc2-docstring} causalis.shared.rct_design.enrichment.EnrichmentDiagnostics.selected_fraction
+```
+
+````
+
+````{py:attribute} warnings
+:canonical: causalis.shared.rct_design.enrichment.EnrichmentDiagnostics.warnings
+:type: tuple[str, ...]
+:value: >
+   None
+
+```{autodoc2-docstring} causalis.shared.rct_design.enrichment.EnrichmentDiagnostics.warnings
+```
+
+````
+
+`````
+
+`````{py:class} PrognosticEnrichment(estimator: typing.Any, *, training_source: str = 'treatment', train_fraction: float = 0.3, top_fraction: float | None = 0.2, threshold: float | None = None, split_seed: int = 42)
+:canonical: causalis.shared.rct_design.enrichment.PrognosticEnrichment
+
+```{autodoc2-docstring} causalis.shared.rct_design.enrichment.PrognosticEnrichment
+```
+
+```{rubric} Initialization
+```
+
+```{autodoc2-docstring} causalis.shared.rct_design.enrichment.PrognosticEnrichment.__init__
+```
+
+````{py:method} fit(data: causalis.data_contracts.CausalData | causalis.data_contracts.RctCausalData, *, features: typing.Sequence[str], outcome: str | None = None) -> causalis.shared.rct_design.enrichment.PrognosticEnrichment
+:canonical: causalis.shared.rct_design.enrichment.PrognosticEnrichment.fit
+
+```{autodoc2-docstring} causalis.shared.rct_design.enrichment.PrognosticEnrichment.fit
+```
+
+````
+
+````{py:method} get_partition() -> pandas.DataFrame
+:canonical: causalis.shared.rct_design.enrichment.PrognosticEnrichment.get_partition
+
+```{autodoc2-docstring} causalis.shared.rct_design.enrichment.PrognosticEnrichment.get_partition
+```
+
+````
+
+````{py:method} get_selected_df() -> pandas.DataFrame
+:canonical: causalis.shared.rct_design.enrichment.PrognosticEnrichment.get_selected_df
+
+```{autodoc2-docstring} causalis.shared.rct_design.enrichment.PrognosticEnrichment.get_selected_df
+```
+
+````
+
+````{py:method} select() -> causalis.data_contracts.CausalData
+:canonical: causalis.shared.rct_design.enrichment.PrognosticEnrichment.select
+
+```{autodoc2-docstring} causalis.shared.rct_design.enrichment.PrognosticEnrichment.select
+```
+
+````
+
+````{py:method} diagnostics(*, target_allocation: dict[int, float], alpha: float = 0.001) -> causalis.shared.rct_design.enrichment.EnrichmentDiagnostics
+:canonical: causalis.shared.rct_design.enrichment.PrognosticEnrichment.diagnostics
+
+```{autodoc2-docstring} causalis.shared.rct_design.enrichment.PrognosticEnrichment.diagnostics
+```
+
+````
+
+`````

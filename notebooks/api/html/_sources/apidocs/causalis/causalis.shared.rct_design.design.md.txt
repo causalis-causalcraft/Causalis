@@ -1,0 +1,42 @@
+# {py:mod}`causalis.shared.rct_design.design`
+
+```{py:module} causalis.shared.rct_design.design
+```
+
+```{autodoc2-docstring} causalis.shared.rct_design.design
+:allowtitles:
+```
+
+## Module Contents
+
+### Functions
+
+````{list-table}
+:class: autosummary longtable
+:align: left
+
+* - {py:obj}`calculate_sample_size <causalis.shared.rct_design.design.calculate_sample_size>`
+  - ```{autodoc2-docstring} causalis.shared.rct_design.design.calculate_sample_size
+    :summary:
+    ```
+* - {py:obj}`calculate_mde <causalis.shared.rct_design.design.calculate_mde>`
+  - ```{autodoc2-docstring} causalis.shared.rct_design.design.calculate_mde
+    :summary:
+    ```
+````
+
+### API
+
+````{py:function} calculate_sample_size(data: causalis.data_contracts.rct_causal_data.RctCausalData, *, outcome: str, covariates: collections.abc.Sequence[str] | None = None, scenario: typing.Literal[default, user] = 'default', mde_type: typing.Literal[absolute, relative] | None = None, mde: collections.abc.Sequence[float] | None = None, allocation: collections.abc.Mapping[str, float] | None = None, alpha: float = 0.05, power: float = 0.8, include_details: bool = False) -> pandas.DataFrame
+:canonical: causalis.shared.rct_design.design.calculate_sample_size
+
+```{autodoc2-docstring} causalis.shared.rct_design.design.calculate_sample_size
+```
+````
+
+````{py:function} calculate_mde(data: causalis.data_contracts.rct_causal_data.RctCausalData, *, outcome: str, sample_size: int, covariates: collections.abc.Sequence[str] | None = None, allocation: collections.abc.Mapping[str, float] | None = None, alpha: float = 0.05, power: float = 0.8, include_details: bool = False) -> pandas.DataFrame
+:canonical: causalis.shared.rct_design.design.calculate_mde
+
+```{autodoc2-docstring} causalis.shared.rct_design.design.calculate_mde
+```
+````

@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>causalis.scenarios.uplift.policy &#8212; Causalis API Reference  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="../../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css?v=27fed22d" />
+    <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="causalis.scenarios.uplift.model" href="causalis.scenarios.uplift.model.html" />
+    <link rel="prev" title="causalis.scenarios.uplift" href="causalis.scenarios.uplift.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="module-causalis.scenarios.uplift.policy">
+<span id="causalis-scenarios-uplift-policy"></span><h1><a class="reference internal" href="#module-causalis.scenarios.uplift.policy" title="causalis.scenarios.uplift.policy"><code class="xref py py-mod docutils literal notranslate"><span class="pre">causalis.scenarios.uplift.policy</span></code></a><a class="headerlink" href="#module-causalis.scenarios.uplift.policy" title="Link to this heading">¶</a></h1>
+<p>Interpretable treatment decisions learned from cross-fitted IRM signals.</p>
+<section id="module-contents">
+<h2>Module Contents<a class="headerlink" href="#module-contents" title="Link to this heading">¶</a></h2>
+<section id="classes">
+<h3>Classes<a class="headerlink" href="#classes" title="Link to this heading">¶</a></h3>
+<table class="autosummary longtable docutils align-left">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#causalis.scenarios.uplift.policy.UpliftPolicyEvaluation" title="causalis.scenarios.uplift.policy.UpliftPolicyEvaluation"><code class="xref py py-obj docutils literal notranslate"><span class="pre">UpliftPolicyEvaluation</span></code></a></p></td>
+<td><p>Independent evaluation of a frozen policy, in outcome units.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#causalis.scenarios.uplift.policy.UpliftPolicyTree" title="causalis.scenarios.uplift.policy.UpliftPolicyTree"><code class="xref py py-obj docutils literal notranslate"><span class="pre">UpliftPolicyTree</span></code></a></p></td>
+<td><p>Learn a shallow, greedy treatment policy from a fitted IRM.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="api">
+<h3>API<a class="headerlink" href="#api" title="Link to this heading">¶</a></h3>
+<dl class="py class">
+<dt class="sig sig-object py" id="causalis.scenarios.uplift.policy.UpliftPolicyEvaluation">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">causalis.scenarios.uplift.policy.</span></span><span class="sig-name descname"><span class="pre">UpliftPolicyEvaluation</span></span><a class="headerlink" href="#causalis.scenarios.uplift.policy.UpliftPolicyEvaluation" title="Link to this definition">¶</a></dt>
+<dd><p>Independent evaluation of a frozen policy, in outcome units.</p>
+<p>Let :math:<code class="docutils literal notranslate"><span class="pre">\widehat\pi(Z)\in\{0,1\}</span></code> be a policy learned on training
+clients, where :math:<code class="docutils literal notranslate"><span class="pre">Z</span></code> contains the policy features. On independent
+evaluation clients, <code class="docutils literal notranslate"><span class="pre">summary()</span></code> estimates policy gains and
+<code class="docutils literal notranslate"><span class="pre">rules_summary()</span></code> estimates effects within each fixed leaf.</p>
+<p>The causal policy value is</p>
+<p>.. math::</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>V(\pi) = \mathbb{E}\!\left[
+    \pi(Z)Y(1) + (1-\pi(Z))Y(0)\right].
+</pre></div>
+</div>
+<p>Reports contain differences in this value, not the absolute expected outcome.
+Higher outcomes are better; no treatment cost is subtracted.</p>
+<p class="rubric" id="id2">Attributes</p>
+<p>diagnostics : dict
+Training and evaluation overlap settings, clipping counts and fractions,
+sample sizes, and inference conventions. Clipping can introduce bias.
+alpha : float
+Significance level; intervals have nominal coverage :math:<code class="docutils literal notranslate"><span class="pre">1-\alpha</span></code>.</p>
+<p class="rubric" id="id3">Notes</p>
+<p>Approximate inference assumes unconfoundedness, adequate overlap, suitable
+nuisance estimation, and independent observations. Rule intervals are
+pointwise HC3 intervals, not individual-effect or simultaneous intervals.
+Evaluation conditions on the learned policy; it does not quantify variation
+from retraining or justify tuning the policy using evaluation results.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="causalis.scenarios.uplift.policy.UpliftPolicyEvaluation.diagnostics">
+<span class="sig-name descname"><span class="pre">diagnostics</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#causalis.scenarios.uplift.policy.UpliftPolicyEvaluation.diagnostics" title="Link to this definition">¶</a></dt>
+<dd><p>None</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="causalis.scenarios.uplift.policy.UpliftPolicyEvaluation.alpha">
+<span class="sig-name descname"><span class="pre">alpha</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></span><a class="headerlink" href="#causalis.scenarios.uplift.policy.UpliftPolicyEvaluation.alpha" title="Link to this definition">¶</a></dt>
+<dd><p>None</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="causalis.scenarios.uplift.policy.UpliftPolicyEvaluation.summary">
+<span class="sig-name descname"><span class="pre">summary</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">pandas.DataFrame</span></span></span><a class="headerlink" href="#causalis.scenarios.uplift.policy.UpliftPolicyEvaluation.summary" title="Link to this definition">¶</a></dt>
+<dd><p>Return policy gains, standard errors, intervals, and targeting share.</p>
+<p>On the evaluation sample of size :math:<code class="docutils literal notranslate"><span class="pre">n</span></code>, let
+:math:<code class="docutils literal notranslate"><span class="pre">a_i=\widehat\pi(Z_i)</span></code> and let :math:<code class="docutils literal notranslate"><span class="pre">\Gamma_i</span></code> be the
+cross-fitted doubly robust signal defined in :class:<code class="docutils literal notranslate"><span class="pre">UpliftPolicyTree</span></code>.
+Each comparison uses a paired per-client signal:</p>
+<p>.. math::</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>S_i^{\mathrm{policy\_vs\_none}} &amp;= a_i\Gamma_i, \\
+S_i^{\mathrm{policy\_vs\_all}} &amp;= (a_i-1)\Gamma_i, \\
+S_i^{\mathrm{all\_vs\_none}} &amp;= \Gamma_i.
+</pre></div>
+</div>
+<p>For each signal :math:<code class="docutils literal notranslate"><span class="pre">S_i</span></code>, the reported estimate and standard error are</p>
+<p>.. math::</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>\widehat\Delta = \overline S = \frac{1}{n}\sum_{i=1}^n S_i,
+\qquad
+\widehat{\mathrm{SE}}(\widehat\Delta)
+= \sqrt{\frac{\sum_{i=1}^n(S_i-\overline S)^2}{n(n-1)}}.
+</pre></div>
+</div>
+<p>The approximate normal interval is</p>
+<p>.. math::</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>\widehat\Delta \;\pm\;
+\Phi^{-1}(1-\alpha/2)\widehat{\mathrm{SE}}(\widehat\Delta).
+</pre></div>
+</div>
+<p class="rubric" id="returns">Returns</p>
+<p>pandas.DataFrame
+A copy with one row per <code class="docutils literal notranslate"><span class="pre">comparison</span></code>. <code class="docutils literal notranslate"><span class="pre">value</span></code> is the average
+gain per evaluation client, including clients the policy does not
+treat; it is not the average among targeted clients alone.
+<code class="docutils literal notranslate"><span class="pre">std_error</span></code>, <code class="docutils literal notranslate"><span class="pre">ci_lower</span></code>, and <code class="docutils literal notranslate"><span class="pre">ci_upper</span></code> describe that gain.
+<code class="docutils literal notranslate"><span class="pre">n_obs</span></code> is the full evaluation size. <code class="docutils literal notranslate"><span class="pre">treatment_fraction</span></code> is
+:math:<code class="docutils literal notranslate"><span class="pre">n^{-1}\sum_i</span> <span class="pre">a_i</span></code>, the learned policy’s targeting share in
+every row, not the historical treatment rate or the baseline share.</p>
+<p class="rubric" id="id4">Notes</p>
+<p>Positive <code class="docutils literal notranslate"><span class="pre">policy_vs_all</span></code> favors the policy over treating everybody;
+negative values favor treating everybody. An interval crossing zero
+does not establish the direction of the gain.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="causalis.scenarios.uplift.policy.UpliftPolicyEvaluation.rules_summary">
+<span class="sig-name descname"><span class="pre">rules_summary</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">pandas.DataFrame</span></span></span><a class="headerlink" href="#causalis.scenarios.uplift.policy.UpliftPolicyEvaluation.rules_summary" title="Link to this definition">¶</a></dt>
+<dd><p>Return effects and support for every frozen rule.</p>
+<p>A leaf :math:<code class="docutils literal notranslate"><span class="pre">\ell</span></code> defines a region :math:<code class="docutils literal notranslate"><span class="pre">R_\ell</span></code> by the conjunction
+of its predicates. Its evaluation clients are
+:math:<code class="docutils literal notranslate"><span class="pre">I_\ell=\{i:Z_i\in</span> <span class="pre">R_\ell\}</span></code>, with :math:<code class="docutils literal notranslate"><span class="pre">n_\ell=|I_\ell|</span></code>.
+The target is the group average treatment effect</p>
+<p>.. math::</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>\tau_\ell = \mathbb{E}[Y(1)-Y(0)\mid Z\in R_\ell],
+\qquad
+\widehat\tau_\ell = \frac{1}{n_\ell}
+    \sum_{i\in I_\ell}\Gamma_i.
+</pre></div>
+</div>
+<p>For a supported leaf, HC3 inference for the saturated group regression
+gives</p>
+<p>.. math::</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>\widehat{\mathrm{SE}}_{\mathrm{HC3}}(\widehat\tau_\ell)
+= \sqrt{\frac{\sum_{i\in I_\ell}
+        (\Gamma_i-\widehat\tau_\ell)^2}{(n_\ell-1)^2}},
+\qquad
+\mathrm{CI}_\ell = \widehat\tau_\ell \;\pm\;
+    \Phi^{-1}(1-\alpha/2)
+    \widehat{\mathrm{SE}}_{\mathrm{HC3}}(\widehat\tau_\ell).
+</pre></div>
+</div>
+<p class="rubric" id="id5">Returns</p>
+<p>pandas.DataFrame
+A copy with one row per training leaf, including leaves with no
+evaluation clients. Columns are:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>* ``rule_id``: stable identifier of the learned leaf.
+* ``conditions``: readable conjunction defining its region.
+* ``predicates``: exact ``(feature, operator, threshold)`` tuples.
+* ``action``: training decision :math:`a_\ell`, either 1 (target)
+  or 0 (do not target); evaluation never changes it.
+* ``n_eval``: :math:`n_\ell`.
+* ``n_treated``: :math:`\sum_{i\in I_\ell}D_i`.
+* ``n_control``: :math:`\sum_{i\in I_\ell}(1-D_i)`.
+* ``status``: ``ok`` when both historical arms are present,
+  ``empty`` when :math:`n_\ell=0`, or
+  ``insufficient_arm_support`` when one historical arm is absent.
+  ``ok`` is a support check, not proof of reliable causal estimation.
+* ``value``: :math:`\widehat\tau_\ell`, irrespective of the action.
+* ``std_error``: the HC3 standard error above.
+* ``ci_lower``, ``ci_upper``: endpoints of the pointwise interval.
+</pre></div>
+</div>
+<p class="rubric" id="id6">Notes</p>
+<p>Unsupported and empty leaves have NaN effect estimates and intervals.
+Their clients remain in the overall policy evaluation.
+A positive <code class="docutils literal notranslate"><span class="pre">value</span></code> means estimated benefit from treatment even if
+<code class="docutils literal notranslate"><span class="pre">action</span></code> is 0. An interval entirely above/below zero supplies evidence
+of positive/negative group uplift; an interval crossing zero leaves its
+direction unresolved. These intervals describe group means, not effects
+for individual clients. Disagreement with the training action is evidence
+to review the policy, not an automatic update to it.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="causalis.scenarios.uplift.policy.UpliftPolicyTree">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">causalis.scenarios.uplift.policy.</span></span><span class="sig-name descname"><span class="pre">UpliftPolicyTree</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_depth</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_samples_leaf</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">50</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_samples_per_arm</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">5</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#causalis.scenarios.uplift.policy.UpliftPolicyTree" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-obj docutils literal notranslate"><span class="pre">sklearn.base.BaseEstimator</span></code></p>
+<p>Learn a shallow, greedy treatment policy from a fitted IRM.</p>
+<p>Let :math:<code class="docutils literal notranslate"><span class="pre">D\in\{0,1\}</span></code> denote historical treatment, :math:<code class="docutils literal notranslate"><span class="pre">Y</span></code> the observed
+outcome, :math:<code class="docutils literal notranslate"><span class="pre">X</span></code> all pre-treatment adjustment variables, and :math:<code class="docutils literal notranslate"><span class="pre">Z</span></code> the
+subset allowed in policy rules. Under consistency, unconfoundedness
+:math:<code class="docutils literal notranslate"><span class="pre">(Y(0),Y(1))\perp</span> <span class="pre">D\mid</span> <span class="pre">X</span></code>, and overlap
+:math:<code class="docutils literal notranslate"><span class="pre">0&lt;e(X)=P(D=1\mid</span> <span class="pre">X)&lt;1</span></code>, the CATE is</p>
+<p>.. math::</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>\tau(x)=\mathbb{E}[Y(1)-Y(0)\mid X=x]
+       =g_1(x)-g_0(x),
+\qquad g_d(x)=\mathbb{E}[Y\mid X=x,D=d].
+</pre></div>
+</div>
+<p>Using out-of-fold nuisance predictions, construct the doubly robust signal</p>
+<p>.. math::</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>\Gamma_i = \widehat g_1^{(-k(i))}(X_i)
+           -\widehat g_0^{(-k(i))}(X_i)
+  +\frac{D_i\{Y_i-\widehat g_1^{(-k(i))}(X_i)\}}
+         {\widetilde e_i}
+  -\frac{(1-D_i)\{Y_i-\widehat g_0^{(-k(i))}(X_i)\}}
+         {1-\widetilde e_i},
+</pre></div>
+</div>
+<p>where :math:<code class="docutils literal notranslate"><span class="pre">k(i)</span></code> is the fold containing observation :math:<code class="docutils literal notranslate"><span class="pre">i</span></code> and
+:math:<code class="docutils literal notranslate"><span class="pre">\widetilde</span> <span class="pre">e_i=\min(1-\epsilon,</span> <span class="pre">\max(\epsilon,\widehat</span> <span class="pre">e^{(-k(i))}(X_i)))</span></code> is IRM’s clipped propensity.
+Clipping stabilizes denominators but can bias the signal; double robustness
+does not remove hidden confounding or guarantee validity under clipping.</p>
+<p>The empirical policy objective, relative to treating nobody, is</p>
+<p>.. math::</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>\widehat J(\pi)=\frac{1}{n_{\mathrm{train}}}
+    \sum_{i\in\mathcal T}\pi(Z_i)\Gamma_i.
+</pre></div>
+</div>
+<p>The tree greedily improves this objective. It does not solve a global
+optimization over all possible trees; see :meth:<code class="docutils literal notranslate"><span class="pre">fit</span></code> for the split reward.</p>
+<p class="rubric" id="id7">Parameters</p>
+<p>max_depth : int, default 2
+Maximum number of splits along a path; zero learns a constant policy.
+min_samples_leaf : int, default 50
+Minimum observations in each child of an accepted split.
+min_samples_per_arm : int, default 5
+Minimum treated and control observations in each child.</p>
+<p class="rubric" id="id8">Notes</p>
+<p>A leaf treats when its training mean signal is positive. Greedy search can
+miss interactions needing a zero-gain first split. If no split is feasible,
+a constant root policy is retained even when the sample is smaller than the
+child-size limits.</p>
+<p>All adjustment variables belong in IRM; <code class="docutils literal notranslate"><span class="pre">policy_features</span></code> only limits the
+rules. Features must be numeric, finite, and measured before intervention.
+Higher outcomes are better; costs, capacity constraints, weighted samples,
+and overlap-based sample dropping are not supported. Decisions estimate
+group benefit, not whether each individual will benefit.</p>
+<p>Split clients before fitting either IRM or tuning the policy. Evaluation
+checks disjoint IDs but cannot verify the provenance of nuisance learners
+or prevent reuse of evaluation results for tuning.</p>
+<p class="rubric">Initialization</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="causalis.scenarios.uplift.policy.UpliftPolicyTree.fit">
+<span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">train_irm</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="causalis.scenarios.unconfoundedness.model.html#causalis.scenarios.unconfoundedness.model.IRM" title="causalis.scenarios.unconfoundedness.model.IRM"><span class="pre">causalis.scenarios.unconfoundedness.model.IRM</span></a></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">policy_features</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Sequence</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#causalis.scenarios.uplift.policy.UpliftPolicyTree.fit" title="Link to this definition">¶</a></dt>
+<dd><p>Discover rules using only the training IRM’s cross-fitted signals.</p>
+<p>For a node containing training indices :math:<code class="docutils literal notranslate"><span class="pre">A</span></code>, the optimal constant
+action and its unnormalized reward are</p>
+<p>.. math::</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>a_A = \mathbf{1}\!\left\{\sum_{i\in A}\Gamma_i&gt;0\right\},
+\qquad W(A)=\max\!\left(0,\sum_{i\in A}\Gamma_i\right).
+</pre></div>
+</div>
+<p>A candidate feature/threshold pair partitions :math:<code class="docutils literal notranslate"><span class="pre">A</span></code> into
+:math:<code class="docutils literal notranslate"><span class="pre">L=\{i\in</span> <span class="pre">A:Z_{ij}\le</span> <span class="pre">t\}</span></code> and
+:math:<code class="docutils literal notranslate"><span class="pre">R=\{i\in</span> <span class="pre">A:Z_{ij}&gt;t\}</span></code>. Its gain is</p>
+<p>.. math::</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>G(j,t;A)=W(L)+W(R)-W(A).
+</pre></div>
+</div>
+<p>Accept the feasible split with greatest positive gain, allowing for
+floating-point roundoff. Both children must satisfy the total and
+per-arm sample limits. Recurse until no improvement is available or
+<code class="docutils literal notranslate"><span class="pre">max_depth</span></code> is reached. Feature order and then ascending thresholds
+break ties. A zero leaf signal recommends no treatment.</p>
+<p class="rubric" id="id9">Parameters</p>
+<p>train_irm : IRM
+Fitted, unweighted IRM with ``overlap_policy=’clip’` and unchanged
+CausalData containing unique, nonmissing client IDs.
+policy_features : sequence of str, optional
+Ordered, nonempty subset of fitted confounders allowed in the rules.
+Defaults to all confounders. Other confounders still enter the
+nuisance models and the DR signal.</p>
+<p class="rubric" id="id10">Returns</p>
+<p>UpliftPolicyTree
+The fitted policy. No IRM models are fitted or modified.</p>
+<p class="rubric" id="id11">Notes</p>
+<p>Signals are computed from fitted nuisances, independently of the last
+requested IRM estimand (including ATTE) and any lazy CATE scoring models.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="causalis.scenarios.uplift.policy.UpliftPolicyTree.rules">
+<span class="sig-name descname"><span class="pre">rules</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">pandas.DataFrame</span></span></span><a class="headerlink" href="#causalis.scenarios.uplift.policy.UpliftPolicyTree.rules" title="Link to this definition">¶</a></dt>
+<dd><p>Return the learned rules and descriptive training statistics.</p>
+<p>For training clients :math:<code class="docutils literal notranslate"><span class="pre">\mathcal</span> <span class="pre">T_\ell</span></code> in leaf :math:<code class="docutils literal notranslate"><span class="pre">\ell</span></code>,</p>
+<p>.. math::</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>\overline\Gamma_{\ell,\mathrm{train}}
+  =\frac{1}{|\mathcal T_\ell|}
+     \sum_{i\in\mathcal T_\ell}\Gamma_i,
+\qquad
+a_\ell=\mathbf{1}\{
+    \overline\Gamma_{\ell,\mathrm{train}}&gt;0\}.
+</pre></div>
+</div>
+<p class="rubric" id="id12">Returns</p>
+<p>pandas.DataFrame
+A copy containing <code class="docutils literal notranslate"><span class="pre">rule_id</span></code>, readable <code class="docutils literal notranslate"><span class="pre">conditions</span></code>, exact
+<code class="docutils literal notranslate"><span class="pre">predicates</span></code> tuples <code class="docutils literal notranslate"><span class="pre">(feature,</span> <span class="pre">operator,</span> <span class="pre">threshold)</span></code>, <code class="docutils literal notranslate"><span class="pre">action</span></code>
+(:math:<code class="docutils literal notranslate"><span class="pre">a_\ell</span></code>), <code class="docutils literal notranslate"><span class="pre">n_train</span></code>, <code class="docutils literal notranslate"><span class="pre">n_treated_train</span></code>,
+<code class="docutils literal notranslate"><span class="pre">n_control_train</span></code>, and <code class="docutils literal notranslate"><span class="pre">train_mean_uplift_descriptive</span></code>
+(:math:<code class="docutils literal notranslate"><span class="pre">\overline\Gamma_{\ell,\mathrm{train}}</span></code>). All predicates
+along a path must hold; the leaves form a disjoint partition.</p>
+<p class="rubric" id="id13">Notes</p>
+<p>Training means are selected on the same data used to discover the rules
+and carry no independent confidence intervals. Use :meth:<code class="docutils literal notranslate"><span class="pre">evaluate</span></code>
+and :meth:<code class="docutils literal notranslate"><span class="pre">UpliftPolicyEvaluation.rules_summary</span></code> for held-out evidence.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="causalis.scenarios.uplift.policy.UpliftPolicyTree.assign">
+<span class="sig-name descname"><span class="pre">assign</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">clients</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">pandas.DataFrame</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">user_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">pandas.DataFrame</span></span></span><a class="headerlink" href="#causalis.scenarios.uplift.policy.UpliftPolicyTree.assign" title="Link to this definition">¶</a></dt>
+<dd><p>Assign clients without outcomes or historical treatment labels.</p>
+<p>For disjoint learned regions :math:<code class="docutils literal notranslate"><span class="pre">R_\ell</span></code> and frozen leaf actions
+:math:<code class="docutils literal notranslate"><span class="pre">a_\ell</span></code>, the assignment function is</p>
+<p>.. math::</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>\widehat\pi(z)=\sum_{\ell=1}^K
+    a_\ell\mathbf{1}\{z\in R_\ell\}.
+</pre></div>
+</div>
+<p>Each client belongs to exactly one leaf. A threshold test sends
+:math:<code class="docutils literal notranslate"><span class="pre">z_j\le</span> <span class="pre">t</span></code> left and :math:<code class="docutils literal notranslate"><span class="pre">z_j&gt;t</span></code> right, including equality on
+the left. Neither outcomes nor estimated individual effects enter this
+assignment step.</p>
+<p class="rubric" id="id14">Parameters</p>
+<p>clients : pandas.DataFrame
+Client IDs and the fitted policy feature columns. Features must be
+numeric, finite, and nonmissing. Extra columns are ignored.
+user_id : str
+Column containing unique, nonmissing IDs. Cannot be <code class="docutils literal notranslate"><span class="pre">rule_id</span></code>
+or <code class="docutils literal notranslate"><span class="pre">action</span></code>, which are reserved output column names.</p>
+<p class="rubric" id="id15">Returns</p>
+<p>pandas.DataFrame
+Original ID column plus <code class="docutils literal notranslate"><span class="pre">rule_id</span></code> and integer <code class="docutils literal notranslate"><span class="pre">action</span></code>:
+1 means target, 0 means do not target. Input order, ID dtype, and
+index are preserved. Empty inputs return the same output schema.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="causalis.scenarios.uplift.policy.UpliftPolicyTree.evaluate">
+<span class="sig-name descname"><span class="pre">evaluate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">eval_irm</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="causalis.scenarios.unconfoundedness.model.html#causalis.scenarios.unconfoundedness.model.IRM" title="causalis.scenarios.unconfoundedness.model.IRM"><span class="pre">causalis.scenarios.unconfoundedness.model.IRM</span></a></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.05</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#causalis.scenarios.uplift.policy.UpliftPolicyEvaluation" title="causalis.scenarios.uplift.policy.UpliftPolicyEvaluation"><span class="pre">causalis.scenarios.uplift.policy.UpliftPolicyEvaluation</span></a></span></span><a class="headerlink" href="#causalis.scenarios.uplift.policy.UpliftPolicyTree.evaluate" title="Link to this definition">¶</a></dt>
+<dd><p>Evaluate frozen decisions on an IRM fitted on disjoint clients.</p>
+<p>For an independent evaluation population and a fixed learned policy,
+the estimands are</p>
+<p>.. math::</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>\Delta_{\pi,0} &amp;= V(\widehat\pi)-V(0)
+    =\mathbb{E}[\widehat\pi(Z)\tau(X)], \\
+\Delta_{\pi,1} &amp;= V(\widehat\pi)-V(1)
+    =\mathbb{E}[(\widehat\pi(Z)-1)\tau(X)], \\
+\Delta_{1,0} &amp;= V(1)-V(0)=\mathbb{E}[\tau(X)].
+</pre></div>
+</div>
+<p>Estimate them with evaluation-only cross-fitted DR signals. See
+:meth:<code class="docutils literal notranslate"><span class="pre">UpliftPolicyEvaluation.summary</span></code> for paired-signal standard errors
+and :meth:<code class="docutils literal notranslate"><span class="pre">UpliftPolicyEvaluation.rules_summary</span></code> for leaf HC3 intervals.</p>
+<p class="rubric" id="id16">Parameters</p>
+<p>eval_irm : IRM
+Independently fitted, unweighted IRM with <code class="docutils literal notranslate"><span class="pre">overlap_policy='clip'</span></code>.
+Outcome, treatment, and ordered confounder definitions must match
+training. Its original CausalData and IDs must remain unchanged,
+and its IDs must be disjoint from training IDs.
+alpha : float, default 0.05
+Significance level in :math:<code class="docutils literal notranslate"><span class="pre">(0,1)</span></code> for nominal
+:math:<code class="docutils literal notranslate"><span class="pre">100(1-\alpha)\%</span></code> intervals.</p>
+<p class="rubric" id="id17">Returns</p>
+<p>UpliftPolicyEvaluation
+Overall policy gains, per-rule effects and support, and overlap
+diagnostics. The policy, training summaries, and both IRMs are
+left unchanged.</p>
+<p class="rubric" id="id18">Notes</p>
+<p>Unsupported leaves have unavailable subgroup estimates; their clients
+remain in the overall policy evaluation, whose inference relies on
+population overlap. An interval crossing zero does not establish a zero
+effect, and evaluation never changes a learned action. If these results
+are used to revise or select policies, evaluate the selected policy on
+another untouched sample.</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../reference.html">Causalis API Reference</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../index.html">API Modules</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="causalis.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">causalis</span></code></a></li>
+</ul>
+</li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../reference.html">Documentation overview</a><ul>
+  <li><a href="../index.html">API Modules</a><ul>
+  <li><a href="causalis.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">causalis</span></code></a><ul>
+  <li><a href="causalis.scenarios.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">causalis.scenarios</span></code></a><ul>
+  <li><a href="causalis.scenarios.uplift.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">causalis.scenarios.uplift</span></code></a><ul>
+      <li>Previous: <a href="causalis.scenarios.uplift.html" title="previous chapter"><code class="xref py py-mod docutils literal notranslate"><span class="pre">causalis.scenarios.uplift</span></code></a></li>
+      <li>Next: <a href="causalis.scenarios.uplift.model.html" title="next chapter"><code class="xref py py-mod docutils literal notranslate"><span class="pre">causalis.scenarios.uplift.model</span></code></a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.0.4</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="../../_sources/apidocs/causalis/causalis.scenarios.uplift.policy.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

@@ -1037,7 +1037,7 @@ def sensitivity_benchmark(
 
     from causalis.scenarios.multi_unconfoundedness.model import MultiTreatmentIRM
 
-    df_long = data_long.get_df()
+    df_long = data_long.get_df(include_user_id=True)
     data_short = MultiCausalData(
         df=df_long,
         outcome=str(data_long.outcome),

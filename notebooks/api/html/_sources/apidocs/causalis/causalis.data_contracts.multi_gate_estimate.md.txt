@@ -1,0 +1,297 @@
+# {py:mod}`causalis.data_contracts.multi_gate_estimate`
+
+```{py:module} causalis.data_contracts.multi_gate_estimate
+```
+
+```{autodoc2-docstring} causalis.data_contracts.multi_gate_estimate
+:allowtitles:
+```
+
+## Module Contents
+
+### Classes
+
+````{list-table}
+:class: autosummary longtable
+:align: left
+
+* - {py:obj}`MultiGateEstimate <causalis.data_contracts.multi_gate_estimate.MultiGateEstimate>`
+  - ```{autodoc2-docstring} causalis.data_contracts.multi_gate_estimate.MultiGateEstimate
+    :summary:
+    ```
+````
+
+### API
+
+`````{py:class} MultiGateEstimate(/, **data: typing.Any)
+:canonical: causalis.data_contracts.multi_gate_estimate.MultiGateEstimate
+
+Bases: {py:obj}`pydantic.BaseModel`
+
+```{autodoc2-docstring} causalis.data_contracts.multi_gate_estimate.MultiGateEstimate
+```
+
+```{rubric} Initialization
+```
+
+```{autodoc2-docstring} causalis.data_contracts.multi_gate_estimate.MultiGateEstimate.__init__
+```
+
+````{py:attribute} model_config
+:canonical: causalis.data_contracts.multi_gate_estimate.MultiGateEstimate.model_config
+:value: >
+   'ConfigDict(...)'
+
+```{autodoc2-docstring} causalis.data_contracts.multi_gate_estimate.MultiGateEstimate.model_config
+```
+
+````
+
+````{py:attribute} estimand
+:canonical: causalis.data_contracts.multi_gate_estimate.MultiGateEstimate.estimand
+:type: str
+:value: >
+   None
+
+```{autodoc2-docstring} causalis.data_contracts.multi_gate_estimate.MultiGateEstimate.estimand
+```
+
+````
+
+````{py:attribute} model
+:canonical: causalis.data_contracts.multi_gate_estimate.MultiGateEstimate.model
+:type: str
+:value: >
+   'MultiTreatmentIRM'
+
+```{autodoc2-docstring} causalis.data_contracts.multi_gate_estimate.MultiGateEstimate.model
+```
+
+````
+
+````{py:attribute} group_names
+:canonical: causalis.data_contracts.multi_gate_estimate.MultiGateEstimate.group_names
+:type: typing.List[str]
+:value: >
+   None
+
+```{autodoc2-docstring} causalis.data_contracts.multi_gate_estimate.MultiGateEstimate.group_names
+```
+
+````
+
+````{py:attribute} treatment_names
+:canonical: causalis.data_contracts.multi_gate_estimate.MultiGateEstimate.treatment_names
+:type: typing.List[str]
+:value: >
+   None
+
+```{autodoc2-docstring} causalis.data_contracts.multi_gate_estimate.MultiGateEstimate.treatment_names
+```
+
+````
+
+````{py:attribute} baseline_treatment
+:canonical: causalis.data_contracts.multi_gate_estimate.MultiGateEstimate.baseline_treatment
+:type: str
+:value: >
+   None
+
+```{autodoc2-docstring} causalis.data_contracts.multi_gate_estimate.MultiGateEstimate.baseline_treatment
+```
+
+````
+
+````{py:attribute} values
+:canonical: causalis.data_contracts.multi_gate_estimate.MultiGateEstimate.values
+:type: numpy.ndarray
+:value: >
+   None
+
+```{autodoc2-docstring} causalis.data_contracts.multi_gate_estimate.MultiGateEstimate.values
+```
+
+````
+
+````{py:attribute} std_errors
+:canonical: causalis.data_contracts.multi_gate_estimate.MultiGateEstimate.std_errors
+:type: numpy.ndarray
+:value: >
+   None
+
+```{autodoc2-docstring} causalis.data_contracts.multi_gate_estimate.MultiGateEstimate.std_errors
+```
+
+````
+
+````{py:attribute} test_stats
+:canonical: causalis.data_contracts.multi_gate_estimate.MultiGateEstimate.test_stats
+:type: numpy.ndarray
+:value: >
+   None
+
+```{autodoc2-docstring} causalis.data_contracts.multi_gate_estimate.MultiGateEstimate.test_stats
+```
+
+````
+
+````{py:attribute} p_values
+:canonical: causalis.data_contracts.multi_gate_estimate.MultiGateEstimate.p_values
+:type: numpy.ndarray
+:value: >
+   None
+
+```{autodoc2-docstring} causalis.data_contracts.multi_gate_estimate.MultiGateEstimate.p_values
+```
+
+````
+
+````{py:attribute} ci_lower
+:canonical: causalis.data_contracts.multi_gate_estimate.MultiGateEstimate.ci_lower
+:type: numpy.ndarray
+:value: >
+   None
+
+```{autodoc2-docstring} causalis.data_contracts.multi_gate_estimate.MultiGateEstimate.ci_lower
+```
+
+````
+
+````{py:attribute} ci_upper
+:canonical: causalis.data_contracts.multi_gate_estimate.MultiGateEstimate.ci_upper
+:type: numpy.ndarray
+:value: >
+   None
+
+```{autodoc2-docstring} causalis.data_contracts.multi_gate_estimate.MultiGateEstimate.ci_upper
+```
+
+````
+
+````{py:attribute} alpha
+:canonical: causalis.data_contracts.multi_gate_estimate.MultiGateEstimate.alpha
+:type: float
+:value: >
+   None
+
+```{autodoc2-docstring} causalis.data_contracts.multi_gate_estimate.MultiGateEstimate.alpha
+```
+
+````
+
+````{py:attribute} covariance
+:canonical: causalis.data_contracts.multi_gate_estimate.MultiGateEstimate.covariance
+:type: pandas.DataFrame
+:value: >
+   None
+
+```{autodoc2-docstring} causalis.data_contracts.multi_gate_estimate.MultiGateEstimate.covariance
+```
+
+````
+
+````{py:attribute} summary_table
+:canonical: causalis.data_contracts.multi_gate_estimate.MultiGateEstimate.summary_table
+:type: pandas.DataFrame
+:value: >
+   None
+
+```{autodoc2-docstring} causalis.data_contracts.multi_gate_estimate.MultiGateEstimate.summary_table
+```
+
+````
+
+````{py:attribute} n_group
+:canonical: causalis.data_contracts.multi_gate_estimate.MultiGateEstimate.n_group
+:type: numpy.ndarray
+:value: >
+   None
+
+```{autodoc2-docstring} causalis.data_contracts.multi_gate_estimate.MultiGateEstimate.n_group
+```
+
+````
+
+````{py:attribute} n_treated
+:canonical: causalis.data_contracts.multi_gate_estimate.MultiGateEstimate.n_treated
+:type: numpy.ndarray
+:value: >
+   None
+
+```{autodoc2-docstring} causalis.data_contracts.multi_gate_estimate.MultiGateEstimate.n_treated
+```
+
+````
+
+````{py:attribute} n_control
+:canonical: causalis.data_contracts.multi_gate_estimate.MultiGateEstimate.n_control
+:type: numpy.ndarray
+:value: >
+   None
+
+```{autodoc2-docstring} causalis.data_contracts.multi_gate_estimate.MultiGateEstimate.n_control
+```
+
+````
+
+````{py:attribute} n_other
+:canonical: causalis.data_contracts.multi_gate_estimate.MultiGateEstimate.n_other
+:type: numpy.ndarray
+:value: >
+   None
+
+```{autodoc2-docstring} causalis.data_contracts.multi_gate_estimate.MultiGateEstimate.n_other
+```
+
+````
+
+````{py:attribute} model_options
+:canonical: causalis.data_contracts.multi_gate_estimate.MultiGateEstimate.model_options
+:type: typing.Dict[str, typing.Any]
+:value: >
+   'Field(...)'
+
+```{autodoc2-docstring} causalis.data_contracts.multi_gate_estimate.MultiGateEstimate.model_options
+```
+
+````
+
+````{py:attribute} diagnostic_data
+:canonical: causalis.data_contracts.multi_gate_estimate.MultiGateEstimate.diagnostic_data
+:type: typing.Optional[typing.Dict[str, typing.Any]]
+:value: >
+   None
+
+```{autodoc2-docstring} causalis.data_contracts.multi_gate_estimate.MultiGateEstimate.diagnostic_data
+```
+
+````
+
+````{py:attribute} time
+:canonical: causalis.data_contracts.multi_gate_estimate.MultiGateEstimate.time
+:type: str
+:value: >
+   'Field(...)'
+
+```{autodoc2-docstring} causalis.data_contracts.multi_gate_estimate.MultiGateEstimate.time
+```
+
+````
+
+````{py:method} summary() -> pandas.DataFrame
+:canonical: causalis.data_contracts.multi_gate_estimate.MultiGateEstimate.summary
+
+```{autodoc2-docstring} causalis.data_contracts.multi_gate_estimate.MultiGateEstimate.summary
+```
+
+````
+
+````{py:method} for_treatment(name: str) -> causalis.data_contracts.gate_estimate.GateEstimate
+:canonical: causalis.data_contracts.multi_gate_estimate.MultiGateEstimate.for_treatment
+
+```{autodoc2-docstring} causalis.data_contracts.multi_gate_estimate.MultiGateEstimate.for_treatment
+```
+
+````
+
+`````

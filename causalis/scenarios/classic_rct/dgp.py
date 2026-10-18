@@ -10,10 +10,64 @@ from __future__ import annotations
 import uuid
 import pandas as pd
 import numpy as np
-from typing import Optional, List, Union, Dict
+from typing import Literal, Optional, List, Union, Dict, overload
 from causalis.dgp.causaldata import CausalData
 from causalis.dgp.causaldata.functional import generate_classic_rct, classic_rct_gamma
 from causalis.dgp.base import _deterministic_ids
+
+@overload
+def generate_classic_rct_26(
+    seed: int = 42,
+    add_pre: bool = False,
+    beta_y: Optional[Union[List[float], np.ndarray]] = None,
+    outcome_depends_on_x: bool = True,
+    include_oracle: bool = False,
+    return_causal_data: Literal[True] = True,
+    *,
+    n: int = 10000,
+    split: float = 0.5,
+    outcome_params: Optional[Dict] = None,
+    add_ancillary: bool = False,
+    deterministic_ids: bool = True,
+    **kwargs
+) -> CausalData: ...
+
+
+@overload
+def generate_classic_rct_26(
+    seed: int = 42,
+    add_pre: bool = False,
+    beta_y: Optional[Union[List[float], np.ndarray]] = None,
+    outcome_depends_on_x: bool = True,
+    include_oracle: bool = False,
+    *,
+    return_causal_data: Literal[False],
+    n: int = 10000,
+    split: float = 0.5,
+    outcome_params: Optional[Dict] = None,
+    add_ancillary: bool = False,
+    deterministic_ids: bool = True,
+    **kwargs
+) -> pd.DataFrame: ...
+
+
+@overload
+def generate_classic_rct_26(
+    seed: int = 42,
+    add_pre: bool = False,
+    beta_y: Optional[Union[List[float], np.ndarray]] = None,
+    outcome_depends_on_x: bool = True,
+    include_oracle: bool = False,
+    return_causal_data: bool = True,
+    *,
+    n: int = 10000,
+    split: float = 0.5,
+    outcome_params: Optional[Dict] = None,
+    add_ancillary: bool = False,
+    deterministic_ids: bool = True,
+    **kwargs
+) -> Union[CausalData, pd.DataFrame]: ...
+
 
 def generate_classic_rct_26(
     seed: int = 42,
@@ -29,7 +83,7 @@ def generate_classic_rct_26(
     add_ancillary: bool = False,
     deterministic_ids: bool = True,
     **kwargs
-):
+) -> Union[CausalData, pd.DataFrame]:
     r"""
     A pre-configured classic RCT dataset with a binary (conversion) outcome.
 

@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>causalis.shared.rct_design.design &#8212; Causalis API Reference  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="../../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css?v=27fed22d" />
+    <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="causalis.shared.rct_design.split" href="causalis.shared.rct_design.split.html" />
+    <link rel="prev" title="causalis.shared.rct_design.enrichment" href="causalis.shared.rct_design.enrichment.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="module-causalis.shared.rct_design.design">
+<span id="causalis-shared-rct-design-design"></span><h1><a class="reference internal" href="#module-causalis.shared.rct_design.design" title="causalis.shared.rct_design.design"><code class="xref py py-mod docutils literal notranslate"><span class="pre">causalis.shared.rct_design.design</span></code></a><a class="headerlink" href="#module-causalis.shared.rct_design.design" title="Link to this heading">¶</a></h1>
+<p>Normal-approximation RCT planning, with optional historical-control CUPED fits.</p>
+<section id="module-contents">
+<h2>Module Contents<a class="headerlink" href="#module-contents" title="Link to this heading">¶</a></h2>
+<section id="functions">
+<h3>Functions<a class="headerlink" href="#functions" title="Link to this heading">¶</a></h3>
+<table class="autosummary longtable docutils align-left">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#causalis.shared.rct_design.design.calculate_sample_size" title="causalis.shared.rct_design.design.calculate_sample_size"><code class="xref py py-obj docutils literal notranslate"><span class="pre">calculate_sample_size</span></code></a></p></td>
+<td><p>Plan separate experiments for target MDEs of one outcome.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#causalis.shared.rct_design.design.calculate_mde" title="causalis.shared.rct_design.design.calculate_mde"><code class="xref py py-obj docutils literal notranslate"><span class="pre">calculate_mde</span></code></a></p></td>
+<td><p>Calculate absolute and relative MDE for a fixed total future sample size.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="api">
+<h3>API<a class="headerlink" href="#api" title="Link to this heading">¶</a></h3>
+<dl class="py function">
+<dt class="sig sig-object py" id="causalis.shared.rct_design.design.calculate_sample_size">
+<span class="sig-prename descclassname"><span class="pre">causalis.shared.rct_design.design.</span></span><span class="sig-name descname"><span class="pre">calculate_sample_size</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="causalis.data_contracts.rct_causal_data.html#causalis.data_contracts.rct_causal_data.RctCausalData" title="causalis.data_contracts.rct_causal_data.RctCausalData"><span class="pre">causalis.data_contracts.rct_causal_data.RctCausalData</span></a></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">outcome</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">covariates</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">collections.abc.Sequence</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scenario</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="pre">default</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">user</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'default'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mde_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="pre">absolute</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">relative</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mde</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">collections.abc.Sequence</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">allocation</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">collections.abc.Mapping</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.05</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">power</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.8</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">include_details</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">pandas.DataFrame</span></span></span><a class="headerlink" href="#causalis.shared.rct_design.design.calculate_sample_size" title="Link to this definition">¶</a></dt>
+<dd><p>Plan separate experiments for target MDEs of one outcome.</p>
+<p class="rubric" id="id4">Parameters</p>
+<p>data : RctCausalData
+Past RCT. Only control rows estimate the baseline and residual variance;
+all declared groups define the future experiment.
+outcome : str
+Required name of one declared outcome.
+covariates : Sequence[str], optional
+Explicit pre-treatment confounders for CUPED. Omitted, None, or [] uses
+unadjusted sample variance, even if data declares confounders.
+scenario : {“default”, “user”}
+Default plans relative targets [0.5, 1, 5, 10, 20] percent and rejects
+custom mde or mde_type. User requires both arguments explicitly.
+mde_type : {“relative”, “absolute”}, optional
+In user mode, percentages (1 means 1%) or differences in outcome units.
+Relative targets require a positive historical control mean.
+mde : Sequence[float], optional
+In user mode, non-empty finite positive targets. Order and duplicates
+are preserved. Each target defines a separate candidate experiment.
+allocation : Mapping[str, float], optional
+Positive shares summing to one for every group; defaults to equal shares.
+Keys are one-hot column names or ‘<treatment>=0’ / ‘<treatment>=1’ for
+binary treatment. Historical allocation is never reused implicitly.
+alpha, power : float
+Per-comparison significance and target power; require 0 &lt; alpha &lt; power &lt; 1.
+include_details : bool
+Append historical fit diagnostics and achieved power. Defaults to False.</p>
+<p class="rubric" id="id5">Returns</p>
+<p>pandas.DataFrame
+One row per target and active arm, in input target and contract arm order.
+Compact columns: outcome, control, treatment, mde_relative, mde_absolute,
+n_control, n_treatment, n_total. Both MDE columns describe the requested
+target; relative values are percentages, or NaN for nonpositive baselines
+in absolute mode. Sizes are integers and other values are not rounded.
+Details append baseline_mean, variance_raw, variance_used,
+variance_reduction_pct, n_reference, alpha, power, achieved_power.
+Within each target, all rows share one experiment sized to meet every
+arm’s target power. n_total counts the shared control once; do not sum rows.</p>
+<p class="rubric" id="id6">Notes</p>
+<p>Estimates historical-control variance once for all targets. Without covariates,
+uses sample variance (ddof=1) without regression. With covariates, uses CUPED
+residual variance SSE / (n_reference - design rank). The two-sided normal
+approximation assumes independent randomization units and the same variance in
+all future groups. Binary outcomes also use this fixed-variance approximation.
+This is a planning estimate, not an exact
+finite-sample power guarantee for CUPEDModel. There is no multiple-testing
+correction or joint-power calculation. Each group’s continuous size is rounded
+up; this is conservative, not a search for the smallest integer allocation.
+Control-constant covariates are dropped with a warning; singular designs,
+non-positive residual degrees of freedom, and zero residual variance raise
+ValueError. Negative estimated variance reduction is retained.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="causalis.shared.rct_design.design.calculate_mde">
+<span class="sig-prename descclassname"><span class="pre">causalis.shared.rct_design.design.</span></span><span class="sig-name descname"><span class="pre">calculate_mde</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="causalis.data_contracts.rct_causal_data.html#causalis.data_contracts.rct_causal_data.RctCausalData" title="causalis.data_contracts.rct_causal_data.RctCausalData"><span class="pre">causalis.data_contracts.rct_causal_data.RctCausalData</span></a></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">outcome</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sample_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">covariates</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">collections.abc.Sequence</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">allocation</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">collections.abc.Mapping</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.05</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">power</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.8</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">include_details</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">pandas.DataFrame</span></span></span><a class="headerlink" href="#causalis.shared.rct_design.design.calculate_mde" title="Link to this definition">¶</a></dt>
+<dd><p>Calculate absolute and relative MDE for a fixed total future sample size.</p>
+<p class="rubric" id="id7">Parameters</p>
+<p>data : RctCausalData
+Historical RCT. Only control rows estimate the baseline and variance.
+outcome : str
+Required name of one declared outcome.
+sample_size : int
+Positive integer total across all future groups, at most 2**53.
+Allocate by largest remainders; ties follow contract order, control first.
+Every group must receive at least one participant.
+covariates : Sequence[str], optional
+Explicit pre-treatment confounders for CUPED. Omitted, None, or [] uses
+unadjusted sample variance, even if data declares confounders.
+allocation : Mapping[str, float], optional
+Positive shares summing to one for every declared group; defaults to equal
+shares. Keys are one-hot names or ‘<treatment>=0’ / ‘<treatment>=1’ for
+binary treatment. Historical allocation is never reused implicitly.
+alpha, power : float
+Per-comparison significance and target power; require 0 &lt; alpha &lt; power &lt; 1.
+include_details : bool
+Append historical fit and design diagnostics. Defaults to False.</p>
+<p class="rubric" id="id8">Returns</p>
+<p>pandas.DataFrame
+One row per active arm in contract order. Compact columns: outcome,
+control, treatment, mde_relative, mde_absolute, n_control, n_treatment,
+n_total. Absolute MDE uses outcome units; relative MDE is a percentage
+(1 means 1%) of the raw historical control mean, or NaN if it is &lt;= 0.
+Sizes are integers and other values are not rounded. Details append
+baseline_mean, variance_raw, variance_used, variance_reduction_pct,
+n_reference, alpha, power. All rows describe the same experiment;
+n_total counts shared control once and must not be summed across rows.</p>
+<p class="rubric" id="id9">Notes</p>
+<p>Uses the same deterministic, two-sided normal power calculation and historical
+variance assumptions as calculate_sample_size. With no covariates, classic
+planning uses sample variance (ddof=1) without regression. With covariates,
+CUPED uses residual variance SSE / (n_reference - design rank). Future arms
+share that variance, including for binary outcomes. Power is per comparison,
+without multiple-testing correction or a joint detection guarantee. Constant
+control covariates are dropped with a warning; invalid fits raise ValueError.</p>
+</dd></dl>
+
+</section>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../reference.html">Causalis API Reference</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../index.html">API Modules</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="causalis.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">causalis</span></code></a></li>
+</ul>
+</li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../reference.html">Documentation overview</a><ul>
+  <li><a href="../index.html">API Modules</a><ul>
+  <li><a href="causalis.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">causalis</span></code></a><ul>
+  <li><a href="causalis.shared.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">causalis.shared</span></code></a><ul>
+  <li><a href="causalis.shared.rct_design.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">causalis.shared.rct_design</span></code></a><ul>
+      <li>Previous: <a href="causalis.shared.rct_design.enrichment.html" title="previous chapter"><code class="xref py py-mod docutils literal notranslate"><span class="pre">causalis.shared.rct_design.enrichment</span></code></a></li>
+      <li>Next: <a href="causalis.shared.rct_design.split.html" title="next chapter"><code class="xref py py-mod docutils literal notranslate"><span class="pre">causalis.shared.rct_design.split</span></code></a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.0.4</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="../../_sources/apidocs/causalis/causalis.shared.rct_design.design.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

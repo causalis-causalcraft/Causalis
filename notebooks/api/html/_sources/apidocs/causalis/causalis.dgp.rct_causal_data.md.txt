@@ -1,0 +1,31 @@
+# {py:mod}`causalis.dgp.rct_causal_data`
+
+```{py:module} causalis.dgp.rct_causal_data
+```
+
+```{autodoc2-docstring} causalis.dgp.rct_causal_data
+:allowtitles:
+```
+
+## Module Contents
+
+### Functions
+
+````{list-table}
+:class: autosummary longtable
+:align: left
+
+* - {py:obj}`generate_rct_causal_data <causalis.dgp.rct_causal_data.generate_rct_causal_data>`
+  - ```{autodoc2-docstring} causalis.dgp.rct_causal_data.generate_rct_causal_data
+    :summary:
+    ```
+````
+
+### API
+
+````{py:function} generate_rct_causal_data(n: int = 10000, *, n_treatments: int = 3, n_outcomes: int = 3, outcome_specs: list[dict[str, typing.Any]] | None = None, k: int = 2, confounder_specs: list[dict[str, typing.Any]] | None = None, target_d_rate: list[float] | numpy.ndarray | None = None, treatment_encoding: typing.Literal[one_hot, binary] = 'one_hot', d_names: list[str] | None = None, seed: int | None = 42, include_user_id: bool = True, include_oracle: bool = False, return_causal_data: bool = True) -> causalis.data_contracts.rct_causal_data.RctCausalData | pandas.DataFrame
+:canonical: causalis.dgp.rct_causal_data.generate_rct_causal_data
+
+```{autodoc2-docstring} causalis.dgp.rct_causal_data.generate_rct_causal_data
+```
+````

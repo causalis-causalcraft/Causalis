@@ -1,0 +1,122 @@
+# {py:mod}`causalis.scenarios.uplift.policy`
+
+```{py:module} causalis.scenarios.uplift.policy
+```
+
+```{autodoc2-docstring} causalis.scenarios.uplift.policy
+:allowtitles:
+```
+
+## Module Contents
+
+### Classes
+
+````{list-table}
+:class: autosummary longtable
+:align: left
+
+* - {py:obj}`UpliftPolicyEvaluation <causalis.scenarios.uplift.policy.UpliftPolicyEvaluation>`
+  - ```{autodoc2-docstring} causalis.scenarios.uplift.policy.UpliftPolicyEvaluation
+    :summary:
+    ```
+* - {py:obj}`UpliftPolicyTree <causalis.scenarios.uplift.policy.UpliftPolicyTree>`
+  - ```{autodoc2-docstring} causalis.scenarios.uplift.policy.UpliftPolicyTree
+    :summary:
+    ```
+````
+
+### API
+
+`````{py:class} UpliftPolicyEvaluation
+:canonical: causalis.scenarios.uplift.policy.UpliftPolicyEvaluation
+
+```{autodoc2-docstring} causalis.scenarios.uplift.policy.UpliftPolicyEvaluation
+```
+
+````{py:attribute} diagnostics
+:canonical: causalis.scenarios.uplift.policy.UpliftPolicyEvaluation.diagnostics
+:type: dict[str, typing.Any]
+:value: >
+   None
+
+```{autodoc2-docstring} causalis.scenarios.uplift.policy.UpliftPolicyEvaluation.diagnostics
+```
+
+````
+
+````{py:attribute} alpha
+:canonical: causalis.scenarios.uplift.policy.UpliftPolicyEvaluation.alpha
+:type: float
+:value: >
+   None
+
+```{autodoc2-docstring} causalis.scenarios.uplift.policy.UpliftPolicyEvaluation.alpha
+```
+
+````
+
+````{py:method} summary() -> pandas.DataFrame
+:canonical: causalis.scenarios.uplift.policy.UpliftPolicyEvaluation.summary
+
+```{autodoc2-docstring} causalis.scenarios.uplift.policy.UpliftPolicyEvaluation.summary
+```
+
+````
+
+````{py:method} rules_summary() -> pandas.DataFrame
+:canonical: causalis.scenarios.uplift.policy.UpliftPolicyEvaluation.rules_summary
+
+```{autodoc2-docstring} causalis.scenarios.uplift.policy.UpliftPolicyEvaluation.rules_summary
+```
+
+````
+
+`````
+
+`````{py:class} UpliftPolicyTree(*, max_depth: int = 2, min_samples_leaf: int = 50, min_samples_per_arm: int = 5)
+:canonical: causalis.scenarios.uplift.policy.UpliftPolicyTree
+
+Bases: {py:obj}`sklearn.base.BaseEstimator`
+
+```{autodoc2-docstring} causalis.scenarios.uplift.policy.UpliftPolicyTree
+```
+
+```{rubric} Initialization
+```
+
+```{autodoc2-docstring} causalis.scenarios.uplift.policy.UpliftPolicyTree.__init__
+```
+
+````{py:method} fit(train_irm: causalis.scenarios.unconfoundedness.model.IRM, *, policy_features: typing.Sequence[str] | None = None)
+:canonical: causalis.scenarios.uplift.policy.UpliftPolicyTree.fit
+
+```{autodoc2-docstring} causalis.scenarios.uplift.policy.UpliftPolicyTree.fit
+```
+
+````
+
+````{py:method} rules() -> pandas.DataFrame
+:canonical: causalis.scenarios.uplift.policy.UpliftPolicyTree.rules
+
+```{autodoc2-docstring} causalis.scenarios.uplift.policy.UpliftPolicyTree.rules
+```
+
+````
+
+````{py:method} assign(clients: pandas.DataFrame, *, user_id: str) -> pandas.DataFrame
+:canonical: causalis.scenarios.uplift.policy.UpliftPolicyTree.assign
+
+```{autodoc2-docstring} causalis.scenarios.uplift.policy.UpliftPolicyTree.assign
+```
+
+````
+
+````{py:method} evaluate(eval_irm: causalis.scenarios.unconfoundedness.model.IRM, *, alpha: float = 0.05) -> causalis.scenarios.uplift.policy.UpliftPolicyEvaluation
+:canonical: causalis.scenarios.uplift.policy.UpliftPolicyTree.evaluate
+
+```{autodoc2-docstring} causalis.scenarios.uplift.policy.UpliftPolicyTree.evaluate
+```
+
+````
+
+`````

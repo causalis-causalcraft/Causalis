@@ -16,7 +16,7 @@ from causalis.scenarios.multi_unconfoundedness.refutation.unconfoundedness.sensi
 )
 
 
-def _make_synthetic_multi(n: int = 450, seed: int = 42) -> MultiCausalData:
+def _make_synthetic_multi(n: int = 450, seed: int = 42, user_id: str | None = None) -> MultiCausalData:
     rng = np.random.default_rng(seed)
     x1 = rng.normal(size=n)
     x2 = rng.normal(size=n)
@@ -48,12 +48,16 @@ def _make_synthetic_multi(n: int = 450, seed: int = 42) -> MultiCausalData:
             "d2": d[:, 2],
         }
     )
+    if user_id is not None:
+        df[user_id] = [f"obs_{i}" for i in rng.permutation(n)]
+        df.index = pd.Index(rng.permutation(n) + 1000, name="row")
     return MultiCausalData(
         df=df,
         outcome="y",
         treatment_names=["d0", "d1", "d2"],
         confounders=["x1", "x2"],
         control_treatment="d0",
+        user_id=user_id,
     )
 
 
@@ -113,8 +117,10 @@ def _dummy_estimate_for_sensitivity(
     )
 
 
-def test_multi_sensitivity_benchmark_basic_with_estimate_input():
-    data = _make_synthetic_multi()
+@pytest.mark.parametrize("user_id", [None, "observation_id"])
+def test_multi_sensitivity_benchmark_basic_with_estimate_input(user_id):
+    data = _make_synthetic_multi(user_id=user_id)
+    original_df = data.df.copy(deep=True)
     model = _fit_multi_irm(data)
     dml_result = model.estimate(score="ATE", diagnostic_data=True)
 
@@ -127,6 +133,7 @@ def test_multi_sensitivity_benchmark_basic_with_estimate_input():
     assert np.all(np.isfinite(res["theta_short"].to_numpy(dtype=float)))
     assert np.all(np.isfinite(res["delta"].to_numpy(dtype=float)))
     assert np.any(np.abs(res["delta"].to_numpy(dtype=float)) > 0.0)
+    pd.testing.assert_frame_equal(data.df, original_df)
 
 
 def test_multi_sensitivity_benchmark_input_validation():
