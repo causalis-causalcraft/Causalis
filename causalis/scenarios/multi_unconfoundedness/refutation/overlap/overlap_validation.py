@@ -225,6 +225,9 @@ def run_overlap_diagnostics(
     Diagnostics are computed pairwise between baseline treatment 0 and each
     active treatment k using pairwise conditional propensity
     P(D=k | X, D in {0, k}) as the comparison score.
+    Weight ESS and tails use generalized inverse propensities for ATE;
+    ATTE uses constant treated weights and baseline odds P(D=k|X)/P(D=0|X).
+    ESS describes row-weight concentration, not variance-adjusted information.
     """
     if not isinstance(data, MultiCausalData):
         raise TypeError(f"data must be MultiCausalData, got {type(data).__name__}.")
@@ -348,8 +351,16 @@ def run_overlap_diagnostics(
         )
 
         with np.errstate(divide="ignore", invalid="ignore"):
-            w_treated = np.where(label_treated_pair > 0, 1.0 / p_treated_pair, 0.0)
-            w_baseline = np.where(label_baseline_pair > 0, 1.0 / p_baseline_pair, 0.0)
+            if score == "ATTE":
+                # Target arm k: constant treated weights and p_k / p_0
+                # baseline weights (common scale factors cancel in Kish ESS).
+                w_treated = label_treated_pair.astype(float)
+                w_baseline = np.where(
+                    label_baseline_pair > 0, p_treated_pair / p_baseline_pair, 0.0
+                )
+            else:
+                w_treated = np.where(label_treated_pair > 0, 1.0 / p_treated_pair, 0.0)
+                w_baseline = np.where(label_baseline_pair > 0, 1.0 / p_baseline_pair, 0.0)
 
         treated_nonzero = w_treated[label_treated_pair > 0]
         baseline_nonzero = w_baseline[label_baseline_pair > 0]
