@@ -92,7 +92,7 @@ def test_iv_causal_data_rejects_invalid_instruments():
 
     with pytest.raises(
         ValueError,
-        match="specified as instruments must contain only int, float, or bool",
+        match=r"specified as instrument\[0\] must contain only int, float, or bool",
     ):
         IVCausalData(df=df, treatment="d", outcome="y", instruments="z_text")
 

@@ -85,9 +85,9 @@ def test_sensitivity_respects_overlap_policy_for_model_and_estimate(overlap_poli
 def test_sensitivity_with_dml_ate_runs_and_returns_dict():
     cd = _make_cd(n=400, random_state=11, outcome_type="normal")
     ml_g = RandomForestRegressor(n_estimators=30, random_state=1)
-    ml_m = RandomForestClassifier(n_estimators=30, random_state=1)
+    ml_m = RandomForestClassifier(n_estimators=30, min_samples_leaf=10, random_state=1)
 
-    res = IRM(cd, ml_g=ml_g, ml_m=ml_m, n_folds=3).fit()
+    res = IRM(cd, ml_g=ml_g, ml_m=ml_m, n_folds=3, random_state=17).fit()
     res.estimate(score="ATE")
     out = sensitivity_analysis(res, cf_y=0.02, cf_d=0.03, rho=1.0)
 
@@ -122,9 +122,9 @@ def test_sensitivity_with_dml_ate_runs_and_returns_dict():
 def test_sensitivity_with_dml_att_runs_and_returns_dict():
     cd = _make_cd(n=400, random_state=7, outcome_type="normal")
     ml_g = RandomForestRegressor(n_estimators=25, random_state=0)
-    ml_m = RandomForestClassifier(n_estimators=25, random_state=0)
+    ml_m = RandomForestClassifier(n_estimators=25, min_samples_leaf=10, random_state=0)
 
-    res = IRM(cd, ml_g=ml_g, ml_m=ml_m, n_folds=3).fit()
+    res = IRM(cd, ml_g=ml_g, ml_m=ml_m, n_folds=3, random_state=17).fit()
     res.estimate(score="ATTE")
     out = sensitivity_analysis(res, cf_y=0.01, cf_d=0.04, rho=0.8)
 

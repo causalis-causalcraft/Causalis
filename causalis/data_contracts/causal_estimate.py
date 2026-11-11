@@ -20,7 +20,10 @@ class CausalEstimate(BaseModel):
     model : str
         The name of the model used for estimation.
     model_options : dict
-        Options passed to the model.
+        Options passed to the model and inference metadata. Clustered IRM
+        estimates include the covariance type, cluster column and counts,
+        finite-sample correction, reference distribution and degrees of freedom,
+        and absolute and relative standard errors.
     value : float
         The estimated absolute effect.
     ci_upper_absolute : float
@@ -102,6 +105,8 @@ class CausalEstimate(BaseModel):
         CUPED estimates with diagnostics include variance reduction in percent,
         comparing adjusted and unadjusted effect variances with the same
         covariance estimator. Negative reductions are retained.
+        Clustered IRM estimates also report their cluster counts, covariance
+        correction, reference distribution, and standard errors.
 
         Returns
         -------
@@ -122,6 +127,25 @@ class CausalEstimate(BaseModel):
             value_rel = (
                 f"{_fmt_float(self.value_relative)} "
                 f"(ci_rel: {_fmt_float(self.ci_lower_relative)}, {_fmt_float(self.ci_upper_relative)})"
+            )
+
+        cluster_summary = {}
+        if self.model_options.get("cov_type") == "cluster":
+            cluster_summary = {
+                key: self.model_options.get(key)
+                for key in (
+                    "cov_type",
+                    "cluster_name",
+                    "n_clusters_fit",
+                    "n_clusters",
+                    "covariance_correction",
+                    "inference_distribution",
+                    "inference_df",
+                )
+            }
+            cluster_summary["std_error"] = _fmt_float(self.model_options.get("std_error"))
+            cluster_summary["std_error_relative"] = _fmt_float(
+                self.model_options.get("std_error_relative")
             )
 
         summary = {
@@ -146,6 +170,7 @@ class CausalEstimate(BaseModel):
             **({"variance_reduction_pct_same_cov": _fmt_float(
                 self.diagnostic_data.variance_reduction_pct_same_cov
             )} if isinstance(self.diagnostic_data, CUPEDDiagnosticData) else {}),
+            **cluster_summary,
             "time": self.time,
         }
         return pd.DataFrame({"field": list(summary.keys()), "value": list(summary.values())}).set_index("field")

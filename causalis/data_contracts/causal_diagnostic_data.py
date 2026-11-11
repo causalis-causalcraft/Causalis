@@ -31,6 +31,9 @@ class UnconfoundednessDiagnosticData(DiagnosticData):
     w_bar: Optional[np.ndarray] = None  # Representer weights used in estimation
     psi_b: Optional[np.ndarray] = None  # Orthogonal signal (for DML)
     folds: Optional[np.ndarray] = None  # Cross-fitting folds
+    cluster_codes: Optional[np.ndarray] = None  # Immutable integer cluster codes aligned to the estimation sample
+    cluster_name: Optional[str] = None  # Fit-time cluster column; codes need not preserve its original labels
+    sample_fingerprint: Optional[Dict[str, Any]] = None  # Bounded fit-time sample identity for safe external-data fallbacks
     overlap_policy: str = "clip"
     overlap_threshold: float = 0.0
     overlap_mask: Optional[np.ndarray] = None

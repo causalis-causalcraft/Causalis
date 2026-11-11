@@ -23,15 +23,17 @@ class CausalData(BaseModel):
     """
     Container for causal inference datasets.
 
-    Wraps a pandas DataFrame and stores the names of treatment, outcome, and optional confounder columns.
-    The stored DataFrame is restricted to only those columns.
+    Wraps a pandas DataFrame and stores treatment, outcome, optional confounders,
+    and optional observation/cluster identifiers. The stored DataFrame is
+    restricted to only those columns.
     Uses Pydantic for validation and as a data_contracts contract.
 
     Attributes
     ----------
     df : pd.DataFrame
-        The DataFrame containing the data_contracts restricted to outcome, treatment, and confounder columns.
-        NaN values are not allowed in the used columns.
+        The DataFrame restricted to outcome, treatment, confounder, and identifier columns.
+        Used columns cannot contain missing values. Numeric roles must contain
+        real, finite values representable within the float64 range.
     treatment_name : str
         Column name representing the treatment variable.
     outcome_name : str
@@ -40,6 +42,18 @@ class CausalData(BaseModel):
         Names of the confounder columns (may be empty).
     user_id_name : str, optional
         Column name representing the unique identifier for each observation/user.
+    cluster_name : str, optional
+        Column containing one-way cluster identifiers. Labels must be non-missing
+        and hashable, with at least two observed clusters. Repeated labels and
+        singleton clusters are allowed; the original dtype is preserved. This
+        column is metadata and is not included in the confounder matrix. Storing
+        it does not by itself enable cluster-robust inference in an estimator.
+
+    Notes
+    -----
+    Validation applies at initialization; the public DataFrame remains mutable.
+    Estimator-specific requirements, such as nonempty confounders, fold support,
+    learner compatibility, and overlap after fitting, are checked by estimators.
     """
     model_config = ConfigDict(
         arbitrary_types_allowed=True,
@@ -52,6 +66,7 @@ class CausalData(BaseModel):
     outcome_name: str = Field(alias="outcome")
     confounders_names: List[str] = Field(alias="confounders", default_factory=list)
     user_id_name: Optional[str] = Field(alias="user_id", default=None)
+    cluster_name: Optional[str] = Field(alias="cluster", default=None, strict=True)
 
     @classmethod
     def from_df(
@@ -61,6 +76,8 @@ class CausalData(BaseModel):
             outcome: str,
             confounders: Optional[Union[str, List[str]]] = None,
             user_id: Optional[str] = None,
+            *,
+            cluster: Optional[str] = None,
             **kwargs: Any
     ) -> 'CausalData':
         """
@@ -78,6 +95,9 @@ class CausalData(BaseModel):
             Column name(s) representing the confounders/covariates.
         user_id : str, optional
             Column name representing the unique identifier for each observation/user.
+        cluster : str, optional
+            Column containing one-way cluster identifiers, separate from all
+            other column roles. Retained as metadata for clustered inference.
         **kwargs : Any
             Additional arguments passed to the Pydantic model constructor.
 
@@ -92,8 +112,17 @@ class CausalData(BaseModel):
             outcome=outcome,
             confounders=confounders,
             user_id=user_id,
+            cluster=cluster,
             **kwargs
         )
+
+    @field_validator("treatment_name", "outcome_name", "user_id_name", "cluster_name")
+    @classmethod
+    def _validate_role_name(cls, value: Optional[str], info: Any) -> Optional[str]:
+        if value is not None and not value.strip():
+            role = info.field_name.removesuffix("_name")
+            raise ValueError(f"{role} must be a non-empty column name.")
+        return value
 
     @field_validator("confounders_names", mode="before")
     @classmethod
@@ -139,14 +168,13 @@ class CausalData(BaseModel):
         Perform complex validation and normalize the stored DataFrame.
 
         This validator:
-        1. Checks for duplicate column names in the input DataFrame.
-        2. Ensures role columns (treatment, outcome, user_id) are disjoint.
-        3. Verifies that all specified columns exist in the DataFrame.
-        4. Validates types and checks for constant variance in outcome, treatment, and confounders.
-        5. Ensures no NaN values are present in used columns.
-        6. Subsets the DataFrame to used columns and coerces binary treatment to int8.
-        7. Checks for duplicate column values.
-        8. Verifies user_id uniqueness.
+        1. Checks that the input has rows and no duplicate column names.
+        2. Ensures role names are nonblank, disjoint, and present in the DataFrame.
+        3. Rejects missing values before performing numeric reductions.
+        4. Validates real, finite numeric roles and nonconstant outcome/treatment/confounders.
+        5. Validates binary treatment and optional identifiers before copying data.
+        6. Subsets the DataFrame and canonicalizes treatment/boolean features.
+        7. Checks for duplicate column values on the normalized data.
 
         Returns
         -------
@@ -162,15 +190,20 @@ class CausalData(BaseModel):
         treatment = self.treatment_name
         outcome = self.outcome_name
         confounders = self.confounders_names
-        user_id = self.user_id_name
+        identifier_columns = {self.user_id_name, self.cluster_name}
 
         # 0. Guard against duplicate column names
         if df.columns.has_duplicates:
             dupes = df.columns[df.columns.duplicated()].unique().tolist()
             raise ValueError(f"DataFrame has duplicate column names: {dupes}. This is not supported.")
+        if len(df) == 0:
+            raise ValueError("DataFrame must contain at least one row; empty datasets are not allowed.")
 
         # 1. Disjoint role validation
         roles = self._get_roles()
+        for role, col in list(roles.items()) + [("confounders", col) for col in confounders]:
+            if not col.strip():
+                raise ValueError(f"Column name specified as {role} must be non-empty.")
 
         # Check for overlaps between primary roles
         role_names = list(roles.keys())
@@ -179,10 +212,11 @@ class CausalData(BaseModel):
                 if roles[r1] == roles[r2]:
                     raise ValueError(f"Column '{roles[r1]}' cannot be both {r1} and {r2}.")
 
-        overlap = [c for c in confounders if c in set(roles.values())]
+        role_columns = set(roles.values())
+        overlap = [c for c in confounders if c in role_columns]
         if overlap:
             raise ValueError(
-                "confounder columns must be disjoint from treatment/outcome/user_id" + self._get_additional_roles_error_msg() + "; overlapping columns: "
+                "confounder columns must be disjoint from treatment/outcome/user_id/cluster" + self._get_additional_roles_error_msg() + "; overlapping columns: "
                 + ", ".join(overlap)
             )
 
@@ -196,19 +230,26 @@ class CausalData(BaseModel):
             if col not in all_columns:
                 raise ValueError(f"Column '{col}' specified as confounders does not exist in the DataFrame.")
 
-        # 4. Validate types and check for constant variance
-        # Outcome
-        if not (pdtypes.is_numeric_dtype(df[outcome]) or pdtypes.is_bool_dtype(df[outcome])):
-            raise ValueError(f"Column '{outcome}' specified as outcome must contain only int, float, or bool values.")
+        cols_to_check = list(dict.fromkeys(list(roles.values()) + confounders))
+
+        # Missing values must be rejected before NumPy reductions, especially
+        # for nullable extension dtypes. Keep only a column-sized mask alive.
+        if any(df[col].isna().any() for col in cols_to_check):
+            raise ValueError("DataFrame contains NaN values in used columns, which are not allowed.")
+
+        # Include numeric roles declared by subclasses, such as IV instruments.
+        for role, col in roles.items():
+            if col not in identifier_columns:
+                self._validate_numeric_values(df[col], role)
+        for col in confounders:
+            self._validate_numeric_values(df[col], "confounders")
+
         if self._is_constant_series(df[outcome]):
             raise ValueError(
                 f"Column '{outcome}' specified as outcome is constant (has zero variance / single unique value), "
                 f"which is not allowed for causal inference."
             )
 
-        # Treatment
-        if not (pdtypes.is_numeric_dtype(df[treatment]) or pdtypes.is_bool_dtype(df[treatment])):
-            raise ValueError(f"Column '{treatment}' specified as treatment must contain only int, float, or bool values.")
         if self._is_constant_series(df[treatment]):
             raise ValueError(
                 f"Column '{treatment}' specified as treatment is constant (has zero variance / single unique value), "
@@ -217,35 +258,28 @@ class CausalData(BaseModel):
 
         self._validate_additional_roles(df)
 
-        # confounders
         for col in confounders:
-            if not (pdtypes.is_numeric_dtype(df[col]) or pdtypes.is_bool_dtype(df[col])):
-                raise ValueError(f"Column '{col}' specified as confounders must contain only int, float, or bool values.")
-            
             if self._is_constant_series(df[col]):
                 raise ValueError(
                     f"Column '{col}' specified as confounder is constant (has zero variance / single unique value), "
                     f"which is not allowed for causal inference."
                 )
 
-        # 5. Check for NaN values in used columns
-        cols_to_check = list(roles.values()) + confounders
-        
-        # Unique columns preserving order
-        cols_to_check = list(dict.fromkeys(cols_to_check))
-        
-        if df[cols_to_check].isna().any().any():
-            raise ValueError("DataFrame contains NaN values in used columns, which are not allowed.")
+        if self.cluster_name is not None:
+            self._validate_cluster_values(df[self.cluster_name])
+        self._check_user_id_uniqueness(df)
 
-        # 5. Store only the relevant columns and canonicalize treatment.
+        # Validate treatment before copying the full stored table. The returned
+        # Series owns the canonical int8 values, so it can be installed directly.
+        binary_treatment = self._validate_and_cast_binary_treatment(df[treatment], treatment)
         self.df = df[cols_to_check].copy()
-        self.df[treatment] = self._validate_and_cast_binary_treatment(self.df[treatment], treatment)
+        self.df[treatment] = binary_treatment
         for col in self.df.columns:
-            if col != user_id and pdtypes.is_bool_dtype(self.df[col]):
+            if col not in identifier_columns and pdtypes.is_bool_dtype(self.df[col]):
                 self.df[col] = self.df[col].astype("int8")
             
-            # Final safeguard for numeric types (excluding user_id)
-            if col != user_id:
+            # Identifier labels are opaque grouping keys, not numeric features.
+            if col not in identifier_columns:
                 if not pdtypes.is_numeric_dtype(self.df[col]):
                     raise ValueError(
                         f"All columns in stored DataFrame must be numeric; column '{col}' has dtype {self.df[col].dtype}."
@@ -253,9 +287,59 @@ class CausalData(BaseModel):
 
         # 6. Check for duplicate column values on the normalized subset
         self._check_duplicate_column_values(self.df)
-        self._check_user_id_uniqueness(self.df)
 
         return self
+
+    @staticmethod
+    def _validate_numeric_values(series: pd.Series, role: str) -> None:
+        """Validate a numeric role without converting or copying the column."""
+        dtype = series.dtype
+        if not (pdtypes.is_numeric_dtype(dtype) or pdtypes.is_bool_dtype(dtype)):
+            raise ValueError(
+                f"Column '{series.name}' specified as {role} must contain only int, float, or bool values."
+            )
+        if pdtypes.is_complex_dtype(dtype):
+            raise ValueError(
+                f"Column '{series.name}' specified as {role} must contain only real int, float, or bool values."
+            )
+
+        # Missing values have already been rejected. Integers and booleans
+        # cannot contain infinity or overflow the float64 range.
+        if pdtypes.is_integer_dtype(dtype) or pdtypes.is_bool_dtype(dtype):
+            return
+        if not np.isfinite(series).all():
+            raise ValueError(
+                f"Column '{series.name}' specified as {role} must contain only finite values."
+            )
+
+        # Wider native floats can be finite but overflow the float64 arrays
+        # used by estimators and duplicate screening. Ordinary floats need no
+        # additional scan or conversion.
+        if isinstance(dtype, np.dtype) and dtype.kind == "f" and dtype.itemsize > np.dtype(np.float64).itemsize:
+            limit = np.finfo(np.float64).max
+            if series.min() < -limit or series.max() > limit:
+                raise ValueError(
+                    f"Column '{series.name}' specified as {role} must contain values within the finite float64 range."
+                )
+
+    @staticmethod
+    def _validate_cluster_values(series: pd.Series) -> None:
+        """Check observed cluster labels without sorting or allocating row codes.
+
+        Missing values are checked with the other used columns. Hash-based
+        uniqueness also validates hashability and ignores unused categories.
+        Do not cache codes/counts: the public DataFrame can be mutated later.
+        """
+        try:
+            labels = pd.unique(series)
+        except TypeError as exc:
+            raise ValueError(
+                f"Column '{series.name}' specified as cluster must contain hashable identifiers."
+            ) from exc
+        if len(labels) < 2:
+            raise ValueError(
+                f"Column '{series.name}' specified as cluster must contain at least two observed clusters."
+            )
 
     @staticmethod
     def _validate_and_cast_binary_treatment(series: pd.Series, name: str) -> pd.Series:
@@ -266,6 +350,10 @@ class CausalData(BaseModel):
         if not pdtypes.is_numeric_dtype(series):
             raise ValueError(
                 f"Column '{name}' specified as treatment must contain only int, float, or bool values."
+            )
+        if pdtypes.is_complex_dtype(series):
+            raise ValueError(
+                f"Column '{name}' specified as treatment must contain only real int, float, or bool values."
             )
 
         values = pd.unique(series)
@@ -304,10 +392,12 @@ class CausalData(BaseModel):
             Mapping of role names to column names.
         """
         roles = {}
-        if self.user_id_name:
+        if self.user_id_name is not None:
             roles["user_id"] = self.user_id_name
         roles["outcome"] = self.outcome_name
         roles["treatment"] = self.treatment_name
+        if self.cluster_name is not None:
+            roles["cluster"] = self.cluster_name
         return roles
 
     def _get_additional_roles_error_msg(self) -> str:
@@ -364,6 +454,8 @@ class CausalData(BaseModel):
             If two columns have identical values.
         """
         cols = [self.outcome_name, self.treatment_name] + self.confounders_names
+        # Cluster labels may legitimately match treatment assignments or other
+        # columns. They are metadata, so exclude them from duplicate screening.
         if self.user_id_name:
             cols.append(self.user_id_name)
 
@@ -465,7 +557,7 @@ class CausalData(BaseModel):
         Returns
         -------
         str
-            The role of the column ('outcome', 'treatment', 'user_id', 'confounder', or 'unknown').
+            The role of the column ('outcome', 'treatment', 'user_id', 'cluster', 'confounder', or 'unknown').
         """
         if column_name == self.outcome_name:
             return "outcome"
@@ -473,6 +565,8 @@ class CausalData(BaseModel):
             return "treatment"
         elif self.user_id_name and column_name == self.user_id_name:
             return "user_id"
+        elif self.cluster_name is not None and column_name == self.cluster_name:
+            return "cluster"
         elif column_name in self.confounders_names:
             return "confounder"
         return "unknown"
@@ -532,6 +626,13 @@ class CausalData(BaseModel):
         return self.df[self.user_id_name]
 
     @property
+    def cluster(self) -> pd.Series:
+        """Cluster labels in observation order, or an empty Series if omitted."""
+        if self.cluster_name is None or self.cluster_name not in self.df.columns:
+            return pd.Series(dtype=object)
+        return self.df[self.cluster_name]
+
+    @property
     def X(self) -> pd.DataFrame:
         """
         Design matrix of confounders.
@@ -552,6 +653,8 @@ class CausalData(BaseModel):
             include_outcome: bool = True,
             include_confounders: bool = True,
             include_user_id: bool = False,
+            *,
+            include_cluster: bool = False,
     ) -> pd.DataFrame:
         """
         Get a DataFrame with specified columns.
@@ -568,6 +671,8 @@ class CausalData(BaseModel):
             Whether to include confounder columns.
         include_user_id : bool, default False
             Whether to include the user_id column.
+        include_cluster : bool, default False
+            Whether to include the cluster identifier column.
 
         Returns
         -------
@@ -583,7 +688,9 @@ class CausalData(BaseModel):
         if columns is not None:
             cols_to_include.extend(columns)
 
-        if columns is None and not any([include_outcome, include_confounders, include_treatment, include_user_id]):
+        if columns is None and not any([
+            include_outcome, include_confounders, include_treatment, include_user_id, include_cluster
+        ]):
             return self.df.iloc[:, 0:0].copy()  # empty frame with same index
 
         if include_outcome:
@@ -594,6 +701,8 @@ class CausalData(BaseModel):
             cols_to_include.append(self.treatment_name)
         if include_user_id and self.user_id_name:
             cols_to_include.append(self.user_id_name)
+        if include_cluster and self.cluster_name is not None:
+            cols_to_include.append(self.cluster_name)
 
         # Remove duplicates while preserving order
         seen = set()
@@ -615,5 +724,7 @@ class CausalData(BaseModel):
         )
         if self.user_id_name:
             res += f", user_id='{self.user_id_name}'"
+        if self.cluster_name is not None:
+            res += f", cluster='{self.cluster_name}'"
         res += ")"
         return res

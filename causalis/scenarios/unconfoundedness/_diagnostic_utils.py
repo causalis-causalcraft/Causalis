@@ -80,7 +80,7 @@ def _build_irm_estimate_diagnostic_data(
     if x is None:
         raise RuntimeError("Diagnostic payloads require cached confounders. Refit with store_diagnostics=True.")
 
-    from causalis.scenarios.unconfoundedness.refutation.unconfoundedness.sensitivity import (
+    from causalis.scenarios.unconfoundedness._sensitivity_inputs import (
         compute_irm_sensitivity_elements,
     )
 
@@ -111,6 +111,12 @@ def _build_irm_estimate_diagnostic_data(
         w_bar=w_bar,
         psi_b=psi_b,
         folds=getattr(model, "folds_", None),
+        sample_fingerprint={
+            **getattr(model, "_fit_sample_fingerprint_", {}),
+            "confounders": list(model._fit_data_roles_[2]),
+            "user_id_name": model._fit_data_roles_[3],
+            "user_id_hash": getattr(model, "_fit_user_id_hash_", None),
+        },
         overlap_policy=model.overlap_policy,
         overlap_threshold=model.overlap_threshold,
         overlap_mask=getattr(model, "overlap_mask_", None),

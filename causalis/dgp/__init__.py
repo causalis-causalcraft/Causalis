@@ -11,6 +11,8 @@ The most commonly used entry points are:
   optional pre-period covariates.
 - ``obs_linear_effect`` and ``obs_linear_26_dataset`` for observational data
   with confounding and ground-truth nuisance objects.
+- ``generate_obs_clustered`` for observational data with one-way dependence
+  in treatment assignments and outcome residuals.
 - ``generate_iv_data`` for binary-instrument IV data compatible with
   ``IVCausalData``.
 - ``generate_scm_data`` for synthetic panel data with one treated unit and a
@@ -20,6 +22,8 @@ The most commonly used entry points are:
 - ``generate_multitreatment`` for one-hot multi-arm treatment assignment.
 - ``generate_rct_causal_data`` for multiple outcomes sharing a randomized
   assignment, directly usable with ``RctCausalData`` and CUPED.
+- ``generate_organic_activation_data`` for organic staggered product activation,
+  monthly/cumulative LTV, three analysis views and isolated oracle effects.
 
 Notes
 -----
@@ -63,8 +67,10 @@ True
 
 from .base import _sigmoid, _logit
 from .rct_causal_data import generate_rct_causal_data
+from .organic_activation import generate_organic_activation_data
 from .causaldata import (
     CausalDatasetGenerator,
+    generate_obs_clustered,
     generate_rct,
     generate_classic_rct,
     classic_rct_gamma,
@@ -89,8 +95,10 @@ from .panel_data_did import (
 )
 
 __all__ = [
+    "generate_organic_activation_data",
     "generate_rct_causal_data",
     "CausalDatasetGenerator",
+    "generate_obs_clustered",
     "generate_rct",
     "generate_classic_rct",
     "classic_rct_gamma",

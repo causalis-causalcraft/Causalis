@@ -7,6 +7,7 @@ from typing import Union
 from causalis.dgp.causaldata import CausalData
 from causalis.dgp.causaldata.functional import obs_linear_effect
 from causalis.dgp.causaldata.base import CausalDatasetGenerator
+from causalis.dgp.causaldata.clustered import generate_obs_clustered
 from causalis.dgp.base import _gaussian_copula, _sigmoid
 
 def obs_linear_26_dataset(n: int = 10000, seed: int = 42, include_oracle: bool = True, return_causal_data: bool = True):

@@ -1,5 +1,6 @@
 from causalis.data_contracts.causaldata import CausalData
 from .base import CausalDatasetGenerator
+from .clustered import generate_obs_clustered
 from .functional import (
     generate_rct,
     generate_classic_rct,
@@ -21,6 +22,7 @@ from causalis.scenarios.cuped.dgp import generate_cuped_tweedie_26, make_cuped_b
 __all__ = [
     "CausalData",
     "CausalDatasetGenerator",
+    "generate_obs_clustered",
     "generate_rct",
     "generate_classic_rct",
     "classic_rct_gamma",

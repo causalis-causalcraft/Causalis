@@ -11,8 +11,9 @@ from scipy.special import logit
 from causalis.data_contracts.causal_estimate import CausalEstimate
 from causalis.dgp.causaldata import CausalData
 from causalis.scenarios.unconfoundedness.refutation._shared import (
+    _aligned_data_array,
     _normalize_score,
-    _validate_estimate_matches_data,
+    _resolve_cluster_context,
 )
 
 _SUPPORT_EPSILON = 1e-8
@@ -68,24 +69,16 @@ def _auc_mann_whitney(scores: np.ndarray, labels: np.ndarray) -> float:
     if n1 == 0 or n0 == 0:
         return float("nan")
 
-    order = np.argsort(scores, kind="mergesort")
-    ranks = np.empty_like(order, dtype=float)
-    ranks[order] = np.arange(1, scores.size + 1, dtype=float)
+    return _auc_from_sorted_controls(pos, np.sort(neg))
 
-    s = scores[order]
-    i = 0
-    while i < s.size:
-        j = i
-        while j < s.size and s[j] == s[i]:
-            j += 1
-        if j - i > 1:
-            avg = (i + 1 + j) / 2.0
-            ranks[order[i:j]] = avg
-        i = j
 
-    r1 = ranks[y].sum()
-    auc = (r1 - n1 * (n1 + 1) / 2.0) / (n1 * n0)
-    return float(auc)
+def _auc_from_sorted_controls(pos: np.ndarray, neg_sorted: np.ndarray) -> float:
+    """Count wins plus half of ties without constructing pairwise comparisons."""
+    if pos.size == 0 or neg_sorted.size == 0:
+        return float("nan")
+    left = np.searchsorted(neg_sorted, pos, side="left")
+    right = np.searchsorted(neg_sorted, pos, side="right")
+    return float(np.sum(left + right) / (2.0 * pos.size * neg_sorted.size))
 
 
 def _ks_statistic_from_sorted(a: np.ndarray, b: np.ndarray) -> float:
@@ -94,7 +87,7 @@ def _ks_statistic_from_sorted(a: np.ndarray, b: np.ndarray) -> float:
     if na == 0 or nb == 0:
         return float("nan")
 
-    vals = np.sort(np.unique(np.concatenate([a, b])))
+    vals = np.unique(np.concatenate([a, b]))
     cdf_a = np.searchsorted(a, vals, side="right") / na
     cdf_b = np.searchsorted(b, vals, side="right") / nb
     return float(np.max(np.abs(cdf_a - cdf_b)))
@@ -362,10 +355,12 @@ def _logistic_recalibration(
     return alpha, beta
 
 
-def _calibration_report(p: np.ndarray, d: np.ndarray, *, n_bins: int) -> Dict[str, Any]:
+def _calibration_report(
+    p: np.ndarray, d: np.ndarray, *, n_bins: int, auc: Optional[float] = None
+) -> Dict[str, Any]:
     """Build calibration metrics, reliability bins, and severity flags."""
     p = np.asarray(p, dtype=float).ravel()
-    d = np.asarray(d, dtype=int).ravel()
+    d = np.asarray(d, dtype=float).ravel()
 
     p, d_f = _mask_finite_pairs(p, d)
     d = d_f.astype(int)
@@ -375,7 +370,8 @@ def _calibration_report(p: np.ndarray, d: np.ndarray, *, n_bins: int) -> Dict[st
 
     p = np.clip(p, 1e-12, 1.0 - 1e-12)
 
-    auc = float(_auc_mann_whitney(p, d)) if np.unique(d).size == 2 else float("nan")
+    if auc is None:
+        auc = float(_auc_mann_whitney(p, d)) if np.unique(d).size == 2 else float("nan")
     brier = float(np.mean((p - d) ** 2))
     ece = float(_ece_binary(p, d, n_bins=n_bins))
 
@@ -491,6 +487,13 @@ def run_overlap_diagnostics(
     observed sample. It does not prove the theoretical positivity assumption
     and does not test for unobserved confounding.
 
+    Summaries weight observations, including with unequal cluster sizes.
+    ``ate_ess`` is Kish row-weight concentration, not the number of independent
+    observations. For clustered estimates, ``cluster_weight_concentration``
+    additionally summarizes weight mass across clusters; it is not a
+    correlation-adjusted variance effective sample size. Pure-arm clusters are
+    reported descriptively and do not by themselves violate positivity.
+
     Parameters
     ----------
     data : CausalData
@@ -554,8 +557,6 @@ def run_overlap_diagnostics(
     >>> report["summary"]  # doctest: +SKIP
     >>> report["edge_mass"]  # doctest: +SKIP
     """
-    _validate_estimate_matches_data(data=data, estimate=estimate)
-
     threshold_values = dict(_DEFAULT_THRESHOLDS)
     if isinstance(thresholds, dict):
         threshold_values.update({str(k): float(v) for k, v in thresholds.items()})
@@ -581,18 +582,20 @@ def run_overlap_diagnostics(
 
     d_raw = getattr(diagnostic_data, "d", None)
     if d_raw is None:
-        d_raw = data.get_df()[str(data.treatment_name)].to_numpy(dtype=float)
+        d_raw = _aligned_data_array(data, diagnostic_data, str(data.treatment_name))
 
     m = np.asarray(m_raw, dtype=float).ravel()
     m_post = np.asarray(m_diag, dtype=float).ravel()
-    d = (np.asarray(d_raw, dtype=float).ravel() > 0.5).astype(int)
+    d = np.asarray(d_raw, dtype=float).ravel()
     if m.size != d.size or m_post.size != d.size:
         raise ValueError("diagnostic_data.m_hat and treatment vector must have matching length.")
 
+    context = _resolve_cluster_context(data, estimate, d.size)
     finite = np.isfinite(m) & np.isfinite(m_post) & np.isfinite(d)
-    m = m[finite]
-    m_post = m_post[finite]
-    d = d[finite]
+    if not np.all(finite):
+        m, m_post, d = m[finite], m_post[finite], d[finite]
+        context = context.subset(finite)
+    d = (d > 0.5).astype(int)
 
     if m.size == 0:
         raise ValueError("No finite propensity/treatment pairs available for overlap diagnostics.")
@@ -629,7 +632,7 @@ def run_overlap_diagnostics(
         auc = float("nan")
     else:
         ks = _ks_statistic_from_sorted(treated_sorted, control_sorted)
-        auc = _auc_mann_whitney(m, d)
+        auc = _auc_from_sorted_controls(treated_sorted, control_sorted)
 
     (
         support_rate_treated,
@@ -707,7 +710,27 @@ def run_overlap_diagnostics(
         "m_clip_upper": clip_upper,
     }
 
-    calibration = _calibration_report(m, d, n_bins=int(n_bins))
+    calibration = _calibration_report(m, d, n_bins=int(n_bins), auc=auc)
+
+    cluster_support: Dict[str, Any] = {}
+    cluster_concentration: Dict[str, float] = {}
+    if context.codes is not None:
+        counts = np.bincount(context.codes)
+        treated = np.bincount(context.codes, weights=d, minlength=counts.size)
+        cluster_support = {
+            "n_clusters": int(counts.size),
+            "n_treated_clusters": int(np.count_nonzero(treated > 0)),
+            "n_control_clusters": int(np.count_nonzero(treated < counts)),
+            "n_mixed_clusters": int(np.count_nonzero((treated > 0) & (treated < counts))),
+            "n_treated_only_clusters": int(np.count_nonzero(treated == counts)),
+            "n_control_only_clusters": int(np.count_nonzero(treated == 0)),
+        }
+        for name, weights in (
+            ("w1", w1), ("w0", w0),
+            ("att_w1", d.astype(float)),
+            ("att_w0", (1.0 - d) * m / (1.0 - m)),
+        ):
+            cluster_concentration[name] = _ess(np.bincount(context.codes, weights=weights))
 
     flags: Dict[str, str] = {}
 
@@ -832,6 +855,10 @@ def run_overlap_diagnostics(
         "calibration": calibration,
         "flags": flags,
         "meta": {
+            **context.metadata,
+            "weighting": "observation",
+            "ess_interpretation": "row_weight_concentration",
+            "cluster_concentration_interpretation": "cluster_weight_mass_concentration",
             "score": score,
             "use_hajek": bool(use_hajek),
             "propensity_source": "m_hat_raw" if getattr(diagnostic_data, "m_hat_raw", None) is not None else "m_hat",
@@ -853,6 +880,10 @@ def run_overlap_diagnostics(
             "support_caliper_multiplier": _SUPPORT_CALIPER_MULTIPLIER,
         },
     }
+
+    if context.codes is not None:
+        report["cluster_support"] = cluster_support
+        report["cluster_weight_concentration"] = cluster_concentration
 
     if return_summary:
         def _safe_ratio(numerator: float, denominator: float) -> float:

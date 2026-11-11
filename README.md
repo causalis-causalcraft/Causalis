@@ -129,6 +129,26 @@ result = model.estimate(score='ATTE')
 result.summary()
 ```
 
+## Organic activation and LTV benchmarks
+
+Generate one staggered client-month panel with separate observed data and oracle
+effects, then prepare DiD, DML/IRM, and IPCW analysis views:
+
+```python
+from causalis.dgp import generate_organic_activation_data
+from causalis.dgp.organic_activation import make_did_pair, make_dml_view, make_ipcw_view
+
+df, oracle, metadata = generate_organic_activation_data(scenario="baseline", seed=42)
+df_did = make_did_pair(df, g=10, t=15)
+df_dml = make_dml_view(df, g=10, horizon=6)
+df_ipcw = make_ipcw_view(df, g=10, horizon=6)
+```
+
+The [organic activation guide](notebooks/examples/organic_activation.md) explains
+the six scenarios, allowed model features, diagnostics, and the distinct
+`ATT_no_activation` and `ATT_defer_natural` benchmarks. These helpers prepare
+data; they do not fit estimators.
+
 ## RCT data with multiple outcomes and treatment arms
 
 ```python
@@ -348,6 +368,79 @@ shared summary-statistics `calculate_mde` API (`baseline_rate`, `variance`,
 `ratio`, and `data_type`) is also removed. Both new APIs require `RctCausalData`
 and a single `outcome`; the previous multi-outcome mapping interface is removed.
 
+## Clustered observational diagnostics
+
+Declare one independent cluster column with `CausalData(..., cluster="cluster")`,
+or use `generate_obs_clustered`. IRM keeps entire clusters in cross-fitting
+folds. Refutation diagnostics use the saved estimation-sample membership,
+including after overlap dropping, and preserve observation-weighted ATE/ATTE
+targets when cluster sizes differ.
+
+```python
+from causalis.dgp import generate_obs_clustered
+from causalis.scenarios.unconfoundedness import IRM
+from causalis.scenarios.unconfoundedness.refutation import (
+    run_score_diagnostics, plot_influence_instability, sensitivity_analysis,
+)
+
+data = generate_obs_clustered(n=10_000, n_clusters=100, seed=42)
+estimate = IRM(data, n_folds=3, random_state=42).fit().estimate()
+scores = run_score_diagnostics(data, estimate)
+figure = plot_influence_instability(estimate)  # clusters by default
+rows = plot_influence_instability(estimate, influence_level="row")
+robustness = sensitivity_analysis(estimate, r2_y=0.03, r2_d=0.03)
+```
+
+Score uncertainty and sensitivity bounds use one-way CR1 covariance from sums
+of centered row influences, with Student's t reference on `G - 1` degrees of
+freedom. Sensitivity benchmark refits preserve the original cluster-disjoint
+folds. This matches IRM's existing inference convention; small or highly
+unbalanced cluster samples can still have poor asymptotic approximations.
+
+`influence_level="auto"` selects clusters when membership is available and rows
+otherwise; `"cluster"` and `"row"` select explicitly. Cluster tables include
+size, treated share, estimate contribution, and variance share. These are
+influence diagnostics, rather than exact leave-cluster-out refits.
+
+Overlap and balance remain descriptive summaries over observations. Reports
+add pure-arm/mixed cluster counts and cluster weight concentration; the latter
+describes concentration of weight across groups, not an ICC-adjusted effective
+sample size. A cluster need not contain both treatment arms. Infinite SMD is
+graded as a balance violation. Pooled out-of-sample moment t/p-values are now
+unavailable because the former pooled construction is degenerate; fold tables
+remain available as descriptive stability checks.
+
+Residual scatter plots default to a reproducible sample of 20,000 points
+(`random_state=42`); all rows still determine summary curves. Pass
+`max_scatter_points=None` for the full scatter. Missing or contradictory cluster
+membership raises an error instead of selecting IID inference. Fewer than two
+retained clusters leaves descriptive diagnostics available but inference
+unavailable; sensitivity inference requires at least two clusters.
+
+Run `.venv/bin/python benchmarks/refutation_cluster.py --rows 100000 1000000`
+to measure diagnostics and rendered plots with three timed repetitions, separate
+allocation measurements, and isolated-worker peak RSS. Use `--score ATTE` for
+ATTE. The checked-in results are in
+[`benchmarks/refutation_cluster_results.json`](benchmarks/refutation_cluster_results.json).
+
+Measured at one million rows, 10,000 clusters and eight confounders, across
+ATE/ATTE and balanced/unequal cluster sizes:
+
+| Operation | Median seconds per call | Peak additional allocations (MiB) |
+| --- | ---: | ---: |
+| Overlap | 0.298–0.303 | 209.3 |
+| Balance | 0.152–0.167 | 70.8 |
+| Score | 0.363–0.461 | 139.7 |
+| Sensitivity | 0.024–0.027 | 30.8 |
+| Influence plot, rendered | 0.179–0.188 | 63.1 |
+| Residual plot, rendered | 0.218–0.223 | 65.2 |
+
+These timings exclude generation and fitting, which are recorded separately.
+Allocation peaks exclude retained inputs; the largest full worker peak RSS was
+1,545.7 MiB, including Python, imports, generation, fitting and estimation.
+The benchmark uses inexpensive dummy learners to isolate diagnostic work;
+end-to-end correctness tests also fit random forests on the clustered generator.
+
 ## Binary sensitivity protocol for observational DML/IRM
 
 Pre-specify a practically meaningful effect boundary and one or more
@@ -385,6 +478,24 @@ strictly beyond `decision_threshold` in the requested direction. `RV` and
 cutoffs. An empty benchmark set, failed external preconditions, unavailable
 sensitivity elements, or strengths outside the finite sensitivity domain
 produce `FAIL`.
+
+For binary IRM, the confounding bound is
+`abs(rho) * sqrt(sigma2 * nu2 * r2_y * r2_d / (1 - r2_d))`.
+`r2_y` is a partial outcome R-squared in `[0, 1]`; `r2_d` is the relative
+Riesz-representer variation gain in `[0, 1)`. The outcome channel is used
+directly, without an odds transformation. This corrects the previous outcome
+parameterization and changes numerical results for explicitly supplied
+strengths; no legacy mode is provided. `RVa` solves for the crossing of the
+full bias-aware CI, including its changing standard error. The stress multiplier
+scales each R-squared on its odds scale, so it need not multiply the bound by
+that same factor.
+
+Inference requires finite, aligned influence-function vectors and a finite,
+non-negative standard error. Invalid inference fails closed; `use_signed_rr=True`
+is rejected. Long and short models must target the same population, including
+identical overlap masks when using `overlap_policy="drop"`. Stale estimates and
+incompatible score overrides are rejected. Within each protocol call, the long
+model is checked once and each unique omitted-feature group is refitted once.
 
 By default, `direction="auto"` selects positive when the original estimate is
 at or above `decision_threshold`, and negative otherwise. It uses this same

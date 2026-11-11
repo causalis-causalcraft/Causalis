@@ -6,6 +6,7 @@ import matplotlib as mpl
 import matplotlib.pyplot as plt
 from causalis.data_contracts.causal_estimate import CausalEstimate
 from causalis.data_contracts.causal_diagnostic_data import UnconfoundednessDiagnosticData
+from causalis.scenarios.unconfoundedness._cluster_utils import compact_cluster_codes
 
 
 def _resolve_overlap_diag(
@@ -54,6 +55,9 @@ def plot_m_overlap(
     - x in [0,1]
     - Stable NumPy KDE w/ boundary reflection (no SciPy warnings)
     - Uses Matplotlib default colors unless color_t/color_c are provided
+
+    Densities weight observations, including for unequal-size clusters; KDE
+    overlays are descriptive smooths rather than inference bands.
 
     Parameters
     ----------
@@ -189,6 +193,11 @@ def plot_m_overlap(
     diag_resolved = _resolve_overlap_diag(diag)
     d = np.asarray(diag_resolved.d).ravel()
     m = np.asarray(diag_resolved.m_hat, dtype=float).ravel()
+    if d.size != m.size:
+        raise ValueError("Propensity and treatment arrays must have matching length.")
+    codes_raw = getattr(diag_resolved, "cluster_codes", None)
+    if codes_raw is not None:
+        compact_cluster_codes(codes_raw, m.size)
     mask = np.isfinite(m) & np.isfinite(d)
     d = d[mask] > 0.5
     m = np.clip(m[mask], 0.0, 1.0)

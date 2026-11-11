@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional
 
 import numpy as np
@@ -11,8 +11,9 @@ import pandas as pd
 from causalis.data_contracts.causal_estimate import CausalEstimate
 from causalis.dgp.causaldata import CausalData
 from causalis.scenarios.unconfoundedness.refutation._shared import (
+    _aligned_data_array,
     _normalize_score,
-    _validate_estimate_matches_data,
+    _resolve_cluster_context,
 )
 
 
@@ -26,6 +27,7 @@ class _BalanceInputs:
     names: List[str]
     score: str
     normalize: bool
+    metadata: Dict[str, Any] = field(default_factory=dict)
 
 
 def _resolve_feature_names(names: Optional[List[str]], p: int) -> List[str]:
@@ -44,7 +46,9 @@ def _extract_balance_inputs(
     normalize: Optional[bool],
 ) -> _BalanceInputs:
     """Extract and validate balance-diagnostic arrays from estimate metadata."""
-    _validate_estimate_matches_data(data=data, estimate=estimate, require_confounders=True)
+    missing = [name for name in estimate.confounders if name not in data.df.columns]
+    if missing:
+        raise ValueError("estimate.confounders are missing in data.get_df(): " + ", ".join(missing))
 
     diagnostic_data = estimate.diagnostic_data
     if diagnostic_data is None:
@@ -59,11 +63,11 @@ def _extract_balance_inputs(
 
     x_raw = getattr(diagnostic_data, "x", None)
     if x_raw is None:
-        x_raw = data.get_df()[list(data.confounders)].to_numpy(dtype=float)
+        x_raw = _aligned_data_array(data, diagnostic_data, list(data.confounders))
 
     d_raw = getattr(diagnostic_data, "d", None)
     if d_raw is None:
-        d_raw = data.get_df()[str(data.treatment_name)].to_numpy(dtype=float)
+        d_raw = _aligned_data_array(data, diagnostic_data, str(data.treatment_name))
 
     score_raw = getattr(diagnostic_data, "score", estimate.estimand)
     score = _normalize_score(score_raw)
@@ -90,16 +94,14 @@ def _extract_balance_inputs(
         w_bar_raw = getattr(diagnostic_data, "w_bar", None)
         if w_bar_raw is None:
             model_ref = getattr(diagnostic_data, "_model", None)
-            if model_ref is not None and hasattr(model_ref, "_get_weights"):
-                try:
-                    _, w_bar_raw = model_ref._get_weights(
-                        n=n,
-                        m_hat_adj=m_hat,
-                        d=d.astype(int),
-                        score="ATE",
-                    )
-                except Exception:
-                    w_bar_raw = None
+            custom_weights = (
+                estimate.model_options.get("se_approx_weight_norm", False)
+                or estimate.model_options.get("uses_custom_weights", False)
+                or getattr(model_ref, "_fit_weights_used_", False)
+                or getattr(model_ref, "weights", None) is not None
+            )
+            if custom_weights:
+                raise ValueError("Custom-weight balance requires saved diagnostic w_bar; refit with diagnostics.")
         if w_bar_raw is not None:
             w_bar = np.asarray(w_bar_raw, dtype=float).ravel()
             if w_bar.size != n:
@@ -124,6 +126,28 @@ def _extract_balance_inputs(
     if score == "ATTE":
         normalize_used = False
 
+    context = _resolve_cluster_context(data, estimate, n)
+    finite = np.isfinite(d) & np.isfinite(m_hat)
+    for j in range(p):
+        finite &= np.isfinite(x[:, j])
+    if not np.any(finite):
+        raise ValueError("No finite observations available for balance diagnostics.")
+    if not np.all(finite):
+        x, d, m_hat = x[finite], d[finite], m_hat[finite]
+        w_bar = w_bar[finite] if w_bar is not None else None
+        context = context.subset(finite)
+    metadata = {**context.metadata, "weighting": "observation"}
+    if context.codes is not None:
+        counts = np.bincount(context.codes)
+        treated = np.bincount(context.codes, weights=d, minlength=counts.size)
+        metadata.update(
+            n_treated_clusters=int(np.count_nonzero(treated > 0)),
+            n_control_clusters=int(np.count_nonzero(treated < counts)),
+            n_mixed_clusters=int(np.count_nonzero((treated > 0) & (treated < counts))),
+            n_treated_only_clusters=int(np.count_nonzero(treated == counts)),
+            n_control_only_clusters=int(np.count_nonzero(treated == 0)),
+        )
+
     return _BalanceInputs(
         x=x,
         d=d,
@@ -132,7 +156,20 @@ def _extract_balance_inputs(
         names=_resolve_feature_names(names, p),
         score=score,
         normalize=bool(normalize_used),
+        metadata=metadata,
     )
+
+
+def _weighted_moments(x: np.ndarray, weights: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+    """Compute centered moments with one observation-sized temporary per feature."""
+    total = float(np.sum(weights))
+    means = np.asarray(x.T @ weights, dtype=float) / total
+    variances = np.empty(x.shape[1], dtype=float)
+    for j in range(x.shape[1]):
+        centered = np.subtract(x[:, j], means[j])
+        np.square(centered, out=centered)
+        variances[j] = float(weights @ centered) / total
+    return means, variances
 
 
 def _balance_smd(
@@ -166,11 +203,8 @@ def _balance_smd(
     if s1 <= 0.0 or s0 <= 0.0:
         raise RuntimeError("Degenerate weights: zero total mass in a pseudo-population.")
 
-    mu1 = (w1[:, None] * x).sum(axis=0) / s1
-    mu0 = (w0[:, None] * x).sum(axis=0) / s0
-
-    var1 = (w1[:, None] * (x - mu1) ** 2).sum(axis=0) / s1
-    var0 = (w0[:, None] * (x - mu0) ** 2).sum(axis=0) / s0
+    mu1, var1 = _weighted_moments(x, w1)
+    mu0, var0 = _weighted_moments(x, w0)
     s_pool = np.sqrt(0.5 * (np.maximum(var1, 0.0) + np.maximum(var0, 0.0)))
 
     smd_weighted = np.full(p, np.nan, dtype=float)
@@ -186,12 +220,8 @@ def _balance_smd(
     if not np.any(mask1) or not np.any(mask0):
         smd_unweighted = np.full(p, np.nan, dtype=float)
     else:
-        x1 = x[mask1]
-        x0 = x[mask0]
-        mu1_u = x1.mean(axis=0)
-        mu0_u = x0.mean(axis=0)
-        var1_u = x1.var(axis=0, ddof=0)
-        var0_u = x0.var(axis=0, ddof=0)
+        mu1_u, var1_u = _weighted_moments(x, mask1.astype(float))
+        mu0_u, var0_u = _weighted_moments(x, mask0.astype(float))
         s_pool_u = np.sqrt(0.5 * (np.maximum(var1_u, 0.0) + np.maximum(var0_u, 0.0)))
 
         smd_unweighted = np.full(p, np.nan, dtype=float)
@@ -202,10 +232,10 @@ def _balance_smd(
         smd_unweighted[zero_both_u & (diff_u <= 1e-16)] = 0.0
         smd_unweighted[zero_both_u & (diff_u > 1e-16)] = np.inf
 
-    finite = np.isfinite(smd_weighted)
-    if np.any(finite):
-        frac_violations = float(np.mean(smd_weighted[finite] >= float(threshold)))
-        smd_max = float(np.nanmax(smd_weighted[finite]))
+    available = ~np.isnan(smd_weighted)
+    if np.any(available):
+        frac_violations = float(np.mean(smd_weighted[available] >= float(threshold)))
+        smd_max = float(np.max(smd_weighted[available]))
         balance_pass = bool((frac_violations < 0.10) and (smd_max < 2.0 * float(threshold)))
     else:
         frac_violations = 0.0
@@ -218,13 +248,13 @@ def _balance_smd(
         "smd_max": smd_max,
         "frac_violations": frac_violations,
         "pass": balance_pass,
-        "meta": {"n": int(n), "p": int(p)},
+        "meta": {"n": int(n), "p": int(p), **inputs.metadata},
     }
 
 
 def _grade(value: float, warn: float, strong: float) -> str:
     """Map a scalar diagnostic value to a traffic-light severity flag."""
-    if value is None or not np.isfinite(value):
+    if value is None or np.isnan(value):
         return "NA"
     value_f = float(value)
     if value_f < warn:
@@ -272,6 +302,10 @@ def run_unconfoundedness_diagnostics(
 
     Smaller weighted SMDs are better. A common rule of thumb is to aim for
     :math:`|\mathrm{SMD}| < 0.10`.
+
+    SMDs are descriptive, observation-weighted quantities for IID and clustered
+    data alike. Unequal cluster sizes retain their observation weights; cluster
+    support counts are included in ``meta`` without changing the SMD denominator.
 
     Parameters
     ----------

@@ -8,9 +8,11 @@ from sklearn.linear_model import LogisticRegression
 from causalis.dgp.causaldata import CausalData
 from causalis.scenarios.unconfoundedness.model import IRM
 from causalis.scenarios.unconfoundedness.refutation.unconfoundedness.sensitivity import (
-    _calibrate_benchmark_gain_statistics,
     sensitivity_benchmark,
     sensitivity_benchmark_group,
+)
+from causalis.scenarios.unconfoundedness.refutation.unconfoundedness._sensitivity_benchmark import (
+    _calibrate_benchmark_gain_statistics,
 )
 
 

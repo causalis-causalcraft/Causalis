@@ -21,7 +21,8 @@ class IVCausalData(CausalData):
 
     Extends :class:`CausalData` with exactly one instrument column. The stored
     DataFrame is restricted to outcome, treatment, instrument, confounder, and
-    optional user_id columns.
+    optional user_id and cluster columns. Cluster labels are metadata only;
+    storing them does not enable cluster-robust IV inference.
 
     Attributes
     ----------
@@ -37,6 +38,8 @@ class IVCausalData(CausalData):
         Names of the confounder columns (may be empty).
     user_id_name : str, optional
         Column name representing the unique identifier for each observation/user.
+    cluster_name : str, optional
+        Column name identifying groups of dependent observations.
     """
 
     instruments_names: List[str] = Field(alias="instruments")
@@ -50,6 +53,8 @@ class IVCausalData(CausalData):
         instruments: Union[str, List[str]],
         confounders: Optional[Union[str, List[str]]] = None,
         user_id: Optional[str] = None,
+        *,
+        cluster: Optional[str] = None,
         **kwargs: Any,
     ) -> "IVCausalData":
         """
@@ -69,6 +74,9 @@ class IVCausalData(CausalData):
             Column name(s) representing the observed confounders/covariates.
         user_id : str, optional
             Column name representing the unique identifier for each observation/user.
+        cluster : str, optional
+            Column name identifying groups of dependent observations. Metadata
+            only; this does not enable cluster-robust IV inference.
         **kwargs : Any
             Additional arguments passed to the Pydantic model constructor.
 
@@ -84,6 +92,7 @@ class IVCausalData(CausalData):
             instruments=instruments,
             confounders=confounders,
             user_id=user_id,
+            cluster=cluster,
             **kwargs,
         )
 
@@ -311,6 +320,8 @@ class IVCausalData(CausalData):
         include_confounders: bool = True,
         include_user_id: bool = False,
         include_instruments: bool = True,
+        *,
+        include_cluster: bool = False,
     ) -> pd.DataFrame:
         """
         Get a DataFrame with specified columns.
@@ -329,6 +340,8 @@ class IVCausalData(CausalData):
             Whether to include the user_id column.
         include_instruments : bool, default True
             Whether to include instrument columns.
+        include_cluster : bool, default False
+            Whether to include the cluster label column.
 
         Returns
         -------
@@ -351,6 +364,7 @@ class IVCausalData(CausalData):
                 include_treatment,
                 include_user_id,
                 include_instruments,
+                include_cluster,
             ]
         ):
             return self.df.iloc[:, 0:0].copy()
@@ -365,6 +379,8 @@ class IVCausalData(CausalData):
             cols_to_include.extend(self.instruments_names)
         if include_user_id and self.user_id_name:
             cols_to_include.append(self.user_id_name)
+        if include_cluster and self.cluster_name is not None:
+            cols_to_include.append(self.cluster_name)
 
         seen = set()
         cols_to_include = [x for x in cols_to_include if not (x in seen or seen.add(x))]
@@ -385,5 +401,7 @@ class IVCausalData(CausalData):
         )
         if self.user_id_name:
             res += f", user_id='{self.user_id_name}'"
+        if self.cluster_name is not None:
+            res += f", cluster='{self.cluster_name}'"
         res += ")"
         return res

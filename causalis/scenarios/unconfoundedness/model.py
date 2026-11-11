@@ -16,9 +16,9 @@ from typing import Any, Dict, Optional, Tuple, List
 
 from joblib import Parallel, delayed
 from sklearn.base import clone, BaseEstimator
-from sklearn.model_selection import StratifiedKFold
+from sklearn.model_selection import KFold, StratifiedKFold
 from sklearn.utils.validation import check_is_fitted
-from scipy.stats import norm
+from scipy.stats import norm, t as student_t
 
 try:
     from catboost import CatBoostClassifier, CatBoostRegressor
@@ -65,6 +65,9 @@ class IRM(BaseEstimator):
     ----------
     data : CausalData
         Data container with outcome, binary treatment (0/1), and confounders.
+        Declaring ``data.cluster_name`` automatically enables one-way clustered
+        cross-fitting and inference for ATE/ATTE. All rows of a cluster stay in
+        one fold. Cluster counts are balanced across folds; row counts need not be.
     ml_g : estimator
         Learner for E[Y|X,D]. If classifier and Y is binary, predict_proba is used; otherwise predict().
     ml_m : classifier
@@ -240,6 +243,26 @@ class IRM(BaseEstimator):
     stabilized by their sample means (a Hajek-style normalization). This option
     is applied to ATE only; for ATTE it is intentionally ignored to preserve the
     canonical ATTE efficient influence function used by the estimator.
+
+    With a cluster column, let :math:`f_i` denote the estimated row influence
+    function, :math:`n` the retained row count, and :math:`G` the retained cluster
+    count. One-way CR1 inference uses
+
+    .. math::
+
+        \widehat{\mathrm{Var}}(\hat\theta)
+        = \frac{G}{G-1}\frac{1}{n^2}
+          \sum_{g=1}^{G}\left(\sum_{i\in g}f_i\right)^2.
+
+    Confidence intervals and p-values use Student's t distribution with
+    :math:`G-1` degrees of freedom. Relative effects use the same covariance
+    estimator for their joint delta-method influence function and baseline
+    guard. ATTE baseline inference accounts for the estimated treated share.
+    The observation-weighted moment equation is unchanged; unequal cluster
+    counts across folds can therefore differ from DoubleML's fold-weighted
+    cluster implementation. Existing weighted/Hajek ATE approximation flags
+    still apply. Clustered GATE/GATET and cluster-aware refutation are not yet
+    implemented.
     """
 
     def __init__(
@@ -293,6 +316,10 @@ class IRM(BaseEstimator):
         self.overlap_mask_ = None
         self.overlap_n_dropped_ = 0
         self.feature_importance_ = None
+        self.cluster_codes_ = None
+        self.n_clusters_ = None
+        self.n_clusters_fit_ = None
+        self._fit_cluster_name_ = None
 
         # Initialize default learners if not provided
         if HAS_CATBOOST:
@@ -569,19 +596,117 @@ class IRM(BaseEstimator):
         }
 
     def _validate_treatment_support(self, d: np.ndarray) -> None:
-        """Ensure both treatment arms have enough rows for stratified cross-fitting."""
+        """Ensure both treatment arms support the selected cross-fitting scheme."""
         class_counts = np.bincount(d, minlength=2)
         if np.any(class_counts == 0):
             missing = np.where(class_counts == 0)[0].tolist()
             raise RuntimeError(
                 f"Missing treatment classes in data: {missing}. Need support for both treatment arms."
             )
+        if self.cluster_codes_ is not None:
+            if self.n_folds > self.n_clusters_fit_:
+                raise ValueError(
+                    f"n_folds={self.n_folds} exceeds the number of clusters="
+                    f"{self.n_clusters_fit_}. Reduce n_folds."
+                )
+            sizes = np.bincount(self.cluster_codes_, minlength=self.n_clusters_fit_)
+            treated = np.bincount(
+                self.cluster_codes_, weights=d, minlength=self.n_clusters_fit_
+            )
+            if np.count_nonzero(treated) < 2 or np.count_nonzero(sizes - treated) < 2:
+                raise ValueError(
+                    "Cluster cross-fitting requires at least two clusters containing "
+                    "each treatment arm so every training split can contain both arms."
+                )
+            return
         min_class_count = int(class_counts.min())
         if self.n_folds > min_class_count:
             raise ValueError(
                 f"n_folds={self.n_folds} exceeds minimum treatment class count={min_class_count}. "
                 "Reduce n_folds or collect more data."
             )
+
+    def _factorize_current_clusters(self, n: int) -> Optional[np.ndarray]:
+        """Encode observed labels without sorting or retaining object labels."""
+        if getattr(self.data, "cluster_name", None) is None:
+            return None
+        labels = self.data.cluster
+        if len(labels) != n:
+            raise ValueError("Cluster identifiers must match the fitted sample size.")
+        try:
+            codes, _ = pd.factorize(labels, sort=False)
+        except TypeError as exc:
+            raise ValueError("Cluster identifiers must be hashable.") from exc
+        if np.any(codes < 0):
+            raise ValueError("Cluster identifiers must be non-missing.")
+        if codes.size == 0 or int(codes.max()) < 1:
+            raise ValueError("Cluster inference requires at least two observed clusters.")
+        codes.setflags(write=False)
+        return codes
+
+    def _store_fit_clusters(self, n: int) -> None:
+        """Snapshot cluster membership independently of optional diagnostics."""
+        self.cluster_codes_ = self._factorize_current_clusters(n)
+        self._fit_cluster_name_ = getattr(self.data, "cluster_name", None)
+        self.n_clusters_fit_ = (
+            int(self.cluster_codes_.max()) + 1
+            if self.cluster_codes_ is not None else None
+        )
+        self.n_clusters_ = self.n_clusters_fit_
+
+    def _make_fold_assignments(self, X: np.ndarray, d: np.ndarray) -> np.ndarray:
+        """Build and preflight folds while retaining only one row-level vector."""
+        n = len(d)
+        fixed_folds = getattr(self, "_fixed_fold_assignments_", None)
+        if fixed_folds is not None:
+            folds = np.asarray(fixed_folds, dtype=int).ravel()
+            if folds.size != n:
+                raise ValueError(
+                    "Fixed fold assignments must match the fitted sample size. "
+                    f"Got {folds.size} and {n}."
+                )
+            if not np.array_equal(np.unique(folds), np.arange(self.n_folds)):
+                raise ValueError(
+                    "Fixed fold assignments must contain every fold id from 0 to "
+                    f"{self.n_folds - 1}."
+                )
+            folds = folds.copy()
+        elif self.cluster_codes_ is None:
+            folds = np.empty(n, dtype=int)
+            splitter = StratifiedKFold(
+                n_splits=self.n_folds, shuffle=True, random_state=self.random_state
+            )
+            for fold_id, (_, test_idx) in enumerate(splitter.split(X, d)):
+                folds[test_idx] = fold_id
+        else:
+            cluster_folds = np.empty(self.n_clusters_fit_, dtype=int)
+            splitter = KFold(
+                n_splits=self.n_folds, shuffle=True, random_state=self.random_state
+            )
+            for fold_id, (_, test_codes) in enumerate(
+                splitter.split(np.empty(self.n_clusters_fit_))
+            ):
+                cluster_folds[test_codes] = fold_id
+            folds = cluster_folds[self.cluster_codes_]
+
+        if self.cluster_codes_ is not None:
+            cluster_folds = np.full(self.n_clusters_fit_, self.n_folds, dtype=int)
+            np.minimum.at(cluster_folds, self.cluster_codes_, folds)
+            if np.any(cluster_folds[self.cluster_codes_] != folds):
+                raise ValueError("Fixed fold assignments must not split a cluster across folds.")
+            test_sizes = np.bincount(folds, minlength=self.n_folds)
+            test_treated = np.bincount(folds, weights=d, minlength=self.n_folds)
+            train_treated = float(np.sum(d)) - test_treated
+            train_control = float(n - np.sum(d)) - (test_sizes - test_treated)
+            invalid = np.flatnonzero((train_treated == 0) | (train_control == 0))
+            if invalid.size:
+                raise ValueError(
+                    "Cluster cross-fitting training splits must contain both treatment "
+                    f"arms; invalid fold ids: {invalid.tolist()}. Change random_state or "
+                    "increase n_folds up to the number of clusters; for fixed folds, "
+                    "provide assignments with both arms in every training split."
+                )
+        return folds
 
     @staticmethod
     def _hash_array(arr: np.ndarray, *, dtype: Optional[np.dtype] = None) -> str:
@@ -606,6 +731,7 @@ class IRM(BaseEstimator):
         X: np.ndarray,
         y: np.ndarray,
         d: np.ndarray,
+        cluster_codes: Optional[np.ndarray] = None,
     ) -> Dict[str, Any]:
         """Build a compact fingerprint for the fitted sample order and contents."""
         if self.data is None or not hasattr(self.data, "df"):
@@ -613,13 +739,21 @@ class IRM(BaseEstimator):
                 "CausalData must be available to fingerprint the fitted sample."
             )
 
-        return {
+        fingerprint = {
             "n_obs": int(len(y)),
             "index_hash": self._hash_index(self.data.df.index),
             "x_hash": self._hash_array(X, dtype=float),
             "y_hash": self._hash_array(y, dtype=float),
             "d_hash": self._hash_array(d, dtype=int),
         }
+        if getattr(self.data, "cluster_name", None) is not None:
+            if cluster_codes is None:
+                cluster_codes = self._factorize_current_clusters(len(y))
+            fingerprint.update(
+                cluster_name=self.data.cluster_name,
+                cluster_hash=self._hash_array(cluster_codes, dtype=int),
+            )
+        return fingerprint
 
     def _validate_current_data_matches_fit(
         self,
@@ -786,33 +920,14 @@ class IRM(BaseEstimator):
         g0_hat = np.full(n, np.nan, dtype=float)
         g1_hat = np.full(n, np.nan, dtype=float)
         m_hat = np.full(n, np.nan, dtype=float)
-        folds = np.full(n, -1, dtype=int)
+        folds = self._make_fold_assignments(X, d)
         fold_importances: List[Optional[Dict[str, Optional[np.ndarray]]]] = []
-
-        fixed_folds = getattr(self, "_fixed_fold_assignments_", None)
-        if fixed_folds is None:
-            skf = StratifiedKFold(
-                n_splits=self.n_folds, shuffle=True, random_state=self.random_state
-            )
-            splits = list(skf.split(X, d))
-        else:
-            fixed_folds = np.asarray(fixed_folds, dtype=int).ravel()
-            if fixed_folds.size != n:
-                raise ValueError(
-                    "Fixed fold assignments must match the fitted sample size. "
-                    f"Got {fixed_folds.size} and {n}."
-                )
-            expected_folds = np.arange(self.n_folds, dtype=int)
-            if not np.array_equal(np.unique(fixed_folds), expected_folds):
-                raise ValueError(
-                    "Fixed fold assignments must contain every fold id from 0 to "
-                    f"{self.n_folds - 1}."
-                )
-            all_idx = np.arange(n, dtype=int)
-            splits = [
-                (all_idx[fixed_folds != fold_id], all_idx[fixed_folds == fold_id])
-                for fold_id in expected_folds
-            ]
+        # Generate row index pairs on demand rather than retaining O(n * n_folds)
+        # indices. Parallel dispatch bounds the number of in-flight training sets.
+        splits = (
+            (np.flatnonzero(folds != fold_id), np.flatnonzero(folds == fold_id))
+            for fold_id in range(self.n_folds)
+        )
 
         if self.n_jobs == 1:
             fold_results = [
@@ -908,6 +1023,20 @@ class IRM(BaseEstimator):
                     "overlap_policy='drop' removed all observations. "
                     "Lower overlap_threshold or use overlap_policy='clip'."
                 )
+            if self.cluster_codes_ is not None:
+                kept_codes = self.cluster_codes_[overlap_mask]
+                observed = np.bincount(
+                    kept_codes, minlength=self.n_clusters_fit_
+                ) > 0
+                self.n_clusters_ = int(np.count_nonzero(observed))
+                if self.n_clusters_ < 2:
+                    raise ValueError(
+                        "overlap_policy='drop' must retain at least two clusters "
+                        "for cluster-robust inference."
+                    )
+                # Recode using integer membership, without hashing labels again.
+                self.cluster_codes_ = (np.cumsum(observed) - 1)[kept_codes]
+                self.cluster_codes_.setflags(write=False)
             if self._y is not None:
                 self._y = self._y[overlap_mask]
             if self._d is not None:
@@ -956,7 +1085,13 @@ class IRM(BaseEstimator):
             self.data.user_id_name,
         )
         self._fit_weights_used_ = self.weights is not None
-        self._fit_sample_fingerprint_ = self._compute_sample_fingerprint(X=X, y=y, d=d)
+        self._fit_user_id_hash_ = (
+            self._hash_index(pd.Index(self.data.user_id))
+            if self.data.user_id_name is not None else None
+        )
+        self._fit_sample_fingerprint_ = self._compute_sample_fingerprint(
+            X=X, y=y, d=d, cluster_codes=self.cluster_codes_
+        )
         if getattr(self.data, "user_id_name", None):
             self._fit_index_ = pd.Index(
                 self.data.user_id.copy(), name=self.data.user_id_name
@@ -1126,6 +1261,34 @@ class IRM(BaseEstimator):
         }
 
     # --------- API ---------
+    def _reset_fit_state(self) -> None:
+        """Invalidate old predictions and inference before starting a new fit.
+
+        A failed refit must not pair previous nuisance predictions or standard
+        errors with new cluster membership or degrees of freedom. Fixed fold
+        assignments are configuration and intentionally survive this reset.
+        """
+        for name in (
+            "g0_hat_", "g1_hat_", "m_hat_", "coef_", "se_", "psi_",
+            "psi_a_", "psi_b_", "t_stat_", "pval_", "confint_", "summary_",
+            "mu_c_", "se_relative_", "confint_relative_", "_fit_data_roles_",
+            "sensitivity_result", "sensitivity_summary",
+            "_uplift_g0_model_", "_uplift_g1_model_", "_uplift_feature_names_",
+            "_uplift_y_is_binary_",
+        ):
+            self.__dict__.pop(name, None)
+        self._X = self._y = self._d = None
+        self._fit_index_ = self._fit_row_index_ = None
+        self._fit_sample_fingerprint_ = None
+        self.folds_ = self._full_sample_folds_ = None
+        self.m_hat_raw_ = self.overlap_mask_ = None
+        self.overlap_n_dropped_ = self.overlap_n_clipped_ = 0
+        self.feature_importance_ = None
+        self.cluster_codes_ = None
+        self.n_clusters_ = self.n_clusters_fit_ = None
+        self._fit_cluster_name_ = None
+        self.normalize_ipw_effective_ = bool(self.normalize_ipw)
+
     def fit(
         self,
         data: Optional[CausalData] = None,
@@ -1149,6 +1312,7 @@ class IRM(BaseEstimator):
         self : IRM
             Fitted estimator.
         """
+        self._reset_fit_state()
         if data is not None:
             self.data = data
         if store_diagnostics is not None:
@@ -1168,6 +1332,7 @@ class IRM(BaseEstimator):
 
         # Cache for sensitivity analysis and effect calculation
         self._validate_fit_config(y_is_binary=y_is_binary)
+        self._store_fit_clusters(len(y))
         self._validate_treatment_support(d)
         self._store_fit_sample(X=X, y=y, d=d)
 
@@ -1222,6 +1387,46 @@ class IRM(BaseEstimator):
                 RuntimeWarning,
             )
 
+    def _influence_variance(self, influence: np.ndarray) -> float:
+        """Variance of a row-averaged influence function, iid or one-way CR1.
+
+        For centered row influences f_i, CR1 is
+        G/(G-1) * sum_g (sum_{i in g} f_i)**2 / n**2.
+        Cluster sums avoid both row-by-cluster indicators and within-cluster
+        outer products. Point estimates remain observation weighted.
+        """
+        n = len(influence)
+        codes = getattr(self, "cluster_codes_", None)
+        if codes is None:
+            return float(np.var(influence, ddof=1)) / n if n > 1 else 0.0
+        if len(codes) != n:
+            raise RuntimeError("Cluster membership does not match the estimation sample.")
+        G = self.n_clusters_
+        if G is None or G < 2:
+            raise ValueError("Cluster inference requires at least two retained clusters.")
+        sums = np.bincount(codes, weights=influence, minlength=G)
+        return float((G / (G - 1)) * np.dot(sums, sums) / (n * n))
+
+    def _inference_reference(self):
+        """Use t(G-1) for clusters and preserve normal inference otherwise."""
+        if getattr(self, "cluster_codes_", None) is not None:
+            return student_t(df=self.n_clusters_ - 1)
+        return norm
+
+    def _inference_metadata(self) -> Dict[str, Any]:
+        clustered = getattr(self, "cluster_codes_", None) is not None
+        return {
+            "cov_type": "cluster" if clustered else "iid",
+            "cluster_name": getattr(self, "_fit_cluster_name_", None),
+            "n_clusters_fit": getattr(self, "n_clusters_fit_", None),
+            "n_clusters": getattr(self, "n_clusters_", None),
+            "covariance_correction": (
+                self.n_clusters_ / (self.n_clusters_ - 1) if clustered else None
+            ),
+            "inference_distribution": "t" if clustered else "normal",
+            "inference_df": self.n_clusters_ - 1 if clustered else None,
+        }
+
     def _solve_moment_equation(
         self,
         *,
@@ -1244,12 +1449,18 @@ class IRM(BaseEstimator):
             psi_res = psi_b + psi_a * theta_hat
             # Estimated influence function and its plug-in sandwich variance.
             IF = -psi_res / J
-            var = float(np.var(IF, ddof=1)) / n
+            var = self._influence_variance(IF)
             se = float(np.sqrt(max(var, 0.0)))
 
         t_stat = theta_hat / se if se > 0 else np.nan
-        pval = 2 * (1 - norm.cdf(abs(t_stat))) if np.isfinite(t_stat) else np.nan
-        z = norm.ppf(1 - alpha / 2.0)
+        reference = self._inference_reference()
+        if not np.isfinite(t_stat):
+            pval = np.nan
+        elif getattr(self, "cluster_codes_", None) is not None:
+            pval = 2 * reference.sf(abs(t_stat))
+        else:
+            pval = 2 * (1 - norm.cdf(abs(t_stat)))
+        z = reference.ppf(1 - alpha / 2.0)
         ci_low = theta_hat - z * se
         ci_high = theta_hat + z * se
 
@@ -1282,14 +1493,17 @@ class IRM(BaseEstimator):
         u0: np.ndarray,
         h0: np.ndarray,
         z: float,
+        score: Optional[str] = None,
     ) -> Tuple[float, float, float, float, float]:
         """Compute relative effect and delta-method interval."""
-        n = len(w)
         # Orthogonal signal for baseline E[w * Y(0)].
         psi_mu_c = w * g0_hat + w_bar * (u0 * h0)
 
         mu_c = float(np.mean(psi_mu_c))
-        mu_c_var = float(np.var(psi_mu_c, ddof=1)) / n if n > 1 else 0.0
+        # ATTE is a ratio with an estimated treated share. Its baseline EIF
+        # therefore centers by D / mean(D), just like the absolute ATTE score.
+        IF_mu = psi_mu_c - (w * mu_c if (score or self.score) == "ATTE" else mu_c)
+        mu_c_var = self._influence_variance(IF_mu)
         mu_c_se = float(np.sqrt(max(mu_c_var, 0.0)))
         tau_rel = np.nan
         ci_low_rel = np.nan
@@ -1303,11 +1517,10 @@ class IRM(BaseEstimator):
 
         if np.isfinite(mu_c) and not (baseline_too_small or baseline_low_signal):
             tau_rel = 100.0 * theta_hat / mu_c
-            IF_mu = psi_mu_c - mu_c
             with np.errstate(divide="ignore", invalid="ignore"):
                 # Delta-method IF for tau_rel = 100 * theta / mu_c.
                 IF_rel = 100.0 * (IF / mu_c - (theta_hat * IF_mu) / (mu_c**2))
-            var_rel = float(np.var(IF_rel, ddof=1)) / n
+            var_rel = self._influence_variance(IF_rel)
             se_rel = float(np.sqrt(max(var_rel, 0.0)))
             ci_low_rel = tau_rel - z * se_rel
             ci_high_rel = tau_rel + z * se_rel
@@ -1406,7 +1619,9 @@ class IRM(BaseEstimator):
                 "random_state": self.random_state,
                 "n_jobs": self.n_jobs,
                 "std_error": se,
+                "std_error_relative": float(self.se_relative_[0]),
                 "t_stat": t_stat,
+                **self._inference_metadata(),
                 "se_approx_hajek": bool(approx_flags.get("se_approx_hajek", False)),
                 "se_approx_weight_norm": bool(
                     approx_flags.get("se_approx_weight_norm", False)
@@ -1477,6 +1692,8 @@ class IRM(BaseEstimator):
             when the fit-time row-to-``user_id`` mapping is still unchanged.
         cov_type : {"HC0", "HC1", "HC2", "HC3"}, default "HC3"
             Robust covariance type for ``score="GATE"`` / ``score="GATET"`` inference.
+            ATE/ATTE inference is selected automatically from the fit-time
+            cluster column; this argument does not select scalar covariance.
         cov_kwds : Optional[Dict[str, Any]], default None
             Additional covariance keyword arguments requested for subgroup inference.
             These are currently ignored because GATE/GATET use closed-form HCx
@@ -1543,6 +1760,7 @@ class IRM(BaseEstimator):
                 u0=components["u0"],
                 h0=components["h0"],
                 z=z,
+                score=score,
             )
         )
         self.mu_c_ = mu_c
@@ -1617,6 +1835,8 @@ class IRM(BaseEstimator):
             "g1_hat": self.g1_hat_,
             "folds": getattr(self, "folds_", None),
             "feature_importance": getattr(self, "feature_importance_", None),
+            "cluster_codes": getattr(self, "cluster_codes_", None),
+            "cluster_name": getattr(self, "_fit_cluster_name_", None),
         }
 
     # Convenience properties
@@ -1810,7 +2030,7 @@ class IRM(BaseEstimator):
         if g1 is None:
             g1 = np.asarray(self.g1_hat_, dtype=float)
 
-        from causalis.scenarios.unconfoundedness.refutation.unconfoundedness.sensitivity import (
+        from causalis.scenarios.unconfoundedness._sensitivity_inputs import (
             compute_irm_sensitivity_elements,
         )
 
@@ -1891,7 +2111,7 @@ class IRM(BaseEstimator):
         check_is_fitted(self, attributes=["coef_", "se_"])
         if not (0.0 < alpha < 1.0):
             raise ValueError("alpha must be in (0,1)")
-        z = norm.ppf(1 - alpha / 2.0)
+        z = self._inference_reference().ppf(1 - alpha / 2.0)
         ci_low = self.coef_[0] - z * self.se_[0]
         ci_high = self.coef_[0] + z * self.se_[0]
         return pd.DataFrame(

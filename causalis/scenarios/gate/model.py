@@ -53,6 +53,11 @@ def _validate_gate_inputs(
 ) -> tuple[pd.DataFrame | pd.Series | np.ndarray, str]:
     """Validate a subgroup-estimation request and resolve fallback groups."""
     check_is_fitted(irm_model, attributes=["g0_hat_", "g1_hat_", "m_hat_"])
+    if getattr(irm_model, "cluster_codes_", None) is not None:
+        raise NotImplementedError(
+            "Cluster-robust GATE/GATET inference is not implemented. "
+            "Clustered IRM currently supports ATE and ATTE only."
+        )
 
     if not hasattr(irm_model, "_y") or not hasattr(irm_model, "_d"):
         raise RuntimeError("IRM model must be fitted before GATE estimation.")

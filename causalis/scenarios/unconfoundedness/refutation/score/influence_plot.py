@@ -10,15 +10,20 @@ import numpy as np
 
 from causalis.data_contracts.causal_estimate import CausalEstimate
 from causalis.dgp.causaldata import CausalData
+from causalis.scenarios.unconfoundedness.refutation._shared import (
+    _aligned_data_array,
+    _resolve_cluster_context,
+)
 
 from .score_validation import (
     _aipw_score_ate,
     _aipw_score_atte,
+    _aggregate_cluster_influence,
     _normalize_score,
-    _resolve_ate_weights,
     _resolve_normalize_ipw,
     _resolve_overlap_threshold,
-    _validate_estimate_matches_data,
+    _resolve_influence_level,
+    _resolve_saved_ate_weights,
 )
 
 
@@ -30,10 +35,9 @@ def _resolve_data_for_labels(
     if data is not None:
         return data
 
-    diagnostic_data = estimate.diagnostic_data
-    model_ref = getattr(diagnostic_data, "_model", None) if diagnostic_data is not None else None
-    model_data = getattr(model_ref, "data", None)
-    return model_data if isinstance(model_data, CausalData) else None
+    # A live model can have been refitted or its data mutated since this
+    # estimate was saved. Only explicit, verified data supplies display labels.
+    return None
 
 
 def _labels_from_user_id(
@@ -71,9 +75,6 @@ def _resolve_inputs(
     use_estimator_psi: bool,
 ) -> dict[str, object]:
     """Resolve arrays needed for lightweight top-influence plotting."""
-    if data is not None:
-        _validate_estimate_matches_data(data=data, estimate=estimate)
-
     diagnostic_data = estimate.diagnostic_data
     if diagnostic_data is None:
         raise ValueError(
@@ -102,6 +103,9 @@ def _resolve_inputs(
                 and np.all(np.isfinite(m_cached))
                 and np.all(np.isfinite(psi_cached))
             ):
+                context = _resolve_cluster_context(data, estimate, n_cached)
+                if not np.array_equal(row_index_cached, context.row_positions):
+                    raise ValueError("Cached influence row positions do not match the estimation sample.")
                 return {
                     "score": str(cache.get("score", "ATE")),
                     "overlap_threshold": float(cache.get("overlap_threshold", 0.0)),
@@ -109,10 +113,7 @@ def _resolve_inputs(
                     "m_clipped": m_cached,
                     "psi": psi_cached,
                     "row_index": row_index_cached,
-                    "observation_label": _labels_from_user_id(
-                        _resolve_data_for_labels(data=data, estimate=estimate),
-                        row_index_cached,
-                    ),
+                    "context": context,
                 }
 
     m_raw = getattr(diagnostic_data, "m_hat", None)
@@ -128,24 +129,22 @@ def _resolve_inputs(
     if y_raw is None:
         if data is None:
             raise ValueError("diagnostic_data must include `y`, or pass `data` for fallback.")
-        y_raw = data.get_df()[str(data.outcome_name)].to_numpy(dtype=float)
+        y_raw = _aligned_data_array(data, diagnostic_data, str(estimate.outcome))
 
     d_raw = getattr(diagnostic_data, "d", None)
     if d_raw is None:
         if data is None:
             raise ValueError("diagnostic_data must include `d`, or pass `data` for fallback.")
-        d_raw = data.get_df()[str(data.treatment_name)].to_numpy(dtype=float)
+        d_raw = _aligned_data_array(data, diagnostic_data, str(estimate.treatment))
 
     g1_raw = getattr(diagnostic_data, "g1_hat", None)
     if g1_raw is None:
         g1_raw = np.asarray(g0_raw, dtype=float)
 
     psi_raw = getattr(diagnostic_data, "psi", None) if use_estimator_psi else None
-    diag_w_raw = getattr(diagnostic_data, "w", None)
-    diag_w_bar_raw = getattr(diagnostic_data, "w_bar", None)
 
     y = np.asarray(y_raw, dtype=float).ravel()
-    d = (np.asarray(d_raw, dtype=float).ravel() > 0.5).astype(float)
+    d = np.asarray(d_raw, dtype=float).ravel()
     g0 = np.asarray(g0_raw, dtype=float).ravel()
     g1 = np.asarray(g1_raw, dtype=float).ravel()
     m = np.asarray(m_raw, dtype=float).ravel()
@@ -153,35 +152,18 @@ def _resolve_inputs(
     n = int(y.size)
     if any(arr.size != n for arr in (d, g0, g1, m)):
         raise ValueError("All diagnostic arrays must have matching sample size n.")
-
-    if score == "ATE" and (diag_w_raw is None or diag_w_bar_raw is None):
-        model_ref = getattr(diagnostic_data, "_model", None)
-        if model_ref is not None and hasattr(model_ref, "_get_weights"):
-            try:
-                w_model, w_bar_model = model_ref._get_weights(
-                    n=n,
-                    m_hat_adj=np.clip(m, overlap_thr, 1.0 - overlap_thr),
-                    d=d.astype(int),
-                    score="ATE",
-                )
-                if diag_w_raw is None:
-                    diag_w_raw = w_model
-                if diag_w_bar_raw is None:
-                    diag_w_bar_raw = w_bar_model
-            except Exception:
-                pass
-
-    if score == "ATE":
-        w, w_bar = _resolve_ate_weights(n=n, w_raw=diag_w_raw, w_bar_raw=diag_w_bar_raw)
-    else:
-        w = np.ones(n, dtype=float)
-        w_bar = np.ones(n, dtype=float)
+    context = _resolve_cluster_context(data, estimate, n)
 
     psi = None
     if psi_raw is not None:
         psi_tmp = np.asarray(psi_raw, dtype=float).ravel()
         if psi_tmp.size == n:
             psi = psi_tmp
+    if score == "ATE" and psi is None:
+        w, w_bar = _resolve_saved_ate_weights(estimate, n)
+    else:
+        w = np.ones(n, dtype=float)
+        w_bar = np.ones(n, dtype=float)
 
     finite_rows = (
         np.isfinite(y)
@@ -195,15 +177,13 @@ def _resolve_inputs(
     if psi is not None:
         finite_rows = finite_rows & np.isfinite(psi)
 
-    row_index = np.flatnonzero(finite_rows).astype(int)
-    y = y[finite_rows]
-    d = d[finite_rows]
-    g0 = g0[finite_rows]
-    g1 = g1[finite_rows]
-    m = m[finite_rows]
-    w = w[finite_rows]
-    w_bar = w_bar[finite_rows]
-    psi = psi[finite_rows] if psi is not None else None
+    if not np.all(finite_rows):
+        y, d, g0, g1, m = (arr[finite_rows] for arr in (y, d, g0, g1, m))
+        w, w_bar = w[finite_rows], w_bar[finite_rows]
+        psi = psi[finite_rows] if psi is not None else None
+        context = context.subset(finite_rows)
+    row_index = context.row_positions
+    d = (d > 0.5).astype(float)
 
     if y.size == 0:
         raise ValueError("No finite observations available for influence plotting.")
@@ -245,13 +225,13 @@ def _resolve_inputs(
         "m_clipped": np.clip(m, overlap_thr, 1.0 - overlap_thr),
         "psi": np.asarray(psi, dtype=float).ravel(),
         "row_index": row_index,
-        "observation_label": _labels_from_user_id(
-            _resolve_data_for_labels(data=data, estimate=estimate),
-            row_index,
-        ),
+        "context": context,
     }
     try:
-        diagnostic_data.score_plot_cache = dict(resolved)
+        # Finite filtering changes the cached sample; keep the original cache
+        # contract so a second call cannot lose the overlap/cluster row map.
+        if np.all(finite_rows) and use_estimator_psi and overlap_threshold is None:
+            diagnostic_data.score_plot_cache = {key: value for key, value in resolved.items() if key != "context"}
     except Exception:
         pass
     return resolved
@@ -264,6 +244,7 @@ def plot_influence_instability(
     overlap_threshold: Optional[float] = None,
     use_estimator_psi: bool = True,
     top_k: int = 20,
+    influence_level: str = "auto",
     annotate: bool = True,
     figsize: Optional[Tuple[float, float]] = None,
     dpi: int = 220,
@@ -277,8 +258,14 @@ def plot_influence_instability(
 
     Panels
     ------
-    1. Ranked bar chart of the top ``k`` observations by ``|psi_i|``.
-    2. Scatter of those top ``k`` observations versus clipped propensity ``m_i``.
+    1. Ranked bars of the top ``k`` absolute influence contributions.
+    2. Cluster influence versus cluster size, colored by treated share. Row
+       mode instead plots influence versus clipped propensity by treatment arm.
+
+    ``influence_level="auto"`` ranks cluster sums for clustered estimates and
+    observations otherwise. ``"row"`` explicitly selects observation rankings;
+    ``"cluster"`` requires saved or verified cluster membership. Cluster sums
+    are contributions to the row-weighted estimate, not exact deletion effects.
 
     This replacement intentionally avoids plotting every observation. Use
     ``run_score_diagnostics(... )["summary"]`` for global tail metrics and this
@@ -336,7 +323,12 @@ def plot_influence_instability(
     m_clipped = np.asarray(resolved["m_clipped"], dtype=float)
     psi = np.asarray(resolved["psi"], dtype=float)
     row_index = np.asarray(resolved["row_index"], dtype=int)
-    observation_label = np.asarray(resolved["observation_label"], dtype=object)
+    context = resolved["context"]
+    level = _resolve_influence_level(influence_level, context.codes)
+    clustered = level == "cluster"
+    if clustered:
+        units = _aggregate_cluster_influence(psi, d, m_clipped, context.codes)
+        psi, m_clipped, d = units["psi"], units["m"], units["treated_share"]
 
     abs_psi = np.abs(psi)
     top_idx = _top_k_indices(abs_psi, top_k=top_k)
@@ -347,12 +339,21 @@ def plot_influence_instability(
     top_abs = np.clip(abs_psi[top_idx], 1e-12, None)
     top_signed = psi[top_idx]
     top_m = m_clipped[top_idx]
+    top_x = units["n"][top_idx] if clustered else top_m
     top_d = d[top_idx]
-    top_rows = row_index[top_idx]
-    top_labels = observation_label[top_idx]
+    if clustered:
+        top_labels = [context.labels[i] for i in top_idx]
+    else:
+        # Convert only the displayed identifiers to strings. A million-row
+        # plot must not allocate a million Python string labels for top_k bars.
+        top_labels = _labels_from_user_id(
+            _resolve_data_for_labels(data=data, estimate=estimate), row_index[top_idx],
+        )
     ranks = np.arange(1, top_n + 1)
-    point_colors = np.where(top_d > 0.5, "C0", "C1")
-    label_rows = [f"#{rank} user_id={label}" for rank, label in zip(ranks, top_labels)]
+    point_colors = plt.get_cmap("viridis")(top_d) if clustered else np.where(top_d > 0.5, "C0", "C1")
+    label_key = "cluster" if clustered else "user_id"
+    label_rows = [f"#{rank} {label_key}={label}" for rank, label in zip(ranks, top_labels)]
+    influence_axis = r"$|\sum_{i\in g}\psi_i|$" if clustered else r"$|\psi_i|$"
 
     fig_size = figsize or (12.0, max(4.8, 2.4 + 0.32 * top_n))
     rc = {
@@ -378,9 +379,9 @@ def plot_influence_instability(
         ax_rank.set_yticks(y_pos, label_rows)
         ax_rank.invert_yaxis()
         ax_rank.set_xscale("log")
-        ax_rank.set_xlabel(r"$|\psi_i|$")
-        ax_rank.set_ylabel("Ranked observations")
-        ax_rank.set_title(f"Top-{top_n} |psi| Contributions")
+        ax_rank.set_xlabel(influence_axis)
+        ax_rank.set_ylabel("Ranked clusters" if clustered else "Ranked observations")
+        ax_rank.set_title(f"Top-{top_n} Cluster |sum psi| Contributions" if clustered else f"Top-{top_n} |psi| Contributions")
         ax_rank.grid(True, axis="x", linewidth=0.5, alpha=0.45)
 
         for y_tick, signed_val, abs_val in zip(y_pos, top_signed, top_abs):
@@ -395,7 +396,13 @@ def plot_influence_instability(
 
         treated_mask = top_d > 0.5
         control_mask = ~treated_mask
-        if np.any(treated_mask):
+        if clustered:
+            ax_scatter.scatter(top_x, top_abs, s=58, c=point_colors, alpha=0.85)
+            # A text key keeps the two-panel contract and avoids treating a
+            # mixed-treatment cluster as a binary-treated observation.
+            ax_scatter.text(0.98, 0.02, "Color: treated share (purple 0, yellow 1)",
+                            transform=ax_scatter.transAxes, ha="right", va="bottom", fontsize=8 * font_scale)
+        elif np.any(treated_mask):
             ax_scatter.scatter(
                 top_m[treated_mask],
                 top_abs[treated_mask],
@@ -404,7 +411,7 @@ def plot_influence_instability(
                 alpha=0.85,
                 label="Treated",
             )
-        if np.any(control_mask):
+        if not clustered and np.any(control_mask):
             ax_scatter.scatter(
                 top_m[control_mask],
                 top_abs[control_mask],
@@ -415,7 +422,7 @@ def plot_influence_instability(
             )
 
         if annotate:
-            for rank, x_val, y_val in zip(ranks, top_m, top_abs):
+            for rank, x_val, y_val in zip(ranks, top_x, top_abs):
                 ax_scatter.annotate(
                     f"#{rank}",
                     xy=(float(x_val), float(y_val)),
@@ -423,19 +430,21 @@ def plot_influence_instability(
                     textcoords="offset points",
                 )
 
-        ax_scatter.axvline(overlap, color="0.35", linestyle=":", linewidth=1.1)
-        ax_scatter.axvline(1.0 - overlap, color="0.35", linestyle=":", linewidth=1.1)
-        ax_scatter.set_xlim(0.0, 1.0)
+        if not clustered:
+            ax_scatter.axvline(overlap, color="0.35", linestyle=":", linewidth=1.1)
+            ax_scatter.axvline(1.0 - overlap, color="0.35", linestyle=":", linewidth=1.1)
+            ax_scatter.set_xlim(0.0, 1.0)
         ax_scatter.set_yscale("log")
-        ax_scatter.set_xlabel(r"Clipped propensity $m_i$")
-        ax_scatter.set_ylabel(r"$|\psi_i|$")
-        ax_scatter.set_title("Top Influential Points by Propensity")
+        ax_scatter.set_xlabel("Cluster size (observations)" if clustered else r"Clipped propensity $m_i$")
+        ax_scatter.set_ylabel(influence_axis)
+        ax_scatter.set_title("Top Influential Clusters by Size" if clustered else "Top Influential Points by Propensity")
         ax_scatter.grid(True, linewidth=0.5, alpha=0.45)
-        ax_scatter.legend(frameon=False)
+        if not clustered:
+            ax_scatter.legend(frameon=False)
         ax_scatter.text(
             0.02,
             0.98,
-            f"score={score}\noverlap={overlap:.4f}\ntop_k={top_n}",
+            f"score={score}\noverlap={overlap:.4f}\ntop_k={top_n}\nlevel={level}",
             transform=ax_scatter.transAxes,
             ha="left",
             va="top",

@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 import pytest
+from types import SimpleNamespace
 from scipy.stats import norm
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.linear_model import LogisticRegression
@@ -8,7 +9,9 @@ from sklearn.linear_model import LogisticRegression
 from causalis.dgp.causaldata import CausalData
 from causalis.scenarios.unconfoundedness.model import IRM
 from causalis.scenarios.unconfoundedness.refutation import run_sensitivity_protocol
-from causalis.scenarios.unconfoundedness.refutation.unconfoundedness import sensitivity as sensitivity_module
+from causalis.scenarios.unconfoundedness.refutation.unconfoundedness import (
+    _sensitivity_benchmark as sensitivity_module,
+)
 
 
 class _DummyIRM:
@@ -18,12 +21,28 @@ class _DummyIRM:
         self.n_rep = 1
 
     def _sensitivity_element_est(self) -> dict:
-        return {"sigma2": 1.0, "nu2": 1.0}
+        return {
+            "sigma2": 1.0,
+            "nu2": 1.0,
+            "psi": np.array([-self.se_[0], self.se_[0]]),
+            "psi_sigma2": np.zeros(2),
+            "psi_nu2": np.zeros(2),
+        }
 
 
 def _install_benchmarks(monkeypatch, payload: dict[tuple[str, ...], dict]) -> None:
-    def _fake_benchmark(effect_estimation, data, benchmarking_group, fit_args=None):
-        del effect_estimation, data, fit_args
+    def _fake_context(effect_estimation, data, fit_args):
+        model = effect_estimation.model
+        confounders = list(
+            dict.fromkeys(name for group in payload for name in group)
+        ) + ["unused"]
+        return SimpleNamespace(
+            model=model,
+            elements=model._sensitivity_element_est(),
+            confounders=confounders,
+        )
+
+    def _fake_benchmark(context, benchmarking_group):
         group = tuple(benchmarking_group)
         values = payload[group]
         return pd.DataFrame(
@@ -50,7 +69,8 @@ def _install_benchmarks(monkeypatch, payload: dict[tuple[str, ...], dict]) -> No
             ]
         )
 
-    monkeypatch.setattr(sensitivity_module, "sensitivity_benchmark_group", _fake_benchmark)
+    monkeypatch.setattr(sensitivity_module, "_prepare_benchmark_context", _fake_context)
+    monkeypatch.setattr(sensitivity_module, "_benchmark_group_refit", _fake_benchmark)
 
 
 def test_protocol_passes_primary_and_reports_limited_stress_margin(monkeypatch):
@@ -110,9 +130,13 @@ def test_protocol_fails_if_any_primary_benchmark_crosses_threshold(monkeypatch, 
     assert "strong" in report["summary"]
 
 
-@pytest.mark.parametrize("direction_kwargs", [{}, {"direction": "auto"}], ids=["default", "auto"])
+@pytest.mark.parametrize(
+    "direction_kwargs", [{}, {"direction": "auto"}], ids=["default", "auto"]
+)
 @pytest.mark.parametrize("theta", [0.3, -0.3])
-def test_protocol_auto_direction_matches_explicit_direction(monkeypatch, theta, direction_kwargs):
+def test_protocol_auto_direction_matches_explicit_direction(
+    monkeypatch, theta, direction_kwargs
+):
     _install_benchmarks(
         monkeypatch,
         {
@@ -131,19 +155,25 @@ def test_protocol_auto_direction_matches_explicit_direction(monkeypatch, theta, 
     policy = {"benchmark_groups": {"drivers": ["x1", "x2"]}, "decision_threshold": 0.0}
 
     report = run_sensitivity_protocol(model, object(), **policy, **direction_kwargs)
-    explicit = run_sensitivity_protocol(model, object(), **policy, direction=expected_direction)
+    explicit = run_sensitivity_protocol(
+        model, object(), **policy, direction=expected_direction
+    )
 
     assert report["direction"] == expected_direction
     assert report["status"] == explicit["status"] == "PASS"
     assert report["limited_margin"] is True
     pd.testing.assert_frame_equal(report["scenarios"], explicit["scenarios"])
-    assert any(f"inferred '{expected_direction}'" in warning for warning in report["warnings"])
+    assert any(
+        f"inferred '{expected_direction}'" in warning for warning in report["warnings"]
+    )
     assert not any("inferred" in warning for warning in explicit["warnings"])
     rule = "ci_lower > 0" if theta > 0 else "ci_upper < 0"
     assert rule in report["summary"]
 
 
-@pytest.mark.parametrize("ci_upper", [-0.1, 0.0, 0.1], ids=["below", "touching", "crossing"])
+@pytest.mark.parametrize(
+    "ci_upper", [-0.1, 0.0, 0.1], ids=["below", "touching", "crossing"]
+)
 def test_protocol_negative_auto_requires_ci_strictly_below_zero(monkeypatch, ci_upper):
     _install_benchmarks(
         monkeypatch,
@@ -203,7 +233,9 @@ def test_protocol_auto_direction_is_relative_to_threshold(
     ("theta", "direction", "rule"),
     [(-1.0, "positive", "ci_lower > 0"), (1.0, "negative", "ci_upper < 0")],
 )
-def test_protocol_does_not_override_explicit_direction(monkeypatch, theta, direction, rule):
+def test_protocol_does_not_override_explicit_direction(
+    monkeypatch, theta, direction, rule
+):
     _install_benchmarks(
         monkeypatch,
         {("x1",): {"cf_y": 0.01, "cf_d": 0.01, "rho": 0.2}},
@@ -451,7 +483,9 @@ def test_protocol_supports_negative_claims(monkeypatch):
 
 
 @pytest.mark.parametrize(("theta", "direction"), [(5.0, "positive"), (-5.0, "auto")])
-def test_protocol_empty_benchmarks_and_failed_preconditions_return_fail(monkeypatch, theta, direction):
+def test_protocol_empty_benchmarks_and_failed_preconditions_return_fail(
+    monkeypatch, theta, direction
+):
     model = _DummyIRM(theta=theta, se=0.1)
     empty = run_sensitivity_protocol(
         model,
@@ -463,7 +497,9 @@ def test_protocol_empty_benchmarks_and_failed_preconditions_return_fail(monkeypa
     assert empty["status"] == "FAIL"
     assert empty["primary"].empty
     assert empty["direction"] == ("positive" if theta > 0 else "negative")
-    assert any("benchmark group is required" in warning for warning in empty["warnings"])
+    assert any(
+        "benchmark group is required" in warning for warning in empty["warnings"]
+    )
     if direction == "auto":
         assert any("inferred 'negative'" in warning for warning in empty["warnings"])
 
@@ -532,9 +568,11 @@ def test_protocol_runs_end_to_end_with_irm(overlap_policy, effect_sign):
     assert report["benchmarks"]["benchmark_group"].tolist() == [("x1", "x2")]
     assert report["scenarios"]["scenario"].tolist() == ["primary", "2x", "adversarial"]
     valid = report["scenarios"]["scenario_valid"].astype(bool)
-    assert np.isfinite(
-        report["scenarios"].loc[valid, ["ci_lower", "ci_upper"]]
-    ).all().all()
+    assert (
+        np.isfinite(report["scenarios"].loc[valid, ["ci_lower", "ci_upper"]])
+        .all()
+        .all()
+    )
     assert report["scenarios"].loc[~valid, "scenario_issue"].notna().all()
     assert len(model._full_sample_folds_) == len(data.df)
     if overlap_policy == "drop":
@@ -564,3 +602,31 @@ def test_protocol_validates_policy_inputs(kwargs, error):
             object(),  # type: ignore[arg-type]
             **call,
         )
+
+
+def test_invalid_final_benchmark_keeps_the_last_valid_primary_cache(monkeypatch):
+    _install_benchmarks(
+        monkeypatch,
+        {
+            ("x1",): {"cf_y": 0.01, "cf_d": 0.02, "rho": 0.4},
+            ("x2",): {
+                "cf_y": np.nan,
+                "cf_d": np.nan,
+                "rho": np.nan,
+                "strengths_valid": False,
+                "calibration_valid": False,
+                "calibration_issue": "missing moments",
+            },
+        },
+    )
+    effect = {"model": _DummyIRM(theta=1.0, se=0.1)}
+    report = run_sensitivity_protocol(
+        effect,
+        object(),
+        decision_threshold=0.0,
+        benchmark_groups={"good": ["x1"], "bad": ["x2"]},
+    )
+    assert report["status"] == "FAIL"
+    assert (
+        effect["bias_aware"]["params"] == report["details"]["good"]["primary"]["params"]
+    )

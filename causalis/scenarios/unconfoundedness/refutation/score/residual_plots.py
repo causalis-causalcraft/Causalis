@@ -11,7 +11,7 @@ import numpy as np
 from causalis.data_contracts.causal_estimate import CausalEstimate
 from causalis.dgp.causaldata import CausalData
 
-from .score_validation import _validate_estimate_matches_data
+from .._shared import _aligned_data_array, _resolve_cluster_context
 
 
 def _binned_mean_line(
@@ -21,33 +21,8 @@ def _binned_mean_line(
     n_bins: int = 20,
 ) -> tuple[np.ndarray, np.ndarray]:
     """Compute quantile-binned x midpoints and mean y values."""
-    x_arr = np.asarray(x, dtype=float).ravel()
-    y_arr = np.asarray(y, dtype=float).ravel()
-    if x_arr.size == 0 or y_arr.size == 0 or x_arr.size != y_arr.size:
-        return np.array([], dtype=float), np.array([], dtype=float)
-
-    n = x_arr.size
-    n_bins_eff = max(2, min(int(n_bins), n))
-    quantiles = np.linspace(0.0, 1.0, n_bins_eff + 1)
-    edges = np.quantile(x_arr, quantiles)
-    edges = np.unique(edges)
-    if edges.size < 3:
-        return np.array([], dtype=float), np.array([], dtype=float)
-
-    mids = []
-    means = []
-    for j in range(edges.size - 1):
-        lo = float(edges[j])
-        hi = float(edges[j + 1])
-        if j < edges.size - 2:
-            mask = (x_arr >= lo) & (x_arr < hi)
-        else:
-            mask = (x_arr >= lo) & (x_arr <= hi)
-        if np.any(mask):
-            mids.append(float(np.mean(x_arr[mask])))
-            means.append(float(np.mean(y_arr[mask])))
-
-    return np.asarray(mids, dtype=float), np.asarray(means, dtype=float)
+    mids, means, _ = _binned_summary(x, y, n_bins=n_bins)
+    return mids, means
 
 
 def _binned_summary(
@@ -70,22 +45,14 @@ def _binned_summary(
     if edges.size < 3:
         return np.array([], dtype=float), np.array([], dtype=float), np.array([], dtype=float)
 
-    mids = []
-    means = []
-    counts = []
-    for j in range(edges.size - 1):
-        lo = float(edges[j])
-        hi = float(edges[j + 1])
-        if j < edges.size - 2:
-            mask = (x_arr >= lo) & (x_arr < hi)
-        else:
-            mask = (x_arr >= lo) & (x_arr <= hi)
-        if np.any(mask):
-            mids.append(float(np.mean(x_arr[mask])))
-            means.append(float(np.mean(y_arr[mask])))
-            counts.append(float(np.sum(mask)))
-
-    return np.asarray(mids, dtype=float), np.asarray(means, dtype=float), np.asarray(counts, dtype=float)
+    # Right edges enter the next bin, except the final edge, matching the
+    # historical interval convention without rescanning all rows for each bin.
+    bins = np.searchsorted(edges[1:-1], x_arr, side="right")
+    counts = np.bincount(bins, minlength=edges.size - 1).astype(float)
+    sum_x = np.bincount(bins, weights=x_arr, minlength=counts.size)
+    sum_y = np.bincount(bins, weights=y_arr, minlength=counts.size)
+    present = counts > 0
+    return sum_x[present] / counts[present], sum_y[present] / counts[present], counts[present]
 
 
 def _maybe_subsample_scatter(
@@ -118,11 +85,8 @@ def _resolve_residual_inputs(
     data: Optional[CausalData],
     *,
     clip_propensity: float,
-) -> dict[str, np.ndarray]:
+) -> dict[str, Any]:
     """Resolve residual-plot arrays from diagnostic data or a fallback dataset."""
-    if data is not None:
-        _validate_estimate_matches_data(data=data, estimate=estimate)
-
     diagnostic_data = estimate.diagnostic_data
     if diagnostic_data is None:
         raise ValueError(
@@ -130,8 +94,20 @@ def _resolve_residual_inputs(
             "Fit IRM with store_diagnostics=True and call estimate() first."
         )
 
-    # Fast path: reuse cached residual-plot inputs stored in diagnostic_data.
     cache = getattr(diagnostic_data, "residual_plot_cache", None)
+    m_source = getattr(diagnostic_data, "m_hat", None)
+    source_n = None
+    if m_source is None and isinstance(cache, dict):
+        m_source = cache.get("m")
+        if cache.get("finite_mask") is not None:
+            source_n = np.asarray(cache["finite_mask"]).size
+    if m_source is None:
+        raise ValueError("estimate.diagnostic_data must include `m_hat` and `g0_hat`.")
+    if source_n is None:
+        source_n = np.asarray(m_source).size
+    context = _resolve_cluster_context(data, estimate, source_n)
+
+    # Fast path: reuse cached residual-plot inputs stored in diagnostic_data.
     if isinstance(cache, dict):
         required = {"y", "d", "g0", "g1", "m"}
         if required.issubset(set(cache.keys())):
@@ -141,6 +117,14 @@ def _resolve_residual_inputs(
             g1_cached = np.asarray(cache.get("g1"), dtype=float).ravel()
             m_cached = np.asarray(cache.get("m"), dtype=float).ravel()
             n_cached = y_cached.size
+            finite_cached = cache.get("finite_mask")
+            cache_context = context
+            if finite_cached is not None:
+                finite_cached = np.asarray(finite_cached, dtype=bool)
+                if finite_cached.ndim == 1 and finite_cached.size == source_n:
+                    cache_context = context.subset(finite_cached)
+                else:
+                    n_cached = -1
             if (
                 n_cached > 0
                 and d_cached.size == n_cached
@@ -152,6 +136,7 @@ def _resolve_residual_inputs(
                 and np.all(np.isfinite(g0_cached))
                 and np.all(np.isfinite(g1_cached))
                 and np.all(np.isfinite(m_cached))
+                and cache_context.row_positions.size == n_cached
             ):
                 eps = float(max(clip_propensity, 1e-12))
                 return {
@@ -160,6 +145,7 @@ def _resolve_residual_inputs(
                     "g0": g0_cached,
                     "g1": g1_cached,
                     "m": np.clip(m_cached, eps, 1.0 - eps),
+                    "metadata": {**cache_context.metadata, "weighting": "observation"},
                 }
 
     m_raw = getattr(diagnostic_data, "m_hat", None)
@@ -177,16 +163,16 @@ def _resolve_residual_inputs(
     if y_raw is None:
         if data is None:
             raise ValueError("diagnostic_data must include `y`, or pass `data` for fallback.")
-        y_raw = data.get_df()[str(data.outcome_name)].to_numpy(dtype=float)
+        y_raw = _aligned_data_array(data, diagnostic_data, str(data.outcome_name))
 
     d_raw = getattr(diagnostic_data, "d", None)
     if d_raw is None:
         if data is None:
             raise ValueError("diagnostic_data must include `d`, or pass `data` for fallback.")
-        d_raw = data.get_df()[str(data.treatment_name)].to_numpy(dtype=float)
+        d_raw = _aligned_data_array(data, diagnostic_data, str(data.treatment_name))
 
     y = np.asarray(y_raw, dtype=float).ravel()
-    d = (np.asarray(d_raw, dtype=float).ravel() > 0.5).astype(float)
+    d = np.asarray(d_raw, dtype=float).ravel()
     g0 = np.asarray(g0_raw, dtype=float).ravel()
     g1 = np.asarray(g1_raw, dtype=float).ravel()
     m = np.asarray(m_raw, dtype=float).ravel()
@@ -196,11 +182,10 @@ def _resolve_residual_inputs(
         raise ValueError("All diagnostic arrays must have matching sample size n.")
 
     finite = np.isfinite(y) & np.isfinite(d) & np.isfinite(g0) & np.isfinite(g1) & np.isfinite(m)
-    y = y[finite]
-    d = d[finite]
-    g0 = g0[finite]
-    g1 = g1[finite]
-    m = m[finite]
+    if not np.all(finite):
+        y, d, g0, g1, m = y[finite], d[finite], g0[finite], g1[finite], m[finite]
+        context = context.subset(finite)
+    d = (d > 0.5).astype(float)
     if y.size == 0:
         raise ValueError("No finite observations available for residual plotting.")
 
@@ -214,6 +199,7 @@ def _resolve_residual_inputs(
         "g0": g0,
         "g1": g1,
         "m": m,
+        "metadata": {**context.metadata, "weighting": "observation"},
     }
     try:
         diagnostic_data.residual_plot_cache = {
@@ -222,6 +208,7 @@ def _resolve_residual_inputs(
             "g0": np.asarray(g0, dtype=float).ravel(),
             "g1": np.asarray(g1, dtype=float).ravel(),
             "m": m_unc,
+            "finite_mask": finite,
         }
     except Exception:
         pass
@@ -236,8 +223,8 @@ def plot_residual_diagnostics(
     n_bins: int = 20,
     marker_size: float = 12.0,
     alpha: float = 0.35,
-    max_scatter_points: Optional[int] = None,
-    random_state: Optional[int] = None,
+    max_scatter_points: Optional[int] = 20_000,
+    random_state: Optional[int] = 42,
     figsize: Tuple[float, float] = (14.0, 4.8),
     dpi: int = 220,
     font_scale: float = 1.10,
@@ -266,6 +253,8 @@ def plot_residual_diagnostics(
 
     Clear trends usually mean the nuisance models still leave structure in the
     data, which can show up later as unstable score diagnostics.
+    Summaries weight observations, including with unequal cluster sizes. The
+    binned curves are descriptive and do not draw independence-based intervals.
 
     Parameters
     ----------
@@ -281,11 +270,12 @@ def plot_residual_diagnostics(
         Scatter marker size.
     alpha : float, default 0.35
         Scatter opacity.
-    max_scatter_points : int, optional
+    max_scatter_points : int, optional, default 20000
         Maximum number of points drawn in each residual scatter panel. When set,
         scatter points are sampled uniformly without replacement, while the
         binned-mean overlays and calibration panel still use all observations.
-    random_state : int, optional
+        Pass None to draw all observations.
+    random_state : int, optional, default 42
         Random seed used when ``max_scatter_points`` triggers scatter sampling.
     figsize : tuple, default (14.0, 4.8)
         Figure size.

@@ -12,7 +12,8 @@ import pandas as pd
 from causalis.data_contracts.causal_estimate import CausalEstimate
 from causalis.dgp.causaldata import CausalData
 
-from .overlap_validation import _calibration_report, _validate_estimate_matches_data
+from .overlap_validation import _calibration_report
+from .._shared import _aligned_data_array, _resolve_cluster_context
 
 
 def _logit(x: np.ndarray) -> np.ndarray:
@@ -39,9 +40,6 @@ def _resolve_calibration_payload(
     n_bins: int,
 ) -> Dict[str, Any]:
     """Extract and validate the calibration inputs used by reliability plots."""
-    if data is not None:
-        _validate_estimate_matches_data(data=data, estimate=estimate)
-
     diagnostic_data = estimate.diagnostic_data
     if diagnostic_data is None:
         raise ValueError(
@@ -61,16 +59,19 @@ def _resolve_calibration_payload(
             raise ValueError(
                 "diagnostic_data must include `d`, or pass `data` for fallback."
             )
-        d_raw = data.get_df()[str(data.treatment_name)].to_numpy(dtype=float)
+        d_raw = _aligned_data_array(data, diagnostic_data, str(data.treatment_name))
 
     p = np.asarray(m_source, dtype=float).ravel()
-    d = (np.asarray(d_raw, dtype=float).ravel() > 0.5).astype(int)
+    d = np.asarray(d_raw, dtype=float).ravel()
     if p.size != d.size:
         raise ValueError("diagnostic_data.m_hat and treatment vector must have matching length.")
 
+    context = _resolve_cluster_context(data, estimate, p.size)
     finite = np.isfinite(p) & np.isfinite(d)
-    p = p[finite]
-    d = d[finite]
+    if not np.all(finite):
+        p, d = p[finite], d[finite]
+        context = context.subset(finite)
+    d = (d > 0.5).astype(int)
     if p.size == 0:
         raise ValueError("No finite propensity/treatment pairs available for reliability plotting.")
 
@@ -100,6 +101,7 @@ def _resolve_calibration_payload(
         "slope": slope,
         "intercept": intercept,
         "n_bins": int(calibration.get("n_bins", int(n_bins))),
+        "metadata": {**context.metadata, "weighting": "observation"},
     }
 
 
@@ -125,6 +127,9 @@ def plot_propensity_reliability(
 ) -> plt.Figure:
     r"""
     Plot a propensity calibration reliability diagram.
+
+    Bin means and recalibration are descriptive, observation-weighted summaries
+    for both IID and clustered samples. No independence-based intervals are drawn.
 
     The reliability plot groups observations into propensity bins and compares
     predicted treatment probability with observed treatment frequency. In a

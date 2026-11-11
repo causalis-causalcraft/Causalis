@@ -4,6 +4,8 @@ from .causaldata import CausalData
 from .rct_causal_data import RctCausalData
 from .rct_estimates import RctEstimates
 from .iv_causal_data import IVCausalData
+from .ipcw_data import IPCWData
+from .ipcw_estimate import IPCWDiagnosticData, IPCWEstimate
 from .multicausaldata import MultiCausalData
 from .panel_data_did import PanelDataDID
 from .panel_data_scm import PanelDataSCM
@@ -44,6 +46,9 @@ __all__ = [
     "RctCausalData",
     "RctEstimates",
     "IVCausalData",
+    "IPCWData",
+    "IPCWEstimate",
+    "IPCWDiagnosticData",
     "MultiCausalData",
     "PanelDataDID",
     "PanelDataSCM",

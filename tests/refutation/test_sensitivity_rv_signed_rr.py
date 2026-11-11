@@ -3,7 +3,9 @@ import math
 import numpy as np
 import pytest
 
-from causalis.scenarios.unconfoundedness.refutation.unconfoundedness.sensitivity import compute_bias_aware_ci
+from causalis.scenarios.unconfoundedness.refutation.unconfoundedness.sensitivity import (
+    compute_bias_aware_ci,
+)
 
 
 class _DummyIRM:
@@ -16,9 +18,16 @@ class _DummyIRM:
         return self._elements
 
 
-def _make_elements(n: int = 5, *, sigma2: float = 1.0, nu2: float = 0.25,
-                   rr_val: float = -0.4, m_alpha_val: float = 0.25) -> dict:
-    psi = np.zeros(n, dtype=float)
+def _make_elements(
+    n: int = 5,
+    *,
+    sigma2: float = 1.0,
+    nu2: float = 0.25,
+    rr_val: float = -0.4,
+    m_alpha_val: float = 0.25,
+) -> dict:
+    psi = np.linspace(-1.0, 1.0, n)
+    psi *= 0.1 / np.sqrt(np.var(psi, ddof=1) / n)
     psi_sigma2 = np.zeros(n, dtype=float)
     psi_nu2 = np.zeros(n, dtype=float)
     rr = np.full(n, rr_val, dtype=float)
@@ -41,6 +50,7 @@ def test_rv_formula_equal_strength():
     out = compute_bias_aware_ci(model, cf_y=0.2, cf_d=0.2, rho=1.0, H0=0.0, alpha=0.05)
 
     denom = 1.0 * math.sqrt(1.0 * 0.25)
+
     def _rv(delta: float) -> float:
         d2 = (delta / denom) ** 2
         return (math.sqrt(d2 * d2 + 4.0 * d2) - d2) / 2.0
@@ -77,21 +87,7 @@ def test_binary_deprecated_keywords_use_new_strengths_directly():
     assert legacy["bias_aware_ci"] == pytest.approx(current["bias_aware_ci"])
 
 
-def test_signed_rr_nu2_uses_cf_y_directly_and_cf_d_odds():
+def test_signed_rr_is_rejected_with_canonical_strengths():
     model = _DummyIRM(theta=1.0, se=0.1, elements=_make_elements())
-    cf_y, cf_d, rho = 0.2, 0.2, 1.0
-
-    out = compute_bias_aware_ci(model, cf_y=cf_y, cf_d=cf_d, rho=rho, use_signed_rr=True)
-
-    a = math.sqrt(2.0 * 0.25)
-    b = -0.4  # signed riesz representer
-    k_d = cf_d / (1.0 - cf_d)
-    base = a * a * cf_y + b * b * k_d + 2.0 * rho * math.sqrt(cf_y * k_d) * a * b
-    assert out["nu2"] == pytest.approx(max(base, 0.0), rel=1e-12)
-    assert out["bound_width"] == pytest.approx(math.sqrt(1.0 * max(base, 0.0)), rel=1e-12)
-    assert out["params"]["use_signed_rr"] is True
-    # RV/RVa are not defined under the signed-rr quadratic form
-    assert math.isnan(out["rv"])
-    assert math.isnan(out["rva"])
-
-
+    with pytest.raises(ValueError, match="not a valid sensitivity bound"):
+        compute_bias_aware_ci(model, cf_y=0.2, cf_d=0.2, rho=1.0, use_signed_rr=True)
