@@ -488,7 +488,10 @@ def run_overlap_diagnostics(
     and does not test for unobserved confounding.
 
     Summaries weight observations, including with unequal cluster sizes.
-    ``ate_ess`` is Kish row-weight concentration, not the number of independent
+    ``ate_ess`` retains ATE inverse-propensity ESS; ``att_ess`` uses constant
+    treated weights and control odds ``m / (1 - m)``. ESS summary rows and
+    flags use the requested score. Both payloads describe Kish row-weight
+    concentration, not the number of independent
     observations. For clustered estimates, ``cluster_weight_concentration``
     additionally summarizes weight mass across clusters; it is not a
     correlation-adjusted variance effective sample size. Pure-arm clusters are
@@ -675,6 +678,21 @@ def run_overlap_diagnostics(
         "ess_ratio_w1": ess_ratio_w1,
         "ess_ratio_w0": ess_ratio_w0,
     }
+    # ATT targets the treated population: treated weights are constant and
+    # controls carry propensity odds. Keep the explicitly ATE-labelled payload
+    # for callers that use it, but grade/report ESS for the requested estimand.
+    att_w0 = m[~d_bool] / (1.0 - m[~d_bool])
+    att_ess_w0 = _ess(att_w0)
+    att_ess = {
+        "ess_w1": float(n_treated) if n_treated else float("nan"),
+        "ess_w0": att_ess_w0,
+        "ess_ratio_w1": 1.0 if n_treated else float("nan"),
+        "ess_ratio_w0": float(att_ess_w0 / max(n_control, 1)),
+    }
+    if score == "ATTE":
+        ess_ratio_w1 = att_ess["ess_ratio_w1"]
+        ess_ratio_w0 = att_ess["ess_ratio_w0"]
+
     ate_tails = {
         "w1": _weight_tail_stats(w1[d_bool]),
         "w0": _weight_tail_stats(w0[~d_bool]),
@@ -849,6 +867,7 @@ def run_overlap_diagnostics(
         "ks": float(ks),
         "auc": float(auc),
         "ate_ess": ate_ess,
+        "att_ess": att_ess,
         "ate_tails": ate_tails,
         "att_weights": att_weights,
         "clipping": clipping,
