@@ -216,3 +216,65 @@ def test_invalid_inputs_and_estimate_before_fit_are_rejected():
 
     with pytest.raises(RuntimeError, match="fit"):
         CallawaySantAnnaDID().estimate()
+
+
+def test_ipw_and_dr_influence_scores_are_invariant_to_common_time_trends():
+    rng = np.random.default_rng(42)
+    n_units = 200
+    periods = pd.period_range("2020-01", periods=2, freq="M")
+    x = rng.normal(0.0, 1.0, size=n_units)
+    treated = rng.random(n_units) < 1.0 / (1.0 + np.exp(-0.8 * x))
+
+    rows = []
+    for u in range(n_units):
+        y1 = rng.normal(0.0, 1.0)
+        dy = 1.5 * (x[u] ** 2) + (2.0 if treated[u] else 0.0) + rng.normal(0.0, 1.0)
+        for idx, period in enumerate(periods):
+            rows.append(
+                {
+                    "unit": u,
+                    "time": period,
+                    "d": int(treated[u] and idx == 1),
+                    "y": y1 if idx == 0 else y1 + dy,
+                    "x": x[u],
+                }
+            )
+    df_base = pd.DataFrame(rows)
+    df_shifted = df_base.copy()
+    df_shifted.loc[df_shifted["time"] == periods[1], "y"] += 100.0
+
+    # Without covariates, IPW and DR share the exact two-sample SE and are invariant to common trends.
+    p0 = PanelDataDID(df=df_base, y="y", unit_col="unit", time_col="time", treated_time="d")
+    p1 = PanelDataDID(df=df_shifted, y="y", unit_col="unit", time_col="time", treated_time="d")
+    res_dr0 = CallawaySantAnnaDID(estimator="dr", control_group="never_treated").fit(p0).estimate()
+    res_ipw0 = CallawaySantAnnaDID(estimator="ipw", control_group="never_treated").fit(p0).estimate()
+    res_ipw1 = CallawaySantAnnaDID(estimator="ipw", control_group="never_treated").fit(p1).estimate()
+
+    assert res_ipw0.att == pytest.approx(res_dr0.att)
+    assert res_ipw0.se == pytest.approx(res_dr0.se)
+    assert res_ipw1.att == pytest.approx(res_ipw0.att)
+    assert res_ipw1.se == pytest.approx(res_ipw0.se)
+
+    # With covariates, both IPW and DR SEs are invariant to a common post-period shift and
+    # use separately centered treated and control Hajek influence components.
+    pc0 = PanelDataDID(
+        df=df_base, y="y", unit_col="unit", time_col="time", treated_time="d", covariates=["x"]
+    )
+    pc1 = PanelDataDID(
+        df=df_shifted, y="y", unit_col="unit", time_col="time", treated_time="d", covariates=["x"]
+    )
+    for estimator in ("ipw", "dr"):
+        est0 = CallawaySantAnnaDID(estimator=estimator, control_group="never_treated").fit(pc0).estimate()
+        est1 = CallawaySantAnnaDID(estimator=estimator, control_group="never_treated").fit(pc1).estimate()
+        assert est1.att == pytest.approx(est0.att)
+        assert est1.se == pytest.approx(est0.se)
+
+        ud = est0.diagnostics["unit_level"]
+        resid = ud["delta_y"] - ud["outcome_regression"]
+        w1 = ud["treated_weight"]
+        w0 = ud["control_weight"]
+        expected_scores = w1 * (resid - float(np.mean(w1 * resid))) - w0 * (
+            resid - float(np.mean(w0 * resid))
+        )
+        np.testing.assert_allclose(ud["influence_score"].to_numpy(), expected_scores.to_numpy())
+

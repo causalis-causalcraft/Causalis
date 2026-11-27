@@ -120,9 +120,11 @@ def _validate_propensity_clip(propensity_clip: float) -> float:
 
 
 def _normal_p_value(estimate: float, se: float) -> float:
+    if abs(estimate) <= 1e-15 and se <= 1e-24:
+        return 1.0
     if se > 0.0:
         return float(2.0 * norm.sf(abs(estimate / se)))
-    return 1.0 if abs(estimate) <= 1e-16 else float("nan")
+    return float("nan")
 
 
 def _effective_sample_size(weights: np.ndarray) -> float:
@@ -570,8 +572,13 @@ def _fit_cell(
         outcome_hat = np.zeros(delta_y.shape[0], dtype=float)
 
     residualized_delta = delta_y - outcome_hat
-    att = float(np.mean((treated_weights - control_weights) * residualized_delta))
-    raw_scores = (treated_weights - control_weights) * residualized_delta - treated_weights * att
+    att_treated = float(np.mean(treated_weights * residualized_delta))
+    att_control = float(np.mean(control_weights * residualized_delta))
+    att = att_treated - att_control
+    raw_scores = (
+        treated_weights * (residualized_delta - att_treated)
+        - control_weights * (residualized_delta - att_control)
+    )
     used_control_weights = control_weights
 
     control_design = design[control]
