@@ -101,11 +101,17 @@ def _safe_t_stat(estimate: pd.Series, se: pd.Series) -> pd.Series:
     estimate_values = pd.to_numeric(estimate, errors="coerce").to_numpy(dtype=float)
     se_values = pd.to_numeric(se, errors="coerce").to_numpy(dtype=float)
     out = np.full(estimate_values.shape[0], np.nan, dtype=float)
-    positive = np.isfinite(se_values) & (se_values > 0.0)
+    negligible_zero = (
+        np.isfinite(se_values)
+        & np.isfinite(estimate_values)
+        & (se_values <= 1e-24)
+        & (np.abs(estimate_values) <= 1e-15)
+    )
+    positive = np.isfinite(se_values) & (se_values > 0.0) & ~negligible_zero
     out[positive] = estimate_values[positive] / se_values[positive]
     zero = np.isfinite(se_values) & (se_values == 0.0) & np.isfinite(estimate_values)
-    out[zero & (np.abs(estimate_values) <= 1e-16)] = 0.0
-    out[zero & (np.abs(estimate_values) > 1e-16)] = np.inf
+    out[negligible_zero] = 0.0
+    out[zero & ~negligible_zero] = np.inf
     return pd.Series(out, index=estimate.index)
 
 
